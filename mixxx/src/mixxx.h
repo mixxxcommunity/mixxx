@@ -64,6 +64,7 @@ class MixxxKeyboard;
 class SkinLoader;
 
 class VinylControlManager;
+class AutoDJ;
 
 /**
   * This Class is the base class for Mixxx. It sets up the main
@@ -175,6 +176,9 @@ class MixxxApp : public QMainWindow
     LibraryScanner* m_pLibraryScanner;
     // The library management object
     Library* m_pLibrary;
+
+    // The AutoDJ object
+    AutoDJ* m_pAutoDJ;
 
     /** file_menu contains all items of the menubar entry "File" */
     QMenu *m_pFileMenu;

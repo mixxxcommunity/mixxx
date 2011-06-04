@@ -13,11 +13,12 @@ public:
     ~AutoDJ();
 
 public slots:
+    void setEnabled(bool);
 
 signals:
 
 private:
-
+    bool m_bEnabled;
     PlayerManager* m_pPlayerManager;
 
 

@@ -1,3 +1,5 @@
+#include <QtDebug>
+
 #include "playermanager.h"
 #include "library/autodj.h"
 
@@ -10,3 +12,14 @@ AutoDJ::AutoDJ(QObject* parent, PlayerManager* playerManager) :
 AutoDJ::~AutoDJ()
 {
 }
+
+void AutoDJ::setEnabled(bool enable){
+
+    m_bEnabled = enable;
+
+    if(enable){
+        qDebug() << "AutoDJ enabled";
+    }
+}
+
+
