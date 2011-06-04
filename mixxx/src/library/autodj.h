@@ -4,8 +4,7 @@
 #include <QObject>
 class PlayerManager;
 
-class AutoDJ : public QObject
-{
+class AutoDJ : public QObject {
     Q_OBJECT
 
 public:
@@ -16,11 +15,11 @@ public slots:
     void setEnabled(bool);
 
 signals:
+    void needNextTrack();
 
 private:
-    bool m_bEnabled;
     PlayerManager* m_pPlayerManager;
-
+    bool m_bEnabled;
 
 
 };

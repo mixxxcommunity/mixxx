@@ -28,6 +28,7 @@ DlgAutoDJ::DlgAutoDJ(QWidget* parent, ConfigObject<ConfigValue>* pConfig,
     connect(m_pTrackTableView, SIGNAL(loadTrackToPlayer(TrackPointer, QString)),
             this, SIGNAL(loadTrackToPlayer(TrackPointer, QString)));
 
+
     QBoxLayout* box = dynamic_cast<QBoxLayout*>(layout());
     Q_ASSERT(box); //Assumes the form layout is a QVBox/QHBoxLayout!
     box->removeWidget(m_pTrackTablePlaceholder);
@@ -163,6 +164,9 @@ void DlgAutoDJ::shufflePlaylist(bool buttonChecked)
 
 void DlgAutoDJ::toggleAutoDJ(bool toggle)
 {
+    // Emit signal for AutoDJ
+    emit setAutoDJEnabled(toggle);
+
     if (toggle) //Enable Auto DJ
     {
         if (m_pCOPlay1->get() == 1.0f && m_pCOPlay2->get() == 1.0f) {
