@@ -6,7 +6,6 @@
 
 #include "library/autodjfeature.h"
 #include "library/playlisttablemodel.h"
-
 #include "library/trackcollection.h"
 #include "dlgautodj.h"
 #include "widget/wlibrary.h"

@@ -42,6 +42,7 @@ class DlgAutoDJ : public QWidget, public Ui::DlgAutoDJ, public virtual LibraryVi
     void loadTrack(TrackPointer tio);
     void loadTrackToPlayer(TrackPointer tio, QString group);
     void setAutoDJEnabled(bool);
+    void sendNextTrack(TrackPointer nextTrack);
 
   private:
     bool loadNextTrackFromQueue(bool removeTopMostBeforeLoading);

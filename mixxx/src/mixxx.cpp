@@ -38,7 +38,6 @@
 #include "library/library.h"
 #include "library/librarytablemodel.h"
 #include "library/libraryscanner.h"
-#include "library/autodj.h"
 
 #include "soundmanager.h"
 #include "soundmanagerutil.h"
@@ -364,9 +363,6 @@ MixxxApp::MixxxApp(QApplication *a, struct CmdlineArgs args)
     }
     m_pConfig->set(ConfigKey("[Library]", "SupportedFileExtensions"),
         QStringList(SoundSourceProxy::supportedFileExtensions()).join(","));
-
-    // Create the AutoDJ
-    m_pAutoDJ = new AutoDJ(this, m_pPlayerManager);
 
     // Call inits to invoke all other construction parts
 
