@@ -28,6 +28,7 @@
 
 #include "dlgprefbpm.h"
 #include "dlgpreferences.h"
+#include "dlgprefautodj.h"
 #include "dlgprefsound.h"
 #include "dlgprefmidibindings.h"
 #include "dlgprefplaylist.h"
@@ -68,6 +69,7 @@ DlgPreferences::DlgPreferences(MixxxApp * mixxx, SkinLoader* pSkinLoader,
     //contentsTreeWidget->setCurrentRow(0);
 
     // Construct widgets for use in tabs
+    wautodj = new DlgPrefAutoDJ(this, config);
     wsound = new DlgPrefSound(this, soundman, pPlayerManager, config);
     wplaylist = new DlgPrefPlaylist(this, config);
     wcontrols = new DlgPrefControls(this, mixxx, pSkinLoader, pPlayerManager, config);
@@ -107,7 +109,7 @@ DlgPreferences::DlgPreferences(MixxxApp * mixxx, SkinLoader* pSkinLoader,
 #ifdef __SHOUTCAST__
     pagesWidget->addWidget(wshoutcast);
 #endif
-
+    pagesWidget->addWidget(wautodj);
     pagesWidget->addWidget(wNoMidi);
     setupMidiWidgets();
 
@@ -124,9 +126,10 @@ DlgPreferences::DlgPreferences(MixxxApp * mixxx, SkinLoader* pSkinLoader,
     connect(this, SIGNAL(showDlg()), wplaylist,  SLOT(slotUpdate()));
     connect(this, SIGNAL(showDlg()), wcontrols,  SLOT(slotUpdate()));
     connect(this, SIGNAL(showDlg()), weq,        SLOT(slotUpdate()));
-    connect(this, SIGNAL(showDlg()),wcrossfader, SLOT(slotUpdate()));
+    connect(this, SIGNAL(showDlg()), wcrossfader,SLOT(slotUpdate()));
     connect(this, SIGNAL(showDlg()), wbpm,       SLOT(slotUpdate()));
     connect(this, SIGNAL(showDlg()), wreplaygain,SLOT(slotUpdate()));
+    connect(this, SIGNAL(showDlg()), wautodj,    SLOT(slotUpdate()));
 
     connect(this, SIGNAL(showDlg()), wrecord,    SLOT(slotUpdate()));
 #ifdef __VINYLCONTROL__
@@ -152,6 +155,7 @@ DlgPreferences::DlgPreferences(MixxxApp * mixxx, SkinLoader* pSkinLoader,
     connect(buttonBox, SIGNAL(accepted()), wbpm,      SLOT(slotApply()));
     connect(buttonBox, SIGNAL(accepted()),wreplaygain,SLOT(slotApply()));
     connect(buttonBox, SIGNAL(accepted()), wrecord,   SLOT(slotApply()));
+    connect(buttonBox, SIGNAL(accepted()), wautodj,   SLOT(slotApply()));
 #ifdef __SHOUTCAST__
     connect(buttonBox, SIGNAL(accepted()), wshoutcast,SLOT(slotApply()));
 #endif
@@ -240,6 +244,12 @@ void DlgPreferences::createIcons()
     m_pReplayGainButton->setTextAlignment(0, Qt::AlignLeft | Qt::AlignVCenter);
     m_pReplayGainButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 
+    m_pAutoDJButton = new QTreeWidgetItem(contentsTreeWidget, QTreeWidgetItem::Type);
+    m_pAutoDJButton->setIcon(0, QIcon(":/images/preferences/ic_preferences_autodj.png"));
+    m_pAutoDJButton->setText(0, tr("Auto DJ"));
+    m_pAutoDJButton->setTextAlignment(0, Qt::AlignLeft | Qt::AlignVCenter);
+    m_pAutoDJButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+
 #ifdef __VINYLCONTROL__
     m_pVinylControlButton = new QTreeWidgetItem(contentsTreeWidget, QTreeWidgetItem::Type);
     //QT screws up my nice vinyl svg for some reason, so we'll use a PNG version
@@ -292,6 +302,8 @@ void DlgPreferences::changePage(QTreeWidgetItem * current, QTreeWidgetItem * pre
            pagesWidget->setCurrentWidget(wbpm);
        else if (current == m_pReplayGainButton)
            pagesWidget->setCurrentWidget(wreplaygain);
+       else if (current == m_pAutoDJButton)
+           pagesWidget->setCurrentWidget(wautodj);
 
 #ifdef __VINYLCONTROL__
        else if (current == m_pVinylControlButton)

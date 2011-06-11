@@ -329,6 +329,7 @@ class MixxxCore(Feature):
                    "controlbeat.cpp",
 
                    "dlgpreferences.cpp",
+				   "dlgprefautodj.cpp",
                    "dlgprefsound.cpp",
                    "dlgprefsounditem.cpp",
                    "dlgprefmidibindings.cpp",
@@ -510,7 +511,7 @@ class MixxxCore(Feature):
                    "library/starrating.cpp",
                    "library/stardelegate.cpp",
                    "library/stareditor.cpp",
-		   "library/autodj.cpp",
+         		   "library/autodj.cpp",
                    "audiotagger.cpp",
 
                    "library/treeitemmodel.cpp",
@@ -576,6 +577,7 @@ class MixxxCore(Feature):
         # Uic these guys (they're moc'd automatically after this) - Generates
         # the code for the QT UI forms
         build.env.Uic4('dlgpreferencesdlg.ui')
+        build.env.Uic4('dlgprefautodjdlg.ui')
         build.env.Uic4('dlgprefsounddlg.ui')
         build.env.Uic4('dlgprefmidibindingsdlg.ui')
         build.env.Uic4('dlgprefplaylistdlg.ui')

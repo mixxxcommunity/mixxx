@@ -32,6 +32,7 @@ class QStackedWidget;
 class MixxxApp;
 class PlayerProxy;
 class SoundManager;
+class DlgPrefAutoDJ;
 class DlgPrefSound;
 class DlgPrefMidiBindings;
 class DlgPrefPlaylist;
@@ -83,6 +84,7 @@ private:
     void setupMidiWidgets();
     DlgPrefSound *wsound;
     QList<DlgPrefMidiBindings*> wmidiBindingsForDevice;
+    DlgPrefAutoDJ *wautodj;
     DlgPrefPlaylist *wplaylist;
     DlgPrefNoMidi *wNoMidi;
     DlgPrefControls *wcontrols;
@@ -105,6 +107,7 @@ private:
     QTreeWidgetItem* m_pVinylControlButton;
     QTreeWidgetItem* m_pShoutcastButton;
     QTreeWidgetItem* m_pReplayGainButton;
+    QTreeWidgetItem* m_pAutoDJButton;
     QTreeWidgetItem* m_pMIDITreeItem;
     QList<QTreeWidgetItem*> m_midiBindingsButtons;
 
