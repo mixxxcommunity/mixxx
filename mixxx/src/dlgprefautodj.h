@@ -14,10 +14,15 @@ public:
     DlgPrefAutoDJ(QWidget *parent, ConfigObject<ConfigValue> *_config);
     ~DlgPrefAutoDJ();
 public slots:
+    void slotUpdateFadeLength();
+    // Apply changes to widget
     void slotApply();
     void slotUpdate();
 
 private:
+    void loadSettings();
+    void setDefaults();
+    int m_fadeLength;
     ConfigObject<ConfigValue> *m_pConfig;
 };
 
