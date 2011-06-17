@@ -35,8 +35,7 @@ class DlgAutoDJ : public QWidget, public Ui::DlgAutoDJ, public virtual LibraryVi
   public slots:
     void shufflePlaylist(bool buttonChecked);
     void toggleAutoDJ(bool toggle);
-    void player1PositionChanged(double value);
-    void player2PositionChanged(double value);
+    void nextTrackNeeded();
 
   signals:
     void loadTrack(TrackPointer tio);
@@ -53,20 +52,8 @@ class DlgAutoDJ : public QWidget, public Ui::DlgAutoDJ, public virtual LibraryVi
     PlaylistTableModel* m_pAutoDJTableModel;
     PlaylistDAO& m_playlistDao;
     bool m_bAutoDJEnabled;
-    bool m_bNextTrackAlreadyLoaded; /** Makes our Auto DJ logic assume the
-                                        next track that should be played is
-                                        already loaded. We need this flag to
-                                        make our first-track-gets-loaded-but-
-                                        not-removed-from-the-queue behaviour
-                                        work. */
-    bool m_bPlayer1Primed, m_bPlayer2Primed;
-    ControlObjectThreadMain* m_pCOPlayPos1;
-    ControlObjectThreadMain* m_pCOPlayPos2;
-    ControlObjectThreadMain* m_pCOPlay1;
-    ControlObjectThreadMain* m_pCOPlay2;
-    ControlObjectThreadMain* m_pCORepeat1;
-    ControlObjectThreadMain* m_pCORepeat2;
-    ControlObjectThreadMain* m_pCOCrossfader;
+
+
 };
 
 #endif //DLGTRIAGE_H

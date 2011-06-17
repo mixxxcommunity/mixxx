@@ -9,11 +9,13 @@
 
 #include "library/libraryfeature.h"
 #include "library/dao/playlistdao.h"
+#include "library/autodj.h"
 #include "configobject.h"
 #include "treeitemmodel.h"
 
 class PlaylistTableModel;
 class TrackCollection;
+class AutoDJ;
 
 class AutoDJFeature : public LibraryFeature {
     Q_OBJECT
@@ -50,6 +52,7 @@ private:
     PlaylistDAO& m_playlistDao;
     const static QString m_sAutoDJViewName;
     TreeItemModel m_childModel;
+    AutoDJ* m_pAutoDJ;
 };
 
 

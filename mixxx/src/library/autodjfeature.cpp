@@ -22,6 +22,7 @@ AutoDJFeature::AutoDJFeature(QObject* parent,
           m_pConfig(pConfig),
           m_pTrackCollection(pTrackCollection),
           m_playlistDao(pTrackCollection->getPlaylistDAO()) {
+    m_pAutoDJ = new AutoDJ(this);
 }
 
 AutoDJFeature::~AutoDJFeature() {
@@ -49,6 +50,14 @@ void AutoDJFeature::bindWidget(WLibrarySidebar* sidebarWidget,
             this, SIGNAL(loadTrack(TrackPointer)));
     connect(pAutoDJView, SIGNAL(loadTrackToPlayer(TrackPointer, QString)),
             this, SIGNAL(loadTrackToPlayer(TrackPointer, QString)));
+
+    // Connect the signals to send to our AutoDJ object
+    connect(pAutoDJView, SIGNAL(setAutoDJEnabled(bool)),
+            m_pAutoDJ, SLOT(setEnabled(bool)));
+    connect(pAutoDJView, SIGNAL(sendNextTrack(TrackPointer)),
+            m_pAutoDJ, SLOT(receiveNextTrack(TrackPointer)));
+    connect(m_pAutoDJ, SIGNAL(needNextTrack()),
+            pAutoDJView, SLOT(nextTrackNeeded()));
 }
 
 TreeItemModel* AutoDJFeature::getChildModel() {
