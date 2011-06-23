@@ -17,19 +17,21 @@ public:
 
 public slots:
     void setEnabled(bool);
+    void setEndOfPlaylist(bool);
     void receiveNextTrack(TrackPointer nextTrack);
     void player1PositionChanged(double value);
     void player2PositionChanged(double value);
 
 signals:
     void needNextTrack();
+    void disableAutoDJ();
 
 private:
 
-    void refreshPlayerStates();
+    //void refreshPlayerStates();
     //PlayerManager* m_pPlayerManager;
     bool m_bEnabled;
-
+    bool m_bEndOfPlaylist;
     bool m_bNextTrackAlreadyLoaded; /** Makes our Auto DJ logic assume the
                                         next track that should be played is
                                         already loaded. We need this flag to

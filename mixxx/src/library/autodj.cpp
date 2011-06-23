@@ -9,13 +9,11 @@
 AutoDJ::AutoDJ(QObject* parent) :
     QObject(parent),
     //m_pPlayerManager(playerManager),
-    m_bEnabled(false){
+    m_bEnabled(false) {
 
     m_bPlayer1Primed = false;
     m_bPlayer2Primed = false;
-
-    connect(parent, SIGNAL(sendNextTrack(TrackPointer)),
-            this, SLOT(receiveNextTrack(TrackPointer)));
+    m_bEndOfPlaylist = false;
 
     m_pCOPlayPos1 = new ControlObjectThreadMain(
                             ControlObject::getControl(ConfigKey("[Channel1]", "playposition")));
@@ -34,7 +32,7 @@ AutoDJ::AutoDJ(QObject* parent) :
 }
 
 
-AutoDJ::~AutoDJ(){
+AutoDJ::~AutoDJ() {
     delete m_pCOPlayPos1;
     delete m_pCOPlayPos2;
     delete m_pCOPlay1;
@@ -44,14 +42,14 @@ AutoDJ::~AutoDJ(){
 }
 
 
-void AutoDJ::setEnabled(bool enable){
-
-    if(enable){
+void AutoDJ::setEnabled(bool enable) {
+    m_pCOPlay1->slotSet(1.0f);
+    if(enable) {
         qDebug() << "AutoDJ Enabled";
         // Begin AutoDJ...
         if (m_pCOPlay1->get() == 1.0f && m_pCOPlay2->get() == 1.0f) {
             qDebug() << "One player must be stopped before enabling Auto DJ mode";
-            //pushButtonAutoDJ->setChecked(false);
+            emit disableAutoDJ();
             return;
         }
 
@@ -84,11 +82,13 @@ void AutoDJ::setEnabled(bool enable){
             (m_pCOPlay1->get() == 0.0f && m_pCOPlay2->get() == 1.0f))
         {
             //Load the first song from the queue.
-            if (!loadNextTrackFromQueue(false)) {
+            if (m_bEndOfPlaylist) {
                 //Queue was empty. Disable and return.
                 //pushButtonAutoDJ->setChecked(false);
                 return;
             }
+            //LoadTrackToPlayer()...
+
             //Set the primed flags so the crossfading algorithm knows
             //that it doesn't need to load a track into whatever player.
             if (m_pCOPlay1->get() == 1.0f)
@@ -104,11 +104,13 @@ void AutoDJ::setEnabled(bool enable){
         //If both players are stopped, start the first one (which should have just had a track loaded into it)
         else if (m_pCOPlay1->get() == 0.0f && m_pCOPlay2->get() == 0.0f) {
             //Load the first song from the queue.
-            if (!loadNextTrackFromQueue(false)) {
+            if (m_bEndOfPlaylist) {
                 //Queue was empty. Disable and return.
                 //pushButtonAutoDJ->setChecked(false);
                 return;
             }
+            // LoadTrackToPlayer()...
+
             m_pCOCrossfader->slotSet(-1.0f); //Move crossfader to the left!
             m_pCORepeat1->slotSet(1.0f); //Turn on repeat mode to avoid race condition between async load
                                                //and "play" command.
@@ -116,7 +118,7 @@ void AutoDJ::setEnabled(bool enable){
         }
     }
     else { //Disable AutoDJ
-        //pushButtonAutoDJ->setText(tr("Enable Auto DJ"));
+        emit disableAutoDJ();
         qDebug() << "Auto DJ disabled";
         m_bEnabled = false;
         m_pCOPlayPos1->disconnect(this);
@@ -126,31 +128,30 @@ void AutoDJ::setEnabled(bool enable){
     }
 }
 
-void AutoDJ::player1PositionChanged(double value)
-{
+void AutoDJ::player1PositionChanged(double value) {
+
     const float posThreshold = 0.95; //95% playback is when we crossfade and do stuff
-    if (value > posThreshold)
-    {
+
+    if (value > posThreshold) {
         //Crossfade!
         float crossfadeValue = -1.0f + 2*(value-posThreshold)/(1.0f-posThreshold);
         m_pCOCrossfader->slotSet(crossfadeValue); //Move crossfader to the right!
         //If the second player doesn't have a new track loaded in it...
-        if (!m_bPlayer2Primed)
-        {
+        if (!m_bPlayer2Primed) {
             qDebug() << "pp1c loading";
 
             //Load the next track into Player 2
             //if (!m_bNextTrackAlreadyLoaded) //Fudge to make us not skip the first track
             {
-                if (!loadNextTrackFromQueue(true))
+                if (m_bEndOfPlaylist)
+                //if (!loadNextTrackFromQueue(true))
                     return;
             }
             //m_bNextTrackAlreadyLoaded = false; //Reset fudge
             m_bPlayer2Primed = true;
         }
         //If the second player is stopped...
-        if (m_pCOPlay2->get() == 0.0f)
-        {
+        if (m_pCOPlay2->get() == 0.0f) {
             //Turn off repeat mode to tell Player 1 to stop at the end
             m_pCORepeat1->slotSet(0.0f);
 
@@ -162,31 +163,30 @@ void AutoDJ::player1PositionChanged(double value)
             m_pCOPlay2->slotSet(1.0f);
         }
 
-        if (value == 1.0f)
-        {
+        if (value == 1.0f) {
             m_pCOPlay1->slotSet(0.0f); //Stop the player
             m_bPlayer1Primed = false;
         }
     }
 }
 
-void AutoDJ::player2PositionChanged(double value)
-{
+void AutoDJ::player2PositionChanged(double value) {
+
     const float posThreshold = 0.95; //95% playback is when we crossfade and do stuff
-    if (value > posThreshold)
-    {
+
+    if (value > posThreshold) {
         //Crossfade!
         float crossfadeValue = 1.0f - 2*(value-posThreshold)/(1.0f-posThreshold);
         m_pCOCrossfader->slotSet(crossfadeValue); //Move crossfader to the right!
 
         //If the first player doesn't have the next track loaded, load a track into
         //it and start playing it!
-        if (!m_bPlayer1Primed)
-        {
+        if (!m_bPlayer1Primed) {
             //Load the next track into player 1
             //if (!m_bNextTrackAlreadyLoaded) //Fudge to make us not skip the first track
             {
-                if (!loadNextTrackFromQueue(true))
+                //if (!loadNextTrackFromQueue(true))
+                if (m_bEndOfPlaylist)
                     return;
             }
             //m_bNextTrackAlreadyLoaded = false; //Reset fudge
@@ -212,18 +212,21 @@ void AutoDJ::player2PositionChanged(double value)
     }
 }
 
-void AutoDJ::refreshPlayerStates(){
+//void AutoDJ::refreshPlayerStates(){
 
     // Loop through all decks, check which ones are playing
     //for (int i = 1; i < m_pPlayerManager->numDecks(); i++){
     //    Deck* deck = m_pPlayerManager->getDeck(i);
         // deck->check if already playing
     //}
+//}
+
+void AutoDJ::receiveNextTrack(TrackPointer nextTrack) {
+    qDebug() << "Received track!";
 }
 
-void AutoDJ::receiveNextTrack(TrackPointer nextTrack){
-    qDebug() << "Received track!" << nextTrack;
-
+void AutoDJ::setEndOfPlaylist(bool endOfPlaylist) {
+    m_bEndOfPlaylist = endOfPlaylist;
 }
 
 

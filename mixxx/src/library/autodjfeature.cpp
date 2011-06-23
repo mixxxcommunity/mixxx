@@ -56,8 +56,12 @@ void AutoDJFeature::bindWidget(WLibrarySidebar* sidebarWidget,
             m_pAutoDJ, SLOT(setEnabled(bool)));
     connect(pAutoDJView, SIGNAL(sendNextTrack(TrackPointer)),
             m_pAutoDJ, SLOT(receiveNextTrack(TrackPointer)));
+    connect(pAutoDJView, SIGNAL(endOfPlaylist(bool)),
+            m_pAutoDJ, SLOT(setEndOfPlaylist(bool)));
     connect(m_pAutoDJ, SIGNAL(needNextTrack()),
             pAutoDJView, SLOT(nextTrackNeeded()));
+    connect(m_pAutoDJ, SIGNAL(disableAutoDJ()),
+            pAutoDJView, SLOT(slotDisableAutoDJ()));
 }
 
 TreeItemModel* AutoDJFeature::getChildModel() {

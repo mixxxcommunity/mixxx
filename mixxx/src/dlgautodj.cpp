@@ -140,19 +140,15 @@ void DlgAutoDJ::toggleAutoDJ(bool toggle){
     // Emit signal for AutoDJ
     emit setAutoDJEnabled(toggle);
 
-    if (toggle) //Enable Auto DJ
-    {
+    if (toggle) { // Enable Auto DJ
         pushButtonAutoDJ->setText(tr("Disable Auto DJ"));
         m_bAutoDJEnabled = true;
     }
-    else //Disable Auto DJ
-    {
-
+    else { // Disable Auto DJ
     }
 }
 
-bool DlgAutoDJ::loadNextTrackFromQueue(bool removeTopMostBeforeLoading)
-{
+bool DlgAutoDJ::loadNextTrackFromQueue(bool removeTopMostBeforeLoading) {
     if (removeTopMostBeforeLoading) {
         //Only remove the top track if this isn't the start of Auto DJ mode.
         m_pAutoDJTableModel->removeTrack(m_pAutoDJTableModel->index(0, 0));
@@ -160,10 +156,10 @@ bool DlgAutoDJ::loadNextTrackFromQueue(bool removeTopMostBeforeLoading)
     //Get the track at the top of the playlist...
     TrackPointer nextTrack = m_pAutoDJTableModel->getTrack(m_pAutoDJTableModel->index(0, 0));
 
-    if (!nextTrack) //We ran out of tracks in the queue...
-    {
+    if (!nextTrack) { // We ran out of tracks in the queue...
         //Disable auto DJ and return...
         pushButtonAutoDJ->setChecked(false);
+        emit endOfPlaylist(true);
         return false;
     }
     //m_bNextTrackAlreadyLoaded = false;
@@ -173,6 +169,23 @@ bool DlgAutoDJ::loadNextTrackFromQueue(bool removeTopMostBeforeLoading)
     return true;
 }
 
-void DlgAutoDJ::nextTrackNeeded(){
-    emit sendNextTrack(m_pAutoDJTableModel->getTrack(m_pAutoDJTableModel->index(0, 0)));
+void DlgAutoDJ::slotNextTrackNeeded() {
+
+    // Get the track at the top of the playlist
+    TrackPointer nextTrack = m_pAutoDJTableModel->getTrack(m_pAutoDJTableModel->index(0, 0));
+
+    if (!nextTrack) {
+        // Playlist empty, disable AutoDJ and emit that end of playlist has been reached
+        pushButtonAutoDJ->setChecked(false);
+        emit endOfPlaylist(true);
+        return;
+    }
+    qDebug() << "Sending track";
+    emit sendNextTrack(nextTrack);
+}
+
+void DlgAutoDJ::slotDisableAutoDJ() {
+    m_bAutoDJEnabled = false;
+    pushButtonAutoDJ->setChecked(false);
+    pushButtonAutoDJ->setText(tr("Enable Auto DJ"));
 }

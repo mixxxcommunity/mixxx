@@ -35,13 +35,15 @@ class DlgAutoDJ : public QWidget, public Ui::DlgAutoDJ, public virtual LibraryVi
   public slots:
     void shufflePlaylist(bool buttonChecked);
     void toggleAutoDJ(bool toggle);
-    void nextTrackNeeded();
+    void slotNextTrackNeeded();
+    void slotDisableAutoDJ();
 
   signals:
     void loadTrack(TrackPointer tio);
     void loadTrackToPlayer(TrackPointer tio, QString group);
     void setAutoDJEnabled(bool);
     void sendNextTrack(TrackPointer nextTrack);
+    void endOfPlaylist(bool);
 
   private:
     bool loadNextTrackFromQueue(bool removeTopMostBeforeLoading);
