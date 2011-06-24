@@ -424,10 +424,12 @@ void SetlogFeature::slotPositionChanged(double /*value*/){
     	if( m_oldTrackIdPlayer[deck-1] != currendPlayingTrackId ){
     		// The audience listens to a new track
     		qDebug() << "The audience listens to track " << currendPlayingTrackId;
-    		m_playlistDao.appendTrackToPlaylist(currendPlayingTrackId, m_playlistId);
     		if( m_pPlaylistTableModel->getPlaylistId() == m_playlistId ){
     			// View needs a refresh
-    			m_pPlaylistTableModel->select();
+    			m_pPlaylistTableModel->appendTrack(currendPlayingTrackId);
+    		}
+    		else{
+        		m_playlistDao.appendTrackToPlaylist(currendPlayingTrackId, m_playlistId);
     		}
     		m_oldTrackIdPlayer[deck-1] = currendPlayingTrackId;
     	}
