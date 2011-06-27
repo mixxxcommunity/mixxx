@@ -7,7 +7,6 @@
 #include "library/playlisttablemodel.h"
 #include "dlgautodj.h"
 
-
 DlgAutoDJ::DlgAutoDJ(QWidget* parent, ConfigObject<ConfigValue>* pConfig,
                      TrackCollection* pTrackCollection, MixxxKeyboard* pKeyboard)
      : QWidget(parent), Ui::DlgAutoDJ(), m_playlistDao(pTrackCollection->getPlaylistDAO()){
@@ -53,6 +52,7 @@ DlgAutoDJ::DlgAutoDJ(QWidget* parent, ConfigObject<ConfigValue>* pConfig,
 
     connect(pushButtonAutoDJ, SIGNAL(toggled(bool)),
             this,  SLOT(toggleAutoDJ(bool))); _blah;
+
 }
 
 DlgAutoDJ::~DlgAutoDJ(){
@@ -128,7 +128,7 @@ void DlgAutoDJ::moveSelection(int delta) {
     m_pTrackTableView->moveSelection(delta);
 }
 
-void DlgAutoDJ::shufflePlaylist(bool buttonChecked){
+void DlgAutoDJ::shufflePlaylist(bool buttonChecked) {
     Q_UNUSED(buttonChecked);
     m_pTrackTableView->sortByColumn(0, Qt::AscendingOrder);
     qDebug() << "Shuffling AutoDJ playlist";
@@ -136,7 +136,7 @@ void DlgAutoDJ::shufflePlaylist(bool buttonChecked){
     qDebug() << "Shuffling done";
 }
 
-void DlgAutoDJ::toggleAutoDJ(bool toggle){
+void DlgAutoDJ::toggleAutoDJ(bool toggle) {
     // Emit signal for AutoDJ
     emit setAutoDJEnabled(toggle);
 
@@ -180,6 +180,9 @@ void DlgAutoDJ::slotNextTrackNeeded() {
         emit endOfPlaylist(true);
         return;
     }
+    // Remove the track at the top of the playlist
+    m_pAutoDJTableModel->removeTrack(m_pAutoDJTableModel->index(0, 0));
+
     qDebug() << "Sending track";
     emit sendNextTrack(nextTrack);
 }

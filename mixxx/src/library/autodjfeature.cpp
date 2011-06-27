@@ -22,7 +22,8 @@ AutoDJFeature::AutoDJFeature(QObject* parent,
           m_pConfig(pConfig),
           m_pTrackCollection(pTrackCollection),
           m_playlistDao(pTrackCollection->getPlaylistDAO()) {
-    m_pAutoDJ = new AutoDJ(this);
+
+
 }
 
 AutoDJFeature::~AutoDJFeature() {
@@ -44,6 +45,12 @@ void AutoDJFeature::bindWidget(WLibrarySidebar* sidebarWidget,
                                            m_pConfig,
                                            m_pTrackCollection,
                                            keyboard);
+    m_pAutoDJ = new AutoDJ(this);
+    connect(m_pAutoDJ, SIGNAL(loadTrack(TrackPointer)),
+            this, SIGNAL(loadTrack(TrackPointer)));
+    connect(m_pAutoDJ, SIGNAL(loadTrackToPlayer(TrackPointer,QString)),
+            this, SIGNAL(loadTrackToPlayer(TrackPointer,QString)));
+
     pAutoDJView->installEventFilter(keyboard);
     libraryWidget->registerView(m_sAutoDJViewName, pAutoDJView);
     connect(pAutoDJView, SIGNAL(loadTrack(TrackPointer)),
@@ -51,7 +58,7 @@ void AutoDJFeature::bindWidget(WLibrarySidebar* sidebarWidget,
     connect(pAutoDJView, SIGNAL(loadTrackToPlayer(TrackPointer, QString)),
             this, SIGNAL(loadTrackToPlayer(TrackPointer, QString)));
 
-    // Connect the signals to send to our AutoDJ object
+    // Connect the signals to and from the AutoDJ object
     connect(pAutoDJView, SIGNAL(setAutoDJEnabled(bool)),
             m_pAutoDJ, SLOT(setEnabled(bool)));
     connect(pAutoDJView, SIGNAL(sendNextTrack(TrackPointer)),
@@ -59,7 +66,7 @@ void AutoDJFeature::bindWidget(WLibrarySidebar* sidebarWidget,
     connect(pAutoDJView, SIGNAL(endOfPlaylist(bool)),
             m_pAutoDJ, SLOT(setEndOfPlaylist(bool)));
     connect(m_pAutoDJ, SIGNAL(needNextTrack()),
-            pAutoDJView, SLOT(nextTrackNeeded()));
+            pAutoDJView, SLOT(slotNextTrackNeeded()));
     connect(m_pAutoDJ, SIGNAL(disableAutoDJ()),
             pAutoDJView, SLOT(slotDisableAutoDJ()));
 }

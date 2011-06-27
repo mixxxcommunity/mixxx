@@ -14,7 +14,6 @@ class PlaylistTableModel;
 class WTrackTableView;
 class AnalyserQueue;
 class QSqlTableModel;
-class ControlObjectThreadMain;
 
 class DlgAutoDJ : public QWidget, public Ui::DlgAutoDJ, public virtual LibraryView {
     Q_OBJECT
@@ -54,7 +53,6 @@ class DlgAutoDJ : public QWidget, public Ui::DlgAutoDJ, public virtual LibraryVi
     PlaylistTableModel* m_pAutoDJTableModel;
     PlaylistDAO& m_playlistDao;
     bool m_bAutoDJEnabled;
-
 
 };
 

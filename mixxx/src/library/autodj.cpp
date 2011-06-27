@@ -1,14 +1,12 @@
 #include <QtDebug>
 
-#include "playermanager.h"
-#include "deck.h"
 #include "controlobject.h"
 #include "controlobjectthreadmain.h"
+#include "playerinfo.h"
 #include "library/autodj.h"
 
 AutoDJ::AutoDJ(QObject* parent) :
     QObject(parent),
-    //m_pPlayerManager(playerManager),
     m_bEnabled(false) {
 
     m_bPlayer1Primed = false;
@@ -43,7 +41,12 @@ AutoDJ::~AutoDJ() {
 
 
 void AutoDJ::setEnabled(bool enable) {
-    m_pCOPlay1->slotSet(1.0f);
+
+    // Check if we have yet to receive a track to load
+    if(m_pNextTrack == NULL) {
+        emit needNextTrack();
+    }
+
     if(enable) {
         qDebug() << "AutoDJ Enabled";
         // Begin AutoDJ...
@@ -59,38 +62,23 @@ void AutoDJ::setEnabled(bool enable) {
         connect(m_pCOPlayPos2, SIGNAL(valueChanged(double)),
         this, SLOT(player2PositionChanged(double)));
 
-        //Manually override the "next track is already loaded" flag
-        //because we've already primed a player with the first track.
-        //We do this so that you don't lose the first song in your
-        //Auto DJ queue if you enable Auto DJ then change your mind
-        //and disable it right away. This just makes it a little bit
-        //more user friendly. :)
-        //m_bNextTrackAlreadyLoaded = true;
         m_bPlayer1Primed = false;
         m_bPlayer2Primed = false;
 
-        //If there are no tracks in the Auto DJ queue, disable Auto DJ mode.
-       /* if (m_pAutoDJTableModel->rowCount() == 0)
-        {
-            //Queue was empty. Disable and return.
-            pushButtonAutoDJ->setChecked(false);
-            return;
-        }*/ //don't need this code, above block takes care of this case.
-
-        //If only one of the players is playing...
+        // If only one of the players is playing...
         if ((m_pCOPlay1->get() == 1.0f && m_pCOPlay2->get() == 0.0f) ||
-            (m_pCOPlay1->get() == 0.0f && m_pCOPlay2->get() == 1.0f))
-        {
-            //Load the first song from the queue.
+            (m_pCOPlay1->get() == 0.0f && m_pCOPlay2->get() == 1.0f)) {
+
+            // Load the first song from the queue.
             if (m_bEndOfPlaylist) {
-                //Queue was empty. Disable and return.
-                //pushButtonAutoDJ->setChecked(false);
+                // Queue is empty. Disable and return.
+                emit disableAutoDJ();
                 return;
             }
-            //LoadTrackToPlayer()...
+            loadNextTrack();
 
-            //Set the primed flags so the crossfading algorithm knows
-            //that it doesn't need to load a track into whatever player.
+            // Set the primed flags so the crossfading algorithm knows
+            // that it doesn't need to load a track into whatever player.
             if (m_pCOPlay1->get() == 1.0f)
             {
                 m_bPlayer1Primed = true;
@@ -101,23 +89,23 @@ void AutoDJ::setEnabled(bool enable) {
             }
         }
 
-        //If both players are stopped, start the first one (which should have just had a track loaded into it)
+        // If both players are stopped, start the first one
         else if (m_pCOPlay1->get() == 0.0f && m_pCOPlay2->get() == 0.0f) {
-            //Load the first song from the queue.
+            // Load the first song from the queue.
             if (m_bEndOfPlaylist) {
-                //Queue was empty. Disable and return.
-                //pushButtonAutoDJ->setChecked(false);
+                // Queue was empty. Disable and return.
+                emit disableAutoDJ();
                 return;
             }
-            // LoadTrackToPlayer()...
+            loadNextTrack();
 
-            m_pCOCrossfader->slotSet(-1.0f); //Move crossfader to the left!
-            m_pCORepeat1->slotSet(1.0f); //Turn on repeat mode to avoid race condition between async load
-                                               //and "play" command.
+            m_pCOCrossfader->slotSet(-1.0f); // Move crossfader to the left!
+            m_pCORepeat1->slotSet(1.0f); // Turn on repeat mode to avoid race condition between async load
             m_pCOPlay1->slotSet(1.0f); //Play the track in player 1
         }
     }
-    else { //Disable AutoDJ
+    else {
+        // Disable AutoDJ
         emit disableAutoDJ();
         qDebug() << "Auto DJ disabled";
         m_bEnabled = false;
@@ -212,21 +200,18 @@ void AutoDJ::player2PositionChanged(double value) {
     }
 }
 
-//void AutoDJ::refreshPlayerStates(){
-
-    // Loop through all decks, check which ones are playing
-    //for (int i = 1; i < m_pPlayerManager->numDecks(); i++){
-    //    Deck* deck = m_pPlayerManager->getDeck(i);
-        // deck->check if already playing
-    //}
-//}
-
 void AutoDJ::receiveNextTrack(TrackPointer nextTrack) {
     qDebug() << "Received track!";
+    m_pNextTrack = nextTrack;
 }
 
 void AutoDJ::setEndOfPlaylist(bool endOfPlaylist) {
     m_bEndOfPlaylist = endOfPlaylist;
+}
+
+void AutoDJ::loadNextTrack() {
+    emit loadTrack(m_pNextTrack);
+    emit needNextTrack();
 }
 
 

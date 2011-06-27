@@ -4,8 +4,8 @@
 #include <QObject>
 
 #include "dlgautodj.h"
+#include "configobject.h"
 
-//class PlayerManager;
 class ControlObjectThreadMain;
 
 class AutoDJ : public QObject {
@@ -25,11 +25,10 @@ public slots:
 signals:
     void needNextTrack();
     void disableAutoDJ();
+    void loadTrack(TrackPointer tio);
+    void loadTrackToPlayer(TrackPointer tio, QString group);
 
 private:
-
-    //void refreshPlayerStates();
-    //PlayerManager* m_pPlayerManager;
     bool m_bEnabled;
     bool m_bEndOfPlaylist;
     bool m_bNextTrackAlreadyLoaded; /** Makes our Auto DJ logic assume the
@@ -47,6 +46,8 @@ private:
     ControlObjectThreadMain* m_pCORepeat1;
     ControlObjectThreadMain* m_pCORepeat2;
     ControlObjectThreadMain* m_pCOCrossfader;
+    TrackPointer m_pNextTrack;
+    void loadNextTrack();
 
 
 };
