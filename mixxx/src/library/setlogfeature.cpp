@@ -124,7 +124,6 @@ void SetlogFeature::bindWidget(WLibrarySidebar* sidebarWidget,
     connect(this, SIGNAL(showPage(const QUrl&)),
             edit, SLOT(setSourc e(const QUrl&)));
 
-    // playposition is from -0.14 to + 1.14
     m_pCOPlayPos1 = new ControlObjectThreadMain(
                             ControlObject::getControl(ConfigKey("[Channel1]", "playposition")));
     m_pCOPlayPos2 = new ControlObjectThreadMain(
@@ -161,7 +160,7 @@ void SetlogFeature::onRightClick(const QPoint& globalPos) {
     //Create the right-click menu
     // QMenu menu(NULL);
     // menu.addAction(m_pCreatePlaylistAction);
-    // TODO add something like disable logging
+    // TODO(DASCHUER) add something like disable logging
     // menu.exec(globalPos);
 }
 
@@ -185,7 +184,7 @@ void SetlogFeature::onRightClickChild(const QPoint& globalPos, QModelIndex index
     //menu.addSeparator();
     menu.addAction(m_pAddToAutoDJAction);
     menu.addAction(m_pRenamePlaylistAction);
-    if(playlistId != m_playlistId){
+    if (playlistId != m_playlistId) {
     	// Todays playlist should not be locked or deleted
     	menu.addAction(m_pDeletePlaylistAction);
     	menu.addAction(m_pLockPlaylistAction);
@@ -196,8 +195,8 @@ void SetlogFeature::onRightClickChild(const QPoint& globalPos, QModelIndex index
 }
 
 
-void SetlogFeature::slotRenamePlaylist()
-{
+void SetlogFeature::slotRenamePlaylist() {
+
     qDebug() << "slotRenamePlaylist()";
 
     QString oldName = m_lastRightClickedIndex.data().toString();
@@ -251,8 +250,7 @@ void SetlogFeature::slotRenamePlaylist()
 }
 
 
-void SetlogFeature::slotTogglePlaylistLock()
-{
+void SetlogFeature::slotTogglePlaylistLock() {
     QString playlistName = m_lastRightClickedIndex.data().toString();
     int playlistId = m_playlistDao.getPlaylistIdFromName(playlistName);
     bool locked = !m_playlistDao.isPlaylistLocked(playlistId);
@@ -265,8 +263,7 @@ void SetlogFeature::slotTogglePlaylistLock()
     playlistItem->setIcon(locked ? QIcon(":/images/library/ic_library_locked.png") : QIcon());
 }
 
-void SetlogFeature::slotDeletePlaylist()
-{
+void SetlogFeature::slotDeletePlaylist() {
     //qDebug() << "slotDeletePlaylist() row:" << m_lastRightClickedIndex.data();
     int playlistId = m_playlistDao.getPlaylistIdFromName(m_lastRightClickedIndex.data().toString());
     bool locked = m_playlistDao.isPlaylistLocked(playlistId);
@@ -354,12 +351,12 @@ void SetlogFeature::clearChildModel()
     m_childModel.removeRows(0,m_playlistTableModel.rowCount());
 }
 
-void SetlogFeature::onLazyChildExpandation(const QModelIndex &index){
+void SetlogFeature::onLazyChildExpandation(const QModelIndex &index) {
 	Q_UNUSED(index);
     //Nothing to do because the childmodel is not of lazy nature.
 }
 
-void SetlogFeature::slotExportPlaylist(){
+void SetlogFeature::slotExportPlaylist() {
     qDebug() << "Export playlist" << m_lastRightClickedIndex.data();
     QString file_location = QFileDialog::getSaveFileName(NULL,
                                         tr("Export Playlist"),
@@ -409,7 +406,8 @@ void SetlogFeature::slotAddToAutoDJ() {
     emit(featureUpdated());
 }
 
-void SetlogFeature::slotPositionChanged(double /*value*/){
+void SetlogFeature::slotPositionChanged(double value) {
+	Q_UNUSED(value);	
 	TrackPointer currendPlayingTrack;
 	int currendPlayingTrackId = 0;
 
@@ -417,18 +415,20 @@ void SetlogFeature::slotPositionChanged(double /*value*/){
     if ( deck && deck <= 2) {
         QString chan = QString("[Channel%1]").arg(deck);
         currendPlayingTrack = PlayerInfo::Instance().getTrackInfo(chan);
-    	if (currendPlayingTrack )
-    	{
+    	if (currendPlayingTrack) {
     		currendPlayingTrackId = currendPlayingTrack->getId();
     	}
-    	if( m_oldTrackIdPlayer[deck-1] != currendPlayingTrackId ){
+    	if (m_oldTrackIdPlayer[deck-1] != currendPlayingTrackId) {
     		// The audience listens to a new track
+
     		qDebug() << "The audience listens to track " << currendPlayingTrackId;
-    		if( m_pPlaylistTableModel->getPlaylistId() == m_playlistId ){
+    		currendPlayingTrack->setPlayed(true); // Here the song is realy played, not only loaded.
+
+    		if (m_pPlaylistTableModel->getPlaylistId() == m_playlistId) {
     			// View needs a refresh
     			m_pPlaylistTableModel->appendTrack(currendPlayingTrackId);
     		}
-    		else{
+    		else {
         		m_playlistDao.appendTrackToPlaylist(currendPlayingTrackId, m_playlistId);
     		}
     		m_oldTrackIdPlayer[deck-1] = currendPlayingTrackId;
