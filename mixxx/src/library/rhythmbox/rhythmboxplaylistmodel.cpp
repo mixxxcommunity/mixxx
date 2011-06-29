@@ -35,7 +35,30 @@ TrackPointer RhythmboxPlaylistModel::getTrack(const QModelIndex& index) const {
 
     QString location = index.sibling(index.row(), fieldIndex("location")).data().toString();
 
-    TrackInfoObject* pTrack = new TrackInfoObject(location);
+    if( location.isEmpty()) {
+    	// Track is lost
+    	return TrackPointer();
+    }
+
+    TrackDAO& track_dao = m_pTrackCollection->getTrackDAO();
+    int track_id = track_dao.getTrackId(location);
+    if (track_id < 0) {
+    	// Add Track to library
+    	track_id = track_dao.addTrack(location);
+    }
+
+    TrackPointer pTrack;
+
+    if (track_id < 0) {
+    	// Add Track to library failed
+    	// Create own TrackInfoObject
+    	pTrack = TrackPointer(new TrackInfoObject(location), &QObject::deleteLater);
+    }
+    else {
+    	pTrack = track_dao.getTrack(track_id);
+    }
+
+    // Overwrite Metadata from Rythmbox library
     pTrack->setArtist(artist);
     pTrack->setTitle(title);
     pTrack->setAlbum(album);
@@ -43,7 +66,7 @@ TrackPointer RhythmboxPlaylistModel::getTrack(const QModelIndex& index) const {
     pTrack->setGenre(genre);
     pTrack->setBpm(bpm);
 
-    return TrackPointer(pTrack, &QObject::deleteLater);
+    return pTrack;
 }
 
 QString RhythmboxPlaylistModel::getTrackLocation(const QModelIndex& index) const {
@@ -128,7 +151,8 @@ QItemDelegate* RhythmboxPlaylistModel::delegateForColumn(const int i) {
 }
 
 TrackModel::CapabilitiesFlags RhythmboxPlaylistModel::getCapabilities() const {
-    return TRACKMODELCAPS_NONE;
+    return TRACKMODELCAPS_NONE |
+      	   TRACKMODELCAPS_ADDTOAUTODJ;
 }
 
 Qt::ItemFlags RhythmboxPlaylistModel::flags(const QModelIndex &index) const {
