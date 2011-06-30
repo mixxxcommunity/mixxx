@@ -246,13 +246,15 @@ void TrackDAO::prepareLibraryInsert(QSqlQuery& query) {
                   "filetype, location, comment, url, duration, rating, key, "
                   "bitrate, samplerate, cuepoint, bpm, replaygain, wavesummaryhex, "
                   "timesplayed, "
-                  "channels, mixxx_deleted, header_parsed, beats_version, beats) "
+                  "channels, mixxx_deleted, header_parsed, beats_version, beats, "
+                  "fadein, fadeout) "
                   "VALUES (:artist, "
                   ":title, :album, :year, :genre, :tracknumber, "
                   ":filetype, :location, :comment, :url, :duration, :rating, :key, "
                   ":bitrate, :samplerate, :cuepoint, :bpm, :replaygain, :wavesummaryhex, "
                   ":timesplayed, "
-                  ":channels, :mixxx_deleted, :header_parsed, :beats_version, :beats)");
+                  ":channels, :mixxx_deleted, :header_parsed, :beats_version, :beats, "
+                  ":fade_in, :fade_out)");
 }
 
 void TrackDAO::bindTrackToLibraryInsert(QSqlQuery& query, TrackInfoObject* pTrack, int trackLocationId) {
@@ -298,6 +300,9 @@ void TrackDAO::bindTrackToLibraryInsert(QSqlQuery& query, TrackInfoObject* pTrac
     query.bindValue(":beats_version", blobVersion);
     query.bindValue(":beats", pBeatsBlob ? *pBeatsBlob : QVariant(QVariant::ByteArray));
     delete pBeatsBlob;
+
+    query.bindValue(":fade_in", pTrack->getFadeIn());
+    query.bindValue(":fade_out", pTrack->getFadeOut());
 }
 
 void TrackDAO::addTracks(QList<TrackInfoObject*> tracksToAdd) {
@@ -598,6 +603,8 @@ TrackPointer TrackDAO::getTrackFromDB(QSqlQuery &query) const
         QString filetype = query.value(query.record().indexOf("filetype")).toString();
         QString location = query.value(query.record().indexOf("location")).toString();
         bool header_parsed = query.value(query.record().indexOf("header_parsed")).toBool();
+        int fadeIn = query.value(query.record().indexOf("fade_in")).toInt();
+        int fadeOut = query.value(query.record().indexOf("fade_out")).toInt();
 
         TrackInfoObject* track = new TrackInfoObject(location, false);
         TrackPointer pTrack = TrackPointer(track, &TrackDAO::deleteTrack);
@@ -643,6 +650,9 @@ TrackPointer TrackDAO::getTrackFromDB(QSqlQuery &query) const
 
         track->setCuePoints(m_cueDao.getCuesForTrack(trackId));
         track->setDirty(false);
+
+        track->setFadeIn(fadeIn);
+        track->setFadeOut(fadeOut);
 
         // Listen to dirty and changed signals
         connect(track, SIGNAL(dirty(TrackInfoObject*)),
@@ -730,7 +740,7 @@ TrackPointer TrackDAO::getTrack(int id, bool cacheOnly) const
         "filetype, rating, key, track_locations.location as location, "
         "track_locations.filesize as filesize, comment, url, duration, bitrate, "
         "samplerate, cuepoint, bpm, replaygain, wavesummaryhex, channels, "
-        "header_parsed, timesplayed, played, beats_version, beats "
+        "header_parsed, timesplayed, played, beats_version, beats, fade_in, fade_out, "
         "FROM Library "
         "INNER JOIN track_locations "
             "ON library.location = track_locations.id "
@@ -775,7 +785,8 @@ void TrackDAO::updateTrack(TrackInfoObject* pTrack)
                   "bpm=:bpm, replaygain=:replaygain, wavesummaryhex=:wavesummaryhex, "
                   "timesplayed=:timesplayed, played=:played, "
                   "channels=:channels, header_parsed=:header_parsed, "
-                  "beats_version=:beats_version, beats=:beats "
+                  "beats_version=:beats_version, beats=:beats, "
+                  "fade_in=:fade_in, fade_out=:fade_out "
                   "WHERE id="+QString("%1").arg(trackId));
     query.bindValue(":artist", pTrack->getArtist());
     query.bindValue(":title", pTrack->getTitle());
@@ -816,6 +827,9 @@ void TrackDAO::updateTrack(TrackInfoObject* pTrack)
     query.bindValue(":beats", pBeatsBlob ? *pBeatsBlob : QVariant(QVariant::ByteArray));
     query.bindValue(":beats_version", beatsVersion);
     query.bindValue(":bpm", dBpm);
+
+    query.bindValue(":fade_in", pTrack->getFadeIn());
+    query.bindValue(":fade_out", pTrack->getFadeOut());
 
     if (!query.exec()) {
         qDebug() << query.lastError();

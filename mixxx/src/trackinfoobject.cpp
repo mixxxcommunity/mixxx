@@ -857,3 +857,30 @@ void TrackInfoObject::setKey(QString key){
         setDirty(true);
 }
 
+int TrackInfoObject::getFadeIn() const {
+    QMutexLocker lock(&m_qMutex);
+    return m_iFadeIn;
+}
+
+void TrackInfoObject::setFadeIn(int fadeIn) {
+    QMutexLocker lock(&m_qMutex);
+    bool dirty = fadeIn != m_iFadeIn;
+    m_iFadeIn = fadeIn;
+    if (dirty)
+        setDirty(true);
+}
+
+int TrackInfoObject::getFadeOut() const {
+    QMutexLocker lock(&m_qMutex);
+    return m_iFadeOut;
+}
+
+void TrackInfoObject::setFadeOut(int fadeOut) {
+    QMutexLocker lock(&m_qMutex);
+    bool dirty = fadeOut != m_iFadeOut;
+    m_iFadeOut = fadeOut;
+    if (dirty)
+        setDirty(true);
+}
+
+

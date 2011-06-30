@@ -275,4 +275,13 @@ METADATA
       ALTER TABLE Library ADD COLUMN beats_version TEXT;
     </sql>
   </revision>
+  <revision version="13" min_compatible="3">
+	<description>
+	 Add fade points for AutoDJ to library table.
+    </description>
+    <sql>
+	  ALTER TABLE Library ADD COLUMN fade_in INTEGER;
+      ALTER TABLE Library ADD COLUMN fade_out INTEGER; 
+	</sql>
+ </revision>
 </schema>

@@ -251,6 +251,16 @@ public:
     const Segmentation<QString>* getChordData();
     void setChordData(Segmentation<QString> cd);
 
+    // Get the track's FadeIn position
+    int getFadeIn() const;
+    // Set the track's FadeIn position
+    void setFadeIn(int);
+
+    // Get the track's FadeOut position
+    int getFadeOut() const;
+    // Set the track's FadeOut position
+    void setFadeOut(int);
+
   public slots:
     void slotCueUpdated();
 
@@ -382,6 +392,10 @@ public:
 
     // Storage for the track's beats
     BeatsPointer m_pBeats;
+
+    // Fade points for AutoDJ
+    int m_iFadeIn;
+    int m_iFadeOut;
 
     friend class TrackDAO;
 };
