@@ -648,11 +648,11 @@ TrackPointer TrackDAO::getTrackFromDB(QSqlQuery &query) const
         track->setLocation(location);
         track->setHeaderParsed(header_parsed);
 
-        track->setCuePoints(m_cueDao.getCuesForTrack(trackId));
-        track->setDirty(false);
-
         track->setFadeIn(fadeIn);
         track->setFadeOut(fadeOut);
+
+        track->setCuePoints(m_cueDao.getCuesForTrack(trackId));
+        track->setDirty(false);
 
         // Listen to dirty and changed signals
         connect(track, SIGNAL(dirty(TrackInfoObject*)),
@@ -740,7 +740,7 @@ TrackPointer TrackDAO::getTrack(int id, bool cacheOnly) const
         "filetype, rating, key, track_locations.location as location, "
         "track_locations.filesize as filesize, comment, url, duration, bitrate, "
         "samplerate, cuepoint, bpm, replaygain, wavesummaryhex, channels, "
-        "header_parsed, timesplayed, played, beats_version, beats, fade_in, fade_out, "
+        "header_parsed, timesplayed, played, beats_version, beats, fade_in, fade_out "
         "FROM Library "
         "INNER JOIN track_locations "
             "ON library.location = track_locations.id "
