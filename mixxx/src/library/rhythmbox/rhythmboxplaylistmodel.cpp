@@ -22,7 +22,9 @@ RhythmboxPlaylistModel::~RhythmboxPlaylistModel() {
 }
 
 bool RhythmboxPlaylistModel::addTrack(const QModelIndex& index, QString location) {
-    return false;
+    Q_UNUSED(index);
+    Q_UNUSED(location);
+	return false;
 }
 
 TrackPointer RhythmboxPlaylistModel::getTrack(const QModelIndex& index) const {
@@ -35,7 +37,7 @@ TrackPointer RhythmboxPlaylistModel::getTrack(const QModelIndex& index) const {
 
     QString location = index.sibling(index.row(), fieldIndex("location")).data().toString();
 
-    if( location.isEmpty()) {
+    if (location.isEmpty()) {
     	// Track is lost
     	return TrackPointer();
     }
@@ -86,15 +88,16 @@ const QLinkedList<int> RhythmboxPlaylistModel::getTrackRows(int trackId) const {
 }
 
 void RhythmboxPlaylistModel::removeTrack(const QModelIndex& index) {
-
+    Q_UNUSED(index);
 }
 
 void RhythmboxPlaylistModel::removeTracks(const QModelIndexList& indices) {
-
+    Q_UNUSED(indices);
 }
 
 void RhythmboxPlaylistModel::moveTrack(const QModelIndex& sourceIndex, const QModelIndex& destIndex) {
-
+    Q_UNUSED(sourceIndex);
+    Q_UNUSED(destIndex);
 }
 
 void RhythmboxPlaylistModel::search(const QString& searchText) {
@@ -147,7 +150,8 @@ QMimeData* RhythmboxPlaylistModel::mimeData(const QModelIndexList &indexes) cons
 }
 
 QItemDelegate* RhythmboxPlaylistModel::delegateForColumn(const int i) {
-    return NULL;
+    Q_UNUSED(i);
+	return NULL;
 }
 
 TrackModel::CapabilitiesFlags RhythmboxPlaylistModel::getCapabilities() const {
@@ -233,5 +237,6 @@ void RhythmboxPlaylistModel::setPlaylist(QString playlist_path) {
 }
 
 bool RhythmboxPlaylistModel::isColumnHiddenByDefault(int column) {
-    return false;
+    Q_UNUSED(column);
+	return false;
 }
