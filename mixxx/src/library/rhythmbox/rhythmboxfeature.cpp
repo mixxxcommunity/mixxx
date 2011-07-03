@@ -325,9 +325,10 @@ void RhythmboxFeature::importTrack(QXmlStreamReader &xml, QSqlQuery &query)
     location = locationUrl.toLocalFile();
 
     if (location.isEmpty()) {
-    	// in case of smb:// location
-    	// locationUrl.isLocalFile()
-    	return;
+		// here in case of smb:// location
+		// TODO(XXX) QUrl does not support SMB:// locations does Mixxx?
+		// use ~/.gvfs location instead 
+		return;
     }
 
     query.bindValue(":artist", artist);

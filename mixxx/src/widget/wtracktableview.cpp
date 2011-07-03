@@ -474,7 +474,10 @@ void WTrackTableView::dragEnterEvent(QDragEnterEvent * event)
  */
 void WTrackTableView::dragMoveEvent(QDragMoveEvent * event)
 {
-    //qDebug() << "dragMoveEvent" << event->mimeData()->formats();
+    // qDebug() << "dragMoveEvent" << event->mimeData()->formats();
+
+    WLibraryTableView::dragMoveEvent(event); // This is needed to enable autoscroll
+
     if (event->mimeData()->hasUrls())
     {
         if (event->source() == this) {
