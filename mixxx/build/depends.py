@@ -383,6 +383,7 @@ class MixxxCore(Feature):
                    "engine/quantizecontrol.cpp",
                    "engine/clockcontrol.cpp",
                    "engine/readaheadmanager.cpp",
+				   "engine/fadecontrol.cpp",
                    "cachingreader.cpp",
 
                    "analyserrg.cpp",

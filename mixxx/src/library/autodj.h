@@ -39,6 +39,8 @@ private:
                                         work. */
     bool m_bPlayer1Primed, m_bPlayer2Primed;
 
+    ControlObject* m_pTrackSamples1;
+
     ControlObjectThreadMain* m_pCOPlayPos1;
     ControlObjectThreadMain* m_pCOPlayPos2;
     ControlObjectThreadMain* m_pCOPlay1;

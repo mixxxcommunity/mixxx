@@ -27,6 +27,7 @@ AutoDJ::AutoDJ(QObject* parent) :
                             ControlObject::getControl(ConfigKey("[Channel2]", "repeat")));
     m_pCOCrossfader = new ControlObjectThreadMain(
                             ControlObject::getControl(ConfigKey("[Master]", "crossfader")));
+    m_pTrackSamples1 = ControlObject::getControl(ConfigKey("[Channel1]", "track_samples"));
 }
 
 
@@ -201,7 +202,6 @@ void AutoDJ::player2PositionChanged(double value) {
 }
 
 void AutoDJ::receiveNextTrack(TrackPointer nextTrack) {
-    qDebug() << "Received track!";
     m_pNextTrack = nextTrack;
 }
 

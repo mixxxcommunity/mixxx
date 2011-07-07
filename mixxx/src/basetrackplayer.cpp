@@ -13,6 +13,7 @@
 #include "soundsourceproxy.h"
 #include "engine/cuecontrol.h"
 #include "engine/clockcontrol.h"
+#include "engine/fadecontrol.h"
 #include "mathstuff.h"
 #include "waveform/waveformrenderer.h"
 
@@ -44,6 +45,13 @@ BaseTrackPlayer::BaseTrackPlayer(QObject* pParent,
     connect(this, SIGNAL(unloadingTrack(TrackPointer)),
             pCueControl, SLOT(unloadTrack(TrackPointer)));
     pEngineBuffer->addControl(pCueControl);
+
+    FadeControl* pFadeControl = new FadeControl(pSafeGroupName, pConfig);
+    connect(this, SIGNAL(newTrackLoaded(TrackPointer)),
+            pFadeControl, SLOT(loadTrack(TrackPointer)));
+    connect(this, SIGNAL(newTrackLoaded(TrackPointer)),
+            pFadeControl, SLOT(trackUnloaded(TrackPointer)));
+    pEngineBuffer->addControl(pFadeControl);
 
     // Connect our signals and slots with the EngineBuffer's signals and
     // slots. This will let us know when the reader is done loading a track, and
