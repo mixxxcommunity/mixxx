@@ -13,10 +13,6 @@ AutoDJ::AutoDJ(QObject* parent) :
     m_bPlayer2Primed = false;
     m_bEndOfPlaylist = false;
 
-    m_pCOPlayPos1 = new ControlObjectThreadMain(
-                            ControlObject::getControl(ConfigKey("[Channel1]", "playposition")));
-    m_pCOPlayPos2 = new ControlObjectThreadMain(
-                            ControlObject::getControl(ConfigKey("[Channel2]", "playposition")));
     m_pCOPlay1 = new ControlObjectThreadMain(
                             ControlObject::getControl(ConfigKey("[Channel1]", "play")));
     m_pCOPlay2 = new ControlObjectThreadMain(
@@ -27,13 +23,16 @@ AutoDJ::AutoDJ(QObject* parent) :
                             ControlObject::getControl(ConfigKey("[Channel2]", "repeat")));
     m_pCOCrossfader = new ControlObjectThreadMain(
                             ControlObject::getControl(ConfigKey("[Master]", "crossfader")));
-    m_pTrackSamples1 = ControlObject::getControl(ConfigKey("[Channel1]", "track_samples"));
+    m_pCOPlayPosSamples1 = new ControlObjectThreadMain(
+                            ControlObject::getControl(ConfigKey("[Channel1]", "playposition_samples")));
+    m_pCOPlayPosSamples2 = new ControlObjectThreadMain(
+                            ControlObject::getControl(ConfigKey("[Channel2]", "playposition_samples")));
 }
 
 
 AutoDJ::~AutoDJ() {
-    delete m_pCOPlayPos1;
-    delete m_pCOPlayPos2;
+    delete m_pCOPlayPosSamples1;
+    delete m_pCOPlayPosSamples2;
     delete m_pCOPlay1;
     delete m_pCOPlay2;
     delete m_pCORepeat2;
@@ -58,9 +57,9 @@ void AutoDJ::setEnabled(bool enable) {
         }
 
         m_bEnabled = enable;
-        connect(m_pCOPlayPos1, SIGNAL(valueChanged(double)),
+        connect(m_pCOPlayPosSamples1, SIGNAL(valueChanged(double)),
         this, SLOT(player1PositionChanged(double)));
-        connect(m_pCOPlayPos2, SIGNAL(valueChanged(double)),
+        connect(m_pCOPlayPosSamples2, SIGNAL(valueChanged(double)),
         this, SLOT(player2PositionChanged(double)));
 
         m_bPlayer1Primed = false;

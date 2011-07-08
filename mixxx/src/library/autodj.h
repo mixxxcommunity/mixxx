@@ -39,16 +39,15 @@ private:
                                         work. */
     bool m_bPlayer1Primed, m_bPlayer2Primed;
 
-    ControlObject* m_pTrackSamples1;
-
-    ControlObjectThreadMain* m_pCOPlayPos1;
-    ControlObjectThreadMain* m_pCOPlayPos2;
+    ControlObjectThreadMain* m_pCOPlayPosSamples1;
+    ControlObjectThreadMain* m_pCOPlayPosSamples2;
     ControlObjectThreadMain* m_pCOPlay1;
     ControlObjectThreadMain* m_pCOPlay2;
     ControlObjectThreadMain* m_pCORepeat1;
     ControlObjectThreadMain* m_pCORepeat2;
     ControlObjectThreadMain* m_pCOCrossfader;
     TrackPointer m_pNextTrack;
+
     void loadNextTrack();
 
 
