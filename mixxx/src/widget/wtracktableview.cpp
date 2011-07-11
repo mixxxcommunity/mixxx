@@ -190,7 +190,13 @@ void WTrackTableView::loadTrackModel(QAbstractItemModel *model) {
 
     // Set up drag and drop behaviour according to whether or not the track
     // model says it supports it.
-
+/*
+    setDragEnabled(false);
+    setDragDropMode(QAbstractItemView::DragDrop);
+    setDropIndicatorShown(true);
+    setAcceptDrops(true);
+    setAutoScroll(true);
+*/
     //Defaults
     setAcceptDrops(true);
     setDragDropMode(QAbstractItemView::DragOnly);

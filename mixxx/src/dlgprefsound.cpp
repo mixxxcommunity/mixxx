@@ -175,7 +175,7 @@ void DlgPrefSound::initializePaths() {
 void DlgPrefSound::addPath(AudioOutput output) {
     DlgPrefSoundItem *toInsert;
     // if we already know about this output, don't make a new entry
-    foreach (QObject *obj, outputScrollAreaContents->children()) {
+    foreach (QObject *obj, outputTab->children()) {
         DlgPrefSoundItem *item = qobject_cast<DlgPrefSoundItem*>(obj);
         if (item) {
             if (item->type() == output.getType()) {
@@ -191,22 +191,22 @@ void DlgPrefSound::addPath(AudioOutput output) {
     }
     AudioPathType type = output.getType();
     if (AudioPath::isIndexed(type)) {
-        toInsert = new DlgPrefSoundItem(outputScrollAreaContents, type,
+        toInsert = new DlgPrefSoundItem(outputTab, type,
             m_outputDevices, false, output.getIndex());
     } else {
-        toInsert = new DlgPrefSoundItem(outputScrollAreaContents, type,
+        toInsert = new DlgPrefSoundItem(outputTab, type,
             m_outputDevices, false);
     }
     connect(this, SIGNAL(refreshOutputDevices(const QList<SoundDevice*>&)),
             toInsert, SLOT(refreshDevices(const QList<SoundDevice*>&)));
-    insertItem(toInsert, outputVLayout);
+    insertItem(toInsert, outputGridLayout);
     connectSoundItem(toInsert);
 }
 
 void DlgPrefSound::addPath(AudioInput input) {
     DlgPrefSoundItem *toInsert;
     // if we already know about this input, don't make a new entry
-    foreach (QObject *obj, inputScrollAreaContents->children()) {
+    foreach (QObject *obj, inputTab->children()) {
         DlgPrefSoundItem *item = qobject_cast<DlgPrefSoundItem*>(obj);
         if (item) {
             if (item->type() == input.getType()) {
@@ -222,15 +222,15 @@ void DlgPrefSound::addPath(AudioInput input) {
     }
     AudioPathType type = input.getType();
     if (AudioPath::isIndexed(type)) {
-        toInsert = new DlgPrefSoundItem(inputScrollAreaContents, type,
+        toInsert = new DlgPrefSoundItem(inputTab, type,
             m_inputDevices, true, input.getIndex());
     } else {
-        toInsert = new DlgPrefSoundItem(inputScrollAreaContents, type,
+        toInsert = new DlgPrefSoundItem(inputTab, type,
             m_inputDevices, true);
     }
     connect(this, SIGNAL(refreshInputDevices(const QList<SoundDevice*>&)),
             toInsert, SLOT(refreshDevices(const QList<SoundDevice*>&)));
-    insertItem(toInsert, inputVLayout);
+    insertItem(toInsert, inputGridLayout);
     connectSoundItem(toInsert);
 }
 
@@ -247,7 +247,7 @@ void DlgPrefSound::connectSoundItem(DlgPrefSoundItem *item) {
             item, SLOT(reload()));
 }
 
-void DlgPrefSound::insertItem(DlgPrefSoundItem *pItem, QBoxLayout *pLayout) {
+void DlgPrefSound::insertItem(DlgPrefSoundItem *pItem, QGridLayout *pLayout) {
     int pos;
     for (pos = 0; pos < pLayout->count() - 1; ++pos) {
         DlgPrefSoundItem *pOther(qobject_cast<DlgPrefSoundItem*>(
@@ -261,7 +261,8 @@ void DlgPrefSound::insertItem(DlgPrefSoundItem *pItem, QBoxLayout *pLayout) {
             break;
         }
     }
-    pLayout->insertWidget(pos, pItem);
+    //pLayout->insertWidget(pos, pItem);
+    pLayout->addWidget(pItem);
 }
 
 /**

@@ -188,9 +188,10 @@ int main(int argc, char * argv[])
 
             QString fileExtensions = SoundSourceProxy::supportedFileExtensionsString();
             QByteArray fileExtensionsBA = QString(fileExtensions).toUtf8();
-            printf(fileExtensionsBA);
-            printf("\n\n");
-            printf("\
+            // printf(fileExtensionsBA); produces a warning
+            puts(fileExtensionsBA);
+            puts("\n\n");
+            puts("\
                             Each file you specify will be loaded into the\n\
                             next virtual deck.\n\
 \n\
@@ -211,7 +212,7 @@ int main(int argc, char * argv[])
 \n\
     -h, --help              Display this help message and exit");
 
-            printf("\n\n(For more information, see http://mixxx.org/wiki/doku.php/command_line_options)\n");
+            puts("\n\n(For more information, see http://mixxx.org/wiki/doku.php/command_line_options)\n");
             return(0);
         }
 
