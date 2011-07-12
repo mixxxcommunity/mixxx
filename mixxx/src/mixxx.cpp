@@ -412,6 +412,8 @@ MixxxApp::MixxxApp(QApplication *a, struct CmdlineArgs args)
     // Initialize preference dialog
     m_pPrefDlg = new DlgPreferences(this, m_pSkinLoader, m_pSoundManager, m_pPlayerManager,
                                  m_pMidiDeviceManager, m_pVCManager, m_pConfig);
+    m_pPrefDlg->setWindowIcon(QIcon(":/images/ic_mixxx_window.png"));
+    //m_pPrefDlg->set
     m_pPrefDlg->setHidden(true);
 
     // Try open player device If that fails, the preference panel is opened.
@@ -1156,6 +1158,7 @@ void MixxxApp::slotOptionsFullScreen(bool toggle)
 void MixxxApp::slotOptionsPreferences()
 {
     m_pPrefDlg->setHidden(false);
+    m_pPrefDlg->activateWindow();
 }
 
 void MixxxApp::slotControlVinylControl(double toggle)

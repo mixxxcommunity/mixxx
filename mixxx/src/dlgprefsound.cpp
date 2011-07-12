@@ -199,7 +199,7 @@ void DlgPrefSound::addPath(AudioOutput output) {
     }
     connect(this, SIGNAL(refreshOutputDevices(const QList<SoundDevice*>&)),
             toInsert, SLOT(refreshDevices(const QList<SoundDevice*>&)));
-    insertItem(toInsert, outputGridLayout);
+    insertItem(toInsert, outputVLayout);
     connectSoundItem(toInsert);
 }
 
@@ -230,7 +230,7 @@ void DlgPrefSound::addPath(AudioInput input) {
     }
     connect(this, SIGNAL(refreshInputDevices(const QList<SoundDevice*>&)),
             toInsert, SLOT(refreshDevices(const QList<SoundDevice*>&)));
-    insertItem(toInsert, inputGridLayout);
+    insertItem(toInsert, inputVLayout);
     connectSoundItem(toInsert);
 }
 
@@ -247,7 +247,7 @@ void DlgPrefSound::connectSoundItem(DlgPrefSoundItem *item) {
             item, SLOT(reload()));
 }
 
-void DlgPrefSound::insertItem(DlgPrefSoundItem *pItem, QGridLayout *pLayout) {
+void DlgPrefSound::insertItem(DlgPrefSoundItem *pItem, QVBoxLayout *pLayout) {
     int pos;
     for (pos = 0; pos < pLayout->count() - 1; ++pos) {
         DlgPrefSoundItem *pOther(qobject_cast<DlgPrefSoundItem*>(
@@ -261,8 +261,7 @@ void DlgPrefSound::insertItem(DlgPrefSoundItem *pItem, QGridLayout *pLayout) {
             break;
         }
     }
-    //pLayout->insertWidget(pos, pItem);
-    pLayout->addWidget(pItem);
+    pLayout->insertWidget(pos, pItem);
 }
 
 /**

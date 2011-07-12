@@ -157,20 +157,6 @@ DlgPreferences::DlgPreferences(MixxxApp * mixxx, SkinLoader* pSkinLoader,
         connect(wplaylist, SIGNAL(apply()), m_pTrack, SLOT(slotScanLibrary()));
     }*/
     //FIXME: Disabled due to library reworking
-
-    qDebug() << qApp->desktop()->availableGeometry(this); //QRect(0,24 1024x576)
-    qDebug() << sizeHint(); //QSize(932, 620)
-    qDebug() << minimumSize(); //QSize(0, 0)
-    qDebug() << minimumSizeHint(); //QSize(908, 620)
-    qDebug() << maximumSize(); //QSize(16777215, 16777215)
-    qDebug() << size(); //QSize(681, 445)
-//    qDebug() << nonScrollingPageSize;// QSize(0, 0)
-
-    qDebug() << m_wcontrols->sizeHint(); //QSize(499, 565)
-    qDebug() << m_wcontrols->minimumSize(); //QSize(0, 0)
-    qDebug() << m_wcontrols->minimumSizeHint(); //QSize(499, 565)
-    qDebug() << m_wcontrols->maximumSize(); //QSize(16777215, 16777215)
-    //qDebug() << nonScrollingPageSize;// QSize(0, 0)
 }
 
 DlgPreferences::~DlgPreferences()
@@ -284,10 +270,6 @@ void DlgPreferences::changePage(QTreeWidgetItem * current, QTreeWidgetItem * pre
     if (!current)
         current = previous;
 
-    qDebug() << m_wsound->parentWidget();
-    qDebug() << m_wsound->parentWidget()->sizeHint();
-    qDebug() << m_wplaylist->parentWidget();
-
     if (current == m_pSoundButton) {
     	m_wsound->slotUpdate();
     	pagesWidget->setCurrentWidget(m_wsound->parentWidget()->parentWidget());
@@ -321,7 +303,7 @@ void DlgPreferences::changePage(QTreeWidgetItem * current, QTreeWidgetItem * pre
        //Handle selection of midi device items
     } else if (m_midiBindingsButtons.indexOf(current) >= 0) {
     	int index = m_midiBindingsButtons.indexOf(current);
-    	pagesWidget->setCurrentWidget(m_wmidiBindingsForDevice.value(index));
+    	pagesWidget->setCurrentWidget(m_wmidiBindingsForDevice.value(index)->parentWidget()->parentWidget());
     	//Manually fire this slot since it doesn't work right...
     	m_wmidiBindingsForDevice.value(index)->slotUpdate();
     } else if (current == m_pMIDITreeItem) {
@@ -373,7 +355,7 @@ void DlgPreferences::slotHide()
 
 void DlgPreferences::slotShow()
 {
-  //m_pMixxx->releaseKeyboard();
+	//m_pMixxx->releaseKeyboard();
 
 	QSize optimumSize;
 	QSize deltaSize;
@@ -385,11 +367,11 @@ void DlgPreferences::slotShow()
     optimumSize = qApp->desktop()->availableGeometry(this).size();
 
     if (frameSize() == size()) {
-    	// This code is reached in Gnome 2
+    	// This code is reached in Gnome 2.3
     	qDebug() << "guess the size of the window decoration";
     	optimumSize -= QSize(2,30);
     } else {
-    	// Todo Calculate the frame
+    	optimumSize -= (frameSize() - size());
     }
 
     QSize staticSize = size() - pagesWidget->size();
@@ -484,11 +466,12 @@ int DlgPreferences::addPageWidget(QWidget* w)
 
 	QScrollArea* sa = new QScrollArea(pagesWidget);
 	sa->setWidgetResizable(true);
-	sa->setFrameStyle(QFrame::NoFrame);
+
 	sa->setWidget(w);
 	iret = pagesWidget->addWidget(sa);
 
-	m_pageSizeHint = m_pageSizeHint.expandedTo(w->sizeHint());
+	int iframe = 2 * sa->frameWidth();
+	m_pageSizeHint = m_pageSizeHint.expandedTo(w->sizeHint()+QSize(iframe, iframe));
 
     return iret;
 }
