@@ -6,9 +6,9 @@
 #define CONFIG_KEY "[Auto DJ]"
 
 DlgPrefAutoDJ::DlgPrefAutoDJ(QWidget *parent, ConfigObject<ConfigValue> *config) :
-    QWidget(parent), Ui::DlgPrefAutoDJDlg() {
-
-    m_pConfig = config;
+    QWidget(parent),
+    m_pConfig(config),
+    Ui::DlgPrefAutoDJDlg() {
 
     setupUi(this);
 

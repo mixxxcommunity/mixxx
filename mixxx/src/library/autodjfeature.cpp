@@ -22,8 +22,6 @@ AutoDJFeature::AutoDJFeature(QObject* parent,
           m_pConfig(pConfig),
           m_pTrackCollection(pTrackCollection),
           m_playlistDao(pTrackCollection->getPlaylistDAO()) {
-
-
 }
 
 AutoDJFeature::~AutoDJFeature() {
@@ -45,7 +43,10 @@ void AutoDJFeature::bindWidget(WLibrarySidebar* sidebarWidget,
                                            m_pConfig,
                                            m_pTrackCollection,
                                            keyboard);
-    m_pAutoDJ = new AutoDJ(this);
+
+    // TODO(tom__m) This is wrong to create this here, fix the COs returning NULL when creating in constructor
+    m_pAutoDJ = new AutoDJ(this, m_pConfig);
+
     connect(m_pAutoDJ, SIGNAL(loadTrack(TrackPointer)),
             this, SIGNAL(loadTrack(TrackPointer)));
     connect(m_pAutoDJ, SIGNAL(loadTrackToPlayer(TrackPointer,QString)),

@@ -150,14 +150,14 @@ void DlgAutoDJ::toggleAutoDJ(bool toggle) {
 
 bool DlgAutoDJ::loadNextTrackFromQueue(bool removeTopMostBeforeLoading) {
     if (removeTopMostBeforeLoading) {
-        //Only remove the top track if this isn't the start of Auto DJ mode.
+        // Only remove the top track if this isn't the start of Auto DJ mode.
         m_pAutoDJTableModel->removeTrack(m_pAutoDJTableModel->index(0, 0));
     }
-    //Get the track at the top of the playlist...
+    // Get the track at the top of the playlist
     TrackPointer nextTrack = m_pAutoDJTableModel->getTrack(m_pAutoDJTableModel->index(0, 0));
 
-    if (!nextTrack) { // We ran out of tracks in the queue...
-        //Disable auto DJ and return...
+    if (!nextTrack) { // We ran out of tracks in the queue
+        // Disable auto DJ and return...
         pushButtonAutoDJ->setChecked(false);
         emit endOfPlaylist(true);
         return false;

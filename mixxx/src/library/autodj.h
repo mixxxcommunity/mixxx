@@ -4,7 +4,7 @@
 #include <QObject>
 
 #include "dlgautodj.h"
-#include "configobject.h"
+#include "library/tracktransition.h"
 
 class ControlObjectThreadMain;
 
@@ -12,7 +12,7 @@ class AutoDJ : public QObject {
     Q_OBJECT
 
 public:
-    AutoDJ(QObject* parent);
+    AutoDJ(QObject* parent, ConfigObject<ConfigValue>* pConfig);
     ~AutoDJ();
 
 public slots:
@@ -39,6 +39,9 @@ private:
                                         work. */
     bool m_bPlayer1Primed, m_bPlayer2Primed;
 
+    ConfigObject<ConfigValue>* m_pConfig;
+    ControlObjectThreadMain* m_pCOPlayPos1;
+    ControlObjectThreadMain* m_pCOPlayPos2;
     ControlObjectThreadMain* m_pCOPlayPosSamples1;
     ControlObjectThreadMain* m_pCOPlayPosSamples2;
     ControlObjectThreadMain* m_pCOPlay1;
@@ -47,6 +50,7 @@ private:
     ControlObjectThreadMain* m_pCORepeat2;
     ControlObjectThreadMain* m_pCOCrossfader;
     TrackPointer m_pNextTrack;
+    TrackTransition* m_pTrackTransition;
 
     void loadNextTrack();
 

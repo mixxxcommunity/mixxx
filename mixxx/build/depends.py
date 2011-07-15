@@ -513,7 +513,8 @@ class MixxxCore(Feature):
                    "library/stardelegate.cpp",
                    "library/stareditor.cpp",
          		   "library/autodj.cpp",
-                   "audiotagger.cpp",
+                   "library/tracktransition.cpp",
+					"audiotagger.cpp",
 
                    "library/treeitemmodel.cpp",
                    "library/treeitem.cpp",
