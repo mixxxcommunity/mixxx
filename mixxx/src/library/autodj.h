@@ -38,12 +38,16 @@ private:
                                         not-removed-from-the-queue behaviour
                                         work. */
     bool m_bPlayer1Primed, m_bPlayer2Primed;
+    // TODO(tom__m) This is hacky
+    bool m_bPlayer1Cued, m_bPlayer2Cued;
 
     ConfigObject<ConfigValue>* m_pConfig;
     ControlObjectThreadMain* m_pCOPlayPos1;
     ControlObjectThreadMain* m_pCOPlayPos2;
     ControlObjectThreadMain* m_pCOPlayPosSamples1;
     ControlObjectThreadMain* m_pCOPlayPosSamples2;
+    ControlObjectThreadMain* m_pCOSampleRate1;
+    ControlObjectThreadMain* m_pCOSampleRate2;
     ControlObjectThreadMain* m_pCOPlay1;
     ControlObjectThreadMain* m_pCOPlay2;
     ControlObjectThreadMain* m_pCORepeat1;
@@ -52,8 +56,13 @@ private:
     TrackPointer m_pNextTrack;
     TrackTransition* m_pTrackTransition;
 
+    // Handles the emission of signals needed to load the next track as well as
+    // signal that AutoDJ need a new track
     void loadNextTrack();
 
+    // Cues the track in the specified player to the X seconds before the FadeIn point
+    // where X is the user defined crossfade length
+    void cueTrackToFadeIn(QString group);
 
 };
 

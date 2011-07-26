@@ -13,7 +13,10 @@ AutoDJ::AutoDJ(QObject* parent, ConfigObject<ConfigValue>* pConfig) :
 
     m_bPlayer1Primed = false;
     m_bPlayer2Primed = false;
+    m_bPlayer1Cued = false;
+    m_bPlayer2Cued = false;
     m_bEndOfPlaylist = false;
+
 
     m_pTrackTransition = new TrackTransition(this, m_pConfig);
 
@@ -33,9 +36,13 @@ AutoDJ::AutoDJ(QObject* parent, ConfigObject<ConfigValue>* pConfig) :
                             ControlObject::getControl(ConfigKey("[Master]", "crossfader")));
     // TODO(tom__m) These two COs are only used to check if at the end of the track... find a better way to do this
     m_pCOPlayPos1 = new ControlObjectThreadMain(
-                            ControlObject::getControl(ConfigKey("[Channel1]", "play_position")));
+                            ControlObject::getControl(ConfigKey("[Channel1]", "playposition")));
     m_pCOPlayPos2 = new ControlObjectThreadMain(
-                            ControlObject::getControl(ConfigKey("[Channel2]", "play_position")));
+                            ControlObject::getControl(ConfigKey("[Channel2]", "playposition")));
+    m_pCOSampleRate1 = new ControlObjectThreadMain(
+                            ControlObject::getControl(ConfigKey("[Channel1]", "track_samplerate")));
+    m_pCOSampleRate2 = new ControlObjectThreadMain(
+                            ControlObject::getControl(ConfigKey("[Channel2]", "track_samplerate")));
 }
 
 
@@ -77,6 +84,8 @@ void AutoDJ::setEnabled(bool enable) {
 
         m_bPlayer1Primed = false;
         m_bPlayer2Primed = false;
+        m_bPlayer1Cued = false;
+        m_bPlayer2Cued = false;
 
         // If only one of the players is playing...
         if ((m_pCOPlay1->get() == 1.0f && m_pCOPlay2->get() == 0.0f) ||
@@ -133,18 +142,24 @@ void AutoDJ::player1PositionChanged(double value) {
 
     TrackPointer pTrack = PlayerInfo::Instance().getTrackInfo("[Channel1]");
 
+    // Check if the other player already has a track loaded
+    if(!m_bPlayer2Primed) {
+        // Load the next track into the other player
+        if (!m_bEndOfPlaylist) {
+            loadNextTrack();
+            m_bPlayer2Primed = true;
+        }
+    }
+
     // Check if Player 1 position is past the Fade Out point
     if (m_pCOPlayPosSamples1->get() > pTrack->getFadeOut()) {
 
         m_pTrackTransition->transition("[Channel1]", "[Channel2]");
 
-        // Check if the other player already has a track loaded
-        if(!m_bPlayer2Primed) {
-            // Load the next track into the other player
-            if (!m_bEndOfPlaylist) {
-                loadNextTrack();
-                m_bPlayer2Primed = true;
-            }
+        // Cue the track in Player 2 to the Fade In point
+        if (m_bPlayer2Cued == false) {
+            cueTrackToFadeIn("[Channel2]");
+            m_bPlayer2Cued = true;
         }
 
         // Check if other player is stopped
@@ -165,42 +180,6 @@ void AutoDJ::player1PositionChanged(double value) {
             m_bPlayer1Primed = false;
         }
     }
-//    if (value > posThreshold) {
-//        //Crossfade!
-//        float crossfadeValue = -1.0f + 2*(value-posThreshold)/(1.0f-posThreshold);
-//        m_pCOCrossfader->slotSet(crossfadeValue); //Move crossfader to the right!
-//        //If the second player doesn't have a new track loaded in it...
-//        if (!m_bPlayer2Primed) {
-//            qDebug() << "pp1c loading";
-
-//            //Load the next track into Player 2
-//            //if (!m_bNextTrackAlreadyLoaded) //Fudge to make us not skip the first track
-//            {
-//                if (m_bEndOfPlaylist)
-//                //if (!loadNextTrackFromQueue(true))
-//                    return;
-//            }
-//            //m_bNextTrackAlreadyLoaded = false; //Reset fudge
-//            m_bPlayer2Primed = true;
-//        }
-//        //If the second player is stopped...
-//        if (m_pCOPlay2->get() == 0.0f) {
-//            //Turn off repeat mode to tell Player 1 to stop at the end
-//            m_pCORepeat1->slotSet(0.0f);
-
-//            //Turn on repeat mode to tell Player 2 to start playing when the new track is loaded.
-//            //This helps us get around the fact that it takes time for the track to be loaded
-//            //and that is executed asynchronously (so we get around the race condition).
-//            m_pCORepeat2->slotSet(1.0f);
-//            //Play!
-//            m_pCOPlay2->slotSet(1.0f);
-//        }
-
-//        if (value == 1.0f) {
-//            m_pCOPlay1->slotSet(0.0f); //Stop the player
-//            m_bPlayer1Primed = false;
-//        }
-//    }
 }
 
 void AutoDJ::player2PositionChanged(double value) {
@@ -211,6 +190,12 @@ void AutoDJ::player2PositionChanged(double value) {
     if (m_pCOPlayPosSamples2->get() > pTrack->getFadeOut()) {
 
         m_pTrackTransition->transition("[Channel2]", "[Channel1]");
+
+        // Cue the track in Player 1 to the Fade In point
+        if (m_bPlayer1Cued == false) {
+            cueTrackToFadeIn("[Channel1]");
+            m_bPlayer1Cued = true;
+        }
 
         // Check if the other player already has a track loaded
         if (!m_bPlayer1Primed) {
@@ -239,43 +224,6 @@ void AutoDJ::player2PositionChanged(double value) {
             m_bPlayer2Primed = false;
         }
     }
-
-//    if (value > posThreshold) {
-//        //Crossfade!
-//        float crossfadeValue = 1.0f - 2*(value-posThreshold)/(1.0f-posThreshold);
-//        m_pCOCrossfader->slotSet(crossfadeValue); //Move crossfader to the right!
-
-//        //If the first player doesn't have the next track loaded, load a track into
-//        //it and start playing it!
-//        if (!m_bPlayer1Primed) {
-//            //Load the next track into player 1
-//            //if (!m_bNextTrackAlreadyLoaded) //Fudge to make us not skip the first track
-//            {
-//                //if (!loadNextTrackFromQueue(true))
-//                if (m_bEndOfPlaylist)
-//                    return;
-//            }
-//            //m_bNextTrackAlreadyLoaded = false; //Reset fudge
-//            m_bPlayer1Primed = true;
-//        }
-//        if (m_pCOPlay1->get() == 0.0f)
-//        {
-//            //Turn off repeat mode to tell Player 2 to stop at the end
-//            m_pCORepeat2->slotSet(0.0f);
-
-//            //Turn on repeat mode to tell Player 1 to start playing when the new track is loaded.
-//            //This helps us get around the fact that it takes time for the track to be loaded
-//            //and that is executed asynchronously (so we get around the race condition).
-//            m_pCORepeat1->slotSet(1.0f);
-//            m_pCOPlay1->slotSet(1.0f);
-//        }
-
-//        if (value == 1.0f)
-//        {
-//            m_pCOPlay2->slotSet(0.0f); //Stop the player
-//            m_bPlayer2Primed = false;
-//        }
-//    }
 }
 
 void AutoDJ::receiveNextTrack(TrackPointer nextTrack) {
@@ -289,6 +237,39 @@ void AutoDJ::setEndOfPlaylist(bool endOfPlaylist) {
 void AutoDJ::loadNextTrack() {
     emit loadTrack(m_pNextTrack);
     emit needNextTrack();
+}
+
+void AutoDJ::cueTrackToFadeIn(QString group) {
+
+    TrackPointer pTrack = PlayerInfo::Instance().getTrackInfo(group);
+
+    if (group == "[Channel1]") {
+    }
+
+    if (group == "[Channel2]") {
+        // Get the FadeIn point of the track (in samples)
+        double fadeIn = pTrack->getFadeIn();
+        qDebug() << fadeIn;
+
+        // Divide this by 2 and then by the sample rate to convert it to seconds
+        fadeIn = (fadeIn/2)/(m_pCOSampleRate2->get());
+        qDebug() << fadeIn;
+
+        // Subtract the crossfade length
+        fadeIn = fadeIn - (m_pTrackTransition->m_iFadeLength);
+        qDebug() << fadeIn;
+
+        // Check if the crossfade length set our cue to negative
+        if (fadeIn < 0) {
+            fadeIn = 0;
+        }
+        // Convert fadeIn to a ratio of the whole track
+        fadeIn = fadeIn/(pTrack->getDuration());
+        qDebug() << pTrack->getDuration();
+        // Cue up the fadeIn point
+        qDebug() << fadeIn;
+        m_pCOPlayPos2->slotSet(fadeIn);
+    }
 }
 
 
