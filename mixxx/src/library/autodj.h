@@ -19,8 +19,8 @@ public slots:
     void setEnabled(bool);
     void setEndOfPlaylist(bool);
     void receiveNextTrack(TrackPointer nextTrack);
-    void player1PositionChanged(double value);
-    void player2PositionChanged(double value);
+    void player1PositionChanged(double samplePos1);
+    void player2PositionChanged(double samplePos2);
 
 signals:
     void needNextTrack();
@@ -42,8 +42,6 @@ private:
     bool m_bPlayer1Cued, m_bPlayer2Cued;
 
     ConfigObject<ConfigValue>* m_pConfig;
-    ControlObjectThreadMain* m_pCOPlayPos1;
-    ControlObjectThreadMain* m_pCOPlayPos2;
     ControlObjectThreadMain* m_pCOPlayPosSamples1;
     ControlObjectThreadMain* m_pCOPlayPosSamples2;
     ControlObjectThreadMain* m_pCOSampleRate1;

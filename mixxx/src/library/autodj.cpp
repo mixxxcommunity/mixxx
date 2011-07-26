@@ -17,7 +17,6 @@ AutoDJ::AutoDJ(QObject* parent, ConfigObject<ConfigValue>* pConfig) :
     m_bPlayer2Cued = false;
     m_bEndOfPlaylist = false;
 
-
     m_pTrackTransition = new TrackTransition(this, m_pConfig);
 
     m_pCOPlay1 = new ControlObjectThreadMain(
@@ -34,11 +33,6 @@ AutoDJ::AutoDJ(QObject* parent, ConfigObject<ConfigValue>* pConfig) :
                             ControlObject::getControl(ConfigKey("[Channel2]", "playposition_samples")));
     m_pCOCrossfader = new ControlObjectThreadMain(
                             ControlObject::getControl(ConfigKey("[Master]", "crossfader")));
-    // TODO(tom__m) These two COs are only used to check if at the end of the track... find a better way to do this
-    m_pCOPlayPos1 = new ControlObjectThreadMain(
-                            ControlObject::getControl(ConfigKey("[Channel1]", "playposition")));
-    m_pCOPlayPos2 = new ControlObjectThreadMain(
-                            ControlObject::getControl(ConfigKey("[Channel2]", "playposition")));
     m_pCOSampleRate1 = new ControlObjectThreadMain(
                             ControlObject::getControl(ConfigKey("[Channel1]", "track_samplerate")));
     m_pCOSampleRate2 = new ControlObjectThreadMain(
@@ -54,6 +48,8 @@ AutoDJ::~AutoDJ() {
     delete m_pCORepeat1;
     delete m_pCORepeat2;
     delete m_pCOCrossfader;
+    delete m_pCOSampleRate1;
+    delete m_pCOSampleRate2;
 }
 
 
@@ -138,7 +134,7 @@ void AutoDJ::setEnabled(bool enable) {
     }
 }
 
-void AutoDJ::player1PositionChanged(double value) {
+void AutoDJ::player1PositionChanged(double samplePos1) {
 
     TrackPointer pTrack = PlayerInfo::Instance().getTrackInfo("[Channel1]");
 
@@ -152,9 +148,9 @@ void AutoDJ::player1PositionChanged(double value) {
     }
 
     // Check if Player 1 position is past the Fade Out point
-    if (m_pCOPlayPosSamples1->get() > pTrack->getFadeOut()) {
+    if (samplePos1 > pTrack->getFadeOut()) {
 
-        m_pTrackTransition->transition("[Channel1]", "[Channel2]");
+        m_pTrackTransition->transition("[Channel1]", "[Channel2]", pTrack);
 
         // Cue the track in Player 2 to the Fade In point
         if (m_bPlayer2Cued == false) {
@@ -175,35 +171,35 @@ void AutoDJ::player1PositionChanged(double value) {
             m_pCOPlay2->slotSet(1.0f);
         }
 
-        if (m_pCOPlayPos1->get() == 1.0f) {
+        if (m_pTrackTransition->m_pCOPlayPos1->get() == 1.0f) {
             m_pCOPlay1->slotSet(0.0f);
             m_bPlayer1Primed = false;
         }
     }
 }
 
-void AutoDJ::player2PositionChanged(double value) {
+void AutoDJ::player2PositionChanged(double samplePos2) {
 
     TrackPointer pTrack = PlayerInfo::Instance().getTrackInfo("[Channel2]");
 
-    // Check if Player 2 position is past the Fade Out point
-    if (m_pCOPlayPosSamples2->get() > pTrack->getFadeOut()) {
+    // Check if the other player already has a track loaded
+    if (!m_bPlayer1Primed) {
+        // Load the next track into the other player
+        if (!m_bEndOfPlaylist) {
+            loadNextTrack();
+            m_bPlayer1Primed = true;
+        }
+    }
 
-        m_pTrackTransition->transition("[Channel2]", "[Channel1]");
+    // Check if Player 2 position is past the Fade Out point
+    if (samplePos2 > pTrack->getFadeOut()) {
+
+        m_pTrackTransition->transition("[Channel2]", "[Channel1]", pTrack);
 
         // Cue the track in Player 1 to the Fade In point
         if (m_bPlayer1Cued == false) {
             cueTrackToFadeIn("[Channel1]");
             m_bPlayer1Cued = true;
-        }
-
-        // Check if the other player already has a track loaded
-        if (!m_bPlayer1Primed) {
-            // Load the next track into the other player
-            if (!m_bEndOfPlaylist) {
-                loadNextTrack();
-                m_bPlayer1Primed = true;
-            }
         }
 
         // Check if other player is stopped
@@ -219,7 +215,7 @@ void AutoDJ::player2PositionChanged(double value) {
             m_pCOPlay1->slotSet(1.0f);
         }
 
-        if (m_pCOPlayPos2->get() == 1.0f) {
+        if (m_pTrackTransition->m_pCOPlayPos2->get() == 1.0f) {
             m_pCOPlay2->slotSet(0.0f);
             m_bPlayer2Primed = false;
         }
@@ -244,20 +240,14 @@ void AutoDJ::cueTrackToFadeIn(QString group) {
     TrackPointer pTrack = PlayerInfo::Instance().getTrackInfo(group);
 
     if (group == "[Channel1]") {
-    }
-
-    if (group == "[Channel2]") {
         // Get the FadeIn point of the track (in samples)
         double fadeIn = pTrack->getFadeIn();
-        qDebug() << fadeIn;
 
         // Divide this by 2 and then by the sample rate to convert it to seconds
-        fadeIn = (fadeIn/2)/(m_pCOSampleRate2->get());
-        qDebug() << fadeIn;
+        fadeIn = (fadeIn/2)/(m_pCOSampleRate1->get());
 
         // Subtract the crossfade length
         fadeIn = fadeIn - (m_pTrackTransition->m_iFadeLength);
-        qDebug() << fadeIn;
 
         // Check if the crossfade length set our cue to negative
         if (fadeIn < 0) {
@@ -265,10 +255,30 @@ void AutoDJ::cueTrackToFadeIn(QString group) {
         }
         // Convert fadeIn to a ratio of the whole track
         fadeIn = fadeIn/(pTrack->getDuration());
-        qDebug() << pTrack->getDuration();
+
         // Cue up the fadeIn point
-        qDebug() << fadeIn;
-        m_pCOPlayPos2->slotSet(fadeIn);
+        m_pTrackTransition->m_pCOPlayPos1->slotSet(fadeIn);
+    }
+
+    if (group == "[Channel2]") {
+        // Get the FadeIn point of the track (in samples)
+        double fadeIn = pTrack->getFadeIn();
+
+        // Divide this by 2 and then by the sample rate to convert it to seconds
+        fadeIn = (fadeIn/2)/(m_pCOSampleRate2->get());
+
+        // Subtract the crossfade length
+        fadeIn = fadeIn - (m_pTrackTransition->m_iFadeLength);
+
+        // Check if the crossfade length set our cue to negative
+        if (fadeIn < 0) {
+            fadeIn = 0;
+        }
+        // Convert fadeIn to a ratio of the whole track
+        fadeIn = fadeIn/(pTrack->getDuration());
+
+        // Cue up the fadeIn point
+        m_pTrackTransition->m_pCOPlayPos2->slotSet(fadeIn);
     }
 }
 
