@@ -91,6 +91,9 @@ WTrackTableView::~WTrackTableView()
     //delete m_pRenamePlaylistAct;
 
     delete m_pTrackInfo;
+
+	delete m_pNumSamplers;
+	delete m_pNumDecks;
 }
 
 void WTrackTableView::loadTrackModel(QAbstractItemModel *model) {

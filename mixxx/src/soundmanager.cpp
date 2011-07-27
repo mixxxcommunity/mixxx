@@ -34,8 +34,8 @@ SoundManager::SoundManager(ConfigObject<ConfigValue> * pConfig, EngineMaster * _
     : QObject()
     , m_pErrorDevice(NULL)
 #ifdef __PORTAUDIO__
-    , m_paInitialized(false)
-    , m_jackSampleRate(-1)
+   , m_paInitialized(false)
+   , m_jackSampleRate(-1)
 #endif
 {
     //qDebug() << "SoundManager::SoundManager()";
@@ -46,12 +46,14 @@ SoundManager::SoundManager(ConfigObject<ConfigValue> * pConfig, EngineMaster * _
 
     //These are ControlObjectThreadMains because all the code that
     //uses them is called from the GUI thread (stuff like opening soundcards).
-    ControlObjectThreadMain* pControlObjectLatency = new ControlObjectThreadMain(ControlObject::getControl(ConfigKey("[Master]", "latency")));
-    ControlObjectThreadMain* pControlObjectSampleRate = new ControlObjectThreadMain(ControlObject::getControl(ConfigKey("[Master]", "samplerate")));
-    ControlObjectThreadMain* pControlObjectVinylControlMode = new ControlObjectThreadMain(new ControlObject(ConfigKey("[VinylControl]", "mode")));
-    ControlObjectThreadMain* pControlObjectVinylControlMode1 = new ControlObjectThreadMain(ControlObject::getControl(ConfigKey("[Channel1]", "vinylcontrol_mode")));
-    ControlObjectThreadMain* pControlObjectVinylControlMode2 = new ControlObjectThreadMain(ControlObject::getControl(ConfigKey("[Channel2]", "vinylcontrol_mode")));
-    ControlObjectThreadMain* pControlObjectVinylControlGain = new ControlObjectThreadMain(new ControlObject(ConfigKey("[VinylControl]", "gain")));
+    // TODO(xxx) some of these ControlObject are not needed by soundmanager, or are unused here.
+    // It is possible to take them out?    
+    ControlObjectThreadMain* m_pControlObjectLatency = new ControlObjectThreadMain(ControlObject::getControl(ConfigKey("[Master]", "latency")));
+    ControlObjectThreadMain* m_pControlObjectSampleRate = new ControlObjectThreadMain(ControlObject::getControl(ConfigKey("[Master]", "samplerate")));
+    ControlObjectThreadMain* m_pControlObjectVinylControlMode = new ControlObjectThreadMain(new ControlObject(ConfigKey("[VinylControl]", "mode")));
+    ControlObjectThreadMain* m_pControlObjectVinylControlMode1 = new ControlObjectThreadMain(ControlObject::getControl(ConfigKey("[Channel1]", "vinylcontrol_mode")));
+    ControlObjectThreadMain* m_pControlObjectVinylControlMode2 = new ControlObjectThreadMain(ControlObject::getControl(ConfigKey("[Channel2]", "vinylcontrol_mode")));
+    ControlObjectThreadMain* m_pControlObjectVinylControlGain = new ControlObjectThreadMain(new ControlObject(ConfigKey("[VinylControl]", "gain")));
 
     //Hack because PortAudio samplerate enumeration is slow as hell on Linux (ALSA dmix sucks, so we can't blame PortAudio)
     m_samplerates.push_back(44100);
@@ -69,8 +71,9 @@ SoundManager::SoundManager(ConfigObject<ConfigValue> * pConfig, EngineMaster * _
 
     // TODO(bkgood) do these really need to be here? they're set in
     // SoundDevicePortAudio::open
-    pControlObjectLatency->slotSet(m_config.getFramesPerBuffer() / m_config.getSampleRate() * 1000);
-    pControlObjectSampleRate->slotSet(m_config.getSampleRate());
+    m_pControlObjectLatency->slotSet(
+        m_config.getFramesPerBuffer() / m_config.getSampleRate() * 1000);
+    m_pControlObjectSampleRate->slotSet(m_config.getSampleRate());
 }
 
 /** Destructor for the SoundManager class. Closes all the devices, cleans up their pointers
@@ -80,12 +83,21 @@ SoundManager::~SoundManager()
     //Clean up devices.
     clearDeviceList();
 
+#ifdef __PORTAUDIO__
     if (m_paInitialized) {
         Pa_Terminate();
         m_paInitialized = false;
     }
+#endif
     // vinyl control proxies and input buffers are freed in closeDevices, called
     // by clearDeviceList -- bkgood
+
+    delete m_pControlObjectLatency;
+    delete m_pControlObjectSampleRate;
+    delete m_pControlObjectVinylControlMode;
+    delete m_pControlObjectVinylControlMode1;
+    delete m_pControlObjectVinylControlMode2;
+    delete m_pControlObjectVinylControlGain;
 }
 
 /**

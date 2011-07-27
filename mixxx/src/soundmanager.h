@@ -22,6 +22,7 @@
 #include "controlobject.h"
 #include "defs.h"
 #include "soundmanagerconfig.h"
+#include "controlobjectthreadmain.h"
 #include <QTimer>
 
 class SoundDevice;
@@ -96,6 +97,13 @@ class SoundManager : public QObject
 #endif
         QHash<AudioOutput, const AudioSource*> m_registeredSources;
         QHash<AudioInput, AudioDestination*> m_registeredDestinations;
+
+    	ControlObjectThreadMain* m_pControlObjectLatency;
+    	ControlObjectThreadMain* m_pControlObjectSampleRate;
+    	ControlObjectThreadMain* m_pControlObjectVinylControlMode;
+    	ControlObjectThreadMain* m_pControlObjectVinylControlMode1;
+    	ControlObjectThreadMain* m_pControlObjectVinylControlMode2;
+    	ControlObjectThreadMain* m_pControlObjectVinylControlGain;
 };
 
 #endif

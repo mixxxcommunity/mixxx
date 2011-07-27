@@ -29,7 +29,10 @@ SetlogFeature::SetlogFeature(QObject* parent, ConfigObject<ConfigValue>* pConfig
           m_playlistDao(pTrackCollection->getPlaylistDAO()),
           m_trackDao(pTrackCollection->getTrackDAO()),
           m_pConfig(pConfig),
-          m_playlistTableModel(this, pTrackCollection->getDatabase()) {
+          m_playlistTableModel(this, pTrackCollection->getDatabase()), 
+		  m_pCOPlayPos1(NULL),
+		  m_pCOPlayPos2(NULL)
+{
     m_pPlaylistTableModel = new PlaylistTableModel(this, pTrackCollection);
 
     m_pAddToAutoDJAction = new QAction(tr("Add to Auto DJ bottom"),this);
@@ -109,6 +112,12 @@ SetlogFeature::~SetlogFeature() {
     delete m_pAddToAutoDJTopAction;
     delete m_pRenamePlaylistAction;
     delete m_pLockPlaylistAction;
+    if( m_pCOPlayPos1 ){
+    	delete m_pCOPlayPos1;
+    }
+    if( m_pCOPlayPos2 ){
+    	delete m_pCOPlayPos2;
+    }
 }
 
 QVariant SetlogFeature::title() {
