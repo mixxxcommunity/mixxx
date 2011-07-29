@@ -12,7 +12,6 @@ FadeControl::FadeControl(const char *_group,
 }
 
 FadeControl::~FadeControl() {
-    delete m_pTrackSamples;
 }
 
 void FadeControl::loadTrack(TrackPointer pTrack) {
