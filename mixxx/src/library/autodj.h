@@ -23,20 +23,22 @@ public slots:
     void player2PositionChanged(double samplePos2);
 
 signals:
+    // Emitted whenever AutoDJ is ready for the next track from the queue.
+    // This is connected to DlgAutoDJ::slotNextTrackNeeded() by AutoDJFeature.
     void needNextTrack();
+    // Emitted to signal that the AutoDJ automation is stopping.
+    // This is connected to DlgAutoDJ::toggleAutoDJ(bool) by AutoDJFeature.
     void disableAutoDJ();
+    // Emitted so the currently playing track in the specified group will be removed from
+    // the AutoDJ queue. This is connected to DlgAutoDJ::slotRemovePlayingTrackFromQueue(QString).
+    void removePlayingTrackFromQueue(QString group);
     void loadTrack(TrackPointer tio);
     void loadTrackToPlayer(TrackPointer tio, QString group);
 
 private:
     bool m_bEnabled;
     bool m_bEndOfPlaylist;
-    bool m_bNextTrackAlreadyLoaded; /** Makes our Auto DJ logic assume the
-                                        next track that should be played is
-                                        already loaded. We need this flag to
-                                        make our first-track-gets-loaded-but-
-                                        not-removed-from-the-queue behaviour
-                                        work. */
+
     bool m_bPlayer1Primed, m_bPlayer2Primed;
     // TODO(tom__m) This is hacky
     bool m_bPlayer1Cued, m_bPlayer2Cued;
@@ -50,12 +52,17 @@ private:
     ControlObjectThreadMain* m_pCOPlay2;
     ControlObjectThreadMain* m_pCORepeat1;
     ControlObjectThreadMain* m_pCORepeat2;
-    ControlObjectThreadMain* m_pCOCrossfader;
+
+    // This is effectively our "on deck" track for AutoDJ.
     TrackPointer m_pNextTrack;
+
+    // The TrackTransition object is created by AutoDJ to handle the crossfading
+    // algorithm as well as any other logic related to the transition between the
+    // tracks.
     TrackTransition* m_pTrackTransition;
 
     // Handles the emission of signals needed to load the next track as well as
-    // signal that AutoDJ need a new track
+    // signal that AutoDJ needs a new track.
     void loadNextTrack();
 
     // Cues the track in the specified player to the X seconds before the FadeIn point

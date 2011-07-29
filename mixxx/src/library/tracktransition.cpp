@@ -26,6 +26,8 @@ TrackTransition::~TrackTransition() {
     delete m_pCOCrossfader;
     delete m_pCOPlayPos1;
     delete m_pCOPlayPos2;
+    delete m_pCOTrackSamples1;
+    delete m_pCOTrackSamples2;
 }
 
 void TrackTransition::transition(QString groupA, QString groupB, TrackPointer trackA) {

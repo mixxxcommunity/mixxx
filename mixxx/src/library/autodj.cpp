@@ -31,8 +31,6 @@ AutoDJ::AutoDJ(QObject* parent, ConfigObject<ConfigValue>* pConfig) :
                             ControlObject::getControl(ConfigKey("[Channel1]", "playposition_samples")));
     m_pCOPlayPosSamples2 = new ControlObjectThreadMain(
                             ControlObject::getControl(ConfigKey("[Channel2]", "playposition_samples")));
-    m_pCOCrossfader = new ControlObjectThreadMain(
-                            ControlObject::getControl(ConfigKey("[Master]", "crossfader")));
     m_pCOSampleRate1 = new ControlObjectThreadMain(
                             ControlObject::getControl(ConfigKey("[Channel1]", "track_samplerate")));
     m_pCOSampleRate2 = new ControlObjectThreadMain(
@@ -47,7 +45,6 @@ AutoDJ::~AutoDJ() {
     delete m_pCOPlay2;
     delete m_pCORepeat1;
     delete m_pCORepeat2;
-    delete m_pCOCrossfader;
     delete m_pCOSampleRate1;
     delete m_pCOSampleRate2;
 }
@@ -67,6 +64,14 @@ void AutoDJ::setEnabled(bool enable) {
             qDebug() << "One player must be stopped before enabling Auto DJ mode";
             emit disableAutoDJ();
             return;
+        }
+
+        // Never load the same track if it is already playing
+        if (m_pCOPlay1->get() == 1.0f) {
+            emit removePlayingTrackFromQueue("[Channel1]");
+        }
+        if (m_pCOPlay2->get() == 1.0f) {
+            emit removePlayingTrackFromQueue("[Channel2]");
         }
 
         m_bEnabled = enable;
@@ -97,12 +102,10 @@ void AutoDJ::setEnabled(bool enable) {
 
             // Set the primed flags so the crossfading algorithm knows
             // that it doesn't need to load a track into whatever player.
-            if (m_pCOPlay1->get() == 1.0f)
-            {
+            if (m_pCOPlay1->get() == 1.0f) {
                 m_bPlayer1Primed = true;
             }
-            if (m_pCOPlay2->get() == 1.0f)
-            {
+            if (m_pCOPlay2->get() == 1.0f) {
                 m_bPlayer2Primed = true;
             }
         }
@@ -119,7 +122,10 @@ void AutoDJ::setEnabled(bool enable) {
 
             m_pCORepeat1->slotSet(1.0f); // Turn on repeat mode to avoid race condition between async load
             m_pCOPlay1->slotSet(1.0f);  // Play the track in player 1
-            m_pCOCrossfader->slotSet(-1.0f);
+            m_pTrackTransition->m_pCOCrossfader->slotSet(-1.0f);
+
+            // Remove the track in Player 1 from the queue
+           //emit removePlayingTrackFromQueue("[Channel1]");
         }
     }
     else {
@@ -138,8 +144,15 @@ void AutoDJ::player1PositionChanged(double samplePos1) {
 
     TrackPointer pTrack = PlayerInfo::Instance().getTrackInfo("[Channel1]");
 
+    emit removePlayingTrackFromQueue("[Channel1]");
+
     // Check if the other player already has a track loaded
     if(!m_bPlayer2Primed) {
+        // Check if our next track is a duplicate of the track in Player 1
+        if (pTrack->getTitle() == m_pNextTrack->getTitle()) {
+            emit needNextTrack();
+            return;
+        }
         // Load the next track into the other player
         if (!m_bEndOfPlaylist) {
             loadNextTrack();
@@ -149,6 +162,9 @@ void AutoDJ::player1PositionChanged(double samplePos1) {
 
     // Check if Player 1 position is past the Fade Out point
     if (samplePos1 > pTrack->getFadeOut()) {
+
+        // Remove the track in Player 2 from the AutoDJ queue
+        emit removePlayingTrackFromQueue("[Channel2]");
 
         m_pTrackTransition->transition("[Channel1]", "[Channel2]", pTrack);
 
@@ -182,8 +198,15 @@ void AutoDJ::player2PositionChanged(double samplePos2) {
 
     TrackPointer pTrack = PlayerInfo::Instance().getTrackInfo("[Channel2]");
 
+    emit removePlayingTrackFromQueue("[Channel2]");
+
     // Check if the other player already has a track loaded
     if (!m_bPlayer1Primed) {
+        // Check if our next track is a duplicate of the track in Player 2
+        if (pTrack->getTitle() == m_pNextTrack->getTitle()) {
+            emit needNextTrack();
+            return;
+        }
         // Load the next track into the other player
         if (!m_bEndOfPlaylist) {
             loadNextTrack();
@@ -193,6 +216,9 @@ void AutoDJ::player2PositionChanged(double samplePos2) {
 
     // Check if Player 2 position is past the Fade Out point
     if (samplePos2 > pTrack->getFadeOut()) {
+
+        // Remove the track in Player 1 from the AutoDJ queue
+        emit removePlayingTrackFromQueue("[Channel1");
 
         m_pTrackTransition->transition("[Channel2]", "[Channel1]", pTrack);
 
@@ -224,6 +250,7 @@ void AutoDJ::player2PositionChanged(double samplePos2) {
 
 void AutoDJ::receiveNextTrack(TrackPointer nextTrack) {
     m_pNextTrack = nextTrack;
+    qDebug() << "Received track from DlgAutoDJ: " << nextTrack->getTitle();
 }
 
 void AutoDJ::setEndOfPlaylist(bool endOfPlaylist) {

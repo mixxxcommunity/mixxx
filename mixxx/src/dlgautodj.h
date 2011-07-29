@@ -36,6 +36,7 @@ class DlgAutoDJ : public QWidget, public Ui::DlgAutoDJ, public virtual LibraryVi
     void toggleAutoDJ(bool toggle);
     void slotNextTrackNeeded();
     void slotDisableAutoDJ();
+    void slotRemovePlayingTrackFromQueue(QString group);
 
   signals:
     void loadTrack(TrackPointer tio);
@@ -45,8 +46,6 @@ class DlgAutoDJ : public QWidget, public Ui::DlgAutoDJ, public virtual LibraryVi
     void endOfPlaylist(bool);
 
   private:
-    bool loadNextTrackFromQueue(bool removeTopMostBeforeLoading);
-
     ConfigObject<ConfigValue>* m_pConfig;
     TrackCollection* m_pTrackCollection;
     WTrackTableView* m_pTrackTableView;

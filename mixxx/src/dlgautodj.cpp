@@ -5,6 +5,7 @@
 
 #include "library/trackcollection.h"
 #include "library/playlisttablemodel.h"
+#include "playerinfo.h"
 #include "dlgautodj.h"
 
 DlgAutoDJ::DlgAutoDJ(QWidget* parent, ConfigObject<ConfigValue>* pConfig,
@@ -148,25 +149,32 @@ void DlgAutoDJ::toggleAutoDJ(bool toggle) {
     }
 }
 
-bool DlgAutoDJ::loadNextTrackFromQueue(bool removeTopMostBeforeLoading) {
-    if (removeTopMostBeforeLoading) {
-        // Only remove the top track if this isn't the start of Auto DJ mode.
-        m_pAutoDJTableModel->removeTrack(m_pAutoDJTableModel->index(0, 0));
-    }
+void DlgAutoDJ::slotRemovePlayingTrackFromQueue(QString group) {
+
+    int nextId = 0;
+    int loadedId = 0;
+
     // Get the track at the top of the playlist
     TrackPointer nextTrack = m_pAutoDJTableModel->getTrack(m_pAutoDJTableModel->index(0, 0));
 
-    if (!nextTrack) { // We ran out of tracks in the queue
-        // Disable auto DJ and return...
-        pushButtonAutoDJ->setChecked(false);
-        emit endOfPlaylist(true);
-        return false;
+    if (nextTrack) {
+        nextId = nextTrack->getId();
     }
-    //m_bNextTrackAlreadyLoaded = false;
 
-    emit(loadTrack(nextTrack));
+    // Get the loaded track
+    TrackPointer loadedTrack = PlayerInfo::Instance().getTrackInfo(group);
 
-    return true;
+    if (loadedTrack) {
+        loadedId = loadedTrack->getId();
+    }
+
+    if (loadedId != nextId) {
+        // Do not remove when the user has loaded a track manually
+        return;
+    }
+    qDebug() << "REMOVING " << nextTrack->getTitle();
+    // Remove the top track
+    m_pAutoDJTableModel->removeTrack(m_pAutoDJTableModel->index(0, 0));
 }
 
 void DlgAutoDJ::slotNextTrackNeeded() {
@@ -180,10 +188,7 @@ void DlgAutoDJ::slotNextTrackNeeded() {
         emit endOfPlaylist(true);
         return;
     }
-    // Remove the track at the top of the playlist
-    m_pAutoDJTableModel->removeTrack(m_pAutoDJTableModel->index(0, 0));
 
-    qDebug() << "Sending track";
     emit sendNextTrack(nextTrack);
 }
 
