@@ -19,7 +19,7 @@ public slots:
     void unloadTrack(TrackPointer pTrack);
 
 private:
-    ControlObject* m_pTrackSamples;
+    ControlObject* m_pCOTrackSamples;
 
     TrackPointer m_pLoadedTrack;
 

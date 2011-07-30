@@ -8,7 +8,7 @@ FadeControl::FadeControl(const char *_group,
                          ConfigObject<ConfigValue> *_config) :
         EngineControl(_group, _config),
         m_mutex(QMutex::Recursive) {
-    m_pTrackSamples = ControlObject::getControl(ConfigKey(_group, "track_samples"));
+    m_pCOTrackSamples = ControlObject::getControl(ConfigKey(_group, "track_samples"));
 }
 
 FadeControl::~FadeControl() {
@@ -22,21 +22,24 @@ void FadeControl::loadTrack(TrackPointer pTrack) {
         unloadTrack(m_pLoadedTrack);
 
     m_pLoadedTrack = pTrack;
+    const double trackSamples = m_pCOTrackSamples->get();
     //FadesUpdated?? connect
 
-    // If this is the first time loaded, default the fade points to 5% from the
-    // beginning and end of the track
-    if(pTrack->getFadeIn() == NULL) {
-        int samples = m_pTrackSamples->get();
-        samples *= 0.05;
+    // If this is the first time loaded, default the fadeIn point to 5% of the track's
+    // length after the CuePoint and the fadeOut point to 5% before the end of the track.
+    if(!pTrack->getFadeIn()) {
+        float cuePoint = pTrack->getCuePoint();
+        int samples = trackSamples * 0.05;
         if (samples % 2 != 0) {
             samples--;
         }
+        if ((cuePoint + samples) < trackSamples) {
+            samples = cuePoint + samples;
+        }
         pTrack->setFadeIn(samples);
     }
-    if(pTrack->getFadeOut() == NULL) {
-        int samples = m_pTrackSamples->get();
-        samples *= 0.95;
+    if(!pTrack->getFadeOut()) {
+        int samples = trackSamples * 0.95;
         if (samples % 2 != 0) {
             samples--;
         }
