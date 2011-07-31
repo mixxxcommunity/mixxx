@@ -3,12 +3,24 @@
 #include "engine/fadecontrol.h"
 
 #include "controlobject.h"
+#include "controlpushbutton.h"
+#include "mathstuff.h"
 
 FadeControl::FadeControl(const char *_group,
                          ConfigObject<ConfigValue> *_config) :
         EngineControl(_group, _config),
         m_mutex(QMutex::Recursive) {
+
     m_pCOTrackSamples = ControlObject::getControl(ConfigKey(_group, "track_samples"));
+
+    m_pFadepointInSet = new ControlPushButton(ConfigKey(_group, "fadein_set"));
+    connect(m_pFadepointInSet, SIGNAL(valueChanged(double)),
+            this, SLOT(slotFadeInSet(double)));
+
+    m_pFadepointOutSet = new ControlPushButton(ConfigKey(_group, "fadeout_set"));
+    connect(m_pFadepointOutSet, SIGNAL(valueChanged(double)),
+            this, SLOT(slotFadeOutSet(double)));
+
 }
 
 FadeControl::~FadeControl() {
@@ -29,8 +41,8 @@ void FadeControl::loadTrack(TrackPointer pTrack) {
     // length after the CuePoint and the fadeOut point to 5% before the end of the track.
     if(!pTrack->getFadeIn()) {
         float cuePoint = pTrack->getCuePoint();
-        int samples = trackSamples * 0.05;
-        if (samples % 2 != 0) {
+        double samples = trackSamples * 0.05;
+        if (!even(samples)) {
             samples--;
         }
         if ((cuePoint + samples) < trackSamples) {
@@ -39,8 +51,8 @@ void FadeControl::loadTrack(TrackPointer pTrack) {
         pTrack->setFadeIn(samples);
     }
     if(!pTrack->getFadeOut()) {
-        int samples = trackSamples * 0.95;
-        if (samples % 2 != 0) {
+        double samples = trackSamples * 0.95;
+        if (!even(samples)) {
             samples--;
         }
         pTrack->setFadeOut(samples);
@@ -50,4 +62,10 @@ void FadeControl::loadTrack(TrackPointer pTrack) {
 void FadeControl::unloadTrack(TrackPointer pTrack) {
     QMutexLocker lock(&m_mutex);
     m_pLoadedTrack.clear();
+}
+
+void FadeControl::slotFadeInSet(double v) {
+}
+
+void FadeControl::slotFadeOutSet(double v) {
 }
