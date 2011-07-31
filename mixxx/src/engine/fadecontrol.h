@@ -24,6 +24,8 @@ private slots:
 
 private:
     ControlObject* m_pCOTrackSamples;
+    ControlObject* m_pQuantizeEnabled;
+    ControlObject* m_pNextBeat;
 
     // FadePoint button controls
     ControlObject* m_pFadepointInSet;

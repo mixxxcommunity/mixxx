@@ -13,6 +13,9 @@ FadeControl::FadeControl(const char *_group,
 
     m_pCOTrackSamples = ControlObject::getControl(ConfigKey(_group, "track_samples"));
 
+    m_pQuantizeEnabled = ControlObject::getControl(ConfigKey(_group, "quantize"));
+    m_pNextBeat = ControlObject::getControl(ConfigKey(_group, "beat_next"));
+
     m_pFadepointInSet = new ControlPushButton(ConfigKey(_group, "fadein_set"));
     connect(m_pFadepointInSet, SIGNAL(valueChanged(double)),
             this, SLOT(slotFadeInSet(double)));
@@ -24,6 +27,8 @@ FadeControl::FadeControl(const char *_group,
 }
 
 FadeControl::~FadeControl() {
+    delete m_pFadepointInSet;
+    delete m_pFadepointOutSet;
 }
 
 void FadeControl::loadTrack(TrackPointer pTrack) {
@@ -65,7 +70,49 @@ void FadeControl::unloadTrack(TrackPointer pTrack) {
 }
 
 void FadeControl::slotFadeInSet(double v) {
+    if (!v) {
+        return;
+    }
+
+    QMutexLocker lock(&m_mutex);
+    double fadeIn = m_pQuantizeEnabled->get() ?
+                math_max(0., floorf(m_pNextBeat->get())) :
+                math_max(0., floorf(getCurrentSample()));
+    if (!even(fadeIn)) {
+        fadeIn--;
+    }
+
+    if (m_pLoadedTrack) {
+        if (m_pLoadedTrack->getFadeOut() < fadeIn) {
+            qDebug() << "Cannot set the FadeIn point after the FadeOut point";
+            return;
+        }
+
+        qDebug() << "Setting FadeIn point as: " << fadeIn;
+        m_pLoadedTrack->setFadeIn(fadeIn);
+    }
 }
 
 void FadeControl::slotFadeOutSet(double v) {
+    if (!v) {
+        return;
+    }
+
+    QMutexLocker lock(&m_mutex);
+    double fadeOut = m_pQuantizeEnabled->get() ?
+                math_max(0., floorf(m_pNextBeat->get())) :
+                math_max(0., floorf(getCurrentSample()));
+    if (!even(fadeOut)) {
+        fadeOut--;
+    }
+
+    if (m_pLoadedTrack) {
+        if (m_pLoadedTrack->getFadeIn() > fadeOut) {
+            qDebug() << "Cannot set the FadeOut point before the FadeIn point";
+            return;
+        }
+
+        qDebug() << "Setting FadeOut point as: " << fadeOut;
+        m_pLoadedTrack->setFadeOut(fadeOut);
+    }
 }
