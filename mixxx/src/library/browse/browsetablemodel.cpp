@@ -201,8 +201,8 @@ void BrowseTableModel::removeTracks(QStringList trackLocations) {
         any_deleted = true;
 
         // If the track was contained in the Mixxx library, delete it
-        if (track_dao.trackExistsInDatabase(track_location)) {
-            int id = track_dao.getTrackId(track_location);
+        int id = track_dao.getTrackId(track_location);
+        if (id != -1) {
             qDebug() << "BrowseFeature: Deletion affected database";
             track_dao.removeTrack(id);
         }

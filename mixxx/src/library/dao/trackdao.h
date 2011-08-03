@@ -72,7 +72,11 @@ Q_OBJECT
     QString getTrackLocation(int id);
     int addTrack(QString absoluteFilePath);
     int addTrack(QFileInfo& fileInfo);
-    void addTracks(QList<TrackInfoObject*> tracksToAdd);
+
+    void addTracksPrepare();
+    void addTracksFinish();
+    bool addTracksTrack(TrackInfoObject* pTrack);
+
     void removeTrack(int id);
     void removeTracks(QList<int> ids);
     void unremoveTrack(int trackId);
@@ -124,11 +128,8 @@ Q_OBJECT
     TrackPointer getTrackFromDB(QSqlQuery &query) const;
     QString absoluteFilePath(QString location);
 
-    void prepareTrackLocationsInsert(QSqlQuery& query);
-    void bindTrackToTrackLocationsInsert(QSqlQuery& query, TrackInfoObject* pTrack);
-    void prepareLibraryInsert(QSqlQuery& query);
-    void bindTrackToLibraryInsert(QSqlQuery& query,
-                                  TrackInfoObject* pTrack, int trackLocationId);
+    void bindTrackToTrackLocationsInsert(TrackInfoObject* pTrack);
+    void bindTrackToLibraryInsert(TrackInfoObject* pTrack, int trackLocationId);
 
     void writeAudioMetaData(TrackInfoObject* pTrack);
     // Called when the TIO reference count drops to 0
@@ -155,6 +156,9 @@ Q_OBJECT
     mutable QSet<int> m_dirtyTracks;
     mutable QCache<int,TrackPointer> m_trackCache;
     ConfigObject<ConfigValue> * m_pConfig;
+
+    QSqlQuery* m_pQueryTrackLocationInsert;
+    QSqlQuery* m_pQueryLibraryInsert;
 };
 
 #endif //TRACKDAO_H

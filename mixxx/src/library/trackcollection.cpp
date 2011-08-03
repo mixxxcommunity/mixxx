@@ -99,27 +99,16 @@ QSqlDatabase& TrackCollection::getDatabase()
     @return true if the scan completed without being cancelled. False if the scan was cancelled part-way through.
 */
 bool TrackCollection::importDirectory(QString directory, TrackDAO &trackDao,
-                                      QList<TrackInfoObject*>& tracksToAdd)
+										const QStringList & nameFilters)
 {
     //qDebug() << "TrackCollection::importDirectory(" << directory<< ")";
 
     emit(startedLoading());
     QFileInfoList files;
 
-    //Check to make sure the path exists.
-    QDir dir(directory);
-    if (dir.exists()) {
-        files = dir.entryInfoList(QDir::Files | QDir::NoDotAndDotDot);
-    } else {
-        qDebug() << "Error: Import path does not exist." << directory;
-        return true;
-    }
-
-    //The directory exists, so get a list of the contents of the directory and go through it.
-    QList<QFileInfo>::iterator it = files.begin();
-    while (it != files.end()) {
-        QFileInfo file = *it; //TODO: THIS IS SLOW!
-        it++;
+    //get a list of the contents of the directory and go through it.
+    QDirIterator it(directory, nameFilters, QDir::Files | QDir::NoDotAndDotDot);
+    while (it.hasNext()) {
 
         //If a flag was raised telling us to cancel the library scan then stop.
         m_libraryScanMutex.lock();
@@ -130,36 +119,29 @@ bool TrackCollection::importDirectory(QString directory, TrackDAO &trackDao,
             return false;
         }
 
-        QString absoluteFilePath = file.absoluteFilePath();
-        QString fileName = file.fileName();
+      	QString absoluteFilePath = it.next();
 
-        if (fileName.count(m_supportedFileExtensionsRegex)) {
-            //If the track is in the database, mark it as existing. This code gets exectuted
-            //when other files in the same directory have changed (the directory hash has changed).
-            trackDao.markTrackLocationAsVerified(absoluteFilePath);
+		//If the track is in the database, mark it as existing. This code gets exectuted
+		//when other files in the same directory have changed (the directory hash has changed).
+		trackDao.markTrackLocationAsVerified(absoluteFilePath);
 
-            // If the file already exists in the database, continue and go on to
-            // the next file.
+		// If the file already exists in the database, continue and go on to
+		// the next file.
 
-            // If the file doesn't already exist in the database, then add
-            // it. If it does exist in the database, then it is either in the
-            // user's library OR the user has "removed" the track via
-            // "Right-Click -> Remove". These tracks stay in the library, but
-            // their mixxx_deleted column is 1.
-            if (!trackDao.trackExistsInDatabase(absoluteFilePath))
-            {
-                //qDebug() << "Loading" << file.fileName();
-                emit(progressLoading(fileName));
+		// If the file doesn't already exist in the database, then add
+		// it. If it does exist in the database, then it is either in the
+		// user's library OR the user has "removed" the track via
+		// "Right-Click -> Remove". These tracks stay in the library, but
+		// their mixxx_deleted column is 1.
+		if (!trackDao.trackExistsInDatabase(absoluteFilePath))
+		{
+			//qDebug() << "Loading" << it.fileName();
+        	emit(progressLoading(it.fileName()));
 
-                // addTrack uses this QFileInfo instead of making a new one now.
-                //trackDao.addTrack(file);
-                TrackInfoObject* pTrack = new TrackInfoObject(file.absoluteFilePath());
-                tracksToAdd.append(pTrack);
-            }
-        } else {
-            //qDebug() << "Skipping" << file.fileName() <<
-            //    "because it did not match thesupported audio files filter:" <<
-        }
+			TrackInfoObject* pTrack = new TrackInfoObject(absoluteFilePath);
+			trackDao.addTracksTrack(pTrack);
+			delete pTrack;
+		}
     }
     emit(finishedLoading());
     return true;

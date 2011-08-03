@@ -215,37 +215,18 @@ void LibraryScanner::run()
     //THIS SHOULD NOT BE IN A TRANSACTION! Each addTrack() call from inside
     //recursiveScan() handles it's own transactions.
 
-    QList<TrackInfoObject*> tracksToAdd;
+    m_trackDao.addTracksPrepare();
 
-    bool bScanFinishedCleanly = recursiveScan(m_qLibraryPath, tracksToAdd);
+    bool bScanFinishedCleanly = recursiveScan(m_qLibraryPath);
 
     if (!bScanFinishedCleanly) {
         qDebug() << "Recursive scan interrupted.";
     } else {
         qDebug() << "Recursive scan finished cleanly.";
     }
-	/*
-     * We store the scanned files in the database: Note that the recursiveScan()
-     * method used TrackCollection::importDirectory() to scan the folders. The
-     * method TrackCollection::importDirectory() added all the files to the
-     * 'tracksToAdd' list.
-     *
-     * The following statement writes all the scanned tracks in the list to the
-     * database at once. We don't care if the scan has been cancelled or not.
-     *
-     * This new approach accelerates the scanning process massively by a factor
-     * of 3-4 !!!
-     */
 
     // Runs inside a transaction
-    m_trackDao.addTracks(tracksToAdd);
-
-    QMutableListIterator<TrackInfoObject*> it(tracksToAdd);
-    while (it.hasNext()) {
-        TrackInfoObject* pTrack = it.next();
-        it.remove();
-        delete pTrack;
-    }
+    m_trackDao.addTracksFinish();
 
     //Start a transaction for all the library hashing (moved file detection)
     //stuff.
@@ -348,7 +329,7 @@ void LibraryScanner::scan()
     have already been scanned and have not changed. Changes are tracked by performing
     a hash of the directory's file list, and those hashes are stored in the database.
 */
-bool LibraryScanner::recursiveScan(QString dirPath, QList<TrackInfoObject*>& tracksToAdd)
+bool LibraryScanner::recursiveScan(QString dirPath)
 {
     QDirIterator fileIt(dirPath, nameFilters, QDir::Files | QDir::NoDotAndDotDot);
     QString currentFile;
@@ -391,7 +372,7 @@ bool LibraryScanner::recursiveScan(QString dirPath, QList<TrackInfoObject*>& tra
         }
 
         //Rescan that mofo!
-        bScanFinishedCleanly = m_pCollection->importDirectory(dirPath, m_trackDao, tracksToAdd);
+        bScanFinishedCleanly = m_pCollection->importDirectory(dirPath, m_trackDao, nameFilters);
     }
     else //prevHash == newHash
     {
@@ -434,7 +415,7 @@ bool LibraryScanner::recursiveScan(QString dirPath, QList<TrackInfoObject*>& tra
         if (m_directoriesBlacklist.contains(nextPath))
             continue;
 
-        if (!recursiveScan(nextPath, tracksToAdd))
+        if (!recursiveScan(nextPath))
             bScanFinishedCleanly = false;
     }
 
