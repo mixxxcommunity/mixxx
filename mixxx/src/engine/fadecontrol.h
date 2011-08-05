@@ -27,6 +27,9 @@ private:
     ControlObject* m_pQuantizeEnabled;
     ControlObject* m_pNextBeat;
 
+    ControlObject* m_pCOFadeInPosition;
+    ControlObject* m_pCOFadeOutPosition;
+
     // FadePoint button controls
     ControlObject* m_pFadepointInSet;
     ControlObject* m_pFadepointOutSet;

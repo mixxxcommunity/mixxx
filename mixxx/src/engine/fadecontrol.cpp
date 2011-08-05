@@ -24,6 +24,11 @@ FadeControl::FadeControl(const char *_group,
     connect(m_pFadepointOutSet, SIGNAL(valueChanged(double)),
             this, SLOT(slotFadeOutSet(double)));
 
+    // Create the fade_in_position and fade_out_position ControlObjects
+    m_pCOFadeInPosition = new ControlObject(ConfigKey(_group, "fade_in_position"));
+
+    m_pCOFadeOutPosition = new ControlObject(ConfigKey(_group, "fade_out_position"));
+
 }
 
 FadeControl::~FadeControl() {
@@ -42,9 +47,12 @@ void FadeControl::loadTrack(TrackPointer pTrack) {
     const double trackSamples = m_pCOTrackSamples->get();
     //FadesUpdated?? connect
 
+    double trackFadeIn = pTrack->getFadeIn();
+    double trackFadeOut = pTrack->getFadeOut();
+
     // If this is the first time loaded, default the fadeIn point to 5% of the track's
-    // length after the CuePoint and the fadeOut point to 5% before the end of the track.
-    if(!pTrack->getFadeIn()) {
+    // length after the CuePoint, otherwise load the saved fadeIn point
+    if(!trackFadeIn) {
         float cuePoint = pTrack->getCuePoint();
         double samples = trackSamples * 0.05;
         if (!even(samples)) {
@@ -54,13 +62,20 @@ void FadeControl::loadTrack(TrackPointer pTrack) {
             samples = cuePoint + samples;
         }
         pTrack->setFadeIn(samples);
+    } else {
+        m_pCOFadeInPosition->set(trackFadeIn);
     }
-    if(!pTrack->getFadeOut()) {
+
+    // If this is the first time loaded, default the fadeOut point to 5% of the track's
+    // length before the end of the track, otherwise load the saved fadeOut point
+    if(!trackFadeOut) {
         double samples = trackSamples * 0.95;
         if (!even(samples)) {
             samples--;
         }
         pTrack->setFadeOut(samples);
+    } else {
+        m_pCOFadeOutPosition->set(trackFadeOut);
     }
 }
 
@@ -90,6 +105,7 @@ void FadeControl::slotFadeInSet(double v) {
 
         qDebug() << "Setting FadeIn point as: " << fadeIn;
         m_pLoadedTrack->setFadeIn(fadeIn);
+        m_pCOFadeInPosition->set(fadeIn);
     }
 }
 
@@ -114,5 +130,6 @@ void FadeControl::slotFadeOutSet(double v) {
 
         qDebug() << "Setting FadeOut point as: " << fadeOut;
         m_pLoadedTrack->setFadeOut(fadeOut);
+        m_pCOFadeOutPosition->set(fadeOut);
     }
 }

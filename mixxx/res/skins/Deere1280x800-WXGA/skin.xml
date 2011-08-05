@@ -3927,6 +3927,27 @@
 							<Color>#00FF00</Color>
 							<TextColor>#FFFFFF</TextColor>
 						</Mark>
+
+						<!--
+						Fade In and Fade Out point markers for AutoDJ
+						-->
+						<Mark>
+							<Control>fade_in_position</Control>
+							<Pixmap>marker_fade_in.png</Pixmap>
+							<Text>FADE IN</Text>
+							<Align>bottom</Align>
+							<Color>#00FF00</Color>
+							<TextColor>#FFFFFF</TextColor>
+						</Mark>
+						<Mark>
+							<Control>fade_out_position</Control>
+							<Pixmap>marker_fade_out.png</Pixmap>
+							<Text>FADE OUT</Text>
+							<Align>bottom</Align>
+							<Color>#00FF00</Color>
+							<TextColor>#FFFFFF</TextColor>
+						</Mark>
+
 						<!--
 						The hotcues not represented by a button in the current skin show only in the waveform under two circumstances:
 							- if a MIDI device which supports more hotcues than buttons are in the current skin has them activated
