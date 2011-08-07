@@ -42,9 +42,7 @@ TrackCollection::TrackCollection(ConfigObject<ConfigValue>* pConfig)
 TrackCollection::~TrackCollection()
 {
     // Save all tracks that haven't been saved yet.
-    m_trackDao.saveDirtyTracks();
-    // TODO(XXX) Maybe fold saveDirtyTracks into TrackDAO::finish now that it
-    // exists? -- rryan 10/2010
+	// and reset played flags
     m_trackDao.finish();
 
     Q_ASSERT(!m_db.rollback()); //Rollback any uncommitted transaction

@@ -103,11 +103,6 @@ Q_OBJECT
     // call.
     void saveTrack(TrackPointer pTrack);
 
-    // TrackDAO provides a cache of TrackInfoObject's that have been requested
-    // via getTrack(). saveDirtyTracks() saves all cached tracks marked dirty
-    // to the database.
-    void saveDirtyTracks();
-
     // Clears the cached TrackInfoObjects, which can be useful when the
     // underlying database tables change (eg. during a library rescan,
     // we might detect that a track has been moved and modify the update
@@ -125,7 +120,7 @@ Q_OBJECT
     void saveTrack(TrackInfoObject* pTrack);
     void updateTrack(TrackInfoObject* pTrack);
     void addTrack(TrackInfoObject* pTrack);
-    TrackPointer getTrackFromDB(QSqlQuery &query) const;
+    TrackPointer getTrackFromDB(int id) const;
     QString absoluteFilePath(QString location);
 
     void bindTrackToTrackLocationsInsert(TrackInfoObject* pTrack);
@@ -152,8 +147,9 @@ Q_OBJECT
 
     QSqlDatabase &m_database;
     CueDAO &m_cueDao;
-    mutable QHash<int, TrackWeakPointer> m_tracks;
-    mutable QSet<int> m_dirtyTracks;
+    static QHash<int, TrackWeakPointer> m_sTracks;
+    static QMutex m_sTracksMutex;
+    //mutable QSet<int> m_dirtyTracks;
     mutable QCache<int,TrackPointer> m_trackCache;
     ConfigObject<ConfigValue> * m_pConfig;
 

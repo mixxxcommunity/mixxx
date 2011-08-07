@@ -29,9 +29,9 @@ SetlogFeature::SetlogFeature(QObject* parent, ConfigObject<ConfigValue>* pConfig
           m_playlistDao(pTrackCollection->getPlaylistDAO()),
           m_trackDao(pTrackCollection->getTrackDAO()),
           m_pConfig(pConfig),
-          m_playlistTableModel(this, pTrackCollection->getDatabase()), 
 		  m_pCOPlayPos1(NULL),
-		  m_pCOPlayPos2(NULL)
+		  m_pCOPlayPos2(NULL),
+		  m_playlistTableModel(this, pTrackCollection->getDatabase())
 {
     m_pPlaylistTableModel = new PlaylistTableModel(this, pTrackCollection);
 
