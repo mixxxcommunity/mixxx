@@ -77,6 +77,12 @@ BaseTrackPlayer::BaseTrackPlayer(QObject* pParent,
     m_pPlayPosition = new ControlObjectThreadMain(
         ControlObject::getControl(ConfigKey(getGroup(), "playposition")));
 
+    // Fade in and Fade out points for AutoDJ
+    m_pFadeInPoint = new ControlObjectThreadMain(
+        ControlObject::getControl(ConfigKey(getGroup(), "fade_in_position")));
+    m_pFadeOutPoint = new ControlObjectThreadMain(
+        ControlObject::getControl(ConfigKey(getGroup(), "fade_out_position")));
+
     // Duration of the current song, we create this one because nothing else does.
     m_pDuration = new ControlObject(ConfigKey(getGroup(), "duration"));
 
@@ -107,6 +113,8 @@ BaseTrackPlayer::~BaseTrackPlayer()
     delete m_pCuePoint;
     delete m_pLoopInPoint;
     delete m_pLoopOutPoint;
+    delete m_pFadeInPoint;
+    delete m_pFadeOutPoint;
     delete m_pPlayPosition;
     delete m_pBPM;
     delete m_pReplayGain;
@@ -190,6 +198,8 @@ void BaseTrackPlayer::slotUnloadTrack(TrackPointer) {
     m_pReplayGain->slotSet(0);
     m_pLoopInPoint->slotSet(-1);
     m_pLoopOutPoint->slotSet(-1);
+    m_pFadeInPoint->slotSet(-1);
+    m_pFadeOutPoint->slotSet(-1);
     m_pLoadedTrack.clear();
 
     // Update the PlayerInfo class that is used in EngineShoutcast to replace
@@ -240,6 +250,13 @@ void BaseTrackPlayer::slotFinishLoading(TrackPointer pTrackInfoObject)
             }
         }
     }
+
+    // Reset the fade points for AutoDJ.
+    m_pFadeInPoint->slotSet(-1);
+    m_pFadeOutPoint->slotSet(-1);
+
+    m_pFadeInPoint->slotSet(m_pLoadedTrack->getFadeIn());
+    m_pFadeOutPoint->slotSet(m_pLoadedTrack->getFadeOut());
 
     emit(newTrackLoaded(m_pLoadedTrack));
 }

@@ -3936,7 +3936,7 @@
 							<Pixmap>marker_fade_in.png</Pixmap>
 							<Text>FADE IN</Text>
 							<Align>bottom</Align>
-							<Color>#00FF00</Color>
+							<Color>#FF00FF</Color>
 							<TextColor>#FFFFFF</TextColor>
 						</Mark>
 						<Mark>
@@ -3944,7 +3944,7 @@
 							<Pixmap>marker_fade_out.png</Pixmap>
 							<Text>FADE OUT</Text>
 							<Align>bottom</Align>
-							<Color>#00FF00</Color>
+							<Color>#FF00FF</Color>
 							<TextColor>#FFFFFF</TextColor>
 						</Mark>
 

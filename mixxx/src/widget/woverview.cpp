@@ -59,6 +59,23 @@ WOverview::WOverview(const char *pGroup, QWidget * parent)
             this, SLOT(loopEnabledChanged(double)));
     loopEnabledChanged(m_pLoopEnabled->get());
 
+    // Create and connect the COs associated with the AutoDJ fadepoints
+    m_pCOFadeInPosition = ControlObject::getControl(
+        ConfigKey(m_pGroup, "fade_in_position"));
+    connect(m_pCOFadeInPosition, SIGNAL(valueChanged(double)),
+            this, SLOT(fadeInChanged(double)));
+    connect(m_pCOFadeInPosition, SIGNAL(valueChangedFromEngine(double)),
+            this, SLOT(fadeInChanged(double)));
+    fadeInChanged(m_pCOFadeInPosition->get());
+
+    m_pCOFadeOutPosition = ControlObject::getControl(
+        ConfigKey(m_pGroup, "fade_out_position"));
+    connect(m_pCOFadeOutPosition, SIGNAL(valueChanged(double)),
+            this, SLOT(fadeOutChanged(double)));
+    connect(m_pCOFadeOutPosition, SIGNAL(valueChanged(double)),
+            this, SLOT(fadeOutChanged(double)));
+    fadeOutChanged(m_pCOFadeOutPosition->get());
+
     QString pattern = "hotcue_%1_position";
 
     int i = 1;
@@ -212,6 +229,18 @@ void WOverview::loopEndChanged(double v) {
 
 void WOverview::loopEnabledChanged(double v) {
     m_bLoopEnabled = !(v == 0.0f);
+    update();
+}
+
+void WOverview::fadeInChanged(double v) {
+    m_dFadeIn = v;
+    qDebug() << "fade_in_pos" << v;
+    update();
+}
+
+void WOverview::fadeOutChanged(double v) {
+    m_dFadeOut = v;
+    qDebug() << "fade_out_pos" << v;
     update();
 }
 
@@ -435,6 +464,21 @@ void WOverview::paintEvent(QPaintEvent *)
 
             // paint.drawText(rect, Qt::AlignCenter, QString("%1").arg(i+1));
         }
+
+        // Draw AutoDJ fade points
+        QColor fadecolor = m_qColorMarker;
+        paint.setPen(fadecolor);
+        if (m_dFadeIn != -1.0) {
+            fPos = m_dFadeIn * (width() - 2) / m_liSampleDuration;
+            paint.drawLine(fPos, height()/2, fPos, height());
+            paint.drawLine(fPos-10, height()*0.75, fPos, height()*0.75);
+        }
+        if (m_dFadeOut != -1.0) {
+            fPos = m_dFadeOut * (width() - 2) / m_liSampleDuration;
+            paint.drawLine(fPos, height()/2, fPos, height());
+            paint.drawLine(fPos, height()*0.75, fPos+10, height()*0.75);
+        }
+
     }
     paint.end();
 }

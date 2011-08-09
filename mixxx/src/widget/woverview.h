@@ -64,6 +64,8 @@ class WOverview : public WWidget
     void loopStartChanged(double v);
     void loopEndChanged(double v);
     void loopEnabledChanged(double v);
+    void fadeInChanged(double v);
+    void fadeOutChanged(double v);
 
   private:
     const char* m_pGroup;
@@ -80,6 +82,11 @@ class WOverview : public WWidget
     QList<ControlObject*> m_hotcueControls;
     QMap<QObject*, int> m_hotcueMap;
     QList<int> m_hotcues;
+
+    // AutoDJ Fadepoints controls and values
+    ControlObject* m_pCOFadeInPosition;
+    ControlObject* m_pCOFadeOutPosition;
+    double m_dFadeIn, m_dFadeOut;
 
     /** Array containing waveform summary */
     QByteArray m_waveformSummary;
