@@ -234,13 +234,11 @@ void WOverview::loopEnabledChanged(double v) {
 
 void WOverview::fadeInChanged(double v) {
     m_dFadeIn = v;
-    qDebug() << "fade_in_pos" << v;
     update();
 }
 
 void WOverview::fadeOutChanged(double v) {
     m_dFadeOut = v;
-    qDebug() << "fade_out_pos" << v;
     update();
 }
 

@@ -187,9 +187,11 @@ void AutoDJ::player1PositionChanged(double samplePos1) {
             m_pCOPlay2->slotSet(1.0f);
         }
 
-        if (m_pTrackTransition->m_pCOPlayPos1->get() == 1.0f) {
+        // Check if the crossfade has finished
+        if (m_pTrackTransition->m_pCOCrossfader->get() >= 1.0f) {
             m_pCOPlay1->slotSet(0.0f);
             m_bPlayer1Primed = false;
+            m_bPlayer1Cued = false;
         }
     }
 }
@@ -241,9 +243,11 @@ void AutoDJ::player2PositionChanged(double samplePos2) {
             m_pCOPlay1->slotSet(1.0f);
         }
 
-        if (m_pTrackTransition->m_pCOPlayPos2->get() == 1.0f) {
+        // Check if the crossfade has finished
+        if (m_pTrackTransition->m_pCOCrossfader->get() <= -1.0f) {
             m_pCOPlay2->slotSet(0.0f);
             m_bPlayer2Primed = false;
+            m_bPlayer2Cued = false;
         }
     }
 }
