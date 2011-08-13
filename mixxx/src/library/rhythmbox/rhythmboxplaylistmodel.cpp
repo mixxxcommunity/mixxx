@@ -155,8 +155,9 @@ QItemDelegate* RhythmboxPlaylistModel::delegateForColumn(const int i) {
 }
 
 TrackModel::CapabilitiesFlags RhythmboxPlaylistModel::getCapabilities() const {
-    return TRACKMODELCAPS_NONE |
-      	   TRACKMODELCAPS_ADDTOAUTODJ;
+    return   TRACKMODELCAPS_ADDTOAUTODJ
+    	   | TRACKMODELCAPS_ADDTOCRATE
+    	   | TRACKMODELCAPS_ADDTOPLAYLIST;
 }
 
 Qt::ItemFlags RhythmboxPlaylistModel::flags(const QModelIndex &index) const {

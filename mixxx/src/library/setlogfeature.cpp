@@ -39,7 +39,7 @@ SetlogFeature::SetlogFeature(QObject* parent, ConfigObject<ConfigValue>* pConfig
     connect(m_pAddToAutoDJAction, SIGNAL(triggered()),
             this, SLOT(slotAddToAutoDJ()));
 
-    m_pAddToAutoDJTopAction = new QAction(tr("Add to Auto DJ top (2)"),this);
+    m_pAddToAutoDJTopAction = new QAction(tr("Add to Auto DJ top 2"),this);
     connect(m_pAddToAutoDJAction, SIGNAL(triggered()),
             this, SLOT(slotAddToAutoDJTop()));
 

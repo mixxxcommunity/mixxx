@@ -153,6 +153,7 @@ void DlgPrefPlaylist::slotUpdate()
     checkBox_library_scan->setChecked((bool)config->getValueString(ConfigKey("[Library]","RescanOnStartup")).toInt());
     checkbox_ID3_sync->setChecked((bool)config->getValueString(ConfigKey("[Library]","WriteAudioTags")).toInt());
     checkBox_use_relative_path->setChecked((bool)config->getValueString(ConfigKey("[Library]","UseRelativePathOnExport")).toInt());
+    checkBox_show_itunes->setChecked((bool)config->getValueString(ConfigKey("[Library]","ShowItunesLibrary"),"1").toInt());
 
 
 }
@@ -241,6 +242,8 @@ void DlgPrefPlaylist::slotApply()
     config->set(ConfigKey("[Library]","UseRelativePathOnExport"),
                    ConfigValue((int)checkBox_use_relative_path->isChecked()));
 
+    config->set(ConfigKey("[Library]","ShowItunesLibrary"),
+                   ConfigValue((int)checkBox_show_itunes->isChecked()));
 
     config->Save();
 

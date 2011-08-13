@@ -70,6 +70,10 @@ class ITunesFeature : public LibraryFeature {
     QFutureWatcher<TreeItem*> m_future_watcher;
     QFuture<TreeItem*> m_future;
     QString m_title;
+    bool m_cancelImport;
+
+    QString m_dbItunesRoot;
+    QString m_mixxxItunesRoot;
 
     static const QString ITDB_PATH_KEY;
 };

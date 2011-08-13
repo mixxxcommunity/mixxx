@@ -51,6 +51,8 @@ private:
     QFutureWatcher<TreeItem*> m_track_watcher;
     QFuture<TreeItem*> m_track_future;
 
+    bool m_cancelImport;
+
 
     TreeItemModel m_childModel;
 

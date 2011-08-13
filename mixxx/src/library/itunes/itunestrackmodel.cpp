@@ -38,6 +38,8 @@ ITunesTrackModel::~ITunesTrackModel() {
 }
 
 bool ITunesTrackModel::addTrack(const QModelIndex& index, QString location) {
+	Q_UNUSED(index);
+	Q_UNUSED(location);
     return false;
 }
 
@@ -51,7 +53,30 @@ TrackPointer ITunesTrackModel::getTrack(const QModelIndex& index) const {
 
     QString location = index.sibling(index.row(), fieldIndex("location")).data().toString();
 
-    TrackPointer pTrack = TrackPointer(new TrackInfoObject(location), &QObject::deleteLater);
+    if (location.isEmpty()) {
+    	// Track is lost
+    	return TrackPointer();
+    }
+
+    TrackDAO& track_dao = m_pTrackCollection->getTrackDAO();
+    int track_id = track_dao.getTrackId(location);
+    if (track_id < 0) {
+    	// Add Track to library
+    	track_id = track_dao.addTrack(location);
+    }
+
+    TrackPointer pTrack;
+
+    if (track_id < 0) {
+    	// Add Track to library failed
+    	// Create own TrackInfoObject
+    	pTrack = TrackPointer(new TrackInfoObject(location), &QObject::deleteLater);
+    }
+    else {
+    	pTrack = track_dao.getTrack(track_id);
+    }
+
+    // Overwrite Metadata from iTunes library
     pTrack->setArtist(artist);
     pTrack->setTitle(title);
     pTrack->setAlbum(album);
@@ -79,15 +104,16 @@ QString ITunesTrackModel::getTrackLocation(const QModelIndex& index) const {
 }
 
 void ITunesTrackModel::removeTrack(const QModelIndex& index) {
-
+	Q_UNUSED(index);
 }
 
 void ITunesTrackModel::removeTracks(const QModelIndexList& indices) {
-
+	Q_UNUSED(indices);
 }
 
 void ITunesTrackModel::moveTrack(const QModelIndex& sourceIndex, const QModelIndex& destIndex) {
-
+	Q_UNUSED(sourceIndex);
+	Q_UNUSED(destIndex);
 }
 
 void ITunesTrackModel::search(const QString& searchText) {
@@ -139,11 +165,14 @@ QMimeData* ITunesTrackModel::mimeData(const QModelIndexList &indexes) const {
 
 
 QItemDelegate* ITunesTrackModel::delegateForColumn(const int i) {
-    return NULL;
+	Q_UNUSED(i);
+	return NULL;
 }
 
 TrackModel::CapabilitiesFlags ITunesTrackModel::getCapabilities() const {
-    return TRACKMODELCAPS_NONE;
+    return   TRACKMODELCAPS_ADDTOAUTODJ
+     	   | TRACKMODELCAPS_ADDTOCRATE
+     	   | TRACKMODELCAPS_ADDTOPLAYLIST;
 }
 
 Qt::ItemFlags ITunesTrackModel::flags(const QModelIndex &index) const {
@@ -151,5 +180,6 @@ Qt::ItemFlags ITunesTrackModel::flags(const QModelIndex &index) const {
 }
 
 bool ITunesTrackModel::isColumnHiddenByDefault(int column) {
-    return false;
+	Q_UNUSED(column);
+	return false;
 }

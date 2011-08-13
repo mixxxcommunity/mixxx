@@ -9,7 +9,9 @@
 
 RhythmboxFeature::RhythmboxFeature(QObject* parent, TrackCollection* pTrackCollection)
     : LibraryFeature(parent),
-      m_pTrackCollection(pTrackCollection) {
+      m_pTrackCollection(pTrackCollection),
+      m_cancelImport(false)
+{
 
     m_pRhythmboxTrackModel = new RhythmboxTrackModel(this, m_pTrackCollection);
     m_pRhythmboxPlaylistModel = new RhythmboxPlaylistModel(this, m_pTrackCollection);
@@ -33,7 +35,17 @@ RhythmboxFeature::RhythmboxFeature(QObject* parent, TrackCollection* pTrackColle
 }
 
 RhythmboxFeature::~RhythmboxFeature() {
-    delete m_pRhythmboxTrackModel;
+
+	qDebug() << "~RhythmboxFeature()";
+	// stop import thread, if still running
+	m_cancelImport = true;
+	if( m_track_future.isRunning() ){
+		qDebug() << "m_track_future still running";
+		m_track_future.waitForFinished();
+		qDebug() << "m_track_future finished";
+	}
+
+	delete m_pRhythmboxTrackModel;
     delete m_pRhythmboxPlaylistModel;
 }
 
@@ -155,8 +167,8 @@ TreeItem* RhythmboxFeature::importMusicCollection()
 
 
     QXmlStreamReader xml(&db);
-    while (!xml.atEnd()) {
-        xml.readNext();
+    while (!xml.atEnd() && !m_cancelImport) {
+    	xml.readNext();
         if (xml.isStartElement() && xml.name() == "entry") {
             QXmlStreamAttributes attr = xml.attributes();
             //Check if we really parse a track and not album art information
@@ -178,6 +190,11 @@ TreeItem* RhythmboxFeature::importMusicCollection()
 
 
     db.close();
+
+    if (m_cancelImport) {
+    	return NULL;
+    }
+
     return importPlaylists();
 
 
@@ -206,7 +223,7 @@ TreeItem* RhythmboxFeature::importPlaylists()
     TreeItem* rootItem = new TreeItem();
 
     QXmlStreamReader xml(&db);
-    while (!xml.atEnd()) {
+    while (!xml.atEnd() && !m_cancelImport) {
         xml.readNext();
         if (xml.isStartElement() && xml.name() == "playlist") {
             QXmlStreamAttributes attr = xml.attributes();
