@@ -276,12 +276,12 @@ METADATA
     </sql>
   </revision>
   <revision version="13" min_compatible="3">
-	<description>
-	 Add fade points for AutoDJ to library table.
+    <description>
+      Add fade points for AutoDJ to library table.
     </description>
     <sql>
-	  ALTER TABLE Library ADD COLUMN fade_in INTEGER;
+      ALTER TABLE Library ADD COLUMN fade_in INTEGER;
       ALTER TABLE Library ADD COLUMN fade_out INTEGER; 
-	</sql>
+    </sql>
  </revision>
 </schema>

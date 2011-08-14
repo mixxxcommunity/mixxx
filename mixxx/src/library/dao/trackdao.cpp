@@ -247,7 +247,7 @@ void TrackDAO::prepareLibraryInsert(QSqlQuery& query) {
                   "bitrate, samplerate, cuepoint, bpm, replaygain, wavesummaryhex, "
                   "timesplayed, "
                   "channels, mixxx_deleted, header_parsed, beats_version, beats, "
-                  "fadein, fadeout) "
+                  "fade_in, fade_out) "
                   "VALUES (:artist, "
                   ":title, :album, :year, :genre, :tracknumber, "
                   ":filetype, :location, :comment, :url, :duration, :rating, :key, "
