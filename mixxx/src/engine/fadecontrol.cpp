@@ -16,11 +16,11 @@ FadeControl::FadeControl(const char *_group,
     m_pQuantizeEnabled = ControlObject::getControl(ConfigKey(_group, "quantize"));
     m_pNextBeat = ControlObject::getControl(ConfigKey(_group, "beat_next"));
 
-    m_pFadepointInSet = new ControlPushButton(ConfigKey(_group, "fadein_set"));
+    m_pFadepointInSet = new ControlPushButton(ConfigKey(_group, "fade_in_set"));
     connect(m_pFadepointInSet, SIGNAL(valueChanged(double)),
             this, SLOT(slotFadeInSet(double)));
 
-    m_pFadepointOutSet = new ControlPushButton(ConfigKey(_group, "fadeout_set"));
+    m_pFadepointOutSet = new ControlPushButton(ConfigKey(_group, "fade_out_set"));
     connect(m_pFadepointOutSet, SIGNAL(valueChanged(double)),
             this, SLOT(slotFadeOutSet(double)));
 

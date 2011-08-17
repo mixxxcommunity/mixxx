@@ -72,7 +72,7 @@ WOverview::WOverview(const char *pGroup, QWidget * parent)
         ConfigKey(m_pGroup, "fade_out_position"));
     connect(m_pCOFadeOutPosition, SIGNAL(valueChanged(double)),
             this, SLOT(fadeOutChanged(double)));
-    connect(m_pCOFadeOutPosition, SIGNAL(valueChanged(double)),
+    connect(m_pCOFadeOutPosition, SIGNAL(valueChangedFromEngine(double)),
             this, SLOT(fadeOutChanged(double)));
     fadeOutChanged(m_pCOFadeOutPosition->get());
 

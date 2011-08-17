@@ -18,6 +18,9 @@
 	the resulting work only under the same or similar license to this one.
 
 	CHANGELOG
+	v1.10.0.11      (08/17/2011)
+	* Feature: Added buttons to set the Fade In and Fade Out points for AutoDJ
+
 	v1.10.0.10	(01/06/2011)
 	* Feature: Added BPM display & BPM tap button to samplers
 
@@ -5103,7 +5106,7 @@
 						</State>
 						<Pos>365,0</Pos>
 						<Connection>
-							<ConfigKey>[Channel1],fadein_set</ConfigKey>
+							<ConfigKey>[Channel1],fade_in_set</ConfigKey>
 							<EmitOnPressAndRelease>true</EmitOnPressAndRelease>
 							<ButtonState>LeftButton</ButtonState>
 						</Connection>
@@ -5121,7 +5124,7 @@
 						</State>
 						<Pos>365,26</Pos>
 						<Connection>
-							<ConfigKey>[Channel1],fadeout_set</ConfigKey>
+							<ConfigKey>[Channel1],fade_out_set</ConfigKey>
 							<EmitOnPressAndRelease>true</EmitOnPressAndRelease>
 							<ButtonState>LeftButton</ButtonState>
 						</Connection>
@@ -5271,6 +5274,27 @@
 							<Color>#00FF00</Color>
 							<TextColor>#FFFFFF</TextColor>
 						</Mark>
+
+						<!--
+						Fade In and Fade Out point markers for AutoDJ
+						-->
+						<Mark>
+							<Control>fade_in_position</Control>
+							<Pixmap>marker_fade_in.png</Pixmap>
+							<Text>FADE IN</Text>
+							<Align>bottom</Align>
+							<Color>#FF00FF</Color>
+							<TextColor>#FFFFFF</TextColor>
+						</Mark>
+						<Mark>
+							<Control>fade_out_position</Control>
+							<Pixmap>marker_fade_out.png</Pixmap>
+							<Text>FADE OUT</Text>
+							<Align>bottom</Align>
+							<Color>#FF00FF</Color>
+							<TextColor>#FFFFFF</TextColor>
+						</Mark>
+
 						<!--
 						The hotcues not represented by a button in the current skin show only in the waveform under two circumstances:
 							- if a MIDI device which supports more hotcues than buttons are in the current skin has them activated
@@ -6426,7 +6450,7 @@
 						</State>
 						<Pos>365,0</Pos>
 						<Connection>
-							<ConfigKey>[Channel2],fadein_set</ConfigKey>
+							<ConfigKey>[Channel2],fade_in_set</ConfigKey>
 							<EmitOnPressAndRelease>true</EmitOnPressAndRelease>
 							<ButtonState>LeftButton</ButtonState>
 						</Connection>
@@ -6444,7 +6468,7 @@
 						</State>
 						<Pos>365,26</Pos>
 						<Connection>
-							<ConfigKey>[Channel2],fadeout_set</ConfigKey>
+							<ConfigKey>[Channel2],fade_out_set</ConfigKey>
 							<EmitOnPressAndRelease>true</EmitOnPressAndRelease>
 							<ButtonState>LeftButton</ButtonState>
 						</Connection>
