@@ -62,7 +62,8 @@ TrackPointer ITunesPlaylistModel::getTrack(const QModelIndex& index) const
     	pTrack = track_dao.getTrack(track_id);
     }
 
-    // Overwrite Metadata from iTunes library
+    // Overwrite metadata from iTunes library
+    // Note: This will be written to the mixxx library as well
     pTrack->setArtist(artist);
     pTrack->setTitle(title);
     pTrack->setAlbum(album);
@@ -194,14 +195,14 @@ void ITunesPlaylistModel::setPlaylist(QString playlist_path) {
             << "itunes_library.title"
             << "itunes_library.album"
             << "itunes_library.year"
+            << "itunes_library.duration"
+            << "itunes_library.rating"
             << "itunes_library.genre"
             << "itunes_library.tracknumber"
+            << "itunes_library.bpm"
+            << "itunes_library.bitrate"
             << "itunes_library.location"
             << "itunes_library.comment"
-            << "itunes_library.rating"
-            << "itunes_library.duration"
-            << "itunes_library.bitrate"
-            << "itunes_library.bpm"
             << "itunes_playlist_tracks.track_id"
             << "itunes_playlists.name";
 

@@ -19,14 +19,17 @@ ITunesTrackModel::ITunesTrackModel(QObject* parent,
     QStringList columns;
     columns << "id"
             << "artist"
+            << "title"
             << "album"
-            << "genre"
-            << "location"
-            << "comment"
+            << "year"
             << "duration"
-            << "bitrate"
+            << "rating"
+            << "genre"
+            << "tracknumber"
             << "bpm"
-            << "rating";
+            << "bitrate"
+            << "location"
+            << "comment";
     setTable("itunes_library", columns, "id");
     setCaching(false);
 
@@ -76,7 +79,8 @@ TrackPointer ITunesTrackModel::getTrack(const QModelIndex& index) const {
     	pTrack = track_dao.getTrack(track_id);
     }
 
-    // Overwrite Metadata from iTunes library
+    // Overwrite metadata from iTunes library
+    // Note: This will be written to the mixxx library as well
     pTrack->setArtist(artist);
     pTrack->setTitle(title);
     pTrack->setAlbum(album);
@@ -131,7 +135,7 @@ const QString ITunesTrackModel::currentSearch() {
 }
 
 bool ITunesTrackModel::isColumnInternal(int column) {
-    if (column == fieldIndex(LIBRARYTABLE_ID) ||
+	if (column == fieldIndex(LIBRARYTABLE_ID) ||
         column == fieldIndex(LIBRARYTABLE_MIXXXDELETED) ||
         column == fieldIndex(TRACKLOCATIONSTABLE_FSDELETED))
         return true;

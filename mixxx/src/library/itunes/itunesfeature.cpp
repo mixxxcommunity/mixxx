@@ -113,7 +113,7 @@ void ITunesFeature::activate(bool forceReload) {
         // Let a worker thread do the XML parsing
         m_future = QtConcurrent::run(this, &ITunesFeature::importLibrary);
         m_future_watcher.setFuture(m_future);
-        m_title = tr("iTunes (loading)");
+        m_title = tr("(loading) iTunes"); // (loading) at start in respect to small displays
         //calls a slot in the sidebar model such that 'iTunes (isLoading)' is displayed.
         emit (featureIsLoading(this));
     }

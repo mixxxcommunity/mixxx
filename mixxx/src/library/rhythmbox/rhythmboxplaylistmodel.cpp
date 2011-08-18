@@ -60,7 +60,8 @@ TrackPointer RhythmboxPlaylistModel::getTrack(const QModelIndex& index) const {
     	pTrack = track_dao.getTrack(track_id);
     }
 
-    // Overwrite Metadata from Rythmbox library
+    // Overwrite metadata from Rhythmbox library
+    // Note: This will be written to the mixxx library as well
     pTrack->setArtist(artist);
     pTrack->setTitle(title);
     pTrack->setAlbum(album);
@@ -190,14 +191,14 @@ void RhythmboxPlaylistModel::setPlaylist(QString playlist_path) {
             << "rhythmbox_library.title"
             << "rhythmbox_library.album"
             << "rhythmbox_library.year"
+            << "rhythmbox_library.duration"
+            << "rhythmbox_library.rating"
             << "rhythmbox_library.genre"
             << "rhythmbox_library.tracknumber"
+            << "rhythmbox_library.bpm"
+            << "rhythmbox_library.bitrate"
             << "rhythmbox_library.location"
             << "rhythmbox_library.comment"
-            << "rhythmbox_library.rating"
-            << "rhythmbox_library.duration"
-            << "rhythmbox_library.bitrate"
-            << "rhythmbox_library.bpm"
             << "rhythmbox_playlist_tracks.track_id"
             << "rhythmbox_playlists.name";
 

@@ -18,14 +18,17 @@ RhythmboxTrackModel::RhythmboxTrackModel(QObject* parent,
     QStringList columns;
     columns << "id"
             << "artist"
+            << "title"
             << "album"
-            << "genre"
-            << "location"
-            << "comment"
+            << "year"
             << "duration"
-            << "bitrate"
+            << "rating"
+            << "genre"
+            << "tracknumber"
             << "bpm"
-            << "rating";
+            << "bitrate"
+            << "location"
+            << "comment";
     setTable("rhythmbox_library", columns, "id");
     initHeaderData();
     initDefaultSearchColumns();
@@ -75,6 +78,7 @@ TrackPointer RhythmboxTrackModel::getTrack(const QModelIndex& index) const {
     }
 
     // Overwrite Metadata from Rythmbox library
+    // Note: This will be written to the mixxx library as well
     pTrack->setArtist(artist);
     pTrack->setTitle(title);
     pTrack->setAlbum(album);
