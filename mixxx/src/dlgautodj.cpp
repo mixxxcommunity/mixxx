@@ -172,9 +172,12 @@ void DlgAutoDJ::slotRemovePlayingTrackFromQueue(QString group) {
         // Do not remove when the user has loaded a track manually
         return;
     }
-    qDebug() << "REMOVING " << nextTrack->getTitle();
-    // Remove the top track
-    m_pAutoDJTableModel->removeTrack(m_pAutoDJTableModel->index(0, 0));
+
+    if (nextTrack) {
+        qDebug() << "REMOVING " << nextTrack->getTitle();
+        // Remove the top track
+        m_pAutoDJTableModel->removeTrack(m_pAutoDJTableModel->index(0, 0));
+    }
 }
 
 void DlgAutoDJ::slotNextTrackNeeded() {
