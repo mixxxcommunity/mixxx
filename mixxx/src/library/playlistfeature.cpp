@@ -24,8 +24,9 @@ PlaylistFeature::PlaylistFeature(QObject* parent, TrackCollection* pTrackCollect
          // m_pTrackCollection(pTrackCollection),
           m_playlistDao(pTrackCollection->getPlaylistDAO()),
           m_trackDao(pTrackCollection->getTrackDAO()),
-          m_pConfig(pConfig),
-          m_playlistTableModel(this, pTrackCollection->getDatabase()) {
+          m_playlistTableModel(this, pTrackCollection->getDatabase()),
+          m_pConfig(pConfig)
+{
     m_pPlaylistTableModel = new PlaylistTableModel(this, pTrackCollection);
 
     m_pCreatePlaylistAction = new QAction(tr("New Playlist"),this);
@@ -59,6 +60,18 @@ PlaylistFeature::PlaylistFeature(QObject* parent, TrackCollection* pTrackCollect
     connect(m_pExportPlaylistAction, SIGNAL(triggered()),
             this, SLOT(slotExportPlaylist()));
 
+    connect(&m_playlistDao, SIGNAL(added(int)),
+            this, SLOT(slotPlaylistTableChanged(int)));
+
+    connect(&m_playlistDao, SIGNAL(deleted(int)),
+            this, SLOT(slotPlaylistTableChanged(int)));
+
+    connect(&m_playlistDao, SIGNAL(renamed(int)),
+            this, SLOT(slotPlaylistTableChanged(int)));
+
+    connect(&m_playlistDao, SIGNAL(lockChanged(int)),
+            this, SLOT(slotPlaylistTableChanged(int)));
+
     // Setup the sidebar playlist model
     m_playlistTableModel.setTable("Playlists");
     m_playlistTableModel.setFilter("hidden=0");
@@ -69,7 +82,7 @@ PlaylistFeature::PlaylistFeature(QObject* parent, TrackCollection* pTrackCollect
     //construct child model
     TreeItem *rootItem = new TreeItem();
     m_childModel.setRootItem(rootItem);
-    constructChildModel();
+    constructChildModel(-1);
 }
 
 PlaylistFeature::~PlaylistFeature() {
@@ -94,8 +107,11 @@ QIcon PlaylistFeature::getIcon() {
 
 void PlaylistFeature::bindWidget(WLibrarySidebar* sidebarWidget,
                                  WLibrary* libraryWidget,
-                                 MixxxKeyboard* keyboard) {
-    WLibraryTextBrowser* edit = new WLibraryTextBrowser(libraryWidget);
+                                 MixxxKeyboard* keyboard)
+{
+	Q_UNUSED(sidebarWidget);
+	Q_UNUSED(keyboard);
+	WLibraryTextBrowser* edit = new WLibraryTextBrowser(libraryWidget);
     connect(this, SIGNAL(showPage(const QUrl&)),
             edit, SLOT(setSource(const QUrl&)));
     libraryWidget->registerView("PLAYLISTHOME", edit);
@@ -107,7 +123,7 @@ void PlaylistFeature::activate() {
 }
 
 void PlaylistFeature::activateChild(const QModelIndex& index) {
-    //qDebug() << "PlaylistFeature::activateChild()" << index;
+    //qDebug() << "PlaylistFeature::activateChild()" << index;    		playlistId = playlistDao.createPlaylist(playlist);
 
     //Switch the playlist table model's playlist.
     QString playlistName = index.data().toString();
@@ -188,17 +204,11 @@ void PlaylistFeature::slotCreatePlaylist() {
 
     } while (!validNameGiven);
 
-    bool playlistCreated = m_playlistDao.createPlaylist(name);
+    int playlistId = m_playlistDao.createPlaylist(name);
 
-    if (playlistCreated) {
-        clearChildModel();
-        m_playlistTableModel.select();
-        constructChildModel();
+    if (playlistId != -1) {
         emit(featureUpdated());
-        //Switch the view to the new playlist.
-        int playlistId = m_playlistDao.getPlaylistIdFromName(name);
-        m_pPlaylistTableModel->setPlaylist(playlistId);
-        // TODO(XXX) set sidebar selection
+    	// reset sidebar selection
         emit(showTrackModel(m_pPlaylistTableModel));
     }
     else {
@@ -256,11 +266,7 @@ void PlaylistFeature::slotRenamePlaylist()
     } while (!validNameGiven);
 
     m_playlistDao.renamePlaylist(playlistId, newName);
-    clearChildModel();
-    m_playlistTableModel.select();
-    constructChildModel();
-    emit(featureUpdated());
-    m_pPlaylistTableModel->setPlaylist(playlistId);
+	emit(featureUpdated());
 }
 
 
@@ -273,9 +279,6 @@ void PlaylistFeature::slotTogglePlaylistLock()
     if (!m_playlistDao.setPlaylistLocked(playlistId, locked)) {
         qDebug() << "Failed to toggle lock of playlistId " << playlistId;
     }
-
-    TreeItem* playlistItem = m_childModel.getItem(m_lastRightClickedIndex);
-    playlistItem->setIcon(locked ? QIcon(":/images/library/ic_library_locked.png") : QIcon());
 }
 
 void PlaylistFeature::slotDeletePlaylist()
@@ -293,16 +296,14 @@ void PlaylistFeature::slotDeletePlaylist()
         !m_playlistDao.isPlaylistLocked(playlistId)) {
         Q_ASSERT(playlistId >= 0);
 
-        clearChildModel();
         m_playlistDao.deletePlaylist(playlistId);
-        m_playlistTableModel.select();
-        constructChildModel();
         emit(featureUpdated());
     }
 
 }
 
 bool PlaylistFeature::dropAccept(QUrl url) {
+	Q_UNUSED(url);
     return false;
 }
 
@@ -342,7 +343,8 @@ bool PlaylistFeature::dropAcceptChild(const QModelIndex& index, QUrl url) {
 }
 
 bool PlaylistFeature::dragMoveAccept(QUrl url) {
-    return false;
+	Q_UNUSED(url);
+	return false;
 }
 
 bool PlaylistFeature::dragMoveAcceptChild(const QModelIndex& index, QUrl url) {
@@ -360,16 +362,18 @@ bool PlaylistFeature::dragMoveAcceptChild(const QModelIndex& index, QUrl url) {
 TreeItemModel* PlaylistFeature::getChildModel() {
     return &m_childModel;
 }
+
 /**
   * Purpose: When inserting or removing playlists,
   * we require the sidebar model not to reset.
   * This method queries the database and does dynamic insertion
 */
-void PlaylistFeature::constructChildModel()
+QModelIndex PlaylistFeature::constructChildModel(int selected_id)
 {
     QList<TreeItem*> data_list;
     int nameColumn = m_playlistTableModel.record().indexOf("name");
     int idColumn = m_playlistTableModel.record().indexOf("id");
+	QModelIndex selected_index;    
 
     //Access the invisible root item
     TreeItem* root = m_childModel.getItem(QModelIndex());
@@ -381,6 +385,11 @@ void PlaylistFeature::constructChildModel()
         int playlist_id = m_playlistTableModel.data(ind).toInt();
         bool locked = m_playlistDao.isPlaylistLocked(playlist_id);
 
+        if ( selected_id == playlist_id) {
+        	// save index for selection
+        	selected_index = m_childModel.index(row, 0);
+        }
+
         //Create the TreeItem whose parent is the invisible root item
         TreeItem* item = new TreeItem(playlist_name, playlist_name, this, root);
         item->setIcon(locked ? QIcon(":/images/library/ic_library_locked.png") : QIcon());
@@ -389,6 +398,8 @@ void PlaylistFeature::constructChildModel()
 
     //Append all the newly created TreeItems in a dynamic way to the childmodel
     m_childModel.insertRows(data_list, 0, m_playlistTableModel.rowCount());
+
+    return selected_index;
 }
 
 /**
@@ -437,9 +448,12 @@ void PlaylistFeature::slotImportPlaylist()
     //delete the parser object
     if(playlist_parser) delete playlist_parser;
 }
+
 void PlaylistFeature::onLazyChildExpandation(const QModelIndex &index){
-    //Nothing to do because the childmodel is not of lazy nature.
+	Q_UNUSED(index);
+	//Nothing to do because the childmodel is not of lazy nature.
 }
+
 void PlaylistFeature::slotExportPlaylist(){
     qDebug() << "Export playlist" << m_lastRightClickedIndex.data();
     QString file_location = QFileDialog::getSaveFileName(NULL,
@@ -505,3 +519,14 @@ void PlaylistFeature::addToAutoDJ(bool bTop) {
     emit(featureUpdated());
 }
 
+void PlaylistFeature::slotPlaylistTableChanged(int playlistId) {
+	 //qDebug() << "slotPlaylistTableChanged() playlistId:" << playlistId;
+	 Q_UNUSED(playlistId);
+     clearChildModel();
+     m_playlistTableModel.select();
+     m_lastRightClickedIndex = constructChildModel(playlistId);
+     // Switch the view to the playlist.
+     m_pPlaylistTableModel->setPlaylist(playlistId);
+     // Update selection
+ 	 emit(featureSelect(this, m_lastRightClickedIndex));
+}

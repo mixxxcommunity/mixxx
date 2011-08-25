@@ -28,9 +28,9 @@ SetlogFeature::SetlogFeature(QObject* parent, ConfigObject<ConfigValue>* pConfig
          // m_pTrackCollection(pTrackCollection),
           m_playlistDao(pTrackCollection->getPlaylistDAO()),
           m_trackDao(pTrackCollection->getTrackDAO()),
-          m_pConfig(pConfig),
 		  m_pCOPlayPos1(NULL),
 		  m_pCOPlayPos2(NULL),
+          m_pConfig(pConfig),
 		  m_playlistTableModel(this, pTrackCollection->getDatabase())
 {
     m_pPlaylistTableModel = new PlaylistTableModel(this, pTrackCollection);
@@ -40,7 +40,7 @@ SetlogFeature::SetlogFeature(QObject* parent, ConfigObject<ConfigValue>* pConfig
             this, SLOT(slotAddToAutoDJ()));
 
     m_pAddToAutoDJTopAction = new QAction(tr("Add to Auto DJ top 2"),this);
-    connect(m_pAddToAutoDJAction, SIGNAL(triggered()),
+    connect(m_pAddToAutoDJTopAction, SIGNAL(triggered()),
             this, SLOT(slotAddToAutoDJTop()));
 
     m_pDeletePlaylistAction = new QAction(tr("Remove"),this);
@@ -74,7 +74,7 @@ SetlogFeature::SetlogFeature(QObject* parent, ConfigObject<ConfigValue>* pConfig
 
     qDebug() << set_log_name_format;
 
-    do{
+    do {
     	i++;
     	// set_log_name.sprintf(set_log_name_format.toUtf8().data(),i);
     	set_log_name = set_log_name_format.arg(i);
@@ -83,14 +83,12 @@ SetlogFeature::SetlogFeature(QObject* parent, ConfigObject<ConfigValue>* pConfig
     }
     while( existingId != -1 );
 
-    bool playlistCreated = m_playlistDao.createPlaylist(set_log_name, PlaylistDAO::PLHT_SET_LOG);
+    m_playlistId = m_playlistDao.createPlaylist(set_log_name, PlaylistDAO::PLHT_SET_LOG);
 
-    if(!playlistCreated){
+    if (m_playlistId == -1) {
     	qDebug() << tr("Playlist Creation Failed");
     	qDebug() << tr("An unknown error occurred while creating playlist: ") << set_log_name;
     }
-
-    m_playlistId = m_playlistDao.getPlaylistIdFromName(set_log_name);
 
     // Setup the sidebar playlist model
     m_playlistTableModel.setTable("Playlists");

@@ -199,7 +199,6 @@ void BaseTrackPlayer::slotFinishLoading(TrackPointer pTrackInfoObject)
 
     // m_pLoadedTrack->setPlayed(true); // Actually the song is loaded but not played
 
-
     // Generate waveform summary
     //TODO: Consider reworking this visual resample stuff... need to ask rryan about this -- Albert.
     // TODO(rryan) : fix this crap -- the waveform renderers should be owned by
