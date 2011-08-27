@@ -263,6 +263,7 @@ void CrateFeature::slotDeleteCrate() {
 
     if (deleted) {
         emit(featureUpdated());
+        activate();
     } else {
         qDebug() << "Failed to delete crateId" << crateId;
     }
@@ -313,11 +314,7 @@ void CrateFeature::slotRenameCrate() {
 
 
     if (m_crateDao.renameCrate(crateId, newName)) {
-        //clearChildModel();
-        //m_crateListTableModel.select();
-        //constructChildModel(crateId);
         emit(featureUpdated());
-        //m_crateTableModel.setCrate(crateId);
     } else {
         qDebug() << "Failed to rename crateId" << crateId;
     }

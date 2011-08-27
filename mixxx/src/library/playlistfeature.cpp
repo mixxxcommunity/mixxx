@@ -21,7 +21,6 @@
 
 PlaylistFeature::PlaylistFeature(QObject* parent, TrackCollection* pTrackCollection, ConfigObject<ConfigValue>* pConfig)
         : LibraryFeature(parent),
-         // m_pTrackCollection(pTrackCollection),
           m_playlistDao(pTrackCollection->getPlaylistDAO()),
           m_trackDao(pTrackCollection->getTrackDAO()),
           m_playlistTableModel(this, pTrackCollection->getDatabase()),
@@ -291,14 +290,13 @@ void PlaylistFeature::slotDeletePlaylist()
         return;
     }
 
-    if (m_lastRightClickedIndex.isValid() &&
-        !m_playlistDao.isPlaylistLocked(playlistId)) {
+    if (m_lastRightClickedIndex.isValid()) {
         Q_ASSERT(playlistId >= 0);
 
         m_playlistDao.deletePlaylist(playlistId);
         emit(featureUpdated());
+        activate();
     }
-
 }
 
 bool PlaylistFeature::dropAccept(QUrl url) {
@@ -498,13 +496,10 @@ void PlaylistFeature::slotAddToAutoDJ() {
 	addToAutoDJ(false); // Top = True
 }
 
-
 void PlaylistFeature::slotAddToAutoDJTop() {
     //qDebug() << "slotAddToAutoDJTop() row:" << m_lastRightClickedIndex.data();
 	addToAutoDJ(true); // bTop = True
 }
-
-
 
 void PlaylistFeature::addToAutoDJ(bool bTop) {
     //qDebug() << "slotAddToAutoDJ() row:" << m_lastRightClickedIndex.data();

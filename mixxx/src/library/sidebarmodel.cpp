@@ -399,8 +399,6 @@ void SidebarModel::slotFeatureSelect(LibraryFeature* pFeature, const QModelIndex
 	QModelIndex ind;
 	if (featureIndex.isValid()) {
 	    TreeItem* item = (TreeItem*)featureIndex.internalPointer();
-        qDebug() << item->data();
-        qDebug() << item->parent()->data();
 	    ind = createIndex(featureIndex.row(), featureIndex.column(), item);
     } else {
 		for (int i=0; i < m_sFeatures.size(); ++i) {

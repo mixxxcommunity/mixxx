@@ -25,7 +25,6 @@ const QString SetlogFeature::m_sSetlogViewName = QString("SETLOGHOME");
 
 SetlogFeature::SetlogFeature(QObject* parent, ConfigObject<ConfigValue>* pConfig, TrackCollection* pTrackCollection)
         : LibraryFeature(parent),
-         // m_pTrackCollection(pTrackCollection),
           m_playlistDao(pTrackCollection->getPlaylistDAO()),
           m_trackDao(pTrackCollection->getTrackDAO()),
 		  m_pCOPlayPos1(NULL),
@@ -290,12 +289,12 @@ void SetlogFeature::slotDeletePlaylist() {
         return;
     }
 
-    if (m_lastRightClickedIndex.isValid() &&
-        !m_playlistDao.isPlaylistLocked(playlistId)) {
+    if (m_lastRightClickedIndex.isValid()) {
         Q_ASSERT(playlistId >= 0);
 
         m_playlistDao.deletePlaylist(playlistId);
         emit(featureUpdated());
+        activate();
     }
 
 }
