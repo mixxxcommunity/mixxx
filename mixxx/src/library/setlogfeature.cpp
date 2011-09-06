@@ -134,7 +134,7 @@ QVariant SetlogFeature::title() {
 }
 
 QIcon SetlogFeature::getIcon() {
-    return QIcon(":/images/library/ic_library_playlist.png");
+    return QIcon(":/images/library/ic_library_setlog.png");
 }
 
 
