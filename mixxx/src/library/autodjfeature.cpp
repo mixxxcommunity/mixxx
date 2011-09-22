@@ -22,7 +22,8 @@ AutoDJFeature::AutoDJFeature(QObject* parent,
         : LibraryFeature(parent),
           m_pConfig(pConfig),
           m_pTrackCollection(pTrackCollection),
-          m_playlistDao(pTrackCollection->getPlaylistDAO()) {
+          m_playlistDao(pTrackCollection->getPlaylistDAO()) 
+{
 	m_pAutoDJView = NULL;
 }
 

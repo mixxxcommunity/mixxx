@@ -58,6 +58,10 @@ SetlogFeature::SetlogFeature(QObject* parent, ConfigObject<ConfigValue>* pConfig
     connect(m_pExportPlaylistAction, SIGNAL(triggered()),
             this, SLOT(slotExportPlaylist()));
 
+    m_pJoinWithPreviousAction = new QAction(tr("Join with previous"), this);
+//    connect(m_pJoinWithPreviousAction, SIGNAL(triggered()),
+//            this, SLOT(slotJoinWithPrevious()));
+
     connect(&m_playlistDao, SIGNAL(added(int)),
             this, SLOT(slotPlaylistTableChanged(int)));
 
@@ -78,21 +82,14 @@ SetlogFeature::SetlogFeature(QObject* parent, ConfigObject<ConfigValue>* pConfig
     QString set_log_name_format;
     QString set_log_name;
 
-    //set_log_name_format = QDate::currentDate().toString(Qt::ISODate) + "_%d";
-    set_log_name_format = QDate::currentDate().toString(Qt::ISODate) + "_%1";
-    int i = 0;
-    int existingId;
+    set_log_name = QDate::currentDate().toString(Qt::ISODate);
+    set_log_name_format = set_log_name + " (%1)";
+    int i = 1;
 
-    qDebug() << set_log_name_format;
-
-    do {
-    	i++;
-    	// set_log_name.sprintf(set_log_name_format.toUtf8().data(),i);
-    	set_log_name = set_log_name_format.arg(i);
-    	existingId = m_playlistDao.getPlaylistIdFromName(set_log_name);
-    	qDebug() << set_log_name;
+    // calculate name of the todays setlog
+    while (m_playlistDao.getPlaylistIdFromName(set_log_name) != -1) {
+    	set_log_name = set_log_name_format.arg(++i);
     }
-    while( existingId != -1 );
 
     m_playlistId = m_playlistDao.createPlaylist(set_log_name, PlaylistDAO::PLHT_SET_LOG);
 
@@ -212,6 +209,7 @@ void SetlogFeature::onRightClickChild(const QPoint& globalPos, QModelIndex index
     	menu.addAction(m_pDeletePlaylistAction);
     	menu.addAction(m_pLockPlaylistAction);
     }
+   	menu.addAction(m_pJoinWithPreviousAction);
     menu.addSeparator();
     menu.addAction(m_pExportPlaylistAction);
     menu.exec(globalPos);

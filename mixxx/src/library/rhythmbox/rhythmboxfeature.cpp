@@ -32,7 +32,6 @@ RhythmboxFeature::RhythmboxFeature(QObject* parent, TrackCollection* pTrackColle
     }
     connect(&m_track_watcher, SIGNAL(finished()), this, SLOT(onTrackCollectionLoaded()), Qt::QueuedConnection);
 
-
     m_pAddToAutoDJAction = new QAction(tr("Add to Auto DJ bottom"),this);
     connect(m_pAddToAutoDJAction, SIGNAL(triggered()),
             this, SLOT(slotAddToAutoDJ()));
@@ -44,7 +43,6 @@ RhythmboxFeature::RhythmboxFeature(QObject* parent, TrackCollection* pTrackColle
     m_pImportAsMixxxPlaylistAction = new QAction(tr("Import as Mixxx Playlist"), this);
     connect(m_pImportAsMixxxPlaylistAction, SIGNAL(triggered()),
             this, SLOT(slotImportAsMixxxPlaylist()));
-
 }
 
 RhythmboxFeature::~RhythmboxFeature() {
@@ -392,7 +390,6 @@ void RhythmboxFeature::importTrack(QXmlStreamReader &xml, QSqlQuery &query)
         qDebug() << "SQL Error in rhythmboxfeature.cpp: line" << __LINE__ << " " << query.lastError();
         return;
     }
-
 }
 
 /** reads all playlist entries and executes a SQL statement **/

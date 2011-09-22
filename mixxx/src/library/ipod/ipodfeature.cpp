@@ -6,25 +6,31 @@
 #include <QMenu>
 #include <QAction>
 
-#include "library/itunes/itunesfeature.h"
+#include "library/ipod/ipodfeature.h"
 
 #include "library/itunes/itunestrackmodel.h"
-#include "library/itunes/itunesplaylistmodel.h"
+#include "library/ipod/ipodplaylistmodel.h"
 #include "library/dao/settingsdao.h"
 
-const QString ITunesFeature::ITDB_PATH_KEY = "mixxx.itunesfeature.itdbpath";
+extern "C" {
+#include <glib-object.h> // g_type_init
+}
+
+// const QString IPodFeature::ITDB_PATH_KEY = "mixxx.IPodFeature.itdbpath";
 
 
-ITunesFeature::ITunesFeature(QObject* parent, TrackCollection* pTrackCollection)
+IPodFeature::IPodFeature(QObject* parent, TrackCollection* pTrackCollection)
         : LibraryFeature(parent),
           m_pTrackCollection(pTrackCollection),
-          m_cancelImport(false)
+          m_cancelImport(false),
+          m_itdb( 0 )
 {
     m_pITunesTrackModel = new ITunesTrackModel(this, m_pTrackCollection);
-    m_pITunesPlaylistModel = new ITunesPlaylistModel(this, m_pTrackCollection);
+    m_pIPodPlaylistModel = new IPodPlaylistModel(this, m_pTrackCollection);
     m_isActivated = false;
-    m_title = tr("iTunes");
+    m_title = tr("iPod");
 
+    /*
     if (!m_database.isOpen()) {
         m_database = QSqlDatabase::addDatabase("QSQLITE", "ITUNES_SCANNER");
         m_database.setHostName("localhost");
@@ -37,6 +43,7 @@ ITunesFeature::ITunesFeature(QObject* parent, TrackCollection* pTrackCollection)
             qDebug() << "Failed to open database for iTunes scanner." << m_database.lastError();
         }
     }
+    */
     connect(&m_future_watcher, SIGNAL(finished()), this, SLOT(onTrackCollectionLoaded()));
 
     m_pAddToAutoDJAction = new QAction(tr("Add to Auto DJ bottom"),this);
@@ -52,104 +59,125 @@ ITunesFeature::ITunesFeature(QObject* parent, TrackCollection* pTrackCollection)
             this, SLOT(slotImportAsMixxxPlaylist()));
 }
 
-ITunesFeature::~ITunesFeature() {
-	qDebug() << "~ITunesFeature()";
+IPodFeature::~IPodFeature() {
+	qDebug() << "~IPodFeature()";
 	// stop import thread, if still running
 	m_cancelImport = true;
-	if( m_future.isRunning() ){
+	if (m_future.isRunning()) {
 		qDebug() << "m_future still running";
 		m_future.waitForFinished();
 		qDebug() << "m_future finished";
 	}
+    if (m_itdb) {
+        itdb_free( m_itdb );
+    }
     delete m_pITunesTrackModel;
-    delete m_pITunesPlaylistModel;
+    delete m_pIPodPlaylistModel;
     delete m_pAddToAutoDJAction;
     delete m_pAddToAutoDJTopAction;
     delete m_pImportAsMixxxPlaylistAction;
 }
 
 // static
-bool ITunesFeature::isSupported() {
+bool IPodFeature::isSupported() {
     // itunes db might just be elsewhere, don't rely on it being in its
     // normal place. And since we will load an itdb on any platform...
     return true;
 }
 
 
-QVariant ITunesFeature::title() {
+QVariant IPodFeature::title() {
     return m_title;
 }
 
-QIcon ITunesFeature::getIcon() {
-    return QIcon(":/images/library/ic_library_itunes.png");
+QIcon IPodFeature::getIcon() {
+    return QIcon(":/images/library/ic_library_ipod.png");
 }
 
-void ITunesFeature::activate() {
+void IPodFeature::activate() {
     activate(false);
 }
 
-void ITunesFeature::activate(bool forceReload) {
-    //qDebug("ITunesFeature::activate()");
+void IPodFeature::activate(bool forceReload) {
+    //qDebug("IPodFeature::activate()");
+	GError *err = 0;
 
     if (!m_isActivated || forceReload) {
 
         SettingsDAO settings(m_pTrackCollection->getDatabase());
-        QString dbSetting(settings.getValue(ITDB_PATH_KEY));
+//        QString dbSetting(settings.getValue(ITDB_PATH_KEY));
+        QString dbSetting;
         // if a path exists in the database, use it
         if (!dbSetting.isEmpty() && QFile::exists(dbSetting)) {
             m_dbfile = dbSetting;
         } else {
-            // No Path in settings, try the default
-            m_dbfile = getiTunesMusicPath();
+            // No Path in settings
+            m_dbfile = "";
         }
         // if the path we got between the default and the database doesn't
         // exist, ask for a new one and use/save it if it exists
         if (!QFile::exists(m_dbfile)) {
-            m_dbfile = QFileDialog::getOpenFileName(NULL,
-                tr("Select your iTunes library"),
-                QDir::homePath(), "*.xml");
-            if (m_dbfile.isEmpty() || !QFile::exists(m_dbfile)) {
+            m_dbfile = QFileDialog::getExistingDirectory(
+            	NULL,
+                tr("Select your iPod mount"),
+                "/media");
+            if (m_dbfile.isEmpty()) {
                 return;
             }
-            settings.setValue(ITDB_PATH_KEY, m_dbfile);
         }
-        m_isActivated =  true;
-        /* Ususally the maximum number of threads
-         * is > 2 depending on the CPU cores
-         * Unfortunately, within VirtualBox
-         * the maximum number of allowed threads
-         * is 1 at all times We'll need to increase
-         * the number to > 1, otherwise importing the music collection
-         * takes place when the GUI threads terminates, i.e., on
-         * Mixxx shutdown.
-         */
-        QThreadPool::globalInstance()->setMaxThreadCount(4); //Tobias decided to use 4
-        // Let a worker thread do the XML parsing
-        m_future = QtConcurrent::run(this, &ITunesFeature::importLibrary);
-        m_future_watcher.setFuture(m_future);
-        m_title = tr("(loading) iTunes"); // (loading) at start in respect to small displays
-        //calls a slot in the sidebar model such that 'iTunes (isLoading)' is displayed.
-        emit (featureIsLoading(this));
+
+        qDebug() << "Calling the libgpod db parser";
+        m_itdb = itdb_parse( m_dbfile.toUtf8() ,  &err );
+
+        if( err )
+        {
+            qDebug() << "There was an error, attempting to free db: " << err->message;
+            QMessageBox::warning(
+                NULL,
+                tr("Error Loading iPod database"),
+                err->message);
+            g_error_free( err );
+            if ( m_itdb )
+            {
+                itdb_free( m_itdb );
+                m_itdb = 0;
+            }
+        } else {
+        	// now we have an iPod with a valid itdb
+        	m_isActivated =  true;
+
+            QThreadPool::globalInstance()->setMaxThreadCount(4); //Tobias decided to use 4
+            // Let a worker thread do the XML parsing
+            m_future = QtConcurrent::run(this, &IPodFeature::importLibrary);
+            m_future_watcher.setFuture(m_future);
+            m_title = tr("(loading) iPod"); // (loading) at start in respect to small displays
+            //calls a slot in the sidebar model such that 'iTunes (isLoading)' is displayed.
+            emit (featureIsLoading(this));
+        }
     }
     else{
         emit(showTrackModel(m_pITunesTrackModel));
     }
-
 }
 
-void ITunesFeature::activateChild(const QModelIndex& index) {
-    //qDebug() << "ITunesFeature::activateChild()" << index;
-    QString playlist = index.data().toString();
-    qDebug() << "Activating " << playlist;
-    m_pITunesPlaylistModel->setPlaylist(playlist);
-    emit(showTrackModel(m_pITunesPlaylistModel));
+void IPodFeature::activateChild(const QModelIndex& index) {
+	TreeItem *item = static_cast<TreeItem*>(index.internalPointer());
+	qDebug() << "IPodFeature::activateChild " << item->data() << " " << item->dataPath();
+    QString playlist = item->dataPath().toString();
+    Itdb_Playlist* pPlaylist = (Itdb_Playlist*)playlist.toUInt();
+
+    if (pPlaylist) {
+    	qDebug() << "Activating " << QString::fromUtf8(pPlaylist->name);
+    }
+    m_pIPodPlaylistModel->setPlaylist(pPlaylist);
+    emit(showTrackModel(m_pIPodPlaylistModel));
 }
 
-TreeItemModel* ITunesFeature::getChildModel() {
+TreeItemModel* IPodFeature::getChildModel() {
     return &m_childModel;
 }
 
-void ITunesFeature::onRightClick(const QPoint& globalPos) {
+void IPodFeature::onRightClick(const QPoint& globalPos) {
     QMenu menu;
     QAction useDefault(tr("Use Default Library"), &menu);
     QAction chooseNew(tr("Choose Library..."), &menu);
@@ -158,23 +186,23 @@ void ITunesFeature::onRightClick(const QPoint& globalPos) {
     QAction *chosen(menu.exec(globalPos));
     if (chosen == &useDefault) {
         SettingsDAO settings(m_database);
-        settings.setValue(ITDB_PATH_KEY, QString());
+//        settings.setValue(ITDB_PATH_KEY, QString());
         activate(true); // clears tables before parsing
     } else if (chosen == &chooseNew) {
         SettingsDAO settings(m_database);
         QString dbfile = QFileDialog::getOpenFileName(NULL,
-            tr("Select your iTunes library"),
+            tr("Select your iPod mount"),
             QDir::homePath(), "*.xml");
         if (dbfile.isEmpty() || !QFile::exists(dbfile)) {
             return;
         }
-        settings.setValue(ITDB_PATH_KEY, dbfile);
+//        settings.setValue(ITDB_PATH_KEY, dbfile);
         activate(true); // clears tables before parsing
     }
 	m_lastRightClickedIndex = QModelIndex();
 }
 
-void ITunesFeature::onRightClickChild(const QPoint& globalPos, QModelIndex index) {
+void IPodFeature::onRightClickChild(const QPoint& globalPos, QModelIndex index) {
     //Save the model index so we can get it in the action slots...
     m_lastRightClickedIndex = index;
 
@@ -187,59 +215,66 @@ void ITunesFeature::onRightClickChild(const QPoint& globalPos, QModelIndex index
     menu.exec(globalPos);
 }
 
-bool ITunesFeature::dropAccept(QUrl url) {
+bool IPodFeature::dropAccept(QUrl url) {
 	Q_UNUSED(url);
 	return false;
 }
 
-bool ITunesFeature::dropAcceptChild(const QModelIndex& index, QUrl url) {
+bool IPodFeature::dropAcceptChild(const QModelIndex& index, QUrl url) {
 	Q_UNUSED(index);
 	Q_UNUSED(url);
     return false;
 }
 
-bool ITunesFeature::dragMoveAccept(QUrl url) {
+bool IPodFeature::dragMoveAccept(QUrl url) {
 	Q_UNUSED(url);
     return false;
 }
 
-bool ITunesFeature::dragMoveAcceptChild(const QModelIndex& index, QUrl url) {
+bool IPodFeature::dragMoveAcceptChild(const QModelIndex& index, QUrl url) {
 	Q_UNUSED(index);
 	Q_UNUSED(url);
     return false;
 }
 
-QString ITunesFeature::getiTunesMusicPath() {
-    QString musicFolder;
-#if defined(__APPLE__)
-    musicFolder = QDesktopServices::storageLocation(QDesktopServices::MusicLocation) + "/iTunes/iTunes Music Library.xml";
-#elif defined(__WINDOWS__)
-    musicFolder = QDesktopServices::storageLocation(QDesktopServices::MusicLocation) + "\\iTunes\\iTunes Music Library.xml";
-#else
-		musicFolder = "";
-#endif
-    qDebug() << "ITunesLibrary=[" << musicFolder << "]";
-    return musicFolder;
-}
 /*
  * This method is executed in a separate thread
  * via QtConcurrent::run
  */
-TreeItem* ITunesFeature::importLibrary() {
-    //Give thread a low priority
+TreeItem* IPodFeature::importLibrary() {
+    // Give thread a low priority
     QThread* thisThread = QThread::currentThread();
     thisThread->setPriority(QThread::LowestPriority);
 
-    //Delete all table entries of iTunes feature
-    m_database.transaction();
-    clearTable("itunes_playlist_tracks");
-    clearTable("itunes_library");
-    clearTable("itunes_playlists");
-    m_database.commit();
+    // Delete all table entries of iTunes feature
+//    m_database.transaction();
+//    clearTable("itunes_playlist_tracks");
+//    clearTable("itunes_library");
+//    clearTable("itunes_playlists");
+//    m_database.commit();
 
-    qDebug() << "ITunesFeature::importLibrary() ";
+    qDebug() << "IPodFeature::importLibrary() ";
 
+    TreeItem* playlist_root = new TreeItem();
 
+    if (m_itdb) {
+		GList* playlist_node;
+
+		for (playlist_node = g_list_first(m_itdb->playlists);
+			 playlist_node != NULL;
+			 playlist_node = g_list_next(playlist_node))
+		{
+			Itdb_Playlist* pPlaylist;
+			pPlaylist = (Itdb_Playlist*)playlist_node->data;
+			QString playlistname = QString::fromUtf8(pPlaylist->name);
+			qDebug() << playlistname;
+            // append the playlist to the child model
+            TreeItem *item = new TreeItem(playlistname, QString::number((uint)pPlaylist), this, playlist_root);
+            playlist_root->appendChild(item);
+		}
+    }
+
+/*
     m_database.transaction();
 
     //Parse iTunes XML file using SAX (for performance)
@@ -305,10 +340,11 @@ TreeItem* ITunesFeature::importLibrary() {
         playlist_root = NULL;
         return false;
     }
+    */
     return playlist_root;
 }
 
-void ITunesFeature::parseTracks(QXmlStreamReader &xml) {
+void IPodFeature::parseTracks(QXmlStreamReader &xml) {
     QSqlQuery query(m_database);
     query.prepare("INSERT INTO itunes_library (id, artist, title, album, year, genre, comment, tracknumber,"
                   "bpm, bitrate,"
@@ -355,7 +391,7 @@ void ITunesFeature::parseTracks(QXmlStreamReader &xml) {
     }
 }
 
-void ITunesFeature::parseTrack(QXmlStreamReader &xml, QSqlQuery &query) {
+void IPodFeature::parseTrack(QXmlStreamReader &xml, QSqlQuery &query) {
     //qDebug() << "----------------TRACK-----------------";
     int id = -1;
     QString title;
@@ -475,12 +511,12 @@ void ITunesFeature::parseTrack(QXmlStreamReader &xml, QSqlQuery &query) {
     bool success = query.exec();
 
     if (!success) {
-        qDebug() << "SQL Error in itunesfeature.cpp: line" << __LINE__ << " " << query.lastError();
+        qDebug() << "SQL Error in IPodFeature.cpp: line" << __LINE__ << " " << query.lastError();
         return;
     }
 }
 
-TreeItem* ITunesFeature::parsePlaylists(QXmlStreamReader &xml) {
+TreeItem* IPodFeature::parsePlaylists(QXmlStreamReader &xml) {
     qDebug() << "Parse iTunes playlists";
     TreeItem* rootItem = new TreeItem();
     QSqlQuery query_insert_to_playlists(m_database);
@@ -509,7 +545,7 @@ TreeItem* ITunesFeature::parsePlaylists(QXmlStreamReader &xml) {
     return rootItem;
 }
 
-bool ITunesFeature::readNextStartElement(QXmlStreamReader& xml) {
+bool IPodFeature::readNextStartElement(QXmlStreamReader& xml) {
     QXmlStreamReader::TokenType token = QXmlStreamReader::NoToken;
     while (token != QXmlStreamReader::EndDocument && token != QXmlStreamReader::Invalid) {
         token = xml.readNext();
@@ -520,7 +556,7 @@ bool ITunesFeature::readNextStartElement(QXmlStreamReader& xml) {
     return false;
 }
 
-void ITunesFeature::parsePlaylist(QXmlStreamReader &xml, QSqlQuery &query_insert_to_playlists,
+void IPodFeature::parsePlaylist(QXmlStreamReader &xml, QSqlQuery &query_insert_to_playlists,
                                   QSqlQuery &query_insert_to_playlist_tracks, TreeItem* root) {
     //qDebug() << "Parse Playlist";
 
@@ -596,7 +632,7 @@ void ITunesFeature::parsePlaylist(QXmlStreamReader &xml, QSqlQuery &query_insert
 
                     //Insert tracks if we are not in a pre-build playlist
                     if (!isSystemPlaylist && !query_insert_to_playlist_tracks.exec()) {
-                        qDebug() << "SQL Error in ITunesFeature.cpp: line" << __LINE__ << " "
+                        qDebug() << "SQL Error in IPodFeature.cpp: line" << __LINE__ << " "
                                  << query_insert_to_playlist_tracks.lastError();
                         qDebug() << "trackid" << track_reference;
                         qDebug() << "playlistname; " << playlistname;
@@ -614,7 +650,7 @@ void ITunesFeature::parsePlaylist(QXmlStreamReader &xml, QSqlQuery &query_insert
     }
 }
 
-void ITunesFeature::clearTable(QString table_name) {
+void IPodFeature::clearTable(QString table_name) {
     QSqlQuery query(m_database);
     query.prepare("delete from "+table_name);
     bool success = query.exec();
@@ -625,51 +661,50 @@ void ITunesFeature::clearTable(QString table_name) {
         qDebug() << "iTunes table entries of '" << table_name <<"' have been cleared.";
 }
 
-void ITunesFeature::onTrackCollectionLoaded(){
+void IPodFeature::onTrackCollectionLoaded(){
     TreeItem* root = m_future.result();
     if(root){
         m_childModel.setRootItem(root);
         m_pITunesTrackModel->select();
         emit(showTrackModel(m_pITunesTrackModel));
-        qDebug() << "Itunes library loaded: success";
+        qDebug() << "iPod library loaded: success";
     }
     else{
         QMessageBox::warning(
             NULL,
-            tr("Error Loading iTunes Library"),
-            tr("There was an error loading your iTunes library. Some of "
-               "your iTunes tracks or playlists may not have loaded."));
+            tr("Error Loading iPod database"),
+            tr("There was an error loading your iPod database. Some of "
+               "your iPod tracks or playlists may not have loaded."));
     }
     //calls a slot in the sidebarmodel such that 'isLoading' is removed from the feature title.
-    m_title = tr("iTunes");
+    m_title = tr("iPod");
     emit(featureLoadingFinished(this));
     activate();
 }
-
-void ITunesFeature::onLazyChildExpandation(const QModelIndex &index){
+void IPodFeature::onLazyChildExpandation(const QModelIndex &index){
 	Q_UNUSED(index);
 	//Nothing to do because the childmodel is not of lazy nature.
 }
 
-void ITunesFeature::slotAddToAutoDJ() {
+void IPodFeature::slotAddToAutoDJ() {
     //qDebug() << "slotAddToAutoDJ() row:" << m_lastRightClickedIndex.data();
 	addToAutoDJ(false); // Top = True
 }
 
 
-void ITunesFeature::slotAddToAutoDJTop() {
+void IPodFeature::slotAddToAutoDJTop() {
     //qDebug() << "slotAddToAutoDJTop() row:" << m_lastRightClickedIndex.data();
 	addToAutoDJ(true); // bTop = True
 }
 
-void ITunesFeature::addToAutoDJ(bool bTop) {
+void IPodFeature::addToAutoDJ(bool bTop) {
     // qDebug() << "slotAddToAutoDJ() row:" << m_lastRightClickedIndex.data();
 
     if (m_lastRightClickedIndex.isValid()) {
 
     	QString playlist = m_lastRightClickedIndex.data().toString();
-    	ITunesPlaylistModel* pPlaylistModelToAdd = new ITunesPlaylistModel(this, m_pTrackCollection);
-    	pPlaylistModelToAdd->setPlaylist(playlist);
+    	IPodPlaylistModel* pPlaylistModelToAdd = new IPodPlaylistModel(this, m_pTrackCollection);
+ //   	pPlaylistModelToAdd->setPlaylist(playlist);
     	PlaylistDAO &playlistDao = m_pTrackCollection->getPlaylistDAO();
         int autoDJId = playlistDao.getPlaylistIdFromName(AUTODJ_TABLE);
 
@@ -677,8 +712,9 @@ void ITunesFeature::addToAutoDJ(bool bTop) {
         for(int i = 0; i < rows; ++i){
             QModelIndex index = pPlaylistModelToAdd->index(i,0);
             if (index.isValid()) {
-            	qDebug() << pPlaylistModelToAdd->getTrackLocation(index);
-            	TrackPointer track = pPlaylistModelToAdd->getTrack(index);
+//            	qDebug() << pPlaylistModelToAdd->getTrackLocation(index);
+            	TrackPointer track;
+//            	= pPlaylistModelToAdd->getTrack(index);
             	if (bTop) {
             	    // Start at position 2 because position 1 was already loaded to the deck
             		playlistDao.insertTrackIntoPlaylist(track->getId(), autoDJId, i+2);
@@ -691,14 +727,14 @@ void ITunesFeature::addToAutoDJ(bool bTop) {
     }
 }
 
-void ITunesFeature::slotImportAsMixxxPlaylist() {
+void IPodFeature::slotImportAsMixxxPlaylist() {
     // qDebug() << "slotAddToAutoDJ() row:" << m_lastRightClickedIndex.data();
 
     if (m_lastRightClickedIndex.isValid()) {
 
     	QString playlist = m_lastRightClickedIndex.data().toString();
-    	ITunesPlaylistModel* pPlaylistModelToAdd = new ITunesPlaylistModel(this, m_pTrackCollection);
-    	pPlaylistModelToAdd->setPlaylist(playlist);
+    	IPodPlaylistModel* pPlaylistModelToAdd = new IPodPlaylistModel(this, m_pTrackCollection);
+//    	pPlaylistModelToAdd->setPlaylist(playlist);
     	PlaylistDAO &playlistDao = m_pTrackCollection->getPlaylistDAO();
 
         int playlistId = playlistDao.getPlaylistIdFromName(playlist);
@@ -721,8 +757,9 @@ void ITunesFeature::slotImportAsMixxxPlaylist() {
             for (int i = 0; i < rows; ++i) {
                 QModelIndex index = pPlaylistModelToAdd->index(i,0);
                 if (index.isValid()) {
-                	qDebug() << pPlaylistModelToAdd->getTrackLocation(index);
-                	TrackPointer track = pPlaylistModelToAdd->getTrack(index);
+                	//qDebug() << pPlaylistModelToAdd->getTrackLocation(index);
+                	TrackPointer track;
+                	//= pPlaylistModelToAdd->getTrack(index);
         	    	playlistDao.appendTrackToPlaylist(track->getId(), playlistId);
                 }
             }

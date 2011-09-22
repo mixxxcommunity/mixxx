@@ -1,8 +1,6 @@
-// itunesfeaturefeature.h
-// Created 8/23/2009 by RJ Ryan (rryan@mit.edu)
 
-#ifndef ITUNESFEATURE_H
-#define ITUNESFEATURE_H
+#ifndef IPODFEATURE_H
+#define IPODFEATURE_H
 
 #include <QStringListModel>
 #include <QtSql>
@@ -15,16 +13,24 @@
 #include "library/treeitemmodel.h"
 #include "library/treeitem.h"
 
+extern "C"
+{
+#include <gpod/itdb.h>
+}
+
+
+
+
 //class ITunesPlaylistModel;
 class ITunesTrackModel;
-class ITunesPlaylistModel;
+class IPodPlaylistModel;
 
 
-class ITunesFeature : public LibraryFeature {
+class IPodFeature : public LibraryFeature {
  Q_OBJECT
  public:
-    ITunesFeature(QObject* parent, TrackCollection* pTrackCollection);
-    virtual ~ITunesFeature();
+    IPodFeature(QObject* parent, TrackCollection* pTrackCollection);
+    virtual ~IPodFeature();
     static bool isSupported();
 
     QVariant title();
@@ -68,7 +74,7 @@ class ITunesFeature : public LibraryFeature {
 	QModelIndex m_lastRightClickedIndex;
 
     ITunesTrackModel* m_pITunesTrackModel;
-    ITunesPlaylistModel* m_pITunesPlaylistModel;
+    IPodPlaylistModel* m_pIPodPlaylistModel;
     TreeItemModel m_childModel;
     QStringList m_playlists;
     TrackCollection* m_pTrackCollection;
@@ -85,7 +91,9 @@ class ITunesFeature : public LibraryFeature {
     QString m_dbItunesRoot;
     QString m_mixxxItunesRoot;
 
-    static const QString ITDB_PATH_KEY;
+    Itdb_iTunesDB    *m_itdb;
+
+//    static const QString ITDB_PATH_KEY;
 };
 
 #endif /* ITUNESFEATURE_H */
