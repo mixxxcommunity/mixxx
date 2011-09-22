@@ -18,13 +18,7 @@ extern "C"
 #include <gpod/itdb.h>
 }
 
-
-
-
-//class ITunesPlaylistModel;
-class ITunesTrackModel;
 class IPodPlaylistModel;
-
 
 class IPodFeature : public LibraryFeature {
  Q_OBJECT
@@ -73,7 +67,6 @@ class IPodFeature : public LibraryFeature {
 
 	QModelIndex m_lastRightClickedIndex;
 
-    ITunesTrackModel* m_pITunesTrackModel;
     IPodPlaylistModel* m_pIPodPlaylistModel;
     TreeItemModel m_childModel;
     QStringList m_playlists;

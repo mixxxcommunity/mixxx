@@ -25,7 +25,6 @@ IPodFeature::IPodFeature(QObject* parent, TrackCollection* pTrackCollection)
           m_cancelImport(false),
           m_itdb( 0 )
 {
-    m_pITunesTrackModel = new ITunesTrackModel(this, m_pTrackCollection);
     m_pIPodPlaylistModel = new IPodPlaylistModel(this, m_pTrackCollection);
     m_isActivated = false;
     m_title = tr("iPod");
@@ -71,7 +70,6 @@ IPodFeature::~IPodFeature() {
     if (m_itdb) {
         itdb_free( m_itdb );
     }
-    delete m_pITunesTrackModel;
     delete m_pIPodPlaylistModel;
     delete m_pAddToAutoDJAction;
     delete m_pAddToAutoDJTopAction;
@@ -156,7 +154,8 @@ void IPodFeature::activate(bool forceReload) {
         }
     }
     else{
-        emit(showTrackModel(m_pITunesTrackModel));
+        m_pIPodPlaylistModel->setPlaylist(itdb_playlist_mpl(m_itdb)); // Gets the master playlist
+        emit(showTrackModel(m_pIPodPlaylistModel));
     }
 }
 
@@ -266,11 +265,13 @@ TreeItem* IPodFeature::importLibrary() {
 		{
 			Itdb_Playlist* pPlaylist;
 			pPlaylist = (Itdb_Playlist*)playlist_node->data;
-			QString playlistname = QString::fromUtf8(pPlaylist->name);
-			qDebug() << playlistname;
-            // append the playlist to the child model
-            TreeItem *item = new TreeItem(playlistname, QString::number((uint)pPlaylist), this, playlist_root);
-            playlist_root->appendChild(item);
+			if (!itdb_playlist_is_mpl(pPlaylist)) {
+				QString playlistname = QString::fromUtf8(pPlaylist->name);
+				qDebug() << playlistname;
+				// append the playlist to the child model
+				TreeItem *item = new TreeItem(playlistname, QString::number((uint)pPlaylist), this, playlist_root);
+				playlist_root->appendChild(item);
+			}
 		}
     }
 
@@ -665,8 +666,9 @@ void IPodFeature::onTrackCollectionLoaded(){
     TreeItem* root = m_future.result();
     if(root){
         m_childModel.setRootItem(root);
-        m_pITunesTrackModel->select();
-        emit(showTrackModel(m_pITunesTrackModel));
+        if (m_isActivated) {
+        	activate();
+        }
         qDebug() << "iPod library loaded: success";
     }
     else{
@@ -681,6 +683,7 @@ void IPodFeature::onTrackCollectionLoaded(){
     emit(featureLoadingFinished(this));
     activate();
 }
+
 void IPodFeature::onLazyChildExpandation(const QModelIndex &index){
 	Q_UNUSED(index);
 	//Nothing to do because the childmodel is not of lazy nature.
