@@ -53,12 +53,6 @@ class IPodFeature : public LibraryFeature {
     static QString getiTunesMusicPath();
     //returns the invisible rootItem for the sidebar model
     TreeItem* importLibrary();
-    void parseTracks(QXmlStreamReader &xml);
-    void parseTrack(QXmlStreamReader &xml, QSqlQuery &query);
-    TreeItem* parsePlaylists(QXmlStreamReader &xml);
-    void parsePlaylist(QXmlStreamReader &xml, QSqlQuery &query1, QSqlQuery &query2, TreeItem*);
-    void clearTable(QString table_name);
-    bool readNextStartElement(QXmlStreamReader& xml);
     void addToAutoDJ(bool bTop);
 
     QAction* m_pAddToAutoDJAction;
