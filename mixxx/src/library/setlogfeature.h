@@ -56,6 +56,7 @@ public slots:
     void slotRenamePlaylist();
     void slotTogglePlaylistLock();
     void slotExportPlaylist();
+    void slotJoinWithPrevious();
 
     void slotPositionChanged(double /*value*/);
     void slotPlaylistTableChanged(int playlistId);

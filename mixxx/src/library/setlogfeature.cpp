@@ -59,8 +59,8 @@ SetlogFeature::SetlogFeature(QObject* parent, ConfigObject<ConfigValue>* pConfig
             this, SLOT(slotExportPlaylist()));
 
     m_pJoinWithPreviousAction = new QAction(tr("Join with previous"), this);
-//    connect(m_pJoinWithPreviousAction, SIGNAL(triggered()),
-//            this, SLOT(slotJoinWithPrevious()));
+    connect(m_pJoinWithPreviousAction, SIGNAL(triggered()),
+            this, SLOT(slotJoinWithPrevious()));
 
     connect(&m_playlistDao, SIGNAL(added(int)),
             this, SLOT(slotPlaylistTableChanged(int)));
@@ -101,7 +101,7 @@ SetlogFeature::SetlogFeature(QObject* parent, ConfigObject<ConfigValue>* pConfig
     // Setup the sidebar playlist model
     m_playlistTableModel.setTable("Playlists");
     m_playlistTableModel.setFilter("hidden=2"); // PLHT_SET_LOG
-    m_playlistTableModel.setSort(m_playlistTableModel.fieldIndex("name"),
+    m_playlistTableModel.setSort(m_playlistTableModel.fieldIndex("id"),
                                  Qt::AscendingOrder);
     m_playlistTableModel.select();
 
@@ -438,6 +438,22 @@ void SetlogFeature::addToAutoDJ(bool bTop) {
         }
     }
     emit(featureUpdated());
+}
+
+void SetlogFeature::slotJoinWithPrevious() {
+    //qDebug() << "slotJoinWithPrevious() row:" << m_lastRightClickedIndex.data();
+
+    if (m_lastRightClickedIndex.isValid()) {
+        int playlistId = m_playlistDao.getPlaylistIdFromName(
+            m_lastRightClickedIndex.data().toString());
+        if (playlistId >= 0) {
+        	// Add every track from right klicked playlist to that with the next smaller ID
+        	// TODO:
+
+
+
+        }
+    }
 }
 
 void SetlogFeature::slotPositionChanged(double value) {

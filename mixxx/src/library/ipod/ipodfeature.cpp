@@ -335,6 +335,7 @@ void IPodFeature::slotImportAsMixxxPlaylist() {
     	qDebug() << "IPodFeature::slotImportAsMixxxPlaylist " << item->data() << " " << item->dataPath();
 		QString playlist = item->dataPath().toString();
 		Itdb_Playlist* pPlaylist = (Itdb_Playlist*)playlist.toUInt();
+		playlist = QString::fromUtf8(pPlaylist->name);
 		if (pPlaylist) {
 			IPodPlaylistModel* pPlaylistModelToAdd = new IPodPlaylistModel(this, m_pTrackCollection);
 			pPlaylistModelToAdd->setPlaylist(pPlaylist);

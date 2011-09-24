@@ -37,13 +37,17 @@ void IPodPlaylistModel::initHeaderData() {
 	m_headerList.append(qMakePair(QString(tr("Artist")),     offsetof(Itdb_Track, artist)));
 	m_headerList.append(qMakePair(QString(tr("Title")),      offsetof(Itdb_Track, title)));
 	m_headerList.append(qMakePair(QString(tr("Album")),      offsetof(Itdb_Track, album)));
-    m_headerList.append(qMakePair(QString(tr("Genre")),      offsetof(Itdb_Track, genre)));
-//	m_headerList.append(qMakePair(QString(tr("Year")),       offsetof(Itdb_Track, year)));
+	m_headerList.append(qMakePair(QString(tr("Year")),       offsetof(Itdb_Track, year)));
+	m_headerList.append(qMakePair(QString(tr("Duration")),   offsetof(Itdb_Track, tracklen)));
+	m_headerList.append(qMakePair(QString(tr("Rating")),     offsetof(Itdb_Track, rating)));
+
+	m_headerList.append(qMakePair(QString(tr("Genre")),      offsetof(Itdb_Track, genre)));
+
 //	m_headerList.append(qMakePair(QString(tr("Type")),       offsetof(Itdb_Track, type1)));
 	m_headerList.append(qMakePair(QString(tr("Location")),   offsetof(Itdb_Track, ipod_path)));
 	m_headerList.append(qMakePair(QString(tr("Comment")),    offsetof(Itdb_Track, comment)));
-//	m_headerList.append(qMakePair(QString(tr("Duration")),   offsetof(Itdb_Track, tracklen)));
-//	m_headerList.append(qMakePair(QString(tr("Rating")),     offsetof(Itdb_Track, rating)));
+
+
 //	m_headerList.append(qMakePair(QString(tr("Bitrate")),    offsetof(Itdb_Track, artist)));
 //	m_headerList.append(qMakePair(QString(tr("BPM")),        offsetof(Itdb_Track, BPM)));
 //	m_headerList.append(qMakePair(QString(tr("Track #")),    offsetof(Itdb_Track, track_nr)));
@@ -322,28 +326,46 @@ int IPodPlaylistModel::fieldIndex(const QString& fieldName) const {
 
 QVariant IPodPlaylistModel::data(const QModelIndex& index, int role) const {
     //qDebug() << this << "data()";
-    if (   !index.isValid()
-    	|| m_pPlaylist == NULL
-        || (    role != Qt::DisplayRole
-        	 && role != Qt::EditRole
-        	 && role != Qt::CheckStateRole
-        	 && role != Qt::ToolTipRole)
+    if (    role != Qt::DisplayRole
+         && role != Qt::EditRole
+         && role != Qt::CheckStateRole
+         && role != Qt::ToolTipRole
     ) {
         return QVariant();
     }
 
-    int row = index.row();
-    int column = index.column();
 
-    if (row >= m_pPlaylist->num || column >= m_headerList.size()) {
-    	// index is outside the valid range
+    Itdb_Track* pTrack = getPTrackFromModelIndex(index);
+    if (!pTrack) {
     	return QVariant();
     }
 
-    Itdb_Track* pTrack = (Itdb_Track*)(g_list_nth(m_pPlaylist->members, row)->data);
-    size_t structOffset = m_headerList.at(column).second;
+    size_t structOffset = m_headerList.at(index.column()).second;
+    QVariant value = QVariant();
 
-    		/*
+    if (!pTrack) {
+    	return QVariant();
+    }
+
+    if (structOffset == offsetof(Itdb_Track, year)) {
+    	if (pTrack->year) {
+    		value = QVariant(pTrack->year);
+    	}
+    } else if (structOffset == offsetof(Itdb_Track, tracklen)) {
+    	if (pTrack->tracklen) {
+    		value = MixxxUtils::millisecondsToMinutes(pTrack->tracklen, true);
+    	}
+    } else if (structOffset == offsetof(Itdb_Track, rating)) {
+    	value = qVariantFromValue(StarRating(pTrack->rating));
+    } else {
+        // for the gchar* elements
+        qDebug() << *(gchar**)((char*)(pTrack) + structOffset);
+        QString ret = QString::fromUtf8(*(gchar**)((char*)(pTrack) + structOffset));
+
+        value = QVariant(ret);
+    }
+
+    /*
     switch (structOffset) {
     case: offsetof(Itdb_Track, artist)
     case: offsetof(Itdb_Track, title)));
@@ -366,11 +388,7 @@ QVariant IPodPlaylistModel::data(const QModelIndex& index, int role) const {
     }
 
 */
-    // for the gchar* elements
-    qDebug() << *(gchar**)((char*)(pTrack) + structOffset);
-    QString ret = QString::fromUtf8(*(gchar**)((char*)(pTrack) + structOffset));
 
-    QVariant value = QVariant(ret);
 /*
     // This value is the value in its most raw form. It was looked up either
     // from the SQL table or from the cached track layer.
@@ -473,6 +491,12 @@ bool IPodPlaylistModel::setData(const QModelIndex& index, const QVariant& value,
     //m_trackDAO.saveTrack(pTrack);
 
     return true;
+}
+
+TrackModel::CapabilitiesFlags IPodPlaylistModel::getCapabilities() const {
+    return   TRACKMODELCAPS_ADDTOAUTODJ
+    	   | TRACKMODELCAPS_ADDTOCRATE
+    	   | TRACKMODELCAPS_ADDTOPLAYLIST;
 }
 
 Qt::ItemFlags IPodPlaylistModel::flags(const QModelIndex &index) const {
@@ -734,21 +758,11 @@ void IPodPlaylistModel::setPlaylist(Itdb_Playlist* pPlaylist) {
 
 
 TrackPointer IPodPlaylistModel::getTrack(const QModelIndex& index) const {
-    if (   !index.isValid()
-    	|| m_pPlaylist == NULL
-    ) {
-        return TrackPointer();
-    }
 
-    int row = index.row();
-    int column = index.column();
-
-    if (row >= m_pPlaylist->num || column >= m_headerList.size()) {
-    	// index is outside the valid range
-    	return TrackPointer();
-    }
-
-    Itdb_Track* pTrack = (Itdb_Track*)(g_list_nth(m_pPlaylist->members, row)->data);
+	Itdb_Track* pTrack = getPTrackFromModelIndex(index);
+	if (!pTrack) {
+		return TrackPointer();
+	}
 
 	//QString artist = index.sibling(index.row(), fieldIndex("artist")).data().toString();
 	//QString title = index.sibling(index.row(), fieldIndex("title")).data().toString();
@@ -784,18 +798,30 @@ TrackPointer IPodPlaylistModel::getTrack(const QModelIndex& index) const {
 
 	// Overwrite metadata from Ipod
 	// Note: This will be written to the mixxx library as well
-	pTrackP->setArtist(pTrack->artist);
-	pTrackP->setTitle(pTrack->title);
-	pTrackP->setAlbum(pTrack->album);
-	//pTrackP->setYear(pTrack->year);
-	pTrackP->setGenre(pTrack->genre);
-	pTrackP->setBpm(pTrack->BPM);
+	pTrackP->setArtist(QString::fromUtf8(pTrack->artist));
+	pTrackP->setTitle(QString::fromUtf8(pTrack->title));
+	pTrackP->setAlbum(QString::fromUtf8(pTrack->album));
+	pTrackP->setYear(QString::number(pTrack->year));
+	pTrackP->setGenre(QString::fromUtf8(pTrack->genre));
+	pTrackP->setBpm((float)pTrack->BPM);
+	pTrackP->setComment(QString::fromUtf8(pTrack->comment));
 
 	return pTrackP;
 }
 // Gets the on-disk location of the track at the given location.
 QString IPodPlaylistModel::getTrackLocation(const QModelIndex& index) const {
-	return QString();
+
+	Itdb_Track* pTrack = getPTrackFromModelIndex(index);
+	if (!pTrack) {
+		return QString();
+	}
+
+	QString location = itdb_get_mountpoint(m_pPlaylist->itdb);
+	QString ipod_path = pTrack->ipod_path;
+	ipod_path.replace(QString(":"), QString("/"));
+	location += ipod_path;
+
+	return location;
 }
 
 // Gets the track ID of the track at the given QModelIndex
@@ -835,4 +861,22 @@ void IPodPlaylistModel::moveTrack(const QModelIndex& sourceIndex, const QModelIn
 
 QItemDelegate* IPodPlaylistModel::delegateForColumn(const int i) {
 	return NULL;
+}
+
+Itdb_Track* IPodPlaylistModel::getPTrackFromModelIndex(const QModelIndex& index) const {
+    if (   !index.isValid()
+    	|| m_pPlaylist == NULL
+    ) {
+        return NULL;
+    }
+
+    int row = index.row();
+    int column = index.column();
+
+    if (row >= m_pPlaylist->num || column >= m_headerList.size()) {
+    	// index is outside the valid range
+    	return NULL;
+    }
+
+    return (Itdb_Track*)(g_list_nth(m_pPlaylist->members, row)->data);
 }

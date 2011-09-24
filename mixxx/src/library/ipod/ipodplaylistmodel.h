@@ -45,7 +45,7 @@ class IPodPlaylistModel : public QAbstractTableModel , public virtual TrackModel
     // QMimeData* mimeData(const QModelIndexList &indexes) const;
 
     QItemDelegate* delegateForColumn(const int i);
-    //TrackModel::CapabilitiesFlags getCapabilities() const;
+    TrackModel::CapabilitiesFlags getCapabilities() const;
 
     virtual void sort(int column, Qt::SortOrder order);
     virtual QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const;
@@ -94,6 +94,9 @@ class IPodPlaylistModel : public QAbstractTableModel , public virtual TrackModel
     virtual int compareColumnValues(int iColumnNumber, Qt::SortOrder eSortOrder, QVariant val1, QVariant val2);
     virtual int findSortInsertionPoint(int trackId, TrackPointer pTrack,
                                        const QVector<QPair<int, QHash<int, QVariant> > >& rowInfo);
+
+    Itdb_Track* getPTrackFromModelIndex(const QModelIndex& index) const;
+
     QString m_tableName;
     QStringList m_columnNames;
     QString m_columnNamesJoined;
