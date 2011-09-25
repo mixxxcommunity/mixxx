@@ -42,7 +42,7 @@ class IPodPlaylistModel : public QAbstractTableModel , public virtual TrackModel
     virtual void moveTrack(const QModelIndex& sourceIndex, const QModelIndex& destIndex);
 
     virtual Qt::ItemFlags flags(const QModelIndex &index) const;
-    // QMimeData* mimeData(const QModelIndexList &indexes) const;
+    QMimeData* mimeData(const QModelIndexList &indexes) const;
 
     QItemDelegate* delegateForColumn(const int i);
     TrackModel::CapabilitiesFlags getCapabilities() const;

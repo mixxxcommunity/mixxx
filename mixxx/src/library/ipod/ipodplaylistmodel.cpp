@@ -40,134 +40,15 @@ void IPodPlaylistModel::initHeaderData() {
 	m_headerList.append(qMakePair(QString(tr("Year")),       offsetof(Itdb_Track, year)));
 	m_headerList.append(qMakePair(QString(tr("Duration")),   offsetof(Itdb_Track, tracklen)));
 	m_headerList.append(qMakePair(QString(tr("Rating")),     offsetof(Itdb_Track, rating)));
-
 	m_headerList.append(qMakePair(QString(tr("Genre")),      offsetof(Itdb_Track, genre)));
-
-//	m_headerList.append(qMakePair(QString(tr("Type")),       offsetof(Itdb_Track, type1)));
+	m_headerList.append(qMakePair(QString(tr("Type")),       offsetof(Itdb_Track, filetype)));
+	m_headerList.append(qMakePair(QString(tr("Track #")),    offsetof(Itdb_Track, track_nr)));
+	m_headerList.append(qMakePair(QString(tr("Date Added")), offsetof(Itdb_Track, time_added)));
+	m_headerList.append(qMakePair(QString(tr("BPM")),        offsetof(Itdb_Track, BPM)));
+	m_headerList.append(qMakePair(QString(tr("Bitrate")),    offsetof(Itdb_Track, bitrate)));
 	m_headerList.append(qMakePair(QString(tr("Location")),   offsetof(Itdb_Track, ipod_path)));
 	m_headerList.append(qMakePair(QString(tr("Comment")),    offsetof(Itdb_Track, comment)));
 
-
-//	m_headerList.append(qMakePair(QString(tr("Bitrate")),    offsetof(Itdb_Track, artist)));
-//	m_headerList.append(qMakePair(QString(tr("BPM")),        offsetof(Itdb_Track, BPM)));
-//	m_headerList.append(qMakePair(QString(tr("Track #")),    offsetof(Itdb_Track, track_nr)));
-//	m_headerList.append(qMakePair(QString(tr("Date Added")), offsetof(Itdb_Track, time_added)));
-//	m_headerList.append(qMakePair(QString(tr("#")),          offsetof(Itdb_Track, track_nr)));
-//	m_headerList.append(qMakePair(QString(tr("Key")),        offsetof(Itdb_Track, artist)));
-
-	// gchar i;
-
-/*
-	  gchar   *filetype;
-	  gchar   *category;
-	  gchar   *composer;
-	  gchar   *grouping;
-	  gchar   *description;
-	  gchar   *podcasturl;
-	  gchar   *podcastrss;
-	  Itdb_Chapterdata *chapterdata;
-	  gchar   *subtitle;
-	  gchar   *tvshow;
-	  gchar   *tvepisode;
-	  gchar   *tvnetwork;
-	  gchar   *albumartist;
-	  gchar   *keywords;
-	  gchar   *sort_artist;
-	  gchar   *sort_title;
-	  gchar   *sort_album;
-	  gchar   *sort_albumartist;
-	  gchar   *sort_composer;
-	  gchar   *sort_tvshow;
-	  guint32 id;
-	  gint32  size;
-	  gint32  tracklen;
-	  gint32  cd_nr;
-	  gint32  cds;
-	  gint32  tracks;
-	  gint32  bitrate;
-	  guint16 samplerate;
-	  guint16 samplerate_low;
-	  gint32  volume;
-	  guint32 soundcheck;
-	  time_t  time_added;
-	  time_t  time_modified;
-	  time_t  time_played;
-	  guint32 bookmark_time;
-	  guint32 rating;
-	  guint32 playcount;
-	  guint32 playcount2;
-	  guint32 recent_playcount;
-	  gboolean transferred;
-	  guint8  app_rating;
-	  guint8  type1;
-	  guint8  type2;
-	  guint8  compilation;
-	  guint32 starttime;
-	  guint32 stoptime;
-	  guint8  checked;
-	  guint64 dbid;
-	  guint32 drm_userid;
-	  guint32 visible;
-	  guint32 filetype_marker;
-	  guint16 artwork_count;
-	  guint32 artwork_size;
-	  float samplerate2;
-	  guint16 unk126;
-	  guint32 unk132;
-	  time_t  time_released;
-	  guint16 unk144;
-	  guint16 explicit_flag;
-	  guint32 unk148;
-	  guint32 unk152;
-	  guint32 skipcount;
-	  guint32 recent_skipcount;
-	  guint32 last_skipped;
-	  guint8 has_artwork;
-	  guint8 skip_when_shuffling;
-	  guint8 remember_playback_position;
-	  guint8 flag4;
-	  guint64 dbid2;
-	  guint8 lyrics_flag;
-	  guint8 movie_flag;
-	  guint8 mark_unplayed;
-	  guint8 unk179;
-	  guint32 unk180;
-	  guint32 pregap;
-	  guint64 samplecount;
-	  guint32 unk196;
-	  guint32 postgap;
-	  guint32 unk204;
-	  guint32 mediatype;
-	  guint32 season_nr;
-	  guint32 episode_nr;
-	  guint32 unk220;
-	  guint32 unk224;
-	  guint32 unk228, unk232, unk236, unk240, unk244;
-	  guint32 gapless_data;
-	  guint32 unk252;
-	  guint16 gapless_track_flag;
-	  guint16 gapless_album_flag;
-	  guint16 album_id;
-	  struct _Itdb_Artwork *artwork;
-	  guint32 mhii_link;
-	  gint32 reserved_int1;
-	  gint32 reserved_int2;
-	  gint32 reserved_int3;
-	  gint32 reserved_int4;
-	  gint32 reserved_int5;
-	  gint32 reserved_int6;
-	  gpointer reserved1;
-	  gpointer reserved2;
-	  gpointer reserved3;
-	  gpointer reserved4;
-	  gpointer reserved5;
-	  gpointer reserved6;
-	  guint64 usertype;
-	  gpointer userdata;
-	  ItdbUserDataDuplicateFunc userdata_duplicate;
-	  ItdbUserDataDestroyFunc userdata_destroy;
-
-    */
 }
 
 void IPodPlaylistModel::initDefaultSearchColumns() {
@@ -357,6 +238,25 @@ QVariant IPodPlaylistModel::data(const QModelIndex& index, int role) const {
     	}
     } else if (structOffset == offsetof(Itdb_Track, rating)) {
     	value = qVariantFromValue(StarRating(pTrack->rating));
+    } else if (structOffset == offsetof(Itdb_Track, track_nr)) {
+    	if (pTrack->track_nr) {
+    		value = QVariant(pTrack->track_nr);
+    	}
+    } else if (structOffset == offsetof(Itdb_Track, BPM)) {
+    	if (pTrack->BPM) {
+    		value = QVariant(pTrack->BPM);
+    	}
+    } else if (structOffset == offsetof(Itdb_Track, bitrate)) {
+    	if (pTrack->bitrate) {
+    		value = QVariant(pTrack->bitrate);
+    	}
+    } else if (structOffset == offsetof(Itdb_Track, time_added)) {
+    	if (pTrack->time_added) {
+    		QDateTime timeAdded;
+    		timeAdded.setTime_t(pTrack->time_added);
+    		timeAdded.toString(Qt::ISODate);
+    		value = QVariant(timeAdded.toString(Qt::ISODate));
+    	}
     } else {
         // for the gchar* elements
         qDebug() << *(gchar**)((char*)(pTrack) + structOffset);
@@ -365,29 +265,6 @@ QVariant IPodPlaylistModel::data(const QModelIndex& index, int role) const {
         value = QVariant(ret);
     }
 
-    /*
-    switch (structOffset) {
-    case: offsetof(Itdb_Track, artist)
-    case: offsetof(Itdb_Track, title)));
-    case: offsetof(Itdb_Track, album)));
-    case: offsetof(Itdb_Track, genre)));
-
-
-    case: offsetof(Itdb_Track, year)));
-    case: nd(qMakePair(QString(tr("Type")),       offsetof(Itdb_Track, artist)));
-    		m_headerList.append(qMakePair(QString(tr("Location")),   offsetof(Itdb_Track, ipod_path)));
-    		m_headerList.append(qMakePair(QString(tr("Comment")),    offsetof(Itdb_Track, comment)));
-    		m_headerList.append(qMakePair(QString(tr("Duration")),   offsetof(Itdb_Track, tracklen)));
-    		m_headerList.append(qMakePair(QString(tr("Rating")),     offsetof(Itdb_Track, rating)));
-    		m_headerList.append(qMakePair(QString(tr("Bitrate")),    offsetof(Itdb_Track, artist)));
-    		m_headerList.append(qMakePair(QString(tr("BPM")),        offsetof(Itdb_Track, BPM)));
-    		m_headerList.append(qMakePair(QString(tr("Track #")),    offsetof(Itdb_Track, track_nr)));
-    		m_headerList.append(qMakePair(QString(tr("Date Added")), offsetof(Itdb_Track, time_added)));
-    		m_headerList.append(qMakePair(QString(tr("#")),          offsetof(Itdb_Track, track_nr)));
-    		m_headerList.append(qMakePair(QString(tr("Key")),        offsetof(Itdb_Track, artist)));
-    }
-
-*/
 
 /*
     // This value is the value in its most raw form. It was looked up either
@@ -554,14 +431,17 @@ void IPodPlaylistModel::trackChanged(int trackId) {
     if (sDebug) {
         qDebug() << this << "trackChanged" << trackId;
     }
-    m_trackOverrides.insert(trackId);
-    QLinkedList<int> rows = getTrackRows(trackId);
+    // TODO(daschuer): eg. use that for played column
+    //m_trackOverrides.insert(trackId);
+    //QLinkedList<int> rows = getTrackRows(trackId);
+/*
     foreach (int row, rows) {
         //qDebug() << "Row in this result set was updated. Signalling update. track:" << trackId << "row:" << row;
         QModelIndex left = index(row, 0);
         QModelIndex right = index(row, columnCount());
         emit(dataChanged(left, right));
     }
+*/
 }
 
 
@@ -764,13 +644,6 @@ TrackPointer IPodPlaylistModel::getTrack(const QModelIndex& index) const {
 		return TrackPointer();
 	}
 
-	//QString artist = index.sibling(index.row(), fieldIndex("artist")).data().toString();
-	//QString title = index.sibling(index.row(), fieldIndex("title")).data().toString();
-	//QString album = index.sibling(index.row(), fieldIndex("album")).data().toString();
-	//QString year = index.sibling(index.row(), fieldIndex("year")).data().toString();
-	//QString genre = index.sibling(index.row(), fieldIndex("genre")).data().toString();
-	//float bpm = index.sibling(index.row(), fieldIndex("bpm")).data().toString().toFloat();
-
 	QString location = itdb_get_mountpoint(m_pPlaylist->itdb);
 	QString ipod_path = pTrack->ipod_path;
 	ipod_path.replace(QString(":"), QString("/"));
@@ -840,26 +713,57 @@ const QString IPodPlaylistModel::currentSearch() {
 bool IPodPlaylistModel::isColumnInternal(int column) {
 	return false;
 }
+
+QMimeData* IPodPlaylistModel::mimeData(const QModelIndexList &indexes) const {
+    QMimeData *mimeData = new QMimeData();
+    QList<QUrl> urls;
+
+    //Ok, so the list of indexes we're given contains separates indexes for
+    //each column, so even if only one row is selected, we'll have like 7 indexes.
+    //We need to only count each row once:
+    QList<int> rows;
+
+    foreach (QModelIndex index, indexes) {
+        if (index.isValid()) {
+            if (!rows.contains(index.row())) {
+                rows.push_back(index.row());
+                QUrl url = QUrl::fromLocalFile(getTrackLocation(index));
+                if (!url.isValid())
+                    qDebug() << "ERROR invalid url\n";
+                else
+                    urls.append(url);
+            }
+        }
+    }
+    mimeData->setUrls(urls);
+    return mimeData;
+}
     /** if no header state exists, we may hide some columns so that the user can reactivate them **/
 bool IPodPlaylistModel::isColumnHiddenByDefault(int column) {
 	return false;
 }
 
 void IPodPlaylistModel::removeTrack(const QModelIndex& index) {
-
+	Q_UNUSED(index);
 }
-void IPodPlaylistModel::removeTracks(const QModelIndexList& indices) {
 
+void IPodPlaylistModel::removeTracks(const QModelIndexList& indices) {
+	Q_UNUSED(indices);
 }
 
 bool IPodPlaylistModel::addTrack(const QModelIndex& index, QString location) {
+	Q_UNUSED(index);
+	Q_UNUSED(location);
 	return false;
 }
-void IPodPlaylistModel::moveTrack(const QModelIndex& sourceIndex, const QModelIndex& destIndex) {
 
+void IPodPlaylistModel::moveTrack(const QModelIndex& sourceIndex, const QModelIndex& destIndex) {
+	Q_UNUSED(destIndex);
+	Q_UNUSED(sourceIndex);
 }
 
 QItemDelegate* IPodPlaylistModel::delegateForColumn(const int i) {
+	Q_UNUSED(i);
 	return NULL;
 }
 
