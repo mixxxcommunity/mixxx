@@ -18,11 +18,11 @@ IPodPlaylistModel::IPodPlaylistModel(QObject* pParent, TrackCollection* pTrackCo
            QAbstractTableModel(pParent),
            m_pTrackCollection(pTrackCollection),
            m_trackDAO(m_pTrackCollection->getTrackDAO()),
+           m_iSortColumn(0),
+           m_eSortOrder(Qt::AscendingOrder),
            m_pPlaylist(NULL)
 {
 	initHeaderData();
-    m_iSortColumn = 0;
-    m_eSortOrder = Qt::AscendingOrder;
 }
 
 IPodPlaylistModel::~IPodPlaylistModel() {
@@ -33,7 +33,7 @@ void IPodPlaylistModel::initHeaderData() {
     // Set the column heading labels, rename them for translations and have
     // proper capitalization
 
-	//m_headerList.append(qMakePair(QString(tr("Played")),    offsetof(Itdb_Track, artist)));
+	m_headerList.append(qMakePair(QString(tr("#")),          (size_t)0xffff));
 	m_headerList.append(qMakePair(QString(tr("Artist")),     offsetof(Itdb_Track, artist)));
 	m_headerList.append(qMakePair(QString(tr("Title")),      offsetof(Itdb_Track, title)));
 	m_headerList.append(qMakePair(QString(tr("Album")),      offsetof(Itdb_Track, album)));
@@ -166,10 +166,6 @@ void IPodPlaylistModel::setSort(int column, Qt::SortOrder order) {
 
     m_iSortColumn = column;
     m_eSortOrder = order;
-
-    if (m_bIndexBuilt) {
-//        select();
-    }
 }
 
 void IPodPlaylistModel::sort(int column, Qt::SortOrder order) {
@@ -180,7 +176,9 @@ void IPodPlaylistModel::sort(int column, Qt::SortOrder order) {
     m_iSortColumn = column;
     m_eSortOrder = order;
 
-//    select();
+    emit layoutAboutToBeChanged();
+	qSort(m_sortedPlaylist.begin(), m_sortedPlaylist.end(), columnLessThan);
+	emit layoutChanged();
 }
 
 int IPodPlaylistModel::rowCount(const QModelIndex& parent) const {
@@ -228,7 +226,9 @@ QVariant IPodPlaylistModel::data(const QModelIndex& index, int role) const {
     	return QVariant();
     }
 
-    if (structOffset == offsetof(Itdb_Track, year)) {
+    if (structOffset == 0xffff) { // "#"
+    	value = m_sortedPlaylist.at(index.row()).pos;
+	} else if (structOffset == offsetof(Itdb_Track, year)) {
     	if (pTrack->year) {
     		value = QVariant(pTrack->year);
     	}
@@ -444,6 +444,40 @@ void IPodPlaylistModel::trackChanged(int trackId) {
 */
 }
 
+//static
+bool IPodPlaylistModel::columnLessThan(const playlist_member &s1, const playlist_member &s2) {
+    bool ret;
+
+    size_t structOffset = s1.pClass->m_headerList.at(s1.pClass->m_iSortColumn).second;
+
+    if (structOffset == 0xffff) { // "#"
+    	ret = s1.pos < s2.pos;
+	} else if (structOffset == offsetof(Itdb_Track, year)) {
+		ret = s1.pTrack->year < s2.pTrack->year;
+    } else if (structOffset == offsetof(Itdb_Track, tracklen)) {
+    	ret = s1.pTrack->tracklen < s2.pTrack->tracklen;
+    } else if (structOffset == offsetof(Itdb_Track, rating)) {
+    	ret = s1.pTrack->rating < s2.pTrack->rating;
+    } else if (structOffset == offsetof(Itdb_Track, track_nr)) {
+    	ret = s1.pTrack->track_nr < s2.pTrack->track_nr;
+    } else if (structOffset == offsetof(Itdb_Track, BPM)) {
+    	ret = s1.pTrack->BPM < s2.pTrack->BPM;
+    } else if (structOffset == offsetof(Itdb_Track, bitrate)) {
+    	ret = s1.pTrack->bitrate < s2.pTrack->bitrate;
+    } else if (structOffset == offsetof(Itdb_Track, time_added)) {
+    	ret = s1.pTrack->time_added < s2.pTrack->time_added;
+    } else {
+        // for the gchar* elements
+    	QString string1 = QString::fromUtf8(*(gchar**)((char*)(s1.pTrack) + structOffset));
+    	QString string2 = QString::fromUtf8(*(gchar**)((char*)(s2.pTrack) + structOffset));
+        ret = string1.toLower() < string2.toLower();
+    }
+
+	if (s1.pClass->m_eSortOrder != Qt::AscendingOrder) {
+    	return !ret;
+    }
+    return ret;
+}
 
 int IPodPlaylistModel::compareColumnValues(int iColumnNumber, Qt::SortOrder eSortOrder,
                                            QVariant val1, QVariant val2) {
@@ -618,6 +652,8 @@ QVariant IPodPlaylistModel::getBaseValue(const QModelIndex& index, int role) con
 }
 
 void IPodPlaylistModel::setPlaylist(Itdb_Playlist* pPlaylist) {
+	qDebug() << "setPlaylist";
+
 	if (m_pPlaylist == pPlaylist) {
 		return; // Nothing to do;
 	}
@@ -625,12 +661,30 @@ void IPodPlaylistModel::setPlaylist(Itdb_Playlist* pPlaylist) {
 	if (m_pPlaylist) {
 		beginRemoveRows(QModelIndex(), 0, m_pPlaylist->num-1);
 		m_pPlaylist = NULL;
+		m_sortedPlaylist.clear();
 		endRemoveRows();
 	}
 
 	if (pPlaylist) {
 		beginInsertRows(QModelIndex(), 0, pPlaylist->num-1);
 		m_pPlaylist = pPlaylist;
+		// walk thought linked list and collect playlist position
+
+		GList* track_node;
+		uint pl_position = 0;
+
+		for (track_node = g_list_first(pPlaylist->members);
+			 track_node != NULL;
+			 track_node = g_list_next(track_node))
+		{
+			struct playlist_member plMember;
+			plMember.pClass = this;
+			plMember.pTrack = (Itdb_Track*)track_node->data;
+			plMember.pos = ++pl_position;
+			m_sortedPlaylist.append(plMember);
+		}
+		qSort(m_sortedPlaylist.begin(), m_sortedPlaylist.end(), columnLessThan);
+
 		endInsertRows();
 		qDebug() << "IPodPlaylistModel::setPlaylist" << pPlaylist->name;
 	}
@@ -781,6 +835,5 @@ Itdb_Track* IPodPlaylistModel::getPTrackFromModelIndex(const QModelIndex& index)
     	// index is outside the valid range
     	return NULL;
     }
-
-    return (Itdb_Track*)(g_list_nth(m_pPlaylist->members, row)->data);
+    return m_sortedPlaylist.at(row).pTrack;
 }

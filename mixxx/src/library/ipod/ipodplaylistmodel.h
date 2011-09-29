@@ -21,6 +21,13 @@ class IPodPlaylistModel : public QAbstractTableModel , public virtual TrackModel
 {
     Q_OBJECT
   public:
+
+    struct playlist_member {
+    	IPodPlaylistModel* pClass;
+    	int pos;
+    	Itdb_Track* pTrack;
+    };
+
     IPodPlaylistModel(QObject* pParent, TrackCollection* pTrackCollection);
     virtual ~IPodPlaylistModel();
 
@@ -91,6 +98,9 @@ class IPodPlaylistModel : public QAbstractTableModel , public virtual TrackModel
     inline void setTrackValueForColumn(TrackPointer pTrack, int column, QVariant value);
     QVariant getBaseValue(const QModelIndex& index, int role = Qt::DisplayRole) const;
 
+    static bool columnLessThan(const playlist_member &s1, const playlist_member &s2);
+
+
     virtual int compareColumnValues(int iColumnNumber, Qt::SortOrder eSortOrder, QVariant val1, QVariant val2);
     virtual int findSortInsertionPoint(int trackId, TrackPointer pTrack,
                                        const QVector<QPair<int, QHash<int, QVariant> > >& rowInfo);
@@ -123,6 +133,8 @@ class IPodPlaylistModel : public QAbstractTableModel , public virtual TrackModel
     QString m_currentSearchFilter;
 
     QList<QPair<QString, size_t> > m_headerList;
+
+    QList<IPodPlaylistModel::playlist_member> m_sortedPlaylist;
 
     TrackCollection* m_pTrackCollection;
     TrackDAO& m_trackDAO;

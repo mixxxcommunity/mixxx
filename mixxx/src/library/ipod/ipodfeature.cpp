@@ -84,7 +84,6 @@ void IPodFeature::activate() {
 
 void IPodFeature::activate(bool forceReload) {
     //qDebug("IPodFeature::activate()");
-	GError *err = 0;
 
     if (!m_isActivated || forceReload) {
 
@@ -110,34 +109,15 @@ void IPodFeature::activate(bool forceReload) {
             }
         }
 
-        qDebug() << "Calling the libgpod db parser";
-        m_itdb = itdb_parse( m_dbfile.toUtf8() ,  &err );
+       	m_isActivated =  true;
 
-        if( err )
-        {
-            qDebug() << "There was an error, attempting to free db: " << err->message;
-            QMessageBox::warning(
-                NULL,
-                tr("Error Loading iPod database"),
-                err->message);
-            g_error_free( err );
-            if ( m_itdb )
-            {
-                itdb_free( m_itdb );
-                m_itdb = 0;
-            }
-        } else {
-        	// now we have an iPod with a valid itdb
-        	m_isActivated =  true;
-
-            QThreadPool::globalInstance()->setMaxThreadCount(4); //Tobias decided to use 4
-            // Let a worker thread do the XML parsing
-            m_future = QtConcurrent::run(this, &IPodFeature::importLibrary);
-            m_future_watcher.setFuture(m_future);
-            m_title = tr("(loading) iPod"); // (loading) at start in respect to small displays
-            //calls a slot in the sidebar model such that 'iTunes (isLoading)' is displayed.
-            emit (featureIsLoading(this));
-        }
+		QThreadPool::globalInstance()->setMaxThreadCount(4); //Tobias decided to use 4
+		// Let a worker thread do the iPod parsing
+		m_future = QtConcurrent::run(this, &IPodFeature::importLibrary);
+		m_future_watcher.setFuture(m_future);
+		m_title = tr("(loading) iPod"); // (loading) at start in respect to small displays
+		//calls a slot in the sidebar model such that '(loading)iPod' is displayed.
+		emit (featureIsLoading(this));
     }
     else{
         m_pIPodPlaylistModel->setPlaylist(itdb_playlist_mpl(m_itdb)); // Gets the master playlist
@@ -235,8 +215,22 @@ TreeItem* IPodFeature::importLibrary() {
 
     TreeItem* playlist_root = new TreeItem();
 
-    if (m_itdb) {
-		GList* playlist_node;
+    GError* err = 0;
+    qDebug() << "Calling the libgpod db parser for:" << m_dbfile.toUtf8();
+    m_itdb = itdb_parse(m_dbfile.toUtf8(), &err);
+
+    if (err) {
+		qDebug() << "There was an error, attempting to free db: "
+				 << err->message;
+		QMessageBox::warning(NULL, tr("Error Loading iPod database"),
+				err->message);
+		g_error_free(err);
+		if (m_itdb) {
+			itdb_free(m_itdb);
+			m_itdb = 0;
+		}
+    } else if (m_itdb) {
+    	GList* playlist_node;
 
 		for (playlist_node = g_list_first(m_itdb->playlists);
 			 playlist_node != NULL;
