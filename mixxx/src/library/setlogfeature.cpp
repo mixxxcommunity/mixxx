@@ -324,7 +324,7 @@ TreeItemModel* SetlogFeature::getChildModel() {
     return &m_childModel;
 }
 
-/**
+/**lock
   * Purpose: When inserting or removing playlists,
   * we require the sidebar model not to reset.
   * This method queries the database and does dynamic insertion
@@ -353,7 +353,13 @@ QModelIndex SetlogFeature::constructChildModel(int selected_id)
 
         // Create the TreeItem whose parent is the invisible root item
         TreeItem* item = new TreeItem(playlist_name, playlist_name, this, root);
-        item->setIcon(locked ? QIcon(":/images/library/ic_library_locked.png") : QIcon());
+        if (playlist_id == m_playlistId) {
+        	item->setIcon(QIcon(":/images/library/ic_library_setlog_current.png"));
+        } else if (m_playlistDao.isPlaylistLocked(playlist_id)) {
+        	item->setIcon(QIcon(":/images/library/ic_library_locked.png"));
+        } else {
+        	item->setIcon(QIcon());
+        }
         data_list.append(item);
     }
 
