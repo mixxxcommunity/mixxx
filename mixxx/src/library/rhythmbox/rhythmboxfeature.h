@@ -17,8 +17,6 @@
 #include "library/rhythmbox/rhythmboxplaylistmodel.h"
 #include "library/trackcollection.h"
 
-
-
 class RhythmboxFeature : public LibraryFeature {
  Q_OBJECT
  public:
@@ -39,7 +37,19 @@ class RhythmboxFeature : public LibraryFeature {
     TreeItem* importMusicCollection();
     /** processes the playlist entries **/
     TreeItem* importPlaylists();
-private:
+
+  public slots:
+    void activate();
+    void activateChild(const QModelIndex& index);
+    void onRightClick(const QPoint& globalPos);
+    void onRightClickChild(const QPoint& globalPos, QModelIndex index);
+    void onLazyChildExpandation(const QModelIndex& index);
+    void onTrackCollectionLoaded();
+    void slotAddToAutoDJ();
+    void slotAddToAutoDJTop();
+    void slotImportAsMixxxPlaylist();
+
+  private:
     RhythmboxTrackModel* m_pRhythmboxTrackModel;
     RhythmboxPlaylistModel* m_pRhythmboxPlaylistModel;
     TrackCollection* m_pTrackCollection;
@@ -50,10 +60,7 @@ private:
 
     QFutureWatcher<TreeItem*> m_track_watcher;
     QFuture<TreeItem*> m_track_future;
-
     bool m_cancelImport;
-
-
     TreeItemModel m_childModel;
 
     QAction* m_pAddToAutoDJAction;
@@ -70,17 +77,6 @@ private:
     void importPlaylist(QXmlStreamReader &xml, QSqlQuery &query, int playlist_id);
 
     void addToAutoDJ(bool bTop);
-
-public slots:
-    void activate();
-    void activateChild(const QModelIndex& index);
-    void onRightClick(const QPoint& globalPos);
-    void onRightClickChild(const QPoint& globalPos, QModelIndex index);
-    void onLazyChildExpandation(const QModelIndex& index);
-    void onTrackCollectionLoaded();
-    void slotAddToAutoDJ();
-    void slotAddToAutoDJTop();
-    void slotImportAsMixxxPlaylist();
 };
 
 #endif /* RHYTHMBOXFEATURE_H */

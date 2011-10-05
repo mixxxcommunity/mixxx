@@ -25,7 +25,6 @@ WTrackTableView::WTrackTableView(QWidget * parent,
           m_pConfig(pConfig),
           m_pTrackCollection(pTrackCollection),
           m_searchThread(this) {
-
     // Give a NULL parent because otherwise it inherits our style which can make
     // it unreadable. Bug #673411
     m_pTrackInfo = new DlgTrackInfo(NULL);
@@ -56,10 +55,10 @@ WTrackTableView::WTrackTableView(QWidget * parent,
     m_pCrateMenu = new QMenu(this);
     m_pCrateMenu->setTitle(tr("Add to Crate"));
 
-    //Disable editing
+    // Disable editing
     //setEditTriggers(QAbstractItemView::NoEditTriggers);
 
-    //Create all the context m_pMenu->actions (stuff that shows up when you
+    // Create all the context m_pMenu->actions (stuff that shows up when you
     //right-click)
     createActions();
 
@@ -81,6 +80,7 @@ WTrackTableView::~WTrackTableView()
         pHeader->saveHeaderState();
     }
 
+    delete m_pReloadMetadataAct;
     delete m_pAutoDJAct;
     delete m_pAutoDJTopAct;
     delete m_pRemoveAct;
@@ -108,8 +108,12 @@ void WTrackTableView::loadTrackModel(QAbstractItemModel *model) {
      * there's no need to exchange the headers
      * this will cause a small GUI freeze
      */
-    if(getTrackModel() == track_model)
+    if (getTrackModel() == track_model) {
+        // Re-sort the table even if the track model is the same. This triggers
+        // a select() if the table is dirty.
+        doSortByColumn(horizontalHeader()->sortIndicatorSection());
         return;
+    }
 
     setVisible(false);
 
@@ -158,16 +162,13 @@ void WTrackTableView::loadTrackModel(QAbstractItemModel *model) {
     header->setHighlightSections(true);
     header->setSortIndicatorShown(true);
     //setSortingEnabled(true);
-    connect(horizontalHeader(), SIGNAL(sortIndicatorChanged(int,Qt::SortOrder)),
+    connect(horizontalHeader(), SIGNAL(sortIndicatorChanged(int, Qt::SortOrder)),
             this, SLOT(doSortByColumn(int)), Qt::AutoConnection);
-
     doSortByColumn(horizontalHeader()->sortIndicatorSection());
-
-    sortByColumn(horizontalHeader()->sortIndicatorSection());
 
     // Initialize all column-specific things
     for (int i = 0; i < model->columnCount(); ++i) {
-        //Setup delegates according to what the model tells us
+        // Setup delegates according to what the model tells us
         QItemDelegate* delegate = track_model->delegateForColumn(i);
         // We need to delete the old delegates, since the docs say the view will
         // not take ownership of them.
@@ -181,11 +182,13 @@ void WTrackTableView::loadTrackModel(QAbstractItemModel *model) {
             //qDebug() << "Hiding column" << i;
             horizontalHeader()->hideSection(i);
         }
-        /* If Mixxx starts the first time or the header states have been cleared due to database schema evolution
-         * we gonna hide all columns that may contain a potential large number of NULL values.
-         * This will hide the key colum by default unless the user brings it to front
+        /* If Mixxx starts the first time or the header states have been cleared
+         * due to database schema evolution we gonna hide all columns that may
+         * contain a potential large number of NULL values.  This will hide the
+         * key colum by default unless the user brings it to front
          */
-        if (track_model->isColumnHiddenByDefault(i) && !header->hasPersistedHeaderState()) {
+        if (track_model->isColumnHiddenByDefault(i) &&
+            !header->hasPersistedHeaderState()) {
             //qDebug() << "Hiding column" << i;
             horizontalHeader()->hideSection(i);
         }
@@ -193,17 +196,13 @@ void WTrackTableView::loadTrackModel(QAbstractItemModel *model) {
 
     // Set up drag and drop behaviour according to whether or not the track
     // model says it supports it.
-/*
-    setDragEnabled(false);
-    setDragDropMode(QAbstractItemView::DragDrop);
-    setDropIndicatorShown(true);
-    setAcceptDrops(true);
-    setAutoScroll(true);
-*/
-    //Defaults
+
+    // Defaults
     setAcceptDrops(true);
     setDragDropMode(QAbstractItemView::DragOnly);
-    setDragEnabled(true); //Always enable drag for now (until we have a model that doesn't support this.)
+    // Always enable drag for now (until we have a model that doesn't support
+    // this.)
+    setDragEnabled(true);
 
     if (modelHasCapabilities(TrackModel::TRACKMODELCAPS_RECEIVEDROPS)) {
         setDragDropMode(QAbstractItemView::DragDrop);
@@ -212,17 +211,16 @@ void WTrackTableView::loadTrackModel(QAbstractItemModel *model) {
         //viewport()->setAcceptDrops(true);
     }
 
-    //Possible giant fuckup alert - It looks like Qt has something like these
-    //caps built-in, see http://doc.trolltech.com/4.5/qt.html#ItemFlag-enum and
-    //the flags(...) function that we're already using in LibraryTableModel. I
-    //haven't been able to get it to stop us from using a model as a drag target
-    //though, so my hax above may not be completely unjustified.
+    // Possible giant fuckup alert - It looks like Qt has something like these
+    // caps built-in, see http://doc.trolltech.com/4.5/qt.html#ItemFlag-enum and
+    // the flags(...) function that we're already using in LibraryTableModel. I
+    // haven't been able to get it to stop us from using a model as a drag
+    // target though, so my hax above may not be completely unjustified.
 
     setVisible(true);
 }
 
-void WTrackTableView::createActions()
-{
+void WTrackTableView::createActions() {
     Q_ASSERT(m_pMenu);
     Q_ASSERT(m_pSamplerMenu);
 
@@ -237,6 +235,9 @@ void WTrackTableView::createActions()
 
     m_pAutoDJTopAct = new QAction(tr("Add to Auto DJ top 2"),this);
     connect(m_pAutoDJTopAct, SIGNAL(triggered()), this, SLOT(slotSendToAutoDJTop()));
+
+    m_pReloadMetadataAct = new QAction(tr("Reload Track Metadata"), this);
+    connect(m_pReloadMetadataAct, SIGNAL(triggered()), this, SLOT(slotReloadTrackMetadata()));
 }
 
 void WTrackTableView::slotMouseDoubleClicked(const QModelIndex &index)
@@ -376,7 +377,7 @@ void WTrackTableView::contextMenuEvent(QContextMenuEvent * event)
             int iPlaylistId = playlistDao.getPlaylistId(i);
 
             if (!playlistDao.isHidden(iPlaylistId)) {
-                
+
                 QString playlistName = playlistDao.getPlaylistName(iPlaylistId);
                 // No leak because making the menu the parent means they will be
                 // auto-deleted
@@ -415,6 +416,7 @@ void WTrackTableView::contextMenuEvent(QContextMenuEvent * event)
     m_pRemoveAct->setEnabled(!locked);
     m_pMenu->addSeparator();
     m_pMenu->addAction(m_pRemoveAct);
+    m_pMenu->addAction(m_pReloadMetadataAct);
     m_pPropertiesAct->setEnabled(oneSongSelected);
     m_pMenu->addAction(m_pPropertiesAct);
 
@@ -750,8 +752,9 @@ void WTrackTableView::slotSendToAutoDJTop() {
 }
 
 void WTrackTableView::sendToAutoDJ(bool bTop) {
-    if (!modelHasCapabilities(TrackModel::TRACKMODELCAPS_ADDTOAUTODJ))
+    if (!modelHasCapabilities(TrackModel::TRACKMODELCAPS_ADDTOAUTODJ)) {
         return;
+    }
 
     PlaylistDAO& playlistDao = m_pTrackCollection->getPlaylistDAO();
     int iAutoDJPlaylistId = playlistDao.getPlaylistIdFromName(AUTODJ_TABLE);
@@ -776,6 +779,27 @@ void WTrackTableView::sendToAutoDJ(bool bTop) {
             		playlistDao.appendTrackToPlaylist(iTrackId, iAutoDJPlaylistId);
             	}
             }
+        }
+    }
+}
+
+void WTrackTableView::slotReloadTrackMetadata() {
+    if (!modelHasCapabilities(TrackModel::TRACKMODELCAPS_RELOADMETADATA)) {
+        return;
+    }
+
+    QModelIndexList indices = selectionModel()->selectedRows();
+
+    TrackModel* trackModel = getTrackModel();
+
+    if (trackModel == NULL) {
+        return;
+    }
+
+    foreach (QModelIndex index, indices) {
+        TrackPointer pTrack = trackModel->getTrack(index);
+        if (pTrack) {
+            pTrack->parse();
         }
     }
 }

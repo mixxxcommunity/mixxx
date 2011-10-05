@@ -17,9 +17,9 @@ IPodPlaylistModel::IPodPlaylistModel(QObject* pParent, TrackCollection* pTrackCo
                 "mixxx.db.model.ipod_playlist"),
            QAbstractTableModel(pParent),
            m_pTrackCollection(pTrackCollection),
-           m_trackDAO(m_pTrackCollection->getTrackDAO()),
            m_iSortColumn(0),
            m_eSortOrder(Qt::AscendingOrder),
+           m_trackDAO(m_pTrackCollection->getTrackDAO()),
            m_pPlaylist(NULL)
 {
 	initHeaderData();
@@ -134,7 +134,7 @@ int IPodPlaylistModel::findSortInsertionPoint(int trackId, TrackPointer pTrack,
 }
 
 
-QString IPodPlaylistModel::currentSearch() const {
+const QString IPodPlaylistModel::currentSearch() const {
     return m_currentSearch;
 }
 

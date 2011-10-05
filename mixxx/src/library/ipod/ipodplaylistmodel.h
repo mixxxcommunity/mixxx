@@ -69,7 +69,7 @@ class IPodPlaylistModel : public QAbstractTableModel , public virtual TrackModel
     ////////////////////////////////////////////////////////////////////////////
 
     virtual void search(const QString& searchText, const QString extraFilter=QString());
-    virtual QString currentSearch() const;
+    virtual const QString currentSearch() const;
     virtual void setSort(int column, Qt::SortOrder order);
     virtual int fieldIndex(const QString& fieldName) const;
 

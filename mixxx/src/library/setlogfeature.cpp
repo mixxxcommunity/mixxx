@@ -344,7 +344,6 @@ QModelIndex SetlogFeature::constructChildModel(int selected_id)
         QString playlist_name = m_playlistTableModel.data(ind).toString();
         ind = m_playlistTableModel.index(row, idColumn);
         int playlist_id = m_playlistTableModel.data(ind).toInt();
-        bool locked = m_playlistDao.isPlaylistLocked(playlist_id);
 
         if ( selected_id == playlist_id) {
         	// save index for selection

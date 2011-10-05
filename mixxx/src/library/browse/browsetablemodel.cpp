@@ -18,7 +18,7 @@
 BrowseTableModel::BrowseTableModel(QObject* parent, TrackCollection* pTrackCollection,
                                    RecordingManager* pRecordingManager)
         : QStandardItemModel(parent),
-          TrackModel(QSqlDatabase::database("QSQLITE"), // TrackCollections m_db (defaultConnection)
+          TrackModel(pTrackCollection->getDatabase(), // TrackCollections m_db (defaultConnection)
                      "mixxx.db.model.browse"),
           m_pTrackCollection(pTrackCollection),
 		  m_pRecordingManager(pRecordingManager) {
@@ -129,8 +129,7 @@ void BrowseTableModel::search(const QString& searchText) {
 	Q_UNUSED(searchText);
 }
 
-const QString BrowseTableModel::currentSearch()
-{
+const QString BrowseTableModel::currentSearch() const {
     return QString();
 }
 
