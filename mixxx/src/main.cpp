@@ -188,14 +188,11 @@ int main(int argc, char * argv[])
                             Each must be one of the following file types:\n\
                             ");
 
-			QString fileExtensions =
-					SoundSourceProxy::supportedFileExtensionsString();
-			QByteArray fileExtensionsBA = QString(fileExtensions).toUtf8();
-			// printf(fileExtensionsBA); produces a warning
-			puts(fileExtensionsBA);
-			puts("\n\n");
-			puts(
-					"\
+            QString fileExtensions = SoundSourceProxy::supportedFileExtensionsString();
+            QByteArray fileExtensionsBA = QString(fileExtensions).toUtf8();
+            puts(fileExtensionsBA.constData());
+            puts("\n\n");
+            puts("\
                             Each file you specify will be loaded into the\n\
                             next virtual deck.\n\
 \n\
