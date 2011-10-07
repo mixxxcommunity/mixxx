@@ -113,6 +113,19 @@ QVariant BaseSqlTableModel::headerData(int section, Qt::Orientation orientation,
     return QAbstractTableModel::headerData(section, orientation, role);
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 QString BaseSqlTableModel::orderByClause() const {
     bool tableColumnSort = m_iSortColumn < m_tableColumns.size();
 
@@ -134,6 +147,34 @@ QString BaseSqlTableModel::orderByClause() const {
              QLatin1String(" DESC"));
     return s;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void BaseSqlTableModel::select() {
     if (!m_bInitialized) {
@@ -195,10 +236,12 @@ void BaseSqlTableModel::select() {
         Q_ASSERT(record.indexOf(column) == m_tableColumnIndex[column]);
         tableColumnIndices.push_back(record.indexOf(column));
     }
-    int rows = query.size();
-    if (sDebug) {
-        qDebug() << "Rows returned" << rows << m_rowInfo.size();
-    }
+
+	// sqlite does not set size and m_rowInfo was just cleared    
+    //int rows = query.size();
+    //if (sDebug) {
+    //    qDebug() << "Rows returned" << rows << m_rowInfo.size();
+    //}
 
     QVector<RowInfo> rowInfo;
     QSet<int> trackIds;
@@ -208,10 +251,10 @@ void BaseSqlTableModel::select() {
 
         RowInfo thisRowInfo;
         thisRowInfo.trackId = id;
-        thisRowInfo.order = rowInfo.size();
-        // Get all the table columns and store them in the hash for this
+        thisRowInfo.order = rowInfo.size(); // save rows where this currently track id is located
+        
+		// Get all the table columns and store them in the hash for this
         // row-info section.
-
         foreach (int tableColumnIndex, tableColumnIndices) {
             thisRowInfo.metadata[tableColumnIndex] =
                     query.value(tableColumnIndex);

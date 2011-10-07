@@ -561,7 +561,7 @@ void TrackInfoObject::setPlayed(bool bPlayed)
     else if (m_bPlayed && !bPlayed) {
         --m_iTimesPlayed;
         setDirty(true);
-    } 
+    }
     m_bPlayed = bPlayed;
 }
 
