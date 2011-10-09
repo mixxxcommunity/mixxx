@@ -60,15 +60,15 @@ MixxxLibraryFeature::MixxxLibraryFeature(QObject* parent,
         }
     }
 
-    BaseTrackCache* pBaseTrackCache = new BaseTrackCache(
+    m_pBaseTrackCache = new BaseTrackCache(
         pTrackCollection, "library_cache_view", LIBRARYTABLE_ID, columns, true);
     connect(&pTrackCollection->getTrackDAO(), SIGNAL(trackDirty(int)),
-            pBaseTrackCache, SLOT(slotTrackDirty(int)));
+    		m_pBaseTrackCache, SLOT(slotTrackDirty(int)));
     connect(&pTrackCollection->getTrackDAO(), SIGNAL(trackClean(int)),
-            pBaseTrackCache, SLOT(slotTrackClean(int)));
+    		m_pBaseTrackCache, SLOT(slotTrackClean(int)));
 
     pTrackCollection->addTrackSource(
-        QString("default"), QSharedPointer<BaseTrackCache>(pBaseTrackCache));
+        QString("default"), QSharedPointer<BaseTrackCache>(m_pBaseTrackCache));
 
     // These rely on the 'default' track source being present.
     m_pLibraryTableModel = new LibraryTableModel(this, pTrackCollection);
@@ -99,7 +99,9 @@ TreeItemModel* MixxxLibraryFeature::getChildModel() {
 }
 
 void MixxxLibraryFeature::refreshLibraryModels() {
-    m_pLibraryTableModel->select();
+	// is called when library scan is finished
+	m_pBaseTrackCache->buildIndex(); // rebuilding the index here is just a hack because Library scanner knows the new tracks and might be able to inform the library scanner. 
+	m_pLibraryTableModel->select();
     m_pMissingTableModel->select();
 }
 

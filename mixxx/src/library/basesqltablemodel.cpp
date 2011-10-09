@@ -148,34 +148,6 @@ QString BaseSqlTableModel::orderByClause() const {
     return s;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void BaseSqlTableModel::select() {
     if (!m_bInitialized) {
         return;

@@ -183,8 +183,6 @@ void TrackDAO::slotTrackDirty(TrackInfoObject* pTrack) {
         int id = pTrack->getId();
         if (id != -1) {
             //m_dirtyTracks.insert(id);
-            // Do we realy need to emit that?
-            // No one is connected to that.
             emit(trackDirty(id));
         }
     }
@@ -205,6 +203,10 @@ void TrackDAO::slotTrackClean(TrackInfoObject* pTrack) {
             emit(trackClean(id));
         }
     }
+}
+
+void TrackDAO::databaseTrackChanged(TrackInfoObject* pTrack) {
+	slotTrackClean(pTrack);
 }
 
 void TrackDAO::slotTrackChanged(TrackInfoObject* pTrack) {
@@ -392,6 +394,14 @@ bool TrackDAO::addTracksTrack(TrackInfoObject* pTrack) {
 
 	pTrack->setId(trackId);
 	pTrack->setDirty(false);
+
+	// Add Track to Cache to avoid unnecessary DB Lookups
+	m_sTracksMutex.lock();
+	// Automatic conversion to a weak pointer
+	m_sTracks[trackId] = pTrack;
+	m_sTracksMutex.unlock();
+	qDebug() << "m_sTracks.count() =" << m_sTracks.count();
+
 	return true;
 }
 

@@ -144,7 +144,7 @@ void RhythmboxFeature::onRightClickChild(const QPoint& globalPos, QModelIndex in
     m_lastRightClickedIndex = index;
 
     //Create the right-click menu
-    QMenu menu(NULL);
+    QMenu menu;
     menu.addAction(m_pAddToAutoDJAction);
     menu.addAction(m_pAddToAutoDJTopAction);
     menu.addSeparator();
@@ -523,6 +523,7 @@ void RhythmboxFeature::addToAutoDJ(bool bTop) {
     	QString playlist = m_lastRightClickedIndex.data().toString();
     	RhythmboxPlaylistModel* pPlaylistModelToAdd = new RhythmboxPlaylistModel(this, m_pTrackCollection);
     	pPlaylistModelToAdd->setPlaylist(playlist);
+    	pPlaylistModelToAdd->select();
     	PlaylistDAO &playlistDao = m_pTrackCollection->getPlaylistDAO();
         int autoDJId = playlistDao.getPlaylistIdFromName(AUTODJ_TABLE);
 
@@ -552,6 +553,7 @@ void RhythmboxFeature::slotImportAsMixxxPlaylist() {
     	QString playlist = m_lastRightClickedIndex.data().toString();
     	RhythmboxPlaylistModel* pPlaylistModelToAdd = new RhythmboxPlaylistModel(this, m_pTrackCollection);
     	pPlaylistModelToAdd->setPlaylist(playlist);
+    	pPlaylistModelToAdd->select();
     	PlaylistDAO &playlistDao = m_pTrackCollection->getPlaylistDAO();
 
         int playlistId = playlistDao.getPlaylistIdFromName(playlist);
