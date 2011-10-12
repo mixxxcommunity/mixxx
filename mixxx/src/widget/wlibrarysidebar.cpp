@@ -203,4 +203,5 @@ void WLibrarySidebar::selectIndex(const QModelIndex& index) {
     if (index.parent().isValid()) {
     	expand(index.parent());
     }
+    scrollTo(index);
 }
