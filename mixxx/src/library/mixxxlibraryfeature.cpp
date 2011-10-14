@@ -66,6 +66,12 @@ MixxxLibraryFeature::MixxxLibraryFeature(QObject* parent,
     		m_pBaseTrackCache, SLOT(slotTrackDirty(int)));
     connect(&pTrackCollection->getTrackDAO(), SIGNAL(trackClean(int)),
     		m_pBaseTrackCache, SLOT(slotTrackClean(int)));
+    connect(&pTrackCollection->getTrackDAO(), SIGNAL(trackChanged(int)),
+    		m_pBaseTrackCache, SLOT(slotTrackChanged(int)));
+    connect(&pTrackCollection->getTrackDAO(), SIGNAL(tracksAdded(QSet<int>)),
+    		m_pBaseTrackCache, SLOT(slotTracksAdded(QSet<int>)));
+    connect(&pTrackCollection->getTrackDAO(), SIGNAL(tracksRemoved(QSet<int>)),
+    		m_pBaseTrackCache, SLOT(slotTracksRemoved(QSet<int>)));
 
     pTrackCollection->addTrackSource(
         QString("default"), QSharedPointer<BaseTrackCache>(m_pBaseTrackCache));

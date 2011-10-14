@@ -131,7 +131,7 @@ bool TrackCollection::importDirectory(QString directory, TrackDAO &trackDao,
         	emit(progressLoading(it.fileName()));
 
 			TrackInfoObject* pTrack = new TrackInfoObject(absoluteFilePath);
-			trackDao.addTracksTrack(pTrack);
+			trackDao.addTracksTrack(pTrack, false);
 			// TODO: signal track has changed with the mixxx m_trackDao;
 			// m_trackDao.databaseTrackChanged(pTrack);
 			delete pTrack;

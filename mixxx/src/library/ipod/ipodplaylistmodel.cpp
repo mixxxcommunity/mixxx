@@ -5,6 +5,8 @@
 #include "library/ipod/ipodplaylistmodel.h"
 #include "mixxxutils.cpp"
 #include "library/starrating.h"
+#include "track/beatfactory.h"
+#include "track/beats.h"
 
 extern "C" {
 #include <glib-object.h> // g_type_init
@@ -709,7 +711,7 @@ TrackPointer IPodPlaylistModel::getTrack(const QModelIndex& index) const {
 	int track_id = track_dao.getTrackId(location);
 	if (track_id < 0) {
 		// Add Track to library
-		track_id = track_dao.addTrack(location);
+		track_id = track_dao.addTrack(location, true);
 	}
 
 	TrackPointer pTrackP;
@@ -730,8 +732,16 @@ TrackPointer IPodPlaylistModel::getTrack(const QModelIndex& index) const {
 	pTrackP->setAlbum(QString::fromUtf8(pTrack->album));
 	pTrackP->setYear(QString::number(pTrack->year));
 	pTrackP->setGenre(QString::fromUtf8(pTrack->genre));
-	pTrackP->setBpm((float)pTrack->BPM);
+	float bpm;
+	pTrackP->setBpm(bpm);
 	pTrackP->setComment(QString::fromUtf8(pTrack->comment));
+
+    // If the track has a BPM, then give it a static beatgrid.
+    if (bpm) {
+        BeatsPointer pBeats = BeatFactory::makeBeatGrid(pTrackP, bpm, 0);
+        pTrackP->setBeats(pBeats);
+    }
+
 
 	return pTrackP;
 }

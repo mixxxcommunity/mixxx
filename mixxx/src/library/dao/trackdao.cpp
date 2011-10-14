@@ -25,10 +25,13 @@ QMutex TrackDAO::m_sTracksMutex;
 TrackDAO::TrackDAO(QSqlDatabase& database, CueDAO& cueDao, ConfigObject<ConfigValue> * pConfig)
         : m_database(database),
           m_cueDao(cueDao),
-          m_trackCache(TRACK_CACHE_SIZE),
           m_pConfig(pConfig),
+          m_trackCache(TRACK_CACHE_SIZE),
           m_pQueryTrackLocationInsert(NULL),
-          m_pQueryLibraryInsert(NULL) {
+          m_pQueryTrackLocationSelect(NULL),
+          m_pQueryLibraryInsert(NULL),
+          m_pQueryLibraryUpdate(NULL),
+          m_pQueryLibrarySelect(NULL) {
 }
 
 TrackDAO::~TrackDAO() {
@@ -137,11 +140,7 @@ void TrackDAO::saveTrack(TrackInfoObject* pTrack) {
     int trackId = pTrack->getId();
     if (trackId != -1) {
         if (pTrack->isDirty()) {
-            //if (!m_dirtyTracks.contains(trackId)) {
-            //    qDebug() << "WARNING: Inconsistent state in TrackDAO. Track is dirty while TrackDAO thinks it is clean.";
-            //}
-
-            //qDebug() << this << "Dirty tracks before claen save:" << m_dirtyTracks.size();
+            //qDebug() << this << "Dirty tracks before clean save:" << m_dirtyTracks.size();
             //qDebug() << "TrackDAO::saveTrack. Dirty. Calling update";
             updateTrack(pTrack);
 
@@ -152,25 +151,12 @@ void TrackDAO::saveTrack(TrackInfoObject* pTrack) {
         } else {
             //qDebug() << "TrackDAO::saveTrack. Not Dirty";
             //qDebug() << this << "Dirty tracks remaining:" << m_dirtyTracks.size();
-
-            // Q_ASSERT(!m_dirtyTracks.contains(trackId));
-            //if (m_dirtyTracks.contains(trackId)) {
-            //    qDebug() << "WARNING: Inconsistent state in TrackDAO. Track is clean while TrackDAO thinks it is dirty. Correcting.";
-            //    m_dirtyTracks.remove(trackId);
-            //}
-
             //qDebug() << "Skipping track update for track" << pTrack->getId();
         }
     } else {
-        addTrack(pTrack);
+        addTrack(pTrack, false);
     }
 }
-
-/*
-bool TrackDAO::isDirty(int trackId) {
-    return m_dirtyTracks.contains(trackId);
-}
-*/
 
 void TrackDAO::slotTrackDirty(TrackInfoObject* pTrack) {
     //qDebug() << "TrackDAO::slotTrackDirty" << pTrack->getInfo();
@@ -182,7 +168,6 @@ void TrackDAO::slotTrackDirty(TrackInfoObject* pTrack) {
     if (pTrack) {
         int id = pTrack->getId();
         if (id != -1) {
-            //m_dirtyTracks.insert(id);
             emit(trackDirty(id));
         }
     }
@@ -199,7 +184,6 @@ void TrackDAO::slotTrackClean(TrackInfoObject* pTrack) {
     if (pTrack) {
         int id = pTrack->getId();
         if (id != -1) {
-            //m_dirtyTracks.remove(id);
             emit(trackClean(id));
         }
     }
@@ -291,17 +275,23 @@ void TrackDAO::bindTrackToLibraryInsert(TrackInfoObject* pTrack, int trackLocati
     delete pBeatsBlob;
 }
 
+
 void TrackDAO::addTracksPrepare() {
-    // Start the transaction
+   // Start the transaction
     m_database.transaction();
 
     m_pQueryTrackLocationInsert = new QSqlQuery(m_database);
+	m_pQueryTrackLocationSelect = new QSqlQuery(m_database);
     m_pQueryLibraryInsert = new QSqlQuery(m_database);
+    m_pQueryLibraryUpdate = new QSqlQuery(m_database);
+    m_pQueryLibrarySelect = new QSqlQuery(m_database);
 
     m_pQueryTrackLocationInsert->prepare("INSERT INTO track_locations "
     		"(location, directory, filename, filesize, fs_deleted, needs_verification) "
             "VALUES (:location, :directory, :filename, :filesize, :fs_deleted, :needs_verification)"
     		);
+
+    m_pQueryTrackLocationSelect->prepare("SELECT id FROM track_locations WHERE location=:location");
 
     m_pQueryLibraryInsert->prepare("INSERT INTO library "
     		"(artist, title, album, year, genre, tracknumber, "
@@ -316,20 +306,33 @@ void TrackDAO::addTracksPrepare() {
             ":timesplayed, "
             ":channels, :mixxx_deleted, :header_parsed, :beats_version, :beats)"
     		);
+
+    m_pQueryLibraryUpdate->prepare("UPDATE library SET mixxx_deleted = 0 "
+    		"WHERE id = :id");
+
+    m_pQueryLibrarySelect->prepare("SELECT location, id, mixxx_deleted from library "
+    		"WHERE location = :location");
 }
 
 void TrackDAO::addTracksFinish() {
     delete m_pQueryTrackLocationInsert;
+    delete m_pQueryTrackLocationSelect;
     delete m_pQueryLibraryInsert;
+    delete m_pQueryLibrarySelect;
     m_pQueryTrackLocationInsert = NULL;
+    m_pQueryTrackLocationSelect = NULL;
     m_pQueryLibraryInsert = NULL;
+    m_pQueryLibrarySelect = NULL;
 
     m_database.commit();
 }
 
-bool TrackDAO::addTracksTrack(TrackInfoObject* pTrack) {
+bool TrackDAO::addTracksTrack(TrackInfoObject* pTrack, bool unremove) {
+
+	qDebug() << "TrackDAO::addTracksTrack" << pTrack->getFilename();
 
 	int trackLocationId = -1;
+	int trackId = -1;
 
 	// Insert the track location into the corresponding table. This will fail
 	// silently if the location is already in the table because it has a UNIQUE
@@ -339,108 +342,120 @@ bool TrackDAO::addTracksTrack(TrackInfoObject* pTrack) {
 	if (!m_pQueryTrackLocationInsert->exec()) {
 		qDebug() << "Location " << pTrack->getLocation() << " is already in the DB";
 		// Inserting into track_locations failed, so the file already
-		// exists. Query for its id
+		// exists. Query for its trackLocationId.
 
-		m_pQueryTrackLocationInsert->bindValue(":location", pTrack->getLocation());
+		m_pQueryTrackLocationSelect->bindValue(":location", pTrack->getLocation());
 
-		if (!m_pQueryTrackLocationInsert->exec()) {
+		if (!m_pQueryTrackLocationSelect->exec()) {
 			// We can't even select this, something is wrong.
-			qDebug() << m_pQueryTrackLocationInsert->lastError();
-			m_database.rollback();
+            LOG_FAILED_QUERY(*m_pQueryTrackLocationSelect)
+                        << "Can't find track location ID after failing to insert. Something is wrong.";
 			return false;
 		}
-		while (m_pQueryTrackLocationInsert->next()) {
-			trackLocationId = m_pQueryTrackLocationInsert->value(m_pQueryTrackLocationInsert->record().indexOf("id")).toInt();
+		while (m_pQueryTrackLocationSelect->next()) {
+			trackLocationId = m_pQueryTrackLocationSelect->value(m_pQueryTrackLocationSelect->record().indexOf("id")).toInt();
 		}
+
+		m_pQueryLibrarySelect->bindValue(":location", trackLocationId);
+		if (!m_pQueryLibrarySelect->exec()) {
+			 LOG_FAILED_QUERY(*m_pQueryLibrarySelect)
+					 << "Failed to query existing track: "
+					 << pTrack->getFilename();
+		} else {
+			bool mixxx_deleted = 0;
+
+			while (m_pQueryLibrarySelect->next()) {
+				trackId = m_pQueryLibrarySelect->value(m_pQueryLibrarySelect->record().indexOf("id")).toInt();
+				mixxx_deleted = m_pQueryLibrarySelect->value(m_pQueryLibrarySelect->record().indexOf("mixxx_deleted")).toBool();
+			}
+			if (unremove && mixxx_deleted) {
+				// Set mixxx_deleted back to 0
+				m_pQueryLibraryUpdate->bindValue(":id", trackId);
+				if (!m_pQueryLibraryUpdate->exec()) {
+					 LOG_FAILED_QUERY(*m_pQueryLibraryUpdate)
+							 << "Failed to unremove existing track: "
+							 << pTrack->getFilename();
+				}
+			}
+			// Regardless of whether we unremoved this track or not -- it's
+            // already in the library and so we need to skip it. Set the track's
+            // trackId so the caller can know it. TODO(XXX) this is a little
+            // weird because the track has whatever metadata the caller supplied
+            // and that metadata may differ from what is already in the
+            // database. I'm ignoring this corner case. rryan 10/2011
+			pTrack->setId(trackId);
+		}
+		return false;
 	} else {
 		// Inserting succeeded, so just get the last rowid.
 		QVariant lastInsert = m_pQueryTrackLocationInsert->lastInsertId();
 		trackLocationId = lastInsert.toInt();
+
+		//Failure of this assert indicates that we were unable to insert the track
+		//location into the table AND we could not retrieve the id of that track
+		//location from the same table. "It shouldn't happen"... unless I screwed up
+		//- Albert :)
+		Q_ASSERT(trackLocationId >= 0);
+
+        bindTrackToLibraryInsert(pTrack, trackLocationId);
+
+        if (!m_pQueryLibraryInsert->exec()) {
+            // We failed to insert the track. Maybe it is already in the library
+            // but marked deleted? Skip this track.
+            LOG_FAILED_QUERY(*m_pQueryLibraryInsert)
+                    << "Failed to INSERT new track into library:"
+                    << pTrack->getFilename();
+            return false;
+        }
+        trackId = m_pQueryLibraryInsert->lastInsertId().toInt();
+        pTrack->setId(trackId);
+        m_cueDao.saveTrackCues(trackId, pTrack);
+        pTrack->setDirty(false);
 	}
-
-	//Failure of this assert indicates that we were unable to insert the track
-	//location into the table AND we could not retrieve the id of that track
-	//location from the same table. "It shouldn't happen"... unless I screwed up
-	//- Albert :)
-	Q_ASSERT(trackLocationId >= 0);
-
-	// To save time on future queries, setId the trackLocationId on the
-	// track. This takes advantage of the fact that I know the
-	// LibraryScanner doesn't use these tracks for anything. rryan 9/2010
-	// (daschuer:) This comment seems to be out dated
-	//pTrack->setId(trackLocationId);
-
-
-	bindTrackToLibraryInsert(pTrack, trackLocationId);
-
-	if (!m_pQueryLibraryInsert->exec()) {
-		LOG_FAILED_QUERY(*m_pQueryLibraryInsert)
-			<< "Failed to INSERT new track into library:"
-			<< pTrack->getFilename();
-		m_database.rollback();
-		return false;
-	}
-
-	int trackId = m_pQueryLibraryInsert->lastInsertId().toInt();
-
-	if (pTrack->getCuePoints().count()) {
-		if (trackId >= 0) {
-			m_cueDao.saveTrackCues(trackId, pTrack);
-		} else {
-			qDebug() << "Could not get track ID to save the track cue points:"
-					 << m_pQueryLibraryInsert->lastError();
-		}
-	}
-
-	pTrack->setId(trackId);
-	pTrack->setDirty(false);
-
 	// Add Track to Cache to avoid unnecessary DB Lookups
-	m_sTracksMutex.lock();
+//	m_sTracksMutex.lock();
 	// Automatic conversion to a weak pointer
-	m_sTracks[trackId] = pTrack;
-	m_sTracksMutex.unlock();
-	qDebug() << "m_sTracks.count() =" << m_sTracks.count();
+//	m_sTracks[trackId] = pTrack;
+//	m_sTracksMutex.unlock();
+//	qDebug() << "m_sTracks.count() =" << m_sTracks.count();
 
 	return true;
 }
 
-int TrackDAO::addTrack(QFileInfo& fileInfo) {
+int TrackDAO::addTrack(QFileInfo& fileInfo, bool unremove) {
     int trackId = -1;
     TrackInfoObject * pTrack = new TrackInfoObject(fileInfo);
     if (pTrack) {
         // Add the song to the database.
-        addTrack(pTrack);
+        addTrack(pTrack, unremove);
         trackId = pTrack->getId();
         delete pTrack;
     }
     return trackId;
 }
 
-int TrackDAO::addTrack(QString absoluteFilePath) {
+int TrackDAO::addTrack(QString absoluteFilePath, bool unremove) {
     QFileInfo fileInfo(absoluteFilePath);
-    return addTrack(fileInfo);
+    return addTrack(fileInfo, unremove);
 }
 
-void TrackDAO::addTrack(TrackInfoObject* pTrack) {
-    QTime time;
-    time.start();
-
+void TrackDAO::addTrack(TrackInfoObject* pTrack, bool unremove) {
     //qDebug() << "TrackDAO::addTrack" << QThread::currentThread() << m_database.connectionName();
     //qDebug() << "TrackCollection::addTrack(), inserting into DB";
     Q_ASSERT(pTrack); //Why you be giving me NULL pTracks
 
     // Check that track is a supported extension.
     if (!isTrackFormatSupported(pTrack)) {
-        return;
+		// TODO(XXX) provide some kind of error code on a per-track basis.        
+		return;
     }
 
     addTracksPrepare();
-    addTracksTrack(pTrack);
+    addTracksTrack(pTrack, unremove);
     addTracksFinish();
- }
+}
 
-  /** Removes a track from the library track collection. */
+/** Removes a track from the library track collection. */
 void TrackDAO::removeTrack(int id) {
     //qDebug() << "TrackDAO::removeTrack" << QThread::currentThread() << m_database.connectionName();
     Q_ASSERT(id >= 0);
@@ -453,6 +468,10 @@ void TrackDAO::removeTrack(int id) {
     if (!query.exec()) {
         LOG_FAILED_QUERY(query);
     }
+
+    QSet<int> tracksRemovedSet;
+    tracksRemovedSet.insert(id);
+    emit(tracksRemoved(tracksRemovedSet));
 }
 
 void TrackDAO::removeTracks(QList<int> ids) {
@@ -472,6 +491,9 @@ void TrackDAO::removeTracks(QList<int> ids) {
     if (!query.exec()) {
         LOG_FAILED_QUERY(query);
     }
+
+    QSet<int> tracksRemovedSet = QSet<int>::fromList(ids);
+    emit(tracksRemoved(tracksRemovedSet));
 }
 
 /*** If a track has been manually "removed" from Mixxx's library by the user via
@@ -491,13 +513,16 @@ void TrackDAO::unremoveTrack(int trackId) {
         LOG_FAILED_QUERY(query)
                 << "Failed to set track" << trackId << "as undeleted";
     }
+    QSet<int> tracksAddedSet;
+    tracksAddedSet.insert(trackId);
+    emit(tracksAdded(tracksAddedSet));
 }
 
 // static
 void TrackDAO::deleteTrack(TrackInfoObject* pTrack) {
     Q_ASSERT(pTrack);
+    //qDebug() << "Garbage Collecting" << pTrack << "ID" << pTrack->getId() << pTrack->getInfo();
 
-    qDebug() << "Got deletion call for track" << pTrack << "ID" << pTrack->getId() << pTrack->getInfo();
     // Save the track if it is dirty.
     if (pTrack->isDirty()) {
     	pTrack->doSave();
@@ -967,5 +992,8 @@ void TrackDAO::writeAudioMetaData(TrackInfoObject* pTrack){
 }
 
 bool TrackDAO::isTrackFormatSupported(TrackInfoObject* pTrack) const {
-    return SoundSourceProxy::isFilenameSupported(pTrack->getFilename());
+	if (pTrack) {    
+		return SoundSourceProxy::isFilenameSupported(pTrack->getFilename());
+	}
+	return false;
 }

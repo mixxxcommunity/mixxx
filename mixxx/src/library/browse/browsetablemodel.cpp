@@ -17,9 +17,9 @@
 
 BrowseTableModel::BrowseTableModel(QObject* parent, TrackCollection* pTrackCollection,
                                    RecordingManager* pRecordingManager)
-        : QStandardItemModel(parent),
-          TrackModel(pTrackCollection->getDatabase(), // TrackCollections m_db (defaultConnection)
+        : TrackModel(pTrackCollection->getDatabase(), // TrackCollections m_db (defaultConnection)
                      "mixxx.db.model.browse"),
+          QStandardItemModel(parent),
           m_pTrackCollection(pTrackCollection),
 		  m_pRecordingManager(pRecordingManager) {
     QStringList header_data;
@@ -95,7 +95,7 @@ TrackPointer BrowseTableModel::getTrack(const QModelIndex& index) const
     int track_id = track_dao.getTrackId(track_location);
     if (track_id < 0) {
     	// Add Track to library
-    	track_id = track_dao.addTrack(track_location);
+    	track_id = track_dao.addTrack(track_location, true);
     }
 
     return track_dao.getTrack(track_id);

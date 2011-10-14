@@ -70,12 +70,12 @@ class TrackDAO : public QObject, public virtual DAO {
     int getTrackId(QString absoluteFilePath);
     bool trackExistsInDatabase(QString absoluteFilePath);
     QString getTrackLocation(int id);
-    int addTrack(QString absoluteFilePath);
-    int addTrack(QFileInfo& fileInfo);
+    int addTrack(QString absoluteFilePath, bool unremove);
+    int addTrack(QFileInfo& fileInfo, bool unremove);
 
     void addTracksPrepare();
     void addTracksFinish();
-    bool addTracksTrack(TrackInfoObject* pTrack);
+    bool addTracksTrack(TrackInfoObject* pTrack, bool unremove);
 
     void removeTrack(int id);
     void removeTracks(QList<int> ids);
@@ -96,6 +96,8 @@ class TrackDAO : public QObject, public virtual DAO {
     void trackDirty(int trackId);
     void trackClean(int trackId);
     void trackChanged(int trackId);
+    void tracksAdded(QSet<int> trackIds);
+    void tracksRemoved(QSet<int> trackIds);
 
   public slots:
     // The public interface to the TrackDAO requires a TrackPointer so that we
@@ -120,7 +122,8 @@ class TrackDAO : public QObject, public virtual DAO {
     bool isTrackFormatSupported(TrackInfoObject* pTrack) const;
     void saveTrack(TrackInfoObject* pTrack);
     void updateTrack(TrackInfoObject* pTrack);
-    void addTrack(TrackInfoObject* pTrack);
+
+    void addTrack(TrackInfoObject* pTrack, bool unremove);
     TrackPointer getTrackFromDB(int id) const;
     QString absoluteFilePath(QString location);
 
@@ -148,14 +151,16 @@ class TrackDAO : public QObject, public virtual DAO {
 
     QSqlDatabase &m_database;
     CueDAO &m_cueDao;
+    ConfigObject<ConfigValue> * m_pConfig;
     static QHash<int, TrackWeakPointer> m_sTracks;
     static QMutex m_sTracksMutex;
-    //mutable QSet<int> m_dirtyTracks;
     mutable QCache<int,TrackPointer> m_trackCache;
-    ConfigObject<ConfigValue> * m_pConfig;
 
     QSqlQuery* m_pQueryTrackLocationInsert;
+    QSqlQuery* m_pQueryTrackLocationSelect;
     QSqlQuery* m_pQueryLibraryInsert;
+    QSqlQuery* m_pQueryLibraryUpdate;
+    QSqlQuery* m_pQueryLibrarySelect;
 };
 
 #endif //TRACKDAO_H
