@@ -60,21 +60,23 @@ MixxxLibraryFeature::MixxxLibraryFeature(QObject* parent,
         }
     }
 
-    m_pBaseTrackCache = new BaseTrackCache(
+    BaseTrackCache* pBaseTrackCache = new BaseTrackCache(
         pTrackCollection, "library_cache_view", LIBRARYTABLE_ID, columns, true);
     connect(&pTrackCollection->getTrackDAO(), SIGNAL(trackDirty(int)),
-    		m_pBaseTrackCache, SLOT(slotTrackDirty(int)));
+            pBaseTrackCache, SLOT(slotTrackDirty(int)));
     connect(&pTrackCollection->getTrackDAO(), SIGNAL(trackClean(int)),
-    		m_pBaseTrackCache, SLOT(slotTrackClean(int)));
+            pBaseTrackCache, SLOT(slotTrackClean(int)));
     connect(&pTrackCollection->getTrackDAO(), SIGNAL(trackChanged(int)),
-    		m_pBaseTrackCache, SLOT(slotTrackChanged(int)));
+            pBaseTrackCache, SLOT(slotTrackChanged(int)));
     connect(&pTrackCollection->getTrackDAO(), SIGNAL(tracksAdded(QSet<int>)),
-    		m_pBaseTrackCache, SLOT(slotTracksAdded(QSet<int>)));
+            pBaseTrackCache, SLOT(slotTracksAdded(QSet<int>)));
     connect(&pTrackCollection->getTrackDAO(), SIGNAL(tracksRemoved(QSet<int>)),
-    		m_pBaseTrackCache, SLOT(slotTracksRemoved(QSet<int>)));
+            pBaseTrackCache, SLOT(slotTracksRemoved(QSet<int>)));
+    connect(&pTrackCollection->getTrackDAO(), SIGNAL(dbTrackAdded(TrackPointer)),
+            pBaseTrackCache, SLOT(slotDbTrackAdded(TrackPointer)));
 
     pTrackCollection->addTrackSource(
-        QString("default"), QSharedPointer<BaseTrackCache>(m_pBaseTrackCache));
+        QString("default"), QSharedPointer<BaseTrackCache>(pBaseTrackCache));
 
     // These rely on the 'default' track source being present.
     m_pLibraryTableModel = new LibraryTableModel(this, pTrackCollection);
@@ -106,7 +108,6 @@ TreeItemModel* MixxxLibraryFeature::getChildModel() {
 
 void MixxxLibraryFeature::refreshLibraryModels() {
 	// is called when library scan is finished
-	m_pBaseTrackCache->buildIndex(); // rebuilding the index here is just a hack because Library scanner knows the new tracks and might be able to inform the library scanner. 
 	m_pLibraryTableModel->select();
     m_pMissingTableModel->select();
 }

@@ -7,7 +7,6 @@
 #include <QStringListModel>
 
 #include "library/libraryfeature.h"
-#include "library/basetrackcache.h"
 #include "treeitemmodel.h"
 
 class LibraryTableModel;
@@ -41,7 +40,6 @@ class MixxxLibraryFeature : public LibraryFeature {
     LibraryTableModel* m_pLibraryTableModel;
     MissingTableModel* m_pMissingTableModel;
     TreeItemModel m_childModel;
-    BaseTrackCache* m_pBaseTrackCache;
 };
 
 #endif /* MIXXXLIBRARYFEATURE_H */

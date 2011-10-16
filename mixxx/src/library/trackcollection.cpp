@@ -130,11 +130,13 @@ bool TrackCollection::importDirectory(QString directory, TrackDAO &trackDao,
 			//qDebug() << "Loading" << it.fileName();
         	emit(progressLoading(it.fileName()));
 
-			TrackInfoObject* pTrack = new TrackInfoObject(absoluteFilePath);
-			trackDao.addTracksTrack(pTrack, false);
-			// TODO: signal track has changed with the mixxx m_trackDao;
-			// m_trackDao.databaseTrackChanged(pTrack);
-			delete pTrack;
+        	TrackPointer pTrack =  TrackPointer(new TrackInfoObject(absoluteFilePath), &QObject::deleteLater);
+
+        	if (trackDao.addTracksAdd(pTrack.data(), false)) {
+        		// Successful added
+				// singal the main instance of TrackDao, that there is a new Track in the database 
+            	m_trackDao.databaseTrackAdded(pTrack);
+        	}
 		}
     }
     emit(finishedLoading());

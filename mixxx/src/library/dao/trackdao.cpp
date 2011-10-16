@@ -189,8 +189,8 @@ void TrackDAO::slotTrackClean(TrackInfoObject* pTrack) {
     }
 }
 
-void TrackDAO::databaseTrackChanged(TrackInfoObject* pTrack) {
-	slotTrackClean(pTrack);
+void TrackDAO::databaseTrackAdded(TrackPointer pTrack) {
+	emit(dbTrackAdded(pTrack));
 }
 
 void TrackDAO::slotTrackChanged(TrackInfoObject* pTrack) {
@@ -325,9 +325,13 @@ void TrackDAO::addTracksFinish() {
     m_pQueryLibrarySelect = NULL;
 
     m_database.commit();
+
+    emit(tracksAdded(m_tracksAddedSet));
+    emit(dbTrackAdded(TrackPointer()));
+    m_tracksAddedSet.clear();
 }
 
-bool TrackDAO::addTracksTrack(TrackInfoObject* pTrack, bool unremove) {
+bool TrackDAO::addTracksAdd(TrackInfoObject* pTrack, bool unremove) {
 
 	qDebug() << "TrackDAO::addTracksTrack" << pTrack->getFilename();
 
@@ -412,13 +416,7 @@ bool TrackDAO::addTracksTrack(TrackInfoObject* pTrack, bool unremove) {
         m_cueDao.saveTrackCues(trackId, pTrack);
         pTrack->setDirty(false);
 	}
-	// Add Track to Cache to avoid unnecessary DB Lookups
-//	m_sTracksMutex.lock();
-	// Automatic conversion to a weak pointer
-//	m_sTracks[trackId] = pTrack;
-//	m_sTracksMutex.unlock();
-//	qDebug() << "m_sTracks.count() =" << m_sTracks.count();
-
+	m_tracksAddedSet.insert(trackId);
 	return true;
 }
 
@@ -451,7 +449,7 @@ void TrackDAO::addTrack(TrackInfoObject* pTrack, bool unremove) {
     }
 
     addTracksPrepare();
-    addTracksTrack(pTrack, unremove);
+    addTracksAdd(pTrack, unremove);
     addTracksFinish();
 }
 
@@ -513,9 +511,10 @@ void TrackDAO::unremoveTrack(int trackId) {
         LOG_FAILED_QUERY(query)
                 << "Failed to set track" << trackId << "as undeleted";
     }
-    QSet<int> tracksAddedSet;
-    tracksAddedSet.insert(trackId);
-    emit(tracksAdded(tracksAddedSet));
+
+    m_tracksAddedSet.insert(trackId);
+    emit(tracksAdded(m_tracksAddedSet));
+    m_tracksAddedSet.clear();
 }
 
 // static

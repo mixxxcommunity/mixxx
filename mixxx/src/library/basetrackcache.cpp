@@ -73,6 +73,13 @@ void BaseTrackCache::slotTracksAdded(QSet<int> trackIds) {
     updateTracksInIndex(trackIds);
 }
 
+void BaseTrackCache::slotDbTrackAdded(TrackPointer pTrack) {
+    if (sDebug) {
+        qDebug() << this << "slotDbTrackAdded";
+    }
+    updateIndexWithTrackpointer(pTrack);
+}
+
 void BaseTrackCache::slotTracksRemoved(QSet<int> trackIds) {
     if (sDebug) {
         qDebug() << this << "slotTracksRemoved" << trackIds.size();
@@ -124,6 +131,27 @@ TrackPointer BaseTrackCache::lookupCachedTrack(int trackId) const {
         return m_trackDAO.getTrack(trackId, true);
     }
     return TrackPointer();
+}
+
+bool BaseTrackCache::updateIndexWithTrackpointer(TrackPointer pTrack) {
+    if (sDebug) {
+        qDebug() << "updateIndexWithTrackpointer:" << pTrack->getFilename();
+    }
+
+    int numColumns = columnCount();
+
+
+	int id = pTrack->getId();
+
+	if (id > 0) {
+		QVector<QVariant>& record = m_trackInfo[id];
+		record.resize(numColumns);
+
+		for (int i = 0; i < numColumns; ++i) {
+			record[i] = getTrackValueForColumn(pTrack, i);
+		}
+	}
+    return true;
 }
 
 bool BaseTrackCache::updateIndexWithQuery(QString queryString) {
