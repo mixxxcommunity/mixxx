@@ -139,6 +139,7 @@ void LibraryScanner::run()
     //Lower our priority to help not grind crappy computers.
     setPriority(QThread::LowPriority);
 
+    qRegisterMetaType<QSet<int> >("QSet<int>");
 
     if (!m_database.isValid()) {
     	m_database = QSqlDatabase::addDatabase("QSQLITE", "LIBRARY_SCANNER");
@@ -233,11 +234,13 @@ void LibraryScanner::run()
     m_database.transaction();
 
     //At the end of a scan, mark all tracks and directories that
-    //weren't "verified" as "deleted" (as long as the scan wasn't cancelled
+    //weren't "verified" as "deleted" (as long as the scan wasn't canceled
     //half way through. This condition is important because our rescanning
     //algorithm starts by marking all tracks and dirs as unverified, so a
-    //cancelled scan might leave half of your library as unverified. Don't
+    //canceled scan might leave half of your library as unverified. Don't
     //want to mark those tracks/dirs as deleted in that case) :)
+    QSet<int> tracksMovedSetOld;
+    QSet<int> tracksMovedSetNew;
     if (bScanFinishedCleanly)
     {
         qDebug() << "Marking unverified tracks as deleted.";
@@ -248,7 +251,7 @@ void LibraryScanner::run()
         //Check to see if the "deleted" tracks showed up in another location,
         //and if so, do some magic to update all our tables.
         qDebug() << "Detecting moved files.";
-        m_trackDao.detectMovedFiles();
+        m_trackDao.detectMovedFiles(&tracksMovedSetOld, &tracksMovedSetNew);
 
         //Remove the hashes for any directories that have been
         //marked as deleted to clean up. We need to do this otherwise
@@ -273,6 +276,9 @@ void LibraryScanner::run()
     //transaction when this code is called. If there is, it means we probably
     //aren't committing a transaction somewhere that should be.
     m_database.close();
+
+    // Update BaseTrackCache via the main TrackDao
+    m_pCollection->getTrackDAO().databaseTracksMoved(tracksMovedSetOld, tracksMovedSetNew);
 
     resetCancel();
     emit(scanFinished());

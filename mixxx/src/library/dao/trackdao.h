@@ -89,8 +89,9 @@ class TrackDAO : public QObject, public virtual DAO {
     void invalidateTrackLocationsInLibrary(QString libraryPath);
     void markUnverifiedTracksAsDeleted();
     void markTrackLocationsAsDeleted(QString directory);
-    void detectMovedFiles();
+    void detectMovedFiles(QSet<int>* pTracksMovedSetNew, QSet<int>* pTracksMovedSetOld);
     void databaseTrackAdded(TrackPointer pTrack);
+    void databaseTracksMoved(QSet<int> tracksMovedSetOld, QSet<int> tracksMovedSetNew);
 
   signals:
     void trackDirty(int trackId);

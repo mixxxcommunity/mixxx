@@ -193,6 +193,11 @@ void TrackDAO::databaseTrackAdded(TrackPointer pTrack) {
 	emit(dbTrackAdded(pTrack));
 }
 
+void TrackDAO::databaseTracksMoved(QSet<int> tracksMovedSetOld, QSet<int> tracksMovedSetNew) {
+	emit(tracksRemoved(tracksMovedSetNew));
+	emit(tracksAdded(tracksMovedSetOld));  // results in a call of BaseTrackCache::updateTracksInIndex(trackIds);
+}
+
 void TrackDAO::slotTrackChanged(TrackInfoObject* pTrack) {
     //qDebug() << "TrackDAO::slotTrackChanged" << pTrack->getInfo();
     // This is a private slot that is connected to TIO's created by this
@@ -899,13 +904,14 @@ void TrackDAO::markTrackLocationsAsDeleted(QString directory) {
     and see if another "file" with the same name and filesize exists in the track_locations
     table. That means the file has moved instead of being deleted outright, and so
     we can salvage your existing metadata that you have in your DB (like cue points, etc.). */
-void TrackDAO::detectMovedFiles() {
+void TrackDAO::detectMovedFiles(QSet<int>* pTracksMovedSetOld, QSet<int>* pTracksMovedSetNew) {
     //This function should not start a transaction on it's own!
     //When it's called from libraryscanner.cpp, there already is a transaction
     //started!
 
     QSqlQuery query(m_database);
     QSqlQuery query2(m_database);
+    QSqlQuery query3(m_database);
     int oldTrackLocationId = -1;
     int newTrackLocationId = -1;
     QString filename;
@@ -917,6 +923,11 @@ void TrackDAO::detectMovedFiles() {
         LOG_FAILED_QUERY(query);
     }
 
+    query2.prepare("SELECT id FROM track_locations WHERE "
+                   "fs_deleted=0 AND "
+                   "filename=:filename AND "
+                   "filesize=:filesize");
+
     //For each track that's been "deleted" on disk...
     while (query.next()) {
         newTrackLocationId = -1; //Reset this var
@@ -924,10 +935,6 @@ void TrackDAO::detectMovedFiles() {
         filename = query.value(query.record().indexOf("filename")).toString();
         fileSize = query.value(query.record().indexOf("filesize")).toInt();
 
-        query2.prepare("SELECT id FROM track_locations WHERE "
-                       "fs_deleted=0 AND "
-                       "filename=:filename AND "
-                       "filesize=:filesize");
         query2.bindValue(":filename", filename);
         query2.bindValue(":filesize", fileSize);
         Q_ASSERT(query2.exec());
@@ -944,27 +951,53 @@ void TrackDAO::detectMovedFiles() {
             qDebug() << "Found moved track!" << filename;
 
             //Remove old row from track_locations table
-            query2.prepare("DELETE FROM track_locations WHERE "
+            query3.prepare("DELETE FROM track_locations WHERE "
                            "id=:id");
-            query2.bindValue(":id", oldTrackLocationId);
-            Q_ASSERT(query2.exec());
+            query3.bindValue(":id", oldTrackLocationId);
+            Q_ASSERT(query3.exec());
 
             //The library scanner will have added a new row to the Library
             //table which corresponds to the track in the new location. We need
             //to remove that so we don't end up with two rows in the library table
             //for the same track.
-            query2.prepare("DELETE FROM library WHERE "
+            query3.prepare("SELECT id FROM library WHERE "
                            "location=:location");
-            query2.bindValue(":location", newTrackLocationId);
-            Q_ASSERT(query2.exec());
+            query3.bindValue(":location", newTrackLocationId);
+            Q_ASSERT(query3.exec());
+
+            while (query3.next())
+            {
+                int newTrackId = query3.value(query3.record().indexOf("id")).toInt();
+                query3.prepare("DELETE FROM library WHERE "
+                               "id=:newid");
+                query3.bindValue(":newid", newTrackLocationId);
+                Q_ASSERT(query3.exec());
+
+                // We collect all the new tracks the where added to BaseTrackCache as well
+                pTracksMovedSetNew->insert(newTrackId);
+            }
 
             //Update the location foreign key for the existing row in the library table
             //to point to the correct row in the track_locations table.
-            query2.prepare("UPDATE library "
-                           "SET location=:newloc WHERE location=:oldloc");
-            query2.bindValue(":newloc", newTrackLocationId);
-            query2.bindValue(":oldloc", oldTrackLocationId);
-            Q_ASSERT(query2.exec());
+            query3.prepare("SELECT id FROM library WHERE "
+                           "location=:location");
+            query3.bindValue(":location", oldTrackLocationId);
+            Q_ASSERT(query3.exec());
+
+
+            while (query3.next())
+            {
+                int oldTrackId = query3.value(query3.record().indexOf("id")).toInt();
+
+                query3.prepare("UPDATE library "
+                               "SET location=:newloc WHERE id=:oldid");
+                query3.bindValue(":newloc", newTrackLocationId);
+                query3.bindValue(":oldid", oldTrackId);
+                Q_ASSERT(query3.exec());
+
+                // We collect all the old tracks that has to be updated in BaseTrackCache as well
+                pTracksMovedSetOld->insert(oldTrackId);
+            }
         }
     }
 }
