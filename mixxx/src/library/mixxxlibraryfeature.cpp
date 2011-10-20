@@ -43,7 +43,7 @@ MixxxLibraryFeature::MixxxLibraryFeature(QObject* parent,
             + columns.join(",") +
             " FROM library INNER JOIN track_locations "
             "ON library.location = track_locations.id "
-            "WHERE (" + LibraryTableModel::DEFAULT_LIBRARYFILTER + ")";
+            "WHERE mixxx_deleted=0";
 
     query.prepare(queryString);
     if (!query.exec()) {
