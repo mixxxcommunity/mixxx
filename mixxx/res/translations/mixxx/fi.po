@@ -3650,7 +3650,7 @@ msgstr "Näytä tai piilota sarakkeita."
 #~ msgid "Title"
 #~ msgstr "Nimi"
 
-#~ msgid "Missing Songs"
+#~ msgid "Missing Tracks"
 #~ msgstr "Puuttuvat kappaleet"
 
 #~ msgctxt "PlaylistTableModel#3"

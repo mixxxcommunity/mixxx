@@ -3688,7 +3688,7 @@ msgstr "Показать или скрыть столбцы."
 #~ msgid "Preferences"
 #~ msgstr "Параметры"
 
-#~ msgid "Missing Songs"
+#~ msgid "Missing Tracks"
 #~ msgstr "Отсутствующие композиции"
 
 #~ msgctxt "MixxxLibraryFeature#2"

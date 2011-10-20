@@ -11,7 +11,7 @@
 #include "library/trackcollection.h"
 #include "treeitem.h"
 
-#define CHILD_MISSING "Missing Songs"
+#define CHILD_MISSING "Missing Tracks"
 
 MixxxLibraryFeature::MixxxLibraryFeature(QObject* parent,
                                          TrackCollection* pTrackCollection)

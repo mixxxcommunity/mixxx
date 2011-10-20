@@ -3623,7 +3623,7 @@ msgstr "Montrer ou cacher les colonnes."
 #~ msgid "Preferences"
 #~ msgstr "Préférences"
 
-#~ msgid "Missing Songs"
+#~ msgid "Missing Tracks"
 #~ msgstr "Chanson Manquante"
 
 #~ msgctxt "MixxxLibraryFeature#2"

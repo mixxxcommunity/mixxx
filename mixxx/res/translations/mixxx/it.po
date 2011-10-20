@@ -3692,7 +3692,7 @@ msgstr "Mostra o nascondi le colonne."
 #~ "Nessuna periferica d'ingresso selezionata.\n"
 #~ "Seleziona la/le scheda/e audio nelle preferenze di controllo vinile."
 
-#~ msgid "Missing Songs"
+#~ msgid "Missing Tracks"
 #~ msgstr "Brani mancanti"
 
 #~ msgctxt "MixxxLibraryFeature#2"
