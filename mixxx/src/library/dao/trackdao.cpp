@@ -1029,3 +1029,35 @@ bool TrackDAO::isTrackFormatSupported(TrackInfoObject* pTrack) const {
 	}
 	return false;
 }
+
+void TrackDAO::verifyTracksOutside(QString libraryPath) {
+    QSqlQuery query(m_database);
+    QSqlQuery query2(m_database);
+    QString trackLocation;
+
+    libraryPath += "%"; //Add wildcard to SQL query to match subdirectories!
+    query.setForwardOnly(true);
+    query.prepare("SELECT location "
+                  "FROM track_locations "
+                  "WHERE directory NOT LIKE :directory");
+    query.bindValue(":directory", libraryPath);
+
+    if (!query.exec()) {
+        LOG_FAILED_QUERY(query);
+        return;
+    }
+
+    query2.prepare("UPDATE track_locations "
+                  "SET fs_deleted=:fs_deleted, needs_verification=0 "
+                  "WHERE location=:location");
+
+    while (query.next()) {
+    	trackLocation = query.value(query.record().indexOf("location")).toString();
+    	query2.bindValue(":location", trackLocation);
+    	query2.bindValue(":fs_deleted", (int)!QFile::exists(trackLocation));
+   	    if (!query2.exec()) {
+   	        LOG_FAILED_QUERY(query2);
+    	}
+    }
+}
+
