@@ -1,4 +1,3 @@
-
 #include <QtDebug>
 #include <QtCore>
 #include <QtSql>
@@ -22,10 +21,17 @@ QMutex TrackDAO::m_sTracksMutex;
 // 0.
 #define TRACK_CACHE_SIZE 5
 
-TrackDAO::TrackDAO(QSqlDatabase& database, CueDAO& cueDao, ConfigObject<ConfigValue> * pConfig)
+TrackDAO::TrackDAO(QSqlDatabase& database,
+                   CueDAO& cueDao,
+                   PlaylistDAO& playlistDao,
+                   CrateDAO& crateDao,
+                   ConfigObject<ConfigValue> * pConfig)
         : m_database(database),
           m_cueDao(cueDao),
+          m_playlistDao(playlistDao),
+          m_crateDao(crateDao),
           m_pConfig(pConfig),
+		  m_trackCache(TRACK_CACHE_SIZE),
           m_pQueryTrackLocationInsert(NULL),
           m_pQueryTrackLocationSelect(NULL),
           m_pQueryLibraryInsert(NULL),
@@ -89,7 +95,6 @@ int TrackDAO::getTrackId(QString absoluteFilePath) {
     if (query.next()) {
         libraryTrackId = query.value(query.record().indexOf("id")).toInt();
     }
-    //query.finish();
 
     return libraryTrackId;
 }
@@ -110,7 +115,6 @@ QString TrackDAO::getTrackLocation(int trackId) {
     while (query.next()) {
         trackLocation = query.value(query.record().indexOf("location")).toString();
     }
-    //query.finish();
 
     return trackLocation;
 }
@@ -462,10 +466,14 @@ void TrackDAO::removeTrack(int id) {
     Q_ASSERT(id >= 0);
     QSqlQuery query(m_database);
 
+    // Remove track from crates and playlists.
+    m_playlistDao.removeTrackFromPlaylists(id);
+    m_crateDao.removeTrackFromCrates(id);
+
     //Mark the track as deleted!
     query.prepare("UPDATE library "
                   "SET mixxx_deleted=1 "
-                  "WHERE id = " + QString("%1").arg(id));
+                  "WHERE id = " + QString::number(id));
     if (!query.exec()) {
         LOG_FAILED_QUERY(query);
     }
@@ -805,8 +813,6 @@ void TrackDAO::updateTrack(TrackInfoObject* pTrack) {
         m_database.rollback();
         return;
     }
-
-    //query.finish();
 
     //qDebug() << "Update track took : " << time.elapsed() << "ms. Now updating cues";
     time.start();

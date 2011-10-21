@@ -113,19 +113,6 @@ QVariant BaseSqlTableModel::headerData(int section, Qt::Orientation orientation,
     return QAbstractTableModel::headerData(section, orientation, role);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 QString BaseSqlTableModel::orderByClause() const {
     bool tableColumnSort = m_iSortColumn < m_tableColumns.size();
 
@@ -223,10 +210,10 @@ void BaseSqlTableModel::select() {
 
         RowInfo thisRowInfo;
         thisRowInfo.trackId = id;
-        thisRowInfo.order = rowInfo.size(); // save rows where this currently track id is located
-        
-		// Get all the table columns and store them in the hash for this
+        thisRowInfo.order = rowInfo.size(); // save rows where this currently track id is located        
+        // Get all the table columns and store them in the hash for this
         // row-info section.
+
         foreach (int tableColumnIndex, tableColumnIndices) {
             thisRowInfo.metadata[tableColumnIndex] =
                     query.value(tableColumnIndex);
@@ -294,7 +281,9 @@ void BaseSqlTableModel::setTable(const QString& tableName,
                                  const QStringList& tableColumns,
                                  QSharedPointer<BaseTrackCache> trackSource) {
     Q_ASSERT(trackSource);
-    qDebug() << this << "setTable" << tableName << tableColumns << idColumn;
+    if (sDebug) {
+        qDebug() << this << "setTable" << tableName << tableColumns << idColumn;
+    }
     m_tableName = tableName;
     m_idColumn = idColumn;
     m_tableColumns = tableColumns;

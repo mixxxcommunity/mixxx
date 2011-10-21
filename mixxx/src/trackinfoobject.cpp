@@ -190,8 +190,6 @@ void TrackInfoObject::writeToXML( QDomDocument &doc, QDomElement &header )
 
 }
 
-static void doNothing(TrackInfoObject* pTrack) {}
-
 int TrackInfoObject::parse()
 {
     // Add basic information derived from the filename:
