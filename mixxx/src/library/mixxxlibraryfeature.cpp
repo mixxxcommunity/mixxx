@@ -5,6 +5,7 @@
 
 #include "library/mixxxlibraryfeature.h"
 
+#include "library/basetrackcache.h"
 #include "library/librarytablemodel.h"
 #include "library/missingtablemodel.h"
 #include "library/queryutil.h"
@@ -75,8 +76,8 @@ MixxxLibraryFeature::MixxxLibraryFeature(QObject* parent,
     connect(&pTrackCollection->getTrackDAO(), SIGNAL(dbTrackAdded(TrackPointer)),
             pBaseTrackCache, SLOT(slotDbTrackAdded(TrackPointer)));
 
-    pTrackCollection->addTrackSource(
-        QString("default"), QSharedPointer<BaseTrackCache>(pBaseTrackCache));
+    m_pBaseTrackCache = QSharedPointer<BaseTrackCache>(pBaseTrackCache);
+    pTrackCollection->addTrackSource(QString("default"), m_pBaseTrackCache);
 
     // These rely on the 'default' track source being present.
     m_pLibraryTableModel = new LibraryTableModel(this, pTrackCollection);
@@ -106,10 +107,17 @@ TreeItemModel* MixxxLibraryFeature::getChildModel() {
     return &m_childModel;
 }
 
-void MixxxLibraryFeature::refreshLibraryModels() {
-	// is called when library scan is finished
-	m_pLibraryTableModel->select();
-    m_pMissingTableModel->select();
+void MixxxLibraryFeature::refreshLibraryModels()
+{
+    if (m_pBaseTrackCache) {
+        m_pBaseTrackCache->buildIndex();
+    }
+    if (m_pLibraryTableModel) {
+        m_pLibraryTableModel->select();
+    }
+    if (m_pMissingTableModel) {
+        m_pMissingTableModel->select();
+    }
 }
 
 void MixxxLibraryFeature::activate() {
@@ -128,27 +136,39 @@ void MixxxLibraryFeature::activateChild(const QModelIndex& index) {
 }
 
 void MixxxLibraryFeature::onRightClick(const QPoint& globalPos) {
+	Q_UNUSED(globalPos);
 }
 
 void MixxxLibraryFeature::onRightClickChild(const QPoint& globalPos,
                                             QModelIndex index) {
+	Q_UNUSED(globalPos);
+	Q_UNUSED(index);
 }
 
 bool MixxxLibraryFeature::dropAccept(QUrl url) {
+	Q_UNUSED(url);
     return false;
 }
 
 bool MixxxLibraryFeature::dropAcceptChild(const QModelIndex& index, QUrl url) {
-    return false;
+    Q_UNUSED(index);
+    Q_UNUSED(url);
+	return false;
 }
 
 bool MixxxLibraryFeature::dragMoveAccept(QUrl url) {
+	Q_UNUSED(url);
     return false;
 }
 
 bool MixxxLibraryFeature::dragMoveAcceptChild(const QModelIndex& index,
                                               QUrl url) {
+	Q_UNUSED(index);
+	Q_UNUSED(url);
     return false;
-}void MixxxLibraryFeature::onLazyChildExpandation(const QModelIndex &index){
-//Nothing to do because the childmodel is not of lazy nature.
+}
+
+void MixxxLibraryFeature::onLazyChildExpandation(const QModelIndex &index){
+	// Nothing to do because the childmodel is not of lazy nature.
+	Q_UNUSED(index);
 }

@@ -125,14 +125,17 @@ void ITunesPlaylistModel::setPlaylist(QString playlist_path) {
 
     QStringList columns;
     columns << "track_id";
+    columns << "position";
 
     QSqlQuery query(m_database);
-    query.prepare("CREATE TEMPORARY VIEW IF NOT EXISTS " +
-                  driver->formatValue(playlistNameField) + " AS "
-                  "SELECT "
-                  + columns.join(",") +
-                  " FROM itunes_playlist_tracks "
-                  "WHERE playlist_id = " + QString("%1").arg(playlistId));
+    QString queryString = QString(
+        "CREATE TEMPORARY VIEW IF NOT EXISTS %1 AS "
+        "SELECT %2 FROM %3 WHERE playlist_id = %4")
+            .arg(driver->formatValue(playlistNameField))
+            .arg(columns.join(","))
+            .arg("itunes_playlist_tracks")
+            .arg(playlistId);
+    query.prepare(queryString);
 
     if (!query.exec()) {
         qDebug() << "Error creating temporary view for itunes playlists."
@@ -144,11 +147,12 @@ void ITunesPlaylistModel::setPlaylist(QString playlist_path) {
 
     setTable(playlistID, columns[0], columns,
              m_pTrackCollection->getTrackSource("itunes"));
+    setDefaultSort(fieldIndex("position"), Qt::AscendingOrder);
     initHeaderData();
     setSearch("");
 }
 
 bool ITunesPlaylistModel::isColumnHiddenByDefault(int column) {
-	Q_UNUSED(column);
-	return false;
+   Q_UNUSED(column);
+   return false;
 }

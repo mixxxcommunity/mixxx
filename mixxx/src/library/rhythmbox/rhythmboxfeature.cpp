@@ -66,17 +66,10 @@ RhythmboxFeature::RhythmboxFeature(QObject* parent, TrackCollection* pTrackColle
 }
 
 RhythmboxFeature::~RhythmboxFeature() {
-
-	qDebug() << "~RhythmboxFeature()";
-	// stop import thread, if still running
-	m_cancelImport = true;
-	if( m_track_future.isRunning() ){
-		qDebug() << "m_track_future still running";
-		m_track_future.waitForFinished();
-		qDebug() << "m_track_future finished";
-	}
-
-	delete m_pRhythmboxTrackModel;
+    // stop import thread, if still running
+    m_cancelImport = true;
+    m_track_future.waitForFinished();
+    delete m_pRhythmboxTrackModel;
     delete m_pRhythmboxPlaylistModel;
     delete m_pAddToAutoDJAction;
     delete m_pAddToAutoDJTopAction;
@@ -211,18 +204,16 @@ TreeItem* RhythmboxFeature::importMusicCollection()
 
     QXmlStreamReader xml(&db);
     while (!xml.atEnd() && !m_cancelImport) {
-    	xml.readNext();
+        xml.readNext();
         if (xml.isStartElement() && xml.name() == "entry") {
             QXmlStreamAttributes attr = xml.attributes();
             //Check if we really parse a track and not album art information
             if(attr.value("type").toString() == "song"){
                 importTrack(xml, query);
-
             }
         }
     }
     m_database.commit();
-
 
     if (xml.hasError()) {
         // do error handling
@@ -231,16 +222,11 @@ TreeItem* RhythmboxFeature::importMusicCollection()
         return false;
     }
 
-
     db.close();
-
     if (m_cancelImport) {
     	return NULL;
     }
-
     return importPlaylists();
-
-
 }
 
 TreeItem* RhythmboxFeature::importPlaylists()
@@ -260,8 +246,9 @@ TreeItem* RhythmboxFeature::importPlaylists()
                                       "VALUES (:id, :name)");
 
     QSqlQuery query_insert_to_playlist_tracks(m_database);
-    query_insert_to_playlist_tracks.prepare("INSERT INTO rhythmbox_playlist_tracks (playlist_id, track_id) "
-                                            "VALUES (:playlist_id, :track_id)");
+    query_insert_to_playlist_tracks.prepare(
+        "INSERT INTO rhythmbox_playlist_tracks (playlist_id, track_id, position) "
+        "VALUES (:playlist_id, :track_id, :position)");
     //The tree structure holding the playlists
     TreeItem* rootItem = new TreeItem();
 
@@ -415,6 +402,7 @@ void RhythmboxFeature::importTrack(QXmlStreamReader &xml, QSqlQuery &query)
 /** reads all playlist entries and executes a SQL statement **/
 void RhythmboxFeature::importPlaylist(QXmlStreamReader &xml, QSqlQuery &query_insert_to_playlist_tracks, int playlist_id)
 {
+    int playlist_position = 1;
     while(!xml.atEnd())
     {
         //read next XML element
@@ -445,7 +433,7 @@ void RhythmboxFeature::importPlaylist(QXmlStreamReader &xml, QSqlQuery &query_in
 
             query_insert_to_playlist_tracks.bindValue(":playlist_id", playlist_id);
             query_insert_to_playlist_tracks.bindValue(":track_id", track_id);
-
+            query_insert_to_playlist_tracks.bindValue(":position", playlist_position++);
             success = query_insert_to_playlist_tracks.exec();
 
             if(!success){

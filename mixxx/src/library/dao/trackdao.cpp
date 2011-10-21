@@ -26,7 +26,6 @@ TrackDAO::TrackDAO(QSqlDatabase& database, CueDAO& cueDao, ConfigObject<ConfigVa
         : m_database(database),
           m_cueDao(cueDao),
           m_pConfig(pConfig),
-          m_trackCache(TRACK_CACHE_SIZE),
           m_pQueryTrackLocationInsert(NULL),
           m_pQueryTrackLocationSelect(NULL),
           m_pQueryLibraryInsert(NULL),
@@ -280,9 +279,8 @@ void TrackDAO::bindTrackToLibraryInsert(TrackInfoObject* pTrack, int trackLocati
     delete pBeatsBlob;
 }
 
-
 void TrackDAO::addTracksPrepare() {
-   // Start the transaction
+    // Start the transaction
     m_database.transaction();
 
     m_pQueryTrackLocationInsert = new QSqlQuery(m_database);

@@ -70,7 +70,7 @@ QApplication *a;
 
 QStringList plugin_paths; //yes this is global. sometimes global is good.
 
-void qInitImages_mixxx();
+//void qInitImages_mixxx();
 
 QFile Logfile; // global logfile variable
 
@@ -172,18 +172,19 @@ int main(int argc, char * argv[])
     struct CmdlineArgs args;
     args.bStartInFullscreen = false; //Initialize vars
 
-	// Only match supported file types since command line options are also parsed elsewhere
-	QRegExp fileRx(SoundSourceProxy::supportedFileExtensionsRegex(),
-			Qt::CaseInsensitive);
+    // Only match supported file types since command line options are also parsed elsewhere
+    QRegExp fileRx(SoundSourceProxy::supportedFileExtensionsRegex(), Qt::CaseInsensitive);
 
-	for (int i = 0; i < argc; ++i) {
-		if (argv[i] == QString("-h") || argv[i] == QString("--h") || argv[i]
-				== QString("--help")) {
-			puts("Mixxx digital DJ software v");
-			puts(VERSION);
-			puts(" - Command line options");
-			puts(
-					"\n(These are case-sensitive.)\n\n\
+   for (int i = 0; i < argc; ++i) {
+       if (   argv[i] == QString("-h") 
+            || argv[i] == QString("--h") 
+            || argv[i] == QString("--help")
+    ) {
+           puts("Mixxx digital DJ software v");
+           puts(VERSION);
+           puts(" - Command line options");
+           puts(
+                   "\n(These are case-sensitive.)\n\n\
     [FILE]                  Load the specified music file(s) at start-up.\n\
                             Each must be one of the following file types:\n\
                             ");
@@ -208,16 +209,15 @@ int main(int argc, char * argv[])
                             messages it receives and script functions it loads\n\
 \n\
     --locale LOCALE         Use a custom locale for loading translations\n\
-            		        (e.g 'fr')\n\
+                            (e.g 'fr')\n\
 \n\
     -f, --fullScreen        Starts Mixxx in full-screen mode\n\
 \n\
     -h, --help              Display this help message and exit");
 
-			puts(
-					"\n\n(For more information, see http://mixxx.org/wiki/doku.php/command_line_options)\n");
-			return (0);
-		}
+            puts("\n\n(For more information, see http://mixxx.org/wiki/doku.php/command_line_options)\n");
+            return(0);
+        }
 
         if (argv[i]==QString("-f").toLower() || argv[i]==QString("--f") || argv[i]==QString("--fullScreen"))
         {

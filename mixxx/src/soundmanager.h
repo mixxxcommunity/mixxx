@@ -22,7 +22,6 @@
 #include "configobject.h"
 #include "soundmanagerconfig.h"
 #include "controlobjectthreadmain.h"
-#include <QTimer>
 
 class SoundDevice;
 class EngineMaster;
@@ -94,7 +93,6 @@ private:
     bool m_paInitialized;
     unsigned int m_jackSampleRate;
 #endif
-    
     QHash<AudioOutput, const AudioSource*> m_registeredSources;
     QHash<AudioInput, AudioDestination*> m_registeredDestinations;
 

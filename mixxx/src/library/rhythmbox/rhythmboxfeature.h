@@ -60,8 +60,8 @@ class RhythmboxFeature : public LibraryFeature {
 
     QFutureWatcher<TreeItem*> m_track_watcher;
     QFuture<TreeItem*> m_track_future;
-    bool m_cancelImport;
     TreeItemModel m_childModel;
+    bool m_cancelImport;
 
     QAction* m_pAddToAutoDJAction;
     QAction* m_pAddToAutoDJTopAction;

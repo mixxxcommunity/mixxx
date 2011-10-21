@@ -72,11 +72,9 @@ class TrackDAO : public QObject, public virtual DAO {
     QString getTrackLocation(int id);
     int addTrack(QString absoluteFilePath, bool unremove);
     int addTrack(QFileInfo& fileInfo, bool unremove);
-
     void addTracksPrepare();
     void addTracksFinish();
     bool addTracksAdd(TrackInfoObject* pTrack, bool unremove);
-
     void removeTrack(int id);
     void removeTracks(QList<int> ids);
     void unremoveTrack(int trackId);
@@ -125,7 +123,6 @@ class TrackDAO : public QObject, public virtual DAO {
     bool isTrackFormatSupported(TrackInfoObject* pTrack) const;
     void saveTrack(TrackInfoObject* pTrack);
     void updateTrack(TrackInfoObject* pTrack);
-
     void addTrack(TrackInfoObject* pTrack, bool unremove);
     TrackPointer getTrackFromDB(int id) const;
     QString absoluteFilePath(QString location);

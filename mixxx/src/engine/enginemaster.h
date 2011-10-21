@@ -97,7 +97,7 @@ class EngineMaster : public EngineObject, public AudioSource {
       public:
         inline double getGain(ChannelInfo* pChannelInfo) {
             Q_UNUSED(pChannelInfo);
-        	return m_dGain;
+            return m_dGain;
         }
         inline void setGain(double dGain) {
             m_dGain = dGain;

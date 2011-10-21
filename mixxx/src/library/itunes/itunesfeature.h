@@ -74,13 +74,13 @@ class ITunesFeature : public LibraryFeature {
     TrackCollection* m_pTrackCollection;
     //a new DB connection for the worker thread
     QSqlDatabase m_database;
+    bool m_cancelImport;
     bool m_isActivated;
     QString m_dbfile;
 
     QFutureWatcher<TreeItem*> m_future_watcher;
     QFuture<TreeItem*> m_future;
     QString m_title;
-    bool m_cancelImport;
 
     QString m_dbItunesRoot;
     QString m_mixxxItunesRoot;
