@@ -334,7 +334,6 @@ void TrackDAO::addTracksFinish() {
     m_database.commit();
 
     emit(tracksAdded(m_tracksAddedSet));
-    emit(dbTrackAdded(TrackPointer()));
     m_tracksAddedSet.clear();
 }
 

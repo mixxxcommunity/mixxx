@@ -138,6 +138,10 @@ bool BaseTrackCache::updateIndexWithTrackpointer(TrackPointer pTrack) {
         qDebug() << "updateIndexWithTrackpointer:" << pTrack->getFilename();
     }
 
+    if (pTrack.isNull()) {
+    	return false;
+    }
+
     int numColumns = columnCount();
 
 
