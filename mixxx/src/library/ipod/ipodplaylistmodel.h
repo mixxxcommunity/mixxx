@@ -23,9 +23,9 @@ class IPodPlaylistModel : public QAbstractTableModel , public virtual TrackModel
   public:
 
     struct playlist_member {
-    	IPodPlaylistModel* pClass;
-    	int pos;
-    	Itdb_Track* pTrack;
+        IPodPlaylistModel* pClass;
+        int pos;
+        Itdb_Track* pTrack;
     };
 
     IPodPlaylistModel(QObject* pParent, TrackCollection* pTrackCollection);
@@ -68,7 +68,6 @@ class IPodPlaylistModel : public QAbstractTableModel , public virtual TrackModel
     // Other public methods
     ////////////////////////////////////////////////////////////////////////////
 
-    virtual void search(const QString& searchText, const QString extraFilter=QString());
     virtual const QString currentSearch() const;
     virtual void setSort(int column, Qt::SortOrder order);
     virtual int fieldIndex(const QString& fieldName) const;
@@ -106,6 +105,8 @@ class IPodPlaylistModel : public QAbstractTableModel , public virtual TrackModel
                                        const QVector<QPair<int, QHash<int, QVariant> > >& rowInfo);
 
     Itdb_Track* getPTrackFromModelIndex(const QModelIndex& index) const;
+
+    static bool findInUtf8Case(gchar* heystack, gchar* needles);
 
     QString m_tableName;
     QStringList m_columnNames;

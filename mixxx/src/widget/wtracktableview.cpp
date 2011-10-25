@@ -761,11 +761,11 @@ void WTrackTableView::keyPressEvent(QKeyEvent* event)
 {
     if (event->key() == Qt::Key_Return)
     {
-		/*
-		 * It is not a good idea if 'key_return'
-		 * causes a track to load since we allow in-line editing
-		 * of table items in general
-		 */
+        /*
+         * It is not a good idea if 'key_return'
+         * causes a track to load since we allow in-line editing
+         * of table items in general
+         */
         return;
     }
     else if (event->key() == Qt::Key_BracketLeft)
@@ -792,12 +792,12 @@ void WTrackTableView::loadSelectedTrackToGroup(QString group) {
 }
 
 void WTrackTableView::slotSendToAutoDJ() {
-	// append to auto DJ
-	sendToAutoDJ(false); // bTop = false
+    // append to auto DJ
+    sendToAutoDJ(false); // bTop = false
 }
 
 void WTrackTableView::slotSendToAutoDJTop() {
-	sendToAutoDJ(true); // bTop = true
+    sendToAutoDJ(true); // bTop = true
 }
 
 void WTrackTableView::sendToAutoDJ(bool bTop) {
@@ -820,13 +820,13 @@ void WTrackTableView::sendToAutoDJ(bool bTop) {
             (pTrack = trackModel->getTrack(index))) {
             int iTrackId = pTrack->getId();
             if (iTrackId != -1) {
-            	if (bTop) {
-            		// Load track to position two because position one is already loaded to the player
-            		playlistDao.insertTrackIntoPlaylist(iTrackId, iAutoDJPlaylistId, 2);
-            	}
-            	else {
-            		playlistDao.appendTrackToPlaylist(iTrackId, iAutoDJPlaylistId);
-            	}
+                if (bTop) {
+                    // Load track to position two because position one is already loaded to the player
+                    playlistDao.insertTrackIntoPlaylist(iTrackId, iAutoDJPlaylistId, 2);
+                }
+                else {
+                    playlistDao.appendTrackToPlaylist(iTrackId, iAutoDJPlaylistId);
+                }
             }
         }
     }
@@ -912,6 +912,8 @@ void WTrackTableView::doSortByColumn(int headerSection) {
     while (isColumnHidden(visibleColumn) && visibleColumn < itemModel->columnCount()) {
         visibleColumn++;
     }
+
+    currentSelection->reset(); // remove current selection
 
     QModelIndex first;
     foreach (int trackId, trackIds) {
