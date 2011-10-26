@@ -71,10 +71,10 @@ Library::Library(QObject* parent, ConfigObject<ConfigValue>* pConfig, bool first
     //mouse or keyboard if you're using MIDI control and you scroll through them...)
     if (RhythmboxFeature::isSupported())
         addFeature(new RhythmboxFeature(this, m_pTrackCollection));
-    if (ITunesFeature::isSupported() && pConfig->getValueString(ConfigKey("[Library]","ShowItunesLibrary"),"1").toInt() )
+    if (ITunesFeature::isSupported() && pConfig->getValueString(ConfigKey("[Library]","ShowItunesLibrary"),"1").toInt())
         addFeature(new ITunesFeature(this, m_pTrackCollection));
 #ifdef __IPOD__
-    if (IPodFeature::isSupported())
+    if (IPodFeature::isSupported() && pConfig->getValueString(ConfigKey("[Library]","ShowIpod"),"1").toInt())
         addFeature(new IPodFeature(this, m_pTrackCollection));
 #endif // __IPOD__
     if (TraktorFeature::isSupported())

@@ -761,11 +761,9 @@ void WTrackTableView::keyPressEvent(QKeyEvent* event)
 {
     if (event->key() == Qt::Key_Return)
     {
-        /*
-         * It is not a good idea if 'key_return'
-         * causes a track to load since we allow in-line editing
-         * of table items in general
-         */
+        // It is not a good idea if 'key_return'
+        // causes a track to load since we allow in-line editing
+        // of table items in general
         return;
     }
     else if (event->key() == Qt::Key_BracketLeft)

@@ -54,12 +54,13 @@ class IPodFeature : public LibraryFeature {
     //returns the invisible rootItem for the sidebar model
     TreeItem* importLibrary();
     void addToAutoDJ(bool bTop);
+    QString detectMountPoint(QString iPodMountPoint);
 
     QAction* m_pAddToAutoDJAction;
     QAction* m_pAddToAutoDJTopAction;
     QAction* m_pImportAsMixxxPlaylistAction;
 
-	QModelIndex m_lastRightClickedIndex;
+    QModelIndex m_lastRightClickedIndex;
 
     IPodPlaylistModel* m_pIPodPlaylistModel;
     TreeItemModel m_childModel;
@@ -78,9 +79,9 @@ class IPodFeature : public LibraryFeature {
     QString m_dbItunesRoot;
     QString m_mixxxItunesRoot;
 
-    Itdb_iTunesDB    *m_itdb;
+    Itdb_iTunesDB* m_itdb;
 
-//    static const QString ITDB_PATH_KEY;
+    static const QString IPOD_MOUNT_KEY;
 };
 
 #endif /* ITUNESFEATURE_H */

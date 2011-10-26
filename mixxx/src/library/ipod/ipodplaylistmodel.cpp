@@ -654,7 +654,7 @@ void IPodPlaylistModel::setPlaylist(Itdb_Playlist* pPlaylist) {
             // Filter
             bool add = false;
             if( itdb_playlist_is_mpl(pPlaylist) && search.size()){
-                // Apply filter only for the master Playlist "IPOD"
+                // Apply filter only for the master playlist "IPOD"
                 gchar* haystack = g_strconcat(
                         plMember.pTrack->artist,
                         plMember.pTrack->title,
