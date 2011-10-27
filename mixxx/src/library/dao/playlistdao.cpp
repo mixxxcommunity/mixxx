@@ -108,7 +108,6 @@ int PlaylistDAO::getPlaylistIdFromName(QString name) {
     return -1;
 }
 
-
 /** Delete a playlist */
 void PlaylistDAO::deletePlaylist(int playlistId)
 {
@@ -143,7 +142,6 @@ void PlaylistDAO::deletePlaylist(int playlistId)
 
     emit(deleted(playlistId));
 }
-
 
 void PlaylistDAO::renamePlaylist(int playlistId, const QString& newName) {
     QSqlQuery query(m_database);

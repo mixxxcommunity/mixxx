@@ -210,11 +210,11 @@ QString ConfigObject<ValueType>::getValueString(ConfigKey k)
 template <class ValueType>
 QString ConfigObject<ValueType>::getValueString(ConfigKey k, QString default_string)
 {
-	QString ret = get(k)->val->value;
-	if (ret.isEmpty()) {
-		return default_string;
-	}
-	return ret;
+    QString ret = get(k)->val->value;
+    if (ret.isEmpty()) {
+        return default_string;
+    }
+    return ret;
 }
 
 template <class ValueType> bool ConfigObject<ValueType>::Parse()

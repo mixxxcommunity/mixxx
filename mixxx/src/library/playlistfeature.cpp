@@ -24,8 +24,7 @@ PlaylistFeature::PlaylistFeature(QObject* parent, TrackCollection* pTrackCollect
           m_playlistDao(pTrackCollection->getPlaylistDAO()),
           m_trackDao(pTrackCollection->getTrackDAO()),
           m_playlistTableModel(this, pTrackCollection->getDatabase()),
-          m_pConfig(pConfig)
-{
+          m_pConfig(pConfig) {
     m_pPlaylistTableModel = new PlaylistTableModel(this, pTrackCollection);
 
     m_pCreatePlaylistAction = new QAction(tr("New Playlist"),this);
@@ -106,11 +105,10 @@ QIcon PlaylistFeature::getIcon() {
 
 void PlaylistFeature::bindWidget(WLibrarySidebar* sidebarWidget,
                                  WLibrary* libraryWidget,
-                                 MixxxKeyboard* keyboard)
-{
-	Q_UNUSED(sidebarWidget);
-	Q_UNUSED(keyboard);
-	WLibraryTextBrowser* edit = new WLibraryTextBrowser(libraryWidget);
+                                 MixxxKeyboard* keyboard) {
+    Q_UNUSED(sidebarWidget);
+    Q_UNUSED(keyboard);
+    WLibraryTextBrowser* edit = new WLibraryTextBrowser(libraryWidget);
     connect(this, SIGNAL(showPage(const QUrl&)),
             edit, SLOT(setSource(const QUrl&)));
     libraryWidget->registerView("PLAYLISTHOME", edit);
@@ -300,7 +298,7 @@ void PlaylistFeature::slotDeletePlaylist()
 }
 
 bool PlaylistFeature::dropAccept(QUrl url) {
-	Q_UNUSED(url);
+    Q_UNUSED(url);
     return false;
 }
 
@@ -337,8 +335,8 @@ bool PlaylistFeature::dropAcceptChild(const QModelIndex& index, QUrl url) {
 }
 
 bool PlaylistFeature::dragMoveAccept(QUrl url) {
-	Q_UNUSED(url);
-	return false;
+    Q_UNUSED(url);
+    return false;
 }
 
 bool PlaylistFeature::dragMoveAcceptChild(const QModelIndex& index, QUrl url) {
@@ -367,11 +365,10 @@ QModelIndex PlaylistFeature::constructChildModel(int selected_id)
     QList<TreeItem*> data_list;
     int nameColumn = m_playlistTableModel.record().indexOf("name");
     int idColumn = m_playlistTableModel.record().indexOf("id");
-	int selected_row = -1;
+    int selected_row = -1;
     // Access the invisible root item
     TreeItem* root = m_childModel.getItem(QModelIndex());
-    
-	// Create new TreeItems for the playlists in the database
+    // Create new TreeItems for the playlists in the database
     for (int row = 0; row < m_playlistTableModel.rowCount(); ++row) {
         QModelIndex ind = m_playlistTableModel.index(row, nameColumn);
         QString playlist_name = m_playlistTableModel.data(ind).toString();
@@ -380,8 +377,8 @@ QModelIndex PlaylistFeature::constructChildModel(int selected_id)
         bool locked = m_playlistDao.isPlaylistLocked(playlist_id);
 
         if ( selected_id == playlist_id) {
-        	// save index for selection
-        	selected_row = row;
+            // save index for selection
+            selected_row = row;
         }
 
         // Create the TreeItem whose parent is the invisible root item
@@ -393,7 +390,7 @@ QModelIndex PlaylistFeature::constructChildModel(int selected_id)
     // Append all the newly created TreeItems in a dynamic way to the childmodel
     m_childModel.insertRows(data_list, 0, m_playlistTableModel.rowCount());
     if (selected_row == -1) {
-    	return QModelIndex();
+        return QModelIndex();
     }
     return m_childModel.index(selected_row, 0);
 }
@@ -446,8 +443,8 @@ void PlaylistFeature::slotImportPlaylist()
 }
 
 void PlaylistFeature::onLazyChildExpandation(const QModelIndex &index){
-	Q_UNUSED(index);
-	//Nothing to do because the childmodel is not of lazy nature.
+    Q_UNUSED(index);
+    //Nothing to do because the childmodel is not of lazy nature.
 }
 
 void PlaylistFeature::slotExportPlaylist(){
@@ -490,12 +487,12 @@ void PlaylistFeature::slotExportPlaylist(){
 
 void PlaylistFeature::slotAddToAutoDJ() {
     //qDebug() << "slotAddToAutoDJ() row:" << m_lastRightClickedIndex.data();
-	addToAutoDJ(false); // Top = True
+    addToAutoDJ(false); // Top = True
 }
 
 void PlaylistFeature::slotAddToAutoDJTop() {
     //qDebug() << "slotAddToAutoDJTop() row:" << m_lastRightClickedIndex.data();
-	addToAutoDJ(true); // bTop = True
+    addToAutoDJ(true); // bTop = True
 }
 
 void PlaylistFeature::addToAutoDJ(bool bTop) {
@@ -505,28 +502,28 @@ void PlaylistFeature::addToAutoDJ(bool bTop) {
         int playlistId = m_playlistDao.getPlaylistIdFromName(
             m_lastRightClickedIndex.data().toString());
         if (playlistId >= 0) {
-       		// Insert this playlist
-        	m_playlistDao.addToAutoDJQueue(playlistId, bTop);
+       	    // Insert this playlist
+            m_playlistDao.addToAutoDJQueue(playlistId, bTop);
         }
     }
     emit(featureUpdated());
 }
 
 void PlaylistFeature::slotPlaylistTableChanged(int playlistId) {
-	 //qDebug() << "slotPlaylistTableChanged() playlistId:" << playlistId;
-	 enum PlaylistDAO::hidden_type type = m_playlistDao.getHiddenType(playlistId);
-	 if (   type == PlaylistDAO::PLHT_NOT_HIDDEN
-	     || type == PlaylistDAO::PLHT_UNKNOWN      // In case of a deleted Playlist
-	 ){
-		 clearChildModel();
-		 m_playlistTableModel.select();
-		 m_lastRightClickedIndex = constructChildModel(playlistId);
+    //qDebug() << "slotPlaylistTableChanged() playlistId:" << playlistId;
+    enum PlaylistDAO::hidden_type type = m_playlistDao.getHiddenType(playlistId);
+    if (   type == PlaylistDAO::PLHT_NOT_HIDDEN
+        || type == PlaylistDAO::PLHT_UNKNOWN      // In case of a deleted Playlist
+    ){
+        clearChildModel();
+        m_playlistTableModel.select();
+        m_lastRightClickedIndex = constructChildModel(playlistId);
 
-		 if(type != PlaylistDAO::PLHT_UNKNOWN) {
-			 // Switch the view to the playlist.
-			 m_pPlaylistTableModel->setPlaylist(playlistId);
-			 // Update selection
-			 emit(featureSelect(this, m_lastRightClickedIndex));
-		 }
-	 }
+        if(type != PlaylistDAO::PLHT_UNKNOWN) {
+            // Switch the view to the playlist.
+            m_pPlaylistTableModel->setPlaylist(playlistId);
+            // Update selection
+            emit(featureSelect(this, m_lastRightClickedIndex));
+        }
+    }
 }
