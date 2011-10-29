@@ -60,29 +60,23 @@ void WLibrarySidebar::dragMoveEvent(QDragMoveEvent * event)
     // rejected -- rryan 3/2011
     QTreeView::dragMoveEvent(event);
 
-    if (event->mimeData()->hasUrls())
-    {
+    if (event->mimeData()->hasUrls()) {
         QList<QUrl> urls(event->mimeData()->urls());
 
         QUrl url;
 
         //Drag and drop within this widget
         if (   (event->source() == this)
-            && (event->possibleActions() & Qt::MoveAction))
-        {
+            && (event->possibleActions() & Qt::MoveAction)) {
             //Do nothing.
              event->ignore();
-        }
-        else
-        {
+        } else {
             SidebarModel* sidebarModel = dynamic_cast<SidebarModel*>(model());
             bool accepted = true;
             if (sidebarModel) {
-                foreach (url, urls)
-                {
+                foreach (url, urls) {
                     QModelIndex destIndex = this->indexAt(event->pos());
-                    if (!sidebarModel->dragMoveAccept(destIndex, url))
-                    {
+                    if (!sidebarModel->dragMoveAccept(destIndex, url)) {
                         //We only need one URL to be invalid for us
                         //to reject the whole drag...
                         //(eg. you may have tried to drag two MP3's and an EXE)
@@ -91,15 +85,15 @@ void WLibrarySidebar::dragMoveEvent(QDragMoveEvent * event)
                     }
                 }
             }
-            if (accepted)
+            if (accepted) {
                 event->acceptProposedAction();
-            else
+            } else {
                 event->ignore();
+            }
         }
-    }
-    else
+    } else {
         event->ignore();
-
+    }
 }
 
 void WLibrarySidebar::timerEvent(QTimerEvent *event) {
@@ -125,13 +119,10 @@ void WLibrarySidebar::dropEvent(QDropEvent * event) {
 
         //Drag and drop within this widget
         if (    (event->source() == this)
-             && (event->possibleActions() & Qt::MoveAction))
-        {
+             && (event->possibleActions() & Qt::MoveAction)) {
             //Do nothing.
              event->ignore();
-        }
-        else
-        {
+        } else {
             //Reset the selected items (if you had anything highlighted, it clears it)
             //this->selectionModel()->clear();
 
@@ -141,22 +132,20 @@ void WLibrarySidebar::dropEvent(QDropEvent * event) {
             SidebarModel* sidebarModel = dynamic_cast<SidebarModel*>(model());
             bool accepted = false;
             if (sidebarModel) {
-                foreach (url, urls)
-                {
+                foreach (url, urls) {
                     //qDebug() << "dropEvent" << url;
                     QModelIndex destIndex = indexAt(event->pos());
-                    if (sidebarModel->dropAccept(destIndex, url))
-                    {
+                    if (sidebarModel->dropAccept(destIndex, url)) {
                         accepted = true;
-
                     }
                 }
             }
 
-            if (accepted)
+            if (accepted) {
                 event->acceptProposedAction();
-            else
+            } else {
                 event->ignore();
+            }
         }
 
 

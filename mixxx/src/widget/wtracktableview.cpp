@@ -256,8 +256,7 @@ void WTrackTableView::createActions() {
     connect(m_pRemoveAct, SIGNAL(triggered()), this, SLOT(slotRemove()));
 
     m_pRelocate = new QAction(tr("Relocate"),this);
-    connect(m_pRelocate, SIGNAL(triggered()), this, SLOT(slotRemove()));
-
+    connect(m_pRelocate, SIGNAL(triggered()), this, SLOT(slotRelocate()));
 
     m_pPropertiesAct = new QAction(tr("Properties..."), this);
     connect(m_pPropertiesAct, SIGNAL(triggered()), this, SLOT(slotShowTrackInfo()));
@@ -274,6 +273,10 @@ void WTrackTableView::createActions() {
 
 void WTrackTableView::slotMouseDoubleClicked(const QModelIndex &index)
 {
+    if (!modelHasCapabilities(TrackModel::TRACKMODELCAPS_LOADTODECK)) {
+        return;
+    }
+
     TrackModel* trackModel = getTrackModel();
     TrackPointer pTrack;
     if (trackModel && (pTrack = trackModel->getTrack(index))) {
@@ -312,6 +315,18 @@ void WTrackTableView::slotRemove()
         TrackModel* trackModel = getTrackModel();
         if (trackModel) {
             trackModel->removeTracks(indices);
+        }
+    }
+}
+
+void WTrackTableView::slotRelocate()
+{
+    QModelIndexList indices = selectionModel()->selectedRows();
+    if (indices.size() > 0)
+    {
+        TrackModel* trackModel = getTrackModel();
+        if (trackModel) {
+            trackModel->relocateTracks(indices);
         }
     }
 }
@@ -775,23 +790,18 @@ bool WTrackTableView::modelHasCapabilities(TrackModel::CapabilitiesFlags capabil
 
 void WTrackTableView::keyPressEvent(QKeyEvent* event)
 {
-    if (event->key() == Qt::Key_Return)
-    {
+    if (event->key() == Qt::Key_Return) {
         // It is not a good idea if 'key_return'
         // causes a track to load since we allow in-line editing
         // of table items in general
         return;
-    }
-    else if (event->key() == Qt::Key_BracketLeft)
-    {
+    } else if (event->key() == Qt::Key_BracketLeft) {
         loadSelectionToGroup("[Channel1]");
-    }
-    else if (event->key() == Qt::Key_BracketRight)
-    {
+    } else if (event->key() == Qt::Key_BracketRight) {
         loadSelectionToGroup("[Channel2]");
-    }
-    else
+    } else {
         QTableView::keyPressEvent(event);
+    }
 }
 
 void WTrackTableView::loadSelectedTrack() {

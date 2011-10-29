@@ -68,6 +68,9 @@ class TrackModel {
     virtual void removeTracks(const QModelIndexList& indices) {
         Q_UNUSED(indices);
     }
+    virtual void relocateTracks(const QModelIndexList& indices) {
+        Q_UNUSED(indices);
+    }
     virtual bool addTrack(const QModelIndex& index, QString location) {
         Q_UNUSED(index);
         Q_UNUSED(location);

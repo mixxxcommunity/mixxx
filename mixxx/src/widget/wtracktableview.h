@@ -42,6 +42,7 @@ class WTrackTableView : public WLibraryTableView
 
   private slots:
     void slotRemove();
+    void slotRelocate();
     void slotShowTrackInfo();
     void slotNextTrackInfo();
     void slotPrevTrackInfo();

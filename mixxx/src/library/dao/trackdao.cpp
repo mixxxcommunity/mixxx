@@ -504,28 +504,6 @@ void TrackDAO::removeTracks(QList<int> ids) {
     emit(tracksRemoved(tracksRemovedSet));
 }
 
-void TrackDAO::purgeTracks(QList<int> ids) {
-    QString idList = "";
-
-    foreach (int id, ids) {
-        idList.append(QString("%1,").arg(id));
-    }
-
-    // Strip the last ,
-    if (idList.count() > 0) {
-        idList.truncate(idList.count() - 1);
-    }
-
-    QSqlQuery query(m_database);
-    query.prepare(QString("UPDATE library SET mixxx_deleted=1 WHERE id in (%1)").arg(idList));
-    if (!query.exec()) {
-        LOG_FAILED_QUERY(query);
-    }
-
-    QSet<int> tracksRemovedSet = QSet<int>::fromList(ids);
-    emit(tracksRemoved(tracksRemovedSet));
-}
-
 /*** If a track has been manually "removed" from Mixxx's library by the user via
      Mixxx's interface, this lets you add it back. When a track is removed,
      mixxx_deleted in the DB gets set to 1. This clears that, and makes it show
@@ -549,6 +527,66 @@ void TrackDAO::unremoveTrack(int trackId) {
     m_tracksAddedSet.clear();
 }
 
+// Warning, purge cannot be undone
+// check before if there is no reference to this track id's on other library tables
+void TrackDAO::purgeTracks(QList<int> ids) {
+    QString idList = "";
+    QString locationList = "";
+
+    foreach (int id, ids) {
+        idList.append(QString("%1,").arg(id));
+    }
+
+    // Strip the last ","
+    if (idList.count() > 0) {
+        idList.truncate(idList.count() - 1);
+    } else {
+        return;
+    }
+
+    m_database.transaction();
+
+    QSqlQuery query(m_database);
+    query.prepare(QString("SELECT location FROM library WHERE id in (%1)").arg(idList));
+    if (!query.exec()) {
+        LOG_FAILED_QUERY(query);
+    }
+
+    while (query.next()) {
+        int location = query.value(query.record().indexOf("location")).toInt();
+        locationList.append(QString("%1,").arg(location));
+    }
+
+    // Strip the last ","
+    if (locationList.count() > 0) {
+        locationList.truncate(locationList.count() - 1);
+    } else {
+        m_database.rollback();
+        return;
+    }
+
+    //Remove location from track_locations table
+    query.prepare(QString("DELETE FROM track_locations "
+            "WHERE id in (%1)").arg(locationList));
+    if (!query.exec()) {
+        LOG_FAILED_QUERY(query);
+        m_database.rollback();
+        return;
+    }
+
+    //Remove Track from library table
+    query.prepare(QString("DELETE FROM library "
+            "WHERE id in (%1)").arg(idList));
+    if (!query.exec()) {
+        LOG_FAILED_QUERY(query);
+        m_database.rollback();
+        return;
+    }
+
+    m_database.commit();
+}
+
+// deleter of the TrackInfoObject, for delete a Track from Library use Remove or purge
 // static
 void TrackDAO::deleteTrack(TrackInfoObject* pTrack) {
     Q_ASSERT(pTrack);
