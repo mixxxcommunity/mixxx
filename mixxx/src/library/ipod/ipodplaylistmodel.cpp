@@ -772,7 +772,6 @@ TrackPointer IPodPlaylistModel::getTrack(const QModelIndex& index) const {
         pTrackP->setBeats(pBeats);
     }
 
-
     return pTrackP;
 }
 // Gets the on-disk location of the track at the given location.

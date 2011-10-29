@@ -37,31 +37,7 @@ TrackPointer ITunesTrackModel::getTrack(const QModelIndex& index) const {
 
     QString location = index.sibling(index.row(), fieldIndex("location")).data().toString();
 
-    if (location.isEmpty()) {
-    	// Track is lost
-    	return TrackPointer();
-    }
-
-    TrackDAO& track_dao = m_pTrackCollection->getTrackDAO();
-    int track_id = track_dao.getTrackId(location);
-    if (track_id < 0) {
-    	// Add Track to library
-    	track_id = track_dao.addTrack(location, true);
-    }
-
-    TrackPointer pTrack;
-
-    if (track_id < 0) {
-    	// Add Track to library failed
-    	// Create own TrackInfoObject
-    	pTrack = TrackPointer(new TrackInfoObject(location), &QObject::deleteLater);
-    }
-    else {
-    	pTrack = track_dao.getTrack(track_id);
-    }
-
-    // Overwrite metadata from iTunes library
-    // Note: This will be written to the mixxx library as well
+    TrackPointer pTrack = TrackPointer(new TrackInfoObject(location), &QObject::deleteLater);
     pTrack->setArtist(artist);
     pTrack->setTitle(title);
     pTrack->setAlbum(album);
