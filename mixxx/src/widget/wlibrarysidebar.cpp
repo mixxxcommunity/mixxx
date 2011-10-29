@@ -67,7 +67,8 @@ void WLibrarySidebar::dragMoveEvent(QDragMoveEvent * event)
         QUrl url;
 
         //Drag and drop within this widget
-        if (event->source() == this && event->possibleActions() & Qt::MoveAction)
+        if (   (event->source() == this)
+            && (event->possibleActions() & Qt::MoveAction))
         {
             //Do nothing.
              event->ignore();
@@ -123,7 +124,8 @@ void WLibrarySidebar::dropEvent(QDropEvent * event) {
         QUrl url;
 
         //Drag and drop within this widget
-        if (event->source() == this && event->possibleActions() & Qt::MoveAction)
+        if (    (event->source() == this)
+             && (event->possibleActions() & Qt::MoveAction))
         {
             //Do nothing.
              event->ignore();

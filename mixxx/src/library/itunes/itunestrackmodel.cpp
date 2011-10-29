@@ -103,3 +103,19 @@ bool ITunesTrackModel::isColumnHiddenByDefault(int column) {
 	Q_UNUSED(column);
 	return false;
 }
+
+TrackModel::CapabilitiesFlags ITunesTrackModel::getCapabilities() const {
+    return TRACKMODELCAPS_NONE
+            //| TRACKMODELCAPS_REORDER
+            //| TRACKMODELCAPS_RECEIVEDROPS
+            | TRACKMODELCAPS_ADDTOPLAYLIST
+            | TRACKMODELCAPS_ADDTOCRATE
+            | TRACKMODELCAPS_ADDTOAUTODJ
+            //| TRACKMODELCAPS_LOCKED
+            //| TRACKMODELCAPS_RELOADMETADATA
+            | TRACKMODELCAPS_LOADTODECK
+            | TRACKMODELCAPS_LOADTOSAMPLER
+            //| TRACKMODELCAPS_REMOVE
+            //| TRACKMODELCAPS_RELOCATE
+            ;
+}

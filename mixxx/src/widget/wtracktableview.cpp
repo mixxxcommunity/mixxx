@@ -84,6 +84,7 @@ WTrackTableView::~WTrackTableView()
     delete m_pAutoDJAct;
     delete m_pAutoDJTopAct;
     delete m_pRemoveAct;
+    delete m_pRelocate;
     delete m_pPropertiesAct;
     delete m_pMenu;
     delete m_pPlaylistMenu;
@@ -254,6 +255,10 @@ void WTrackTableView::createActions() {
     m_pRemoveAct = new QAction(tr("Remove"),this);
     connect(m_pRemoveAct, SIGNAL(triggered()), this, SLOT(slotRemove()));
 
+    m_pRelocate = new QAction(tr("Relocate"),this);
+    connect(m_pRelocate, SIGNAL(triggered()), this, SLOT(slotRemove()));
+
+
     m_pPropertiesAct = new QAction(tr("Properties..."), this);
     connect(m_pPropertiesAct, SIGNAL(triggered()), this, SLOT(slotShowTrackInfo()));
 
@@ -361,36 +366,40 @@ void WTrackTableView::contextMenuEvent(QContextMenuEvent * event)
         m_pMenu->addSeparator();
     }
 
-    int iNumDecks = m_pNumDecks->get();
-    if (iNumDecks > 0) {
-        for (int i = 1; i <= iNumDecks; ++i) {
-            QString deckGroup = QString("[Channel%1]").arg(i);
-            bool deckPlaying = ControlObject::getControl(
-                ConfigKey(deckGroup, "play"))->get() == 1.0f;
-            bool deckEnabled = !deckPlaying && oneSongSelected;
-            QAction* pAction = new QAction(tr("Load to Deck %1").arg(i), m_pMenu);
-            pAction->setEnabled(deckEnabled);
-            m_pMenu->addAction(pAction);
-            m_deckMapper.setMapping(pAction, deckGroup);
-            connect(pAction, SIGNAL(triggered()), &m_deckMapper, SLOT(map()));
+    if (modelHasCapabilities(TrackModel::TRACKMODELCAPS_LOADTODECK)) {
+        int iNumDecks = m_pNumDecks->get();
+        if (iNumDecks > 0) {
+            for (int i = 1; i <= iNumDecks; ++i) {
+                QString deckGroup = QString("[Channel%1]").arg(i);
+                bool deckPlaying = ControlObject::getControl(
+                    ConfigKey(deckGroup, "play"))->get() == 1.0f;
+                bool deckEnabled = !deckPlaying && oneSongSelected;
+                QAction* pAction = new QAction(tr("Load to Deck %1").arg(i), m_pMenu);
+                pAction->setEnabled(deckEnabled);
+                m_pMenu->addAction(pAction);
+                m_deckMapper.setMapping(pAction, deckGroup);
+                connect(pAction, SIGNAL(triggered()), &m_deckMapper, SLOT(map()));
+            }
         }
     }
 
-    int iNumSamplers = m_pNumSamplers->get();
-    if (iNumSamplers > 0) {
-        m_pSamplerMenu->clear();
-        for (int i = 1; i <= iNumSamplers; ++i) {
-            QString samplerGroup = QString("[Sampler%1]").arg(i);
-            bool samplerPlaying = ControlObject::getControl(
-                ConfigKey(samplerGroup, "play"))->get() == 1.0f;
-            bool samplerEnabled = !samplerPlaying && oneSongSelected;
-            QAction* pAction = new QAction(tr("Sampler %1").arg(i), m_pSamplerMenu);
-            pAction->setEnabled(samplerEnabled);
-            m_pSamplerMenu->addAction(pAction);
-            m_samplerMapper.setMapping(pAction, samplerGroup);
-            connect(pAction, SIGNAL(triggered()), &m_samplerMapper, SLOT(map()));
+    if (modelHasCapabilities(TrackModel::TRACKMODELCAPS_LOADTOSAMPLER)) {
+        int iNumSamplers = m_pNumSamplers->get();
+        if (iNumSamplers > 0) {
+            m_pSamplerMenu->clear();
+            for (int i = 1; i <= iNumSamplers; ++i) {
+                QString samplerGroup = QString("[Sampler%1]").arg(i);
+                bool samplerPlaying = ControlObject::getControl(
+                    ConfigKey(samplerGroup, "play"))->get() == 1.0f;
+                bool samplerEnabled = !samplerPlaying && oneSongSelected;
+                QAction* pAction = new QAction(tr("Sampler %1").arg(i), m_pSamplerMenu);
+                pAction->setEnabled(samplerEnabled);
+                m_pSamplerMenu->addAction(pAction);
+                m_samplerMapper.setMapping(pAction, samplerGroup);
+                connect(pAction, SIGNAL(triggered()), &m_samplerMapper, SLOT(map()));
+            }
+            m_pMenu->addMenu(m_pSamplerMenu);
         }
-        m_pMenu->addMenu(m_pSamplerMenu);
     }
 
     m_pMenu->addSeparator();
@@ -442,8 +451,15 @@ void WTrackTableView::contextMenuEvent(QContextMenuEvent * event)
     bool locked = modelHasCapabilities(TrackModel::TRACKMODELCAPS_LOCKED);
     m_pRemoveAct->setEnabled(!locked);
     m_pMenu->addSeparator();
-    m_pMenu->addAction(m_pRemoveAct);
-    m_pMenu->addAction(m_pReloadMetadataAct);
+    if (modelHasCapabilities(TrackModel::TRACKMODELCAPS_REMOVE)) {
+        m_pMenu->addAction(m_pRemoveAct);
+    }
+    if (modelHasCapabilities(TrackModel::TRACKMODELCAPS_RELOCATE)) {
+        m_pMenu->addAction(m_pRelocate);
+    }
+    if (modelHasCapabilities(TrackModel::TRACKMODELCAPS_RELOADMETADATA)) {
+        m_pMenu->addAction(m_pReloadMetadataAct);
+    }
     m_pPropertiesAct->setEnabled(oneSongSelected);
     m_pMenu->addAction(m_pPropertiesAct);
 

@@ -25,8 +25,7 @@ CrateFeature::CrateFeature(QObject* parent,
           m_crateDao(pTrackCollection->getCrateDAO()),
           m_crateListTableModel(this, pTrackCollection->getDatabase()),
           m_crateTableModel(this, pTrackCollection),
-          m_pConfig(pConfig)
-{
+          m_pConfig(pConfig) {
     Q_UNUSED(parent);
 	m_pCreateCrateAction = new QAction(tr("New Crate"),this);
     connect(m_pCreateCrateAction, SIGNAL(triggered()),
@@ -118,8 +117,8 @@ bool CrateFeature::dropAcceptChild(const QModelIndex& index, QUrl url) {
 }
 
 bool CrateFeature::dragMoveAccept(QUrl url) {
-	Q_UNUSED(url)
-	return false;
+    Q_UNUSED(url)
+    return false;
 }
 
 bool CrateFeature::dragMoveAcceptChild(const QModelIndex& index, QUrl url) {
@@ -135,11 +134,10 @@ bool CrateFeature::dragMoveAcceptChild(const QModelIndex& index, QUrl url) {
 
 void CrateFeature::bindWidget(WLibrarySidebar* sidebarWidget,
                               WLibrary* libraryWidget,
-                              MixxxKeyboard* keyboard)
-{
-	Q_UNUSED(sidebarWidget);
-	Q_UNUSED(keyboard);
-	WLibraryTextBrowser* edit = new WLibraryTextBrowser(libraryWidget);
+                              MixxxKeyboard* keyboard) {
+    Q_UNUSED(sidebarWidget);
+    Q_UNUSED(keyboard);
+    WLibraryTextBrowser* edit = new WLibraryTextBrowser(libraryWidget);
     connect(this, SIGNAL(showPage(const QUrl&)),
             edit, SLOT(setSource(const QUrl&)));
     libraryWidget->registerView("CRATEHOME", edit);

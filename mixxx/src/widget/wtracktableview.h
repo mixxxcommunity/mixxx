@@ -96,6 +96,8 @@ class WTrackTableView : public WLibraryTableView
     // Remove from table
     QAction *m_pRemoveAct;
 
+    QAction *m_pRelocate;
+
     // Show track-editor action
     QAction *m_pPropertiesAct;
 };

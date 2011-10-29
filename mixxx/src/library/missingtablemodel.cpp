@@ -73,11 +73,28 @@ TrackPointer MissingTableModel::getTrack(const QModelIndex& index) const {
 }
 
 void MissingTableModel::removeTrack(const QModelIndex& index) {
-	Q_UNUSED(index);
+    int trackId = getTrackId(index);
+
+    m_trackDao.removeTrack(trackId);
+
+    // TODO(rryan) : do not select, instead route event to BTC and notify from
+    // there.
+    select(); //Repopulate the data model.
 }
 
 void MissingTableModel::removeTracks(const QModelIndexList& indices) {
-	Q_UNUSED(indices);
+    QList<int> trackIds;
+
+    foreach (QModelIndex index, indices) {
+        int trackId = getTrackId(index);
+        trackIds.append(trackId);
+    }
+
+    m_trackDao.removeTracks(trackIds);
+
+    // TODO(rryan) : do not select, instead route event to BTC and notify from
+    // there.
+    select(); //Repopulate the data model.
 }
 
 void MissingTableModel::moveTrack(const QModelIndex& sourceIndex,
@@ -122,6 +139,19 @@ QItemDelegate* MissingTableModel::delegateForColumn(const int i) {
 	return NULL;
 }
 
-TrackModel::CapabilitiesFlags MissingTableModel::getCapabilities() const {
-    return 0;
+TrackModel::CapabilitiesFlags MissingTableModel::getCapabilities() const
+{
+    return    TRACKMODELCAPS_NONE
+            //| TRACKMODELCAPS_REORDER
+            //| TRACKMODELCAPS_RECEIVEDROPS
+            //| TRACKMODELCAPS_ADDTOPLAYLIST
+            //| TRACKMODELCAPS_ADDTOCRATE
+            //| TRACKMODELCAPS_ADDTOAUTODJ
+            //| TRACKMODELCAPS_LOCKED
+            //| TRACKMODELCAPS_RELOADMETADATA
+            //| TRACKMODELCAPS_LOADTODECK
+            //| TRACKMODELCAPS_LOADTOSAMPLER
+            | TRACKMODELCAPS_REMOVE
+            | TRACKMODELCAPS_RELOCATE
+            ;
 }

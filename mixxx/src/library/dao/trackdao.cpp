@@ -504,6 +504,28 @@ void TrackDAO::removeTracks(QList<int> ids) {
     emit(tracksRemoved(tracksRemovedSet));
 }
 
+void TrackDAO::purgeTracks(QList<int> ids) {
+    QString idList = "";
+
+    foreach (int id, ids) {
+        idList.append(QString("%1,").arg(id));
+    }
+
+    // Strip the last ,
+    if (idList.count() > 0) {
+        idList.truncate(idList.count() - 1);
+    }
+
+    QSqlQuery query(m_database);
+    query.prepare(QString("UPDATE library SET mixxx_deleted=1 WHERE id in (%1)").arg(idList));
+    if (!query.exec()) {
+        LOG_FAILED_QUERY(query);
+    }
+
+    QSet<int> tracksRemovedSet = QSet<int>::fromList(ids);
+    emit(tracksRemoved(tracksRemovedSet));
+}
+
 /*** If a track has been manually "removed" from Mixxx's library by the user via
      Mixxx's interface, this lets you add it back. When a track is removed,
      mixxx_deleted in the DB gets set to 1. This clears that, and makes it show
