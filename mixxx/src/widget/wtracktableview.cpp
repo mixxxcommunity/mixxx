@@ -271,8 +271,7 @@ void WTrackTableView::createActions() {
     connect(m_pReloadMetadataAct, SIGNAL(triggered()), this, SLOT(slotReloadTrackMetadata()));
 }
 
-void WTrackTableView::slotMouseDoubleClicked(const QModelIndex &index)
-{
+void WTrackTableView::slotMouseDoubleClicked(const QModelIndex &index) {
     if (!modelHasCapabilities(TrackModel::TRACKMODELCAPS_LOADTODECK)) {
         return;
     }
@@ -788,8 +787,7 @@ bool WTrackTableView::modelHasCapabilities(TrackModel::CapabilitiesFlags capabil
             (trackModel->getCapabilities() & capabilities) == capabilities;
 }
 
-void WTrackTableView::keyPressEvent(QKeyEvent* event)
-{
+void WTrackTableView::keyPressEvent(QKeyEvent* event) {
     if (event->key() == Qt::Key_Return) {
         // It is not a good idea if 'key_return'
         // causes a track to load since we allow in-line editing

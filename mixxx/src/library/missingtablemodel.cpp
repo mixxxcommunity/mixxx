@@ -60,7 +60,7 @@ MissingTableModel::~MissingTableModel() {
 bool MissingTableModel::addTrack(const QModelIndex& index, QString location) {
     Q_UNUSED(index);
     Q_UNUSED(location);
-	return false;
+    return false;
 }
 
 TrackPointer MissingTableModel::getTrack(const QModelIndex& index) const {
@@ -116,8 +116,8 @@ void MissingTableModel::relocateTracks(const QModelIndexList& indices) {
 
 void MissingTableModel::moveTrack(const QModelIndex& sourceIndex,
                                   const QModelIndex& destIndex) {
-	Q_UNUSED(sourceIndex);
-	Q_UNUSED(destIndex);
+    Q_UNUSED(sourceIndex);
+    Q_UNUSED(destIndex);
 }
 
 void MissingTableModel::search(const QString& searchText) {
@@ -153,22 +153,13 @@ Qt::ItemFlags MissingTableModel::flags(const QModelIndex &index) const {
 
 QItemDelegate* MissingTableModel::delegateForColumn(const int i) {
     Q_UNUSED(i);
-	return NULL;
+    return NULL;
 }
 
 TrackModel::CapabilitiesFlags MissingTableModel::getCapabilities() const
 {
     return    TRACKMODELCAPS_NONE
-            //| TRACKMODELCAPS_REORDER
-            //| TRACKMODELCAPS_RECEIVEDROPS
-            //| TRACKMODELCAPS_ADDTOPLAYLIST
-            //| TRACKMODELCAPS_ADDTOCRATE
-            //| TRACKMODELCAPS_ADDTOAUTODJ
-            //| TRACKMODELCAPS_LOCKED
-            //| TRACKMODELCAPS_RELOADMETADATA
-            //| TRACKMODELCAPS_LOADTODECK
-            //| TRACKMODELCAPS_LOADTOSAMPLER
             | TRACKMODELCAPS_REMOVE
-            | TRACKMODELCAPS_RELOCATE
+            | TRACKMODELCAPS_RELOCATE;
             ;
 }
