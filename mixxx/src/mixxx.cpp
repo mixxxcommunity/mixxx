@@ -1336,6 +1336,7 @@ void MixxxApp::slotHelpAbout()
 "</p>"
 "<p align=\"center\"><b>And special thanks to:</b></p>"
 "<p align=\"center\">"
+"Vestax<br>"
 "Stanton<br>"
 "Hercules<br>"
 "EKS<br>"

@@ -161,5 +161,4 @@ TrackModel::CapabilitiesFlags MissingTableModel::getCapabilities() const
     return    TRACKMODELCAPS_NONE
             | TRACKMODELCAPS_REMOVE
             | TRACKMODELCAPS_RELOCATE;
-            ;
 }
