@@ -161,7 +161,7 @@ DlgPreferences::DlgPreferences(MixxxApp * mixxx, SkinLoader* pSkinLoader,
 
 DlgPreferences::~DlgPreferences()
 {
-	destroyMidiWidgets();
+    destroyMidiWidgets();
 }
 
 void DlgPreferences::createIcons()
@@ -309,22 +309,22 @@ void DlgPreferences::changePage(QTreeWidgetItem * current, QTreeWidgetItem * pre
     } else if (current == m_pMIDITreeItem) {
         //If the root "MIDI Device" item is clicked, select the first MIDI device instead.
         //If there is no first MIDI device, display a page that says so (just so we don't not change the page)
-    	if (m_wmidiBindingsForDevice.count() > 0) {
+        if (m_wmidiBindingsForDevice.count() > 0) {
             //Expand the MIDI subtree
-    		contentsTreeWidget->setItemExpanded(m_pMIDITreeItem, true);
+            contentsTreeWidget->setItemExpanded(m_pMIDITreeItem, true);
 
             // FIXME: None of the following works right, for some reason. - Albert Feb 9/09
 
             //Select the first MIDI device
             //contentsTreeWidget->setItemSelected(m_pMIDITreeItem, false);
-    		/*
-		   	foreach(QTreeWidgetItem* item, contentsTreeWidget->selectedItems())
-		   	{
-			   contentsTreeWidget->setItemSelected(item, false);
-		    }*/
-		    //contentsTreeWidget->setItemSelected(m_midiBindingsButtons.value(0), true);
-    	} else {
-    		pagesWidget->setCurrentWidget(m_wNoMidi->parentWidget()->parentWidget());
+            /*
+              foreach(QTreeWidgetItem* item, contentsTreeWidget->selectedItems())
+              {
+              contentsTreeWidget->setItemSelected(item, false);
+              }*/
+            //contentsTreeWidget->setItemSelected(m_midiBindingsButtons.value(0), true);
+        } else {
+            pagesWidget->setCurrentWidget(m_wNoMidi->parentWidget()->parentWidget());
         }
     }
 }
@@ -355,23 +355,23 @@ void DlgPreferences::slotHide()
 
 void DlgPreferences::slotShow()
 {
-	//m_pMixxx->releaseKeyboard();
+    //m_pMixxx->releaseKeyboard();
 
-	QSize optimumSize;
-	QSize deltaSize;
-	QSize pagesSize;
-	QSize saSize;
+    QSize optimumSize;
+    QSize deltaSize;
+    QSize pagesSize;
+    QSize saSize;
 
     adjustSize();
 
     optimumSize = qApp->desktop()->availableGeometry(this).size();
 
     if (frameSize() == size()) {
-    	// This code is reached in Gnome 2.3
-    	qDebug() << "guess the size of the window decoration";
-    	optimumSize -= QSize(2,30);
+        // This code is reached in Gnome 2.3
+        qDebug() << "guess the size of the window decoration";
+        optimumSize -= QSize(2,30);
     } else {
-    	optimumSize -= (frameSize() - size());
+        optimumSize -= (frameSize() - size());
     }
 
     QSize staticSize = size() - pagesWidget->size();
@@ -384,29 +384,29 @@ void DlgPreferences::slotShow()
 
 void DlgPreferences::rescanMidi()
 {
-	destroyMidiWidgets();
-	setupMidiWidgets();
+    destroyMidiWidgets();
+    setupMidiWidgets();
 }
 
 void DlgPreferences::destroyMidiWidgets()
 {
-//XXX this, and the corresponding code over in onShow(), is pretty bad and messy; it should be wrapped up in a class so that constructors and destructors can handle this setup/teardown
+    //XXX this, and the corresponding code over in onShow(), is pretty bad and messy; it should be wrapped up in a class so that constructors and destructors can handle this setup/teardown
 
-	m_midiBindingsButtons.clear();
+    m_midiBindingsButtons.clear();
 
-	while (!m_wmidiBindingsForDevice.isEmpty())
+    while (!m_wmidiBindingsForDevice.isEmpty())
     {
-		DlgPrefMidiBindings* midiDlg = m_wmidiBindingsForDevice.takeLast();
-		pagesWidget->removeWidget(midiDlg);
-		delete midiDlg;
+        DlgPrefMidiBindings* midiDlg = m_wmidiBindingsForDevice.takeLast();
+        pagesWidget->removeWidget(midiDlg);
+        delete midiDlg;
     }
 
-	while(m_pMIDITreeItem->childCount() > 0)
+    while(m_pMIDITreeItem->childCount() > 0)
     {
-		QTreeWidgetItem* midiBindingsButton = m_pMIDITreeItem->takeChild(0);
-		//qDebug() << " Q|T|r\e\eWidgetItem point is " << midiBindingsButton;
-		m_pMIDITreeItem->removeChild(midiBindingsButton);
-		delete midiBindingsButton;
+        QTreeWidgetItem* midiBindingsButton = m_pMIDITreeItem->takeChild(0);
+        //qDebug() << " Q|T|r\e\eWidgetItem point is " << midiBindingsButton;
+        m_pMIDITreeItem->removeChild(midiBindingsButton);
+        delete midiBindingsButton;
     }
 }
 
@@ -417,7 +417,7 @@ void DlgPreferences::setupMidiWidgets()
     QListIterator<MidiDevice*> it(deviceList);
 
     while (it.hasNext())
-      {
+    {
         MidiDevice* currentDevice = it.next();
         QString curDeviceName = currentDevice->getName();
         //qDebug() << "curDeviceName: " << curDeviceName;
@@ -442,13 +442,13 @@ void DlgPreferences::setupMidiWidgets()
         if (currentDevice->isOpen()) temp.setBold(true);
         else temp.setBold(false);
         midiBindingsButton->setFont(0,temp);
-      }
+    }
 }
 
 void DlgPreferences::slotApply()
 {
     m_pMidiDeviceManager->saveMappings();
-//    m_pMixxx->grabKeyboard();
+    //m_pMixxx->grabKeyboard();
 }
 
 void DlgPreferences::slotHighlightDevice(DlgPrefMidiBindings* dialog, bool enabled)
@@ -460,18 +460,17 @@ void DlgPreferences::slotHighlightDevice(DlgPrefMidiBindings* dialog, bool enabl
     midiBindingsButton->setFont(0,temp);
 }
 
-int DlgPreferences::addPageWidget(QWidget* w)
-{
-	int iret;
+int DlgPreferences::addPageWidget(QWidget* w) {
+    int iret;
 
-	QScrollArea* sa = new QScrollArea(pagesWidget);
-	sa->setWidgetResizable(true);
+    QScrollArea* sa = new QScrollArea(pagesWidget);
+    sa->setWidgetResizable(true);
 
-	sa->setWidget(w);
-	iret = pagesWidget->addWidget(sa);
+    sa->setWidget(w);
+    iret = pagesWidget->addWidget(sa);
 
-	int iframe = 2 * sa->frameWidth();
-	m_pageSizeHint = m_pageSizeHint.expandedTo(w->sizeHint()+QSize(iframe, iframe));
+    int iframe = 2 * sa->frameWidth();
+    m_pageSizeHint = m_pageSizeHint.expandedTo(w->sizeHint()+QSize(iframe, iframe));
 
     return iret;
 }

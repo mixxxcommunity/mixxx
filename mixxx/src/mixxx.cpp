@@ -1285,8 +1285,6 @@ void MixxxApp::slotHelpAbout()
 "S. Brandt<br>"
 "Bill Good<br>"
 "Owen Williams<br>"
-"Bruno Buccolo<br>"
-"Ryan Baker<br>"
 "Vittorio Colao<br>"
 
 "</p>"
@@ -1370,6 +1368,8 @@ void MixxxApp::slotHelpAbout()
 "Tom Care<br>"
 "Pawel Bartkiewicz<br>"
 "Nick Guenther<br>"
+"Bruno Buccolo<br>"
+"Ryan Baker<br>"
 "</p>"
 
 "<p align=\"center\"><b>Past Contributors</b></p>"
