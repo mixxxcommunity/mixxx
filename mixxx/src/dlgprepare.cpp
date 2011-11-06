@@ -88,8 +88,9 @@ DlgPrepare::~DlgPrepare() {
 
 void DlgPrepare::onShow()
 {
-    //Refresh crates
-    //m_pCratesTableModel->select();
+    // Refresh table
+    // There might be new tracks dropped to other views
+    m_pPrepareLibraryTableModel->select();
 }
 
 void DlgPrepare::setup(QDomNode node)
@@ -160,7 +161,7 @@ void DlgPrepare::analysisActive(bool bActive) {
     m_bAnalysisActive = bActive;
     if (bActive) {
         pushButtonAnalyze->setEnabled(true);
-        pushButtonAnalyze->setText(tr("Stop Analysis"));
+        pushButtonAnalyze->setText(tr("SPrepareFeaturetop Analysis"));
     } else {
         pushButtonAnalyze->setText(tr("Analyze"));
         labelProgress->setText("");

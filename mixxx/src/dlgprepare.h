@@ -10,8 +10,6 @@
 class PrepareLibraryTableModel;
 class WPrepareCratesTableView;
 class WPrepareLibraryTableView;
-class QSqlTableModel;
-class CrateView;
 
 class DlgPrepare : public QWidget, public Ui::DlgPrepare, public virtual LibraryView {
     Q_OBJECT
@@ -57,8 +55,6 @@ class DlgPrepare : public QWidget, public Ui::DlgPrepare, public virtual Library
     WPrepareLibraryTableView* m_pPrepareLibraryTableView;
     PrepareLibraryTableModel* m_pPrepareLibraryTableModel;
     WPrepareCratesTableView* m_pPrepareCratesTableView;
-    CrateView* m_pCrateView;
-    QSqlTableModel* m_pCratesTableModel;
 };
 
 #endif //DLGTRIAGE_H
