@@ -207,19 +207,11 @@ class FidLib(Dependence):
         else:
             symbol = 'T_LINUX'
 
-        return [build.env.StaticObject('#lib/fidlib-0.9.9/fidlib.c',
+        return [build.env.StaticObject('#lib/fidlib-0.9.10/fidlib.c',
                                        CPPDEFINES=symbol)]
 
     def configure(self, build, conf):
-        build.env.Append(CPPPATH='#lib/fidlib-0.9.9/')
-
-class KissFFT(Dependence):
-
-    def sources(self, build):
-        return ["#lib/kissfft/kiss_fft.c"]
-
-    def configure(self, build, conf):
-        build.env.Append(CPPPATH="#lib/kissfft")
+        build.env.Append(CPPPATH='#lib/fidlib-0.9.10/')
 
 class ReplayGain(Dependence):
 
@@ -230,7 +222,7 @@ class ReplayGain(Dependence):
         build.env.Append(CPPPATH="#lib/replaygain")
 
 class SoundTouch(Dependence):
-    SOUNDTOUCH_PATH = 'soundtouch-1.5.0'
+    SOUNDTOUCH_PATH = 'soundtouch-1.6.0'
 
     def sources(self, build):
         sources = ['engine/enginebufferscalest.cpp',
@@ -242,42 +234,31 @@ class SoundTouch(Dependence):
                    '#lib/%s/FIRFilter.cpp' % self.SOUNDTOUCH_PATH,
                    '#lib/%s/PeakFinder.cpp' % self.SOUNDTOUCH_PATH,
                    '#lib/%s/BPMDetect.cpp' % self.SOUNDTOUCH_PATH]
-        if build.platform_is_windows and build.toolchain_is_msvs:
-            if build.machine_is_64bit:
-                sources.append(
-                    '#lib/%s/cpu_detect_x64_win.cpp' % self.SOUNDTOUCH_PATH)
-            elif build.machine == 'x86':
-                sources.append(
-                    '#lib/%s/cpu_detect_x86_win.cpp' % self.SOUNDTOUCH_PATH)
-            else:
-                raise Exception("Unhandled CPU configuration for SoundTouch")
-        elif build.toolchain_is_gnu:
-            if build.machine == 'x86_64':
-                sources.append(
-                    '#lib/%s/cpu_detect_x64_gcc.cpp' % self.SOUNDTOUCH_PATH)
-            else:
-                sources.append(
-                    '#lib/%s/cpu_detect_x86_gcc.cpp' % self.SOUNDTOUCH_PATH)
-        else:
-            raise Exception("Unhandled CPU configuration for SoundTouch")
 
-        # TODO(XXX) when we figure out a better way to represent features, fix
-        # this.
+        # SoundTouch CPU optimizations are only for x86 architectures
+        cpu_detection = {
+            ('msvs', 'x86'): '#lib/%s/cpu_detect_x86_win.cpp',
+            ('msvs', 'x86_64'): '#lib/%s/cpu_detect_x64_win.cpp',
+            ('gnu', 'x86'): '#lib/%s/cpu_detect_x86_gcc.cpp',
+            ('gnu', 'x86_64'): '#lib/%s/cpu_detect_x64_gcc.cpp'
+            }
+
+        toolchain = 'gnu' if build.toolchain_is_gnu else 'msvs'
+        machine = 'unknown'
+        machine = 'x86_64' if build.architecture_is_x86 and build.machine_is_64bit else machine
+        machine = 'x86' if build.architecture_is_x86 and not build.machine_is_64bit else machine
+
         optimize = int(util.get_flags(build.env, 'optimize', 1))
-        if build.machine_is_64bit or \
-                (build.toolchain_is_msvs and optimize > 1) or \
-                (build.toolchain_is_gnu and optimize > 2):
+        optimizations_enabled = build.machine_is_64bit or \
+            (build.toolchain_is_msvs and optimize > 1) or \
+            (build.toolchain_is_gnu and optimize > 2)
+        cpu_detection_file = cpu_detection.get((toolchain, machine), None)
+        if optimizations_enabled and build.architecture_is_x86 and cpu_detection_file:
             sources.extend(
-                ['#lib/%s/mmx_optimized.cpp' % self.SOUNDTOUCH_PATH,
+                [cpu_detection_file % self.SOUNDTOUCH_PATH,
+                 '#lib/%s/mmx_optimized.cpp' % self.SOUNDTOUCH_PATH,
                  '#lib/%s/sse_optimized.cpp' % self.SOUNDTOUCH_PATH,
                  ])
-        if build.toolchain_is_msvs and not build.machine_is_64bit:
-            sources.append('#lib/%s/3dnow_win.cpp' % self.SOUNDTOUCH_PATH)
-        else:
-            # TODO(XXX) the docs refer to a 3dnow_gcc, but we don't seem to have
-            # it.
-            pass
-
         return sources
 
     def configure(self, build, conf):
@@ -291,7 +272,7 @@ class SoundTouch(Dependence):
         if build.machine_is_64bit or \
                 (build.toolchain_is_msvs and optimize > 1) or \
                 (build.toolchain_is_gnu and optimize > 2):
-            build.env.Append(CPPDEFINES='ALLOW_X86_OPTIMIZATIONS')
+            build.env.Append(CPPDEFINES='SOUNDTOUCH_ALLOW_X86_OPTIMIZATIONS')
 
 class TagLib(Dependence):
     def configure(self, build, conf):
@@ -739,7 +720,7 @@ class MixxxCore(Feature):
             build.env.Append(CPPDEFINES=('UNIX_SHARE_PATH', r'\"%s\"' % share_path))
 
     def depends(self, build):
-        return [SoundTouch, KissFFT, ReplayGain, PortAudio, PortMIDI, Qt,
+        return [SoundTouch, ReplayGain, PortAudio, PortMIDI, Qt,
                 FidLib, SndFile, FLAC, OggVorbis, OpenGL, TagLib,]
 
     def post_dependency_check_configure(self, build, conf):
