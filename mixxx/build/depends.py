@@ -478,6 +478,7 @@ class MixxxCore(Feature):
                    "library/parser.cpp",
                    "library/parserpls.cpp",
                    "library/parserm3u.cpp",
+                   "library/parsercsv.cpp",
 
                    "bpm/bpmscheme.cpp",
 

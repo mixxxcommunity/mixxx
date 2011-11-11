@@ -9,6 +9,7 @@
 #include "library/parser.h"
 #include "library/parserm3u.h"
 #include "library/parserpls.h"
+#include "library/parsercsv.h"
 
 
 #include "widget/wlibrary.h"
@@ -390,30 +391,47 @@ void SetlogFeature::slotExportPlaylist() {
     QString file_location = QFileDialog::getSaveFileName(NULL,
                                         tr("Export Playlist"),
                                         QDesktopServices::storageLocation(QDesktopServices::MusicLocation),
-                                        tr("M3U Playlist (*.m3u);;PLS Playlist (*.pls)"));
+                                        tr("M3U Playlist (*.m3u);;PLS Playlist (*.pls);;Text CSV (*.csv)"));
     //Exit method if user cancelled the open dialog.
     if(file_location.isNull() || file_location.isEmpty()) return;
-    //create and populate a list of files of the playlist
-    QList<QString> playlist_items;
-    int rows = m_pPlaylistTableModel->rowCount();
-    for(int i = 0; i < rows; ++i){
-        QModelIndex index = m_pPlaylistTableModel->index(i,0);
-        playlist_items << m_pPlaylistTableModel->getTrackLocation(index);
-    }
     //check config if relative paths are desired
     bool useRelativePath = (bool)m_pConfig->getValueString(ConfigKey("[Library]","UseRelativePathOnExport")).toInt();
 
     if(file_location.endsWith(".m3u", Qt::CaseInsensitive))
     {
+        //create and populate a list of files of the playlist
+        QList<QString> playlist_items;
+        int rows = m_pPlaylistTableModel->rowCount();
+        for(int i = 0; i < rows; ++i){
+            QModelIndex index = m_pPlaylistTableModel->index(i,0);
+            playlist_items << m_pPlaylistTableModel->getTrackLocation(index);
+        }
         ParserM3u::writeM3UFile(file_location, playlist_items, useRelativePath);
     }
     else if(file_location.endsWith(".pls", Qt::CaseInsensitive))
     {
-        ParserPls::writePLSFile(file_location,playlist_items, useRelativePath);
+        //create and populate a list of files of the playlist
+        QList<QString> playlist_items;
+        int rows = m_pPlaylistTableModel->rowCount();
+        for(int i = 0; i < rows; ++i){
+            QModelIndex index = m_pPlaylistTableModel->index(i,0);
+            playlist_items << m_pPlaylistTableModel->getTrackLocation(index);
+        }
+        ParserPls::writePLSFile(file_location, playlist_items, useRelativePath);
+    }
+    else if(file_location.endsWith(".csv", Qt::CaseInsensitive))
+    {
+        ParserCsv::writeCSVFile(file_location, m_pPlaylistTableModel, useRelativePath);
     }
     else
     {
         //default export to M3U if file extension is missing
+        QList<QString> playlist_items;
+        int rows = m_pPlaylistTableModel->rowCount();
+        for(int i = 0; i < rows; ++i){
+            QModelIndex index = m_pPlaylistTableModel->index(i,0);
+            playlist_items << m_pPlaylistTableModel->getTrackLocation(index);
+        }
 
         qDebug() << "Playlist export: No file extension specified. Appending .m3u "
                  << "and exporting to M3U.";
