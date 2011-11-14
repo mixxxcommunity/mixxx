@@ -172,6 +172,9 @@ bool ParserCsv::writeCSVFile(const QString &file_str, PlaylistTableModel* pPlayl
             }
             out << "\"";
             QString field = pPlaylistTableModel->data(pPlaylistTableModel->index(j,i)).toString();
+            if (useRelativePath && i == pPlaylistTableModel->fieldIndex(PLAYLISTTRACKSTABLE_LOCATION)) {
+                field = base_dir.relativeFilePath(field);
+            }
             out << field.replace('\"', "\"\"");  // escape "
             out << "\"";
         }
