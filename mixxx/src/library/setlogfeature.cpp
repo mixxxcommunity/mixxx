@@ -119,10 +119,10 @@ SetlogFeature::~SetlogFeature() {
     delete m_pAddToAutoDJTopAction;
     delete m_pRenamePlaylistAction;
     delete m_pLockPlaylistAction;
-    if( m_pCOPlayPos1 ){
+    if (m_pCOPlayPos1) {
     	delete m_pCOPlayPos1;
     }
-    if( m_pCOPlayPos2 ){
+    if (m_pCOPlayPos2) {
     	delete m_pCOPlayPos2;
     }
 }
@@ -145,15 +145,18 @@ void SetlogFeature::bindWidget(WLibrarySidebar* sidebarWidget,
     connect(this, SIGNAL(showPage(const QUrl&)),
             edit, SLOT(setSource(const QUrl&)));
 
-    m_pCOPlayPos1 = new ControlObjectThreadMain(
+    if (!m_pCOPlayPos1) {
+        m_pCOPlayPos1 = new ControlObjectThreadMain(
                             ControlObject::getControl(ConfigKey("[Channel1]", "playposition")));
-    m_pCOPlayPos2 = new ControlObjectThreadMain(
+        connect(m_pCOPlayPos1, SIGNAL(valueChanged(double)),
+                this, SLOT(slotPositionChanged(double)));
+    }
+    if (!m_pCOPlayPos2) {
+        m_pCOPlayPos2 = new ControlObjectThreadMain(
                             ControlObject::getControl(ConfigKey("[Channel2]", "playposition")));
-
-    connect(m_pCOPlayPos1, SIGNAL(valueChanged(double)),
-    this, SLOT(slotPositionChanged(double)));
-    connect(m_pCOPlayPos2, SIGNAL(valueChanged(double)),
-    this, SLOT(slotPositionChanged(double)));
+        connect(m_pCOPlayPos2, SIGNAL(valueChanged(double)),
+                this, SLOT(slotPositionChanged(double)));
+    }
 
     libraryWidget->registerView(m_sSetlogViewName, edit);
 }
