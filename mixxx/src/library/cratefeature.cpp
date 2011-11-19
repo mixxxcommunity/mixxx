@@ -9,6 +9,7 @@
 #include "library/parser.h"
 #include "library/parserm3u.h"
 #include "library/parserpls.h"
+#include "library/parsercsv.h"
 
 #include "library/cratetablemodel.h"
 #include "library/trackcollection.h"
@@ -382,7 +383,7 @@ void CrateFeature::slotImportPlaylist()
         NULL,
         tr("Import Playlist"),
         QDesktopServices::storageLocation(QDesktopServices::MusicLocation),
-        tr("Playlist Files (*.m3u *.pls)"));
+        tr("Playlist Files (*.m3u *.pls *.csv)"));
     //Exit method if user cancelled the open dialog.
     if (playlist_file.isNull() || playlist_file.isEmpty() ) return;
 
@@ -395,6 +396,10 @@ void CrateFeature::slotImportPlaylist()
     else if(playlist_file.endsWith(".pls", Qt::CaseInsensitive))
     {
         playlist_parser = new ParserPls();
+    }
+    else if(playlist_file.endsWith(".csv", Qt::CaseInsensitive))
+    {
+        playlist_parser = new ParserCsv();
     }
     else
     {

@@ -32,7 +32,7 @@ public:
 
 private:
     /**Reads a line from the file and returns filepath if a valid file**/
-    QString getFilepath(QTextStream *, QString);
+    QList<QList<QString> > tokenize(const QByteArray& str, char delimiter);
 
 
 };

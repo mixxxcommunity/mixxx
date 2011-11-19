@@ -36,29 +36,32 @@ QList<QString> ParserCsv::parse(QString sFilename)
     clearLocations();
     //qDebug() << "ParserCsv: Starting to parse.";
     if (file.open(QIODevice::ReadOnly) && !isBinary(sFilename)) {
-        /* Unfortunately, QT 4.7 does not handle <CR> (=\r or asci value 13) line breaks.
-         * This is important on OS X where iTunes, e.g., exports CSV playlists using <CR>
-         * rather that <LF>
-         *
-         * Using QFile::readAll() we obtain the complete content of the playlist as a ByteArray.
-         * We replace any '\r' with '\n' if applicaple
-         * This ensures that playlists from iTunes on OS X can be parsed
-         */
         QByteArray ba = file.readAll();
-        //detect encoding
-        bool isCRLF_encoded = ba.contains("\r\n");
-        bool isCR_encoded = ba.contains("\r");
-        if(isCR_encoded && !isCRLF_encoded)
-            ba.replace('\r','\n');
-        QTextStream textstream(ba.data());
-        
-        while(!textstream.atEnd()) {
-            QString sLine = getFilepath(&textstream, basepath);
-            if(sLine.isEmpty())
-                break;
 
-            //qDebug() << "ParserCsv: parsed: " << (sLine);
-            m_sLocations.append(sLine);
+        QList<QList<QString> > tokens = tokenize( ba, ',');
+
+        // detect Location column
+        int loc_coll = 0x7fffffff;
+        if (tokens.size()) {
+            for (int i = 0; i < tokens[0].size(); ++i) {
+                if (tokens[0][i] == tr("Location")) {
+                    loc_coll = i;
+                    break;
+                }
+            }
+            for (int i = 1; i < tokens.size(); ++i) {
+                if (loc_coll < tokens[i].size()) {
+                    // Todo: check if path is relative
+                    QFileInfo fi = tokens[i][loc_coll];
+                    if (fi.isRelative()){
+                        // add base path
+                        qDebug() << "is relative" << basepath << fi.filePath();
+                        fi.setFile(basepath,fi.filePath());
+                    }
+                    m_sLocations.append(fi.filePath());
+
+                }
+            }
         }
 
         file.close();
@@ -74,45 +77,43 @@ QList<QString> ParserCsv::parse(QString sFilename)
     return QList<QString>(); //if we get here something went wrong
 }
 
+// Code was posted at http://www.qtcentre.org/threads/35511-Parsing-CSV-data
+// by "adzajac" and adapted to use QT Classes
+QList<QList<QString> > ParserCsv::tokenize(const QByteArray& str, char delimiter) {
+    QList<QList<QString> > tokens;
 
-QString ParserCsv::getFilepath(QTextStream *stream, QString basepath)
-{
-    QString textline,filename = "";
+    unsigned int row = 0;
+    bool quotes = false;
+    QByteArray field = "";
 
-    textline = stream->readLine();
+    tokens.append(QList<QString>());
 
-    while(!textline.isEmpty()){
-        //qDebug() << "Untransofrmed text: " << textline;
-        if(textline.isNull())
-            break;
-
-        if(!textline.contains("#")){
-            filename = textline;
-            filename.remove("file://");
-            QByteArray strlocbytes = filename.toUtf8();
-            //qDebug() << "QByteArray UTF-8: " << strlocbytes;
-            QUrl location = QUrl::fromEncoded(strlocbytes);
-            //qDebug() << "QURL UTF-8: " << location;
-            QString trackLocation = location.toString();
-            //qDebug() << "UTF8 TrackLocation:" << trackLocation;
-            if(isFilepath(trackLocation)) {
-                return trackLocation;
+    for (int pos = 0; pos < str.length(); ++pos) {
+        char c = str[pos];
+        if (!quotes && c == '"' ){
+            quotes = true;
+        } else if (quotes && c== '"' ){
+            if (pos + 1 < str.length() && str[pos+1]== '"') {
+                field.append(c);
+                pos++;
             } else {
-                // Try relative to csv dir
-                QString rel = basepath + "/" + trackLocation;
-                if (isFilepath(rel)) {
-                    return rel;
-                }
-                // We couldn't match this to a real file so ignore it
+                quotes = false;
             }
+        } else if (!quotes && c == delimiter) {
+            tokens[row].append(QString::fromUtf8(field));
+            field.clear();
+        } else if (!quotes && (c == '\r' || c == '\n')) {
+            tokens[row].append(QString::fromUtf8(field));
+            field.clear();
+            tokens.append(QList<QString>());
+            row++;
+        } else {
+            field.push_back(c);
         }
-        textline = stream->readLine();
     }
-
-    // Signal we reached the end
-    return 0;
-
+    return tokens;
 }
+
 bool ParserCsv::writeCSVFile(const QString &file_str, PlaylistTableModel* pPlaylistTableModel, bool useRelativePath)
 {
     /*
