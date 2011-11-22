@@ -8,6 +8,7 @@
 #include "library/parser.h"
 #include "library/parserm3u.h"
 #include "library/parserpls.h"
+#include "library/parsercsv.h"
 
 
 #include "widget/wlibrary.h"
@@ -411,25 +412,25 @@ void PlaylistFeature::slotImportPlaylist()
             NULL,
             tr("Import Playlist"),
             QDesktopServices::storageLocation(QDesktopServices::MusicLocation),
-            tr("Playlist Files (*.m3u *.pls)")
+            tr("Playlist Files (*.m3u *.m3u8 *.pls *.csv)")
             );
     //Exit method if user cancelled the open dialog.
-    if (playlist_file.isNull() || playlist_file.isEmpty() ) return;
+    if (playlist_file.isNull() || playlist_file.isEmpty()) return;
 
     Parser* playlist_parser = NULL;
 
-    if(playlist_file.endsWith(".m3u", Qt::CaseInsensitive))
-    {
+    if (   playlist_file.endsWith(".m3u", Qt::CaseInsensitive)
+        || playlist_file.endsWith(".m3u8", Qt::CaseInsensitive)) {
+        // .m3u8 is Utf8 representation of an m3u playlist
         playlist_parser = new ParserM3u();
-    }
-    else if(playlist_file.endsWith(".pls", Qt::CaseInsensitive))
-    {
+    } else if (playlist_file.endsWith(".pls", Qt::CaseInsensitive)) {
         playlist_parser = new ParserPls();
-    }
-    else
-    {
+    } else if (playlist_file.endsWith(".csv", Qt::CaseInsensitive)) {
+        playlist_parser = new ParserCsv();
+    } else {
         return;
     }
+
     QList<QString> entries = playlist_parser->parse(playlist_file);
 
     //Iterate over the List that holds URLs of playlist entires
@@ -452,7 +453,7 @@ void PlaylistFeature::slotExportPlaylist(){
     QString file_location = QFileDialog::getSaveFileName(NULL,
                                         tr("Export Playlist"),
                                         QDesktopServices::storageLocation(QDesktopServices::MusicLocation),
-                                        tr("M3U Playlist (*.m3u);;PLS Playlist (*.pls)"));
+                                        tr("M3U Playlist (*.m3u);;PLS Playlist (*.pls);Text CSV (*.csv)"));
     //Exit method if user cancelled the open dialog.
     if(file_location.isNull() || file_location.isEmpty()) return;
     //create and populate a list of files of the playlist
@@ -465,16 +466,13 @@ void PlaylistFeature::slotExportPlaylist(){
     //check config if relative paths are desired
     bool useRelativePath = (bool)m_pConfig->getValueString(ConfigKey("[Library]","UseRelativePathOnExport")).toInt();
 
-    if(file_location.endsWith(".m3u", Qt::CaseInsensitive))
-    {
+    if (file_location.endsWith(".m3u", Qt::CaseInsensitive)) {
         ParserM3u::writeM3UFile(file_location, playlist_items, useRelativePath);
-    }
-    else if(file_location.endsWith(".pls", Qt::CaseInsensitive))
-    {
+    } else if(file_location.endsWith(".pls", Qt::CaseInsensitive)) {
         ParserPls::writePLSFile(file_location,playlist_items, useRelativePath);
-    }
-    else
-    {
+    } else if (file_location.endsWith(".m3u8", Qt::CaseInsensitive)) {
+        ParserM3u::writeM3U8File(file_location, playlist_items, useRelativePath);
+    } else {
         //default export to M3U if file extension is missing
 
         qDebug() << "Playlist export: No file extension specified. Appending .m3u "

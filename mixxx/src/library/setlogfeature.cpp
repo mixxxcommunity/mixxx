@@ -400,48 +400,32 @@ void SetlogFeature::slotExportPlaylist() {
     //check config if relative paths are desired
     bool useRelativePath = (bool)m_pConfig->getValueString(ConfigKey("[Library]","UseRelativePathOnExport")).toInt();
 
-    if(file_location.endsWith(".m3u", Qt::CaseInsensitive))
-    {
+    if (file_location.endsWith(".csv", Qt::CaseInsensitive)) {
+            ParserCsv::writeCSVFile(file_location, m_pPlaylistTableModel, useRelativePath);
+    } else {
         //create and populate a list of files of the playlist
         QList<QString> playlist_items;
         int rows = m_pPlaylistTableModel->rowCount();
-        for(int i = 0; i < rows; ++i){
-            QModelIndex index = m_pPlaylistTableModel->index(i,0);
-            playlist_items << m_pPlaylistTableModel->getTrackLocation(index);
-        }
-        ParserM3u::writeM3UFile(file_location, playlist_items, useRelativePath);
-    }
-    else if(file_location.endsWith(".pls", Qt::CaseInsensitive))
-    {
-        //create and populate a list of files of the playlist
-        QList<QString> playlist_items;
-        int rows = m_pPlaylistTableModel->rowCount();
-        for(int i = 0; i < rows; ++i){
-            QModelIndex index = m_pPlaylistTableModel->index(i,0);
-            playlist_items << m_pPlaylistTableModel->getTrackLocation(index);
-        }
-        ParserPls::writePLSFile(file_location, playlist_items, useRelativePath);
-    }
-    else if(file_location.endsWith(".csv", Qt::CaseInsensitive))
-    {
-        ParserCsv::writeCSVFile(file_location, m_pPlaylistTableModel, useRelativePath);
-    }
-    else
-    {
-        //default export to M3U if file extension is missing
-        QList<QString> playlist_items;
-        int rows = m_pPlaylistTableModel->rowCount();
-        for(int i = 0; i < rows; ++i){
+        for (int i = 0; i < rows; ++i) {
             QModelIndex index = m_pPlaylistTableModel->index(i,0);
             playlist_items << m_pPlaylistTableModel->getTrackLocation(index);
         }
 
-        qDebug() << "Playlist export: No file extension specified. Appending .m3u "
-                 << "and exporting to M3U.";
-        file_location.append(".m3u");
-        ParserM3u::writeM3UFile(file_location, playlist_items, useRelativePath);
+        if (file_location.endsWith(".pls", Qt::CaseInsensitive)) {
+            ParserPls::writePLSFile(file_location, playlist_items, useRelativePath);
+        } else if (file_location.endsWith(".m3u8", Qt::CaseInsensitive)) {
+            ParserM3u::writeM3U8File(file_location, playlist_items, useRelativePath);
+        } else {
+            //default export to M3U if file extension is missing
+            if(!file_location.endsWith(".m3u", Qt::CaseInsensitive))
+            {
+                qDebug() << "Playlist export: No valid file extension specified. Appending .m3u "
+                         << "and exporting to M3U.";
+                file_location.append(".m3u");
+            }
+            ParserM3u::writeM3UFile(file_location, playlist_items, useRelativePath);
+        }
     }
-
 }
 
 void SetlogFeature::slotAddToAutoDJ() {

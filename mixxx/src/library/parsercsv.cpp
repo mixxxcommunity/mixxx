@@ -100,10 +100,18 @@ QList<QList<QString> > ParserCsv::tokenize(const QByteArray& str, char delimiter
                 quotes = false;
             }
         } else if (!quotes && c == delimiter) {
-            tokens[row].append(QString::fromUtf8(field));
+            if (isUtf8(field.data())) {
+                tokens[row].append(QString::fromUtf8(field));
+            } else {
+                tokens[row].append(QString::fromLatin1(field));
+            }
             field.clear();
         } else if (!quotes && (c == '\r' || c == '\n')) {
-            tokens[row].append(QString::fromUtf8(field));
+            if (isUtf8(field.data())) {
+                tokens[row].append(QString::fromUtf8(field));
+            } else {
+                tokens[row].append(QString::fromLatin1(field));
+            }
             field.clear();
             tokens.append(QList<QString>());
             row++;
@@ -114,7 +122,7 @@ QList<QList<QString> > ParserCsv::tokenize(const QByteArray& str, char delimiter
     return tokens;
 }
 
-bool ParserCsv::writeCSVFile(const QString &file_str, PlaylistTableModel* pPlaylistTableModel, bool useRelativePath)
+bool ParserCsv::writeCSVFile(const QString &file_str, BaseSqlTableModel* pPlaylistTableModel, bool useRelativePath)
 {
     /*
      * Important note:

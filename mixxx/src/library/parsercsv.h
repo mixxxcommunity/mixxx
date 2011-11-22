@@ -12,7 +12,7 @@
 //
 //
 #include "parser.h"
-#include "library/playlisttablemodel.h"
+#include "library/basesqltablemodel.h"
 
 #ifndef PARSERCSV_H
 #define PARSERCSV_H
@@ -28,7 +28,7 @@ public:
     /**Overwriting function parse in class Parser**/
     QList<QString> parse(QString);
     //Playlist Export
-    static bool writeCSVFile(const QString &file, PlaylistTableModel* pPlaylistTableModel, bool useRelativePath);
+    static bool writeCSVFile(const QString &file, BaseSqlTableModel* pPlaylistTableModel, bool useRelativePath);
 
 private:
     /**Reads a line from the file and returns filepath if a valid file**/
