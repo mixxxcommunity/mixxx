@@ -284,7 +284,7 @@ enum PlaylistDAO::hidden_type PlaylistDAO::getHiddenType(int playlistId){
             return (enum hidden_type)query.value(0).toInt();
         }
     } else {
-    	LOG_FAILED_QUERY(query);
+        LOG_FAILED_QUERY(query);
     }
     qDebug() << "PlaylistDAO::hidden_type returns PLHT_UNKNOWN for playlistId " << playlistId;
     return PLHT_UNKNOWN;
