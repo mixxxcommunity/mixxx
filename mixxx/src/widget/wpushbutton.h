@@ -64,6 +64,9 @@ private:
     QPixmap **m_pPixmaps;
     /** Associated background pixmap */
     QPixmap *m_pPixmapBack;
+    /** short click toggle button long click push button **/
+    bool m_powerWindowStyle;
+    QTimer m_clickTimer;
 };
 
 #endif

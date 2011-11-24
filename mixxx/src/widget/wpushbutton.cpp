@@ -24,6 +24,7 @@
 #include <QtDebug>
 #include <QMouseEvent>
 #include <QPaintEvent>
+#include <QApplication>
 
 WPushButton::WPushButton(QWidget * parent) : WWidget(parent)
 {
@@ -49,6 +50,8 @@ void WPushButton::setup(QDomNode node)
     // Number of states
     int iNumStates = selectNodeInt(node, "NumberStates");
     setStates(iNumStates);
+
+    m_powerWindowStyle = selectNodeQString(node, "PowerWindowStyle").contains("true", Qt::CaseInsensitive);
 
     // Set background pixmap if available
     if (!selectNode(node, "BackPath").isNull())
@@ -215,20 +218,23 @@ void WPushButton::paintEvent(QPaintEvent *)
 
 void WPushButton::mousePressEvent(QMouseEvent * e)
 {
-    m_bPressed = true;
-
     bool leftClick = e->button() == Qt::LeftButton;
     bool rightClick = e->button() == Qt::RightButton;
 
     // The value to emit.
     double emitValue = m_fValue;
 
-    // Calculate new state if it is a one state button
-    if (m_iNoStates == 1) {
+    if (m_powerWindowStyle && m_iNoStates == 2) {
+        if (m_fValue == 0.0f) {
+            m_clickTimer.setSingleShot(true);
+            m_clickTimer.start(300);
+        }
+        m_fValue = emitValue = 1.0f;
+    } else if (m_iNoStates == 1) {
+        // Calculate new state if it is a one state button
         m_fValue = emitValue = (m_fValue == 0.0f) ? 1.0f : 0.0f;
-    }
-    // Update state on press if it is a n-state button and not a pushbutton
-    else if (leftClick) {
+    } else if (leftClick) {
+        // Update state on press if it is a n-state button and not a pushbutton
         if (m_bLeftClickForcePush) {
             emitValue = 1.0f;
         } else {
@@ -251,6 +257,8 @@ void WPushButton::mousePressEvent(QMouseEvent * e)
     //     }
     // }
 
+    m_bPressed = true;
+
     if (leftClick) {
         emit(valueChangedLeftDown(emitValue));
     } else if (rightClick) {
@@ -262,21 +270,27 @@ void WPushButton::mousePressEvent(QMouseEvent * e)
 
 void WPushButton::mouseReleaseEvent(QMouseEvent * e)
 {
-    m_bPressed = false;
-
     bool leftClick = e->button() == Qt::LeftButton;
     bool rightClick = e->button() == Qt::RightButton;
 
     // The value to emit
     double emitValue = m_fValue;
 
-    // Update state if it is a one state button.
-    if (m_iNoStates==1) // && e->button()==Qt::LeftButton)
-    {
+    if (m_powerWindowStyle && m_iNoStates == 2) {
+        if (    !m_clickTimer.isActive()
+             && !(QApplication::mouseButtons() & Qt::RightButton)
+             && m_bPressed) {
+            // Release Button after Timer, but not if right button is clicked
+            m_fValue = emitValue = 0.0f;
+        }
+    } else if (m_iNoStates==1) // && e->button()==Qt::LeftButton)
+    {   // Update state if it is a one state button.
         m_fValue = emitValue = (m_fValue == 0.0f) ? 1.0f : 0.0f;
     } else if ((leftClick && m_bLeftClickForcePush) || (rightClick && m_bRightClickForcePush)) {
         emitValue = 0.0f;
     }
+
+    m_bPressed = false;
 
     if (leftClick) {
         emit(valueChangedLeftUp(emitValue));
