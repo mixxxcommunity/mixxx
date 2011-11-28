@@ -27,24 +27,21 @@ ControlPushButton::ControlPushButton(ConfigKey key) :
     m_iNoStates = 2;
 }
 
-ControlPushButton::~ControlPushButton()
-{
+ControlPushButton::~ControlPushButton() {
 }
 
-//Tell this PushButton whether or not it's a "toggle" push button...
-void ControlPushButton::setToggleButton(bool bIsToggleButton)
-{
+// Tell this PushButton whether or not it's a "toggle" push button...
+// This is only used for values from Midi
+void ControlPushButton::setToggleButton(bool bIsToggleButton) {
     //qDebug() << "Setting " << m_Key.group << m_Key.item << "as toggle";
     m_bIsToggleButton = bIsToggleButton;
 }
 
-void ControlPushButton::setStates(int num_states)
-{
+void ControlPushButton::setStates(int num_states) {
     m_iNoStates = num_states;
 }
 
-void ControlPushButton::setValueFromMidi(MidiCategory c, double v)
-{
+void ControlPushButton::setValueFromMidi(MidiCategory c, double v) {
     //if (m_bMidiSimulateLatching)
 
     //qDebug() << "bMidiSimulateLatching is true!";

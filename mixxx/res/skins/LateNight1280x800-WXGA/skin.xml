@@ -3686,15 +3686,21 @@
 					****************************************
 					-->
 					<PushButton>
-						<Tooltip>Microphone talkover&#10;Hold-to-talk and mix microphone input into the master output.&#10;</Tooltip>
+						<Tooltip>Microphone talkover&#10;Hold-to-talk or short click for latching to&#10;mix microphone input into the master output.&#10;</Tooltip>
 						<Style>QToolTip { font: 11px Lucida Grande, Lucida Sans Unicode, Arial, Verdana, sans-serif;
 						background-color: #191919; color: #CCCCCC; border: 1px solid #CCCCCC; padding: 4px; }
 						</Style>
-						<NumberStates>1</NumberStates>
+				        <PowerWindowStyle>true</PowerWindowStyle>
+						<NumberStates>2</NumberStates>
 						<State>
 							<Number>0</Number>
 							<Pressed>btn_microphone_talkover_over.png</Pressed>
 							<Unpressed>btn_microphone_talkover.png</Unpressed>
+						</State>
+						<State>
+							<Number>1</Number>
+							<Pressed>btn_microphone_talkover_over.png</Pressed>
+							<Unpressed>btn_microphone_talkover_over.png</Unpressed>
 						</State>
 						<Pos>10,12</Pos>
 						<Connection>

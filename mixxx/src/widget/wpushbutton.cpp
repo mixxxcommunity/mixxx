@@ -81,73 +81,9 @@ void WPushButton::setup(QDomNode node)
     //This next big block allows each ControlPushButton to know whether or not it's
     //a "toggle" button.
 
-    // For each connection
-    QDomNode con = selectNode(node, "Connection");
-    while (!con.isNull())
-    {
-        // Get ConfigKey
-        QString key = selectNodeQString(con, "ConfigKey");
-
-        ConfigKey configKey;
-        configKey.group = key.left(key.indexOf(","));
-        configKey.item = key.mid(key.indexOf(",")+1);
-
-        //Find out if we're a push button...
-        if (node.nodeName() == "PushButton")
-        {
-            ControlPushButton* p = dynamic_cast<ControlPushButton*>(
-                ControlObject::getControl(configKey));
-
-            if (p == NULL) {
-                // A NULL here either means that this control is not a
-                // ControlPushButton or it does not exist. This logic is
-                // specific to push-buttons, so skip it either way.
-                con = con.nextSibling();
-                continue;
-            }
-
-            bool isLeftButton = false;
-            bool isRightButton = false;
-            if (!selectNode(con, "ButtonState").isNull())
-            {
-                if (selectNodeQString(con, "ButtonState").contains("LeftButton", Qt::CaseInsensitive)) {
-                    isLeftButton = true;
-                }
-                else if (selectNodeQString(con, "ButtonState").contains("RightButton", Qt::CaseInsensitive)) {
-                    isRightButton = true;
-                }
-            }
-
-            // If we have 2 states, tell my controlpushbutton object that we're
-            // a toggle button. Only set the control as a toggle button if it
-            // has not been forced to remain a push button by the
-            // Right/LeftClickIsPushButton directive above. Do this by checking
-            // whether this control is mapped to the RightButton or LeftButton
-            // and check it against the value of m_bLeft/RightClickForcePush. We
-            // have to handle the case where no ButtonState is provided for the
-            // control. If no button is provided, then we have to assume the
-            // connected control should be a toggle.
-
-            //bool setAsToggleButton = iNumStates == 2 &&
-            //       ((!isLeftButton && !isRightButton) ||
-            //        ( (isLeftButton && !m_bLeftClickForcePush) ||
-            //          (isRightButton && !m_bRightClickForcePush) ) );
-
-            // if (setAsToggleButton)
-            //     p->setToggleButton(true);
-
-            // BJW: Removed this so that buttons that are hardcoded as toggle in the source
-            // don't get overridden if a skin fails to set them to 2-state. Buttons still
-            // default to non-toggle otherwise.
-            // else
-            //	p->setToggleButton(false);
-        }
-
-        con = con.nextSibling();
-    }
-
-    //End of toggle button stuff.
-    //--------
+    // BJW: Removed this so that buttons that are hardcoded as toggle in the source
+    // don't isLeftButtonget overridden if a skin fails to set them to 2-state. Buttons still
+    // default to non-toggle otherwise.
 }
 
 void WPushButton::setStates(int iStates)
