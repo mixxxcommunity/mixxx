@@ -77,11 +77,7 @@ void WPushButton::setup(QDomNode node)
     if (selectNodeQString(node, "RightClickIsPushButton").contains("true", Qt::CaseInsensitive))
         m_bRightClickForcePush = true;
 
-    //--------
-    //This next big block allows each ControlPushButton to know whether or not it's
-    //a "toggle" button.
-
-    // BJW: Removed this so that buttons that are hardcoded as toggle in the source
+    // BJW: Removed toggle button detection so that buttons that are hardcoded as toggle in the source
     // don't isLeftButtonget overridden if a skin fails to set them to 2-state. Buttons still
     // default to non-toggle otherwise.
 }

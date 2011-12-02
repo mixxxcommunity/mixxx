@@ -203,24 +203,24 @@ void ITunesFeature::onRightClickChild(const QPoint& globalPos, QModelIndex index
 }
 
 bool ITunesFeature::dropAccept(QUrl url) {
-	Q_UNUSED(url);
-	return false;
+    Q_UNUSED(url);
+    return false;
 }
 
 bool ITunesFeature::dropAcceptChild(const QModelIndex& index, QUrl url) {
-	Q_UNUSED(index);
-	Q_UNUSED(url);
+    Q_UNUSED(index);
+    Q_UNUSED(url);
     return false;
 }
 
 bool ITunesFeature::dragMoveAccept(QUrl url) {
-	Q_UNUSED(url);
+    Q_UNUSED(url);
     return false;
 }
 
 bool ITunesFeature::dragMoveAcceptChild(const QModelIndex& index, QUrl url) {
-	Q_UNUSED(index);
-	Q_UNUSED(url);
+    Q_UNUSED(index);
+    Q_UNUSED(url);
     return false;
 }
 
@@ -290,14 +290,14 @@ TreeItem* ITunesFeature::importLibrary() {
 						if (i > -1) {
 							// folder "iTunes Media" in Path
 							m_mixxxItunesRoot = m_dbfile.left(i);
-						}
-						// Remove matching tail part
+			            }
+                        // Remove matching tail part
 						while (m_mixxxItunesRoot.right(1) == m_dbItunesRoot.right(1)) {
-							m_mixxxItunesRoot.chop(1);
-							m_dbItunesRoot.chop(1);
-						}
-					}
-				} else if (key == "Tracks") {
+    						m_mixxxItunesRoot.chop(1);
+    						m_dbItunesRoot.chop(1);
+    					}
+    				}
+    			} else if (key == "Tracks") {
                 	parseTracks(xml);
                     playlist_root = parsePlaylists(xml);
                 }

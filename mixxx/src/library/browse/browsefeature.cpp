@@ -120,24 +120,24 @@ TreeItemModel* BrowseFeature::getChildModel() {
 
 bool BrowseFeature::dropAccept(QUrl url) {
     Q_UNUSED(url);
-	return false;
+    return false;
 }
 
 bool BrowseFeature::dropAcceptChild(const QModelIndex& index, QUrl url) {
-	Q_UNUSED(index);
-	Q_UNUSED(url);
-	return false;
+    Q_UNUSED(index);
+    Q_UNUSED(url);
+    return false;
 }
 
 bool BrowseFeature::dragMoveAccept(QUrl url) {
-	Q_UNUSED(url);
-	return false;
+    Q_UNUSED(url);
+    return false;
 }
 
 bool BrowseFeature::dragMoveAcceptChild(const QModelIndex& index, QUrl url) {
-	Q_UNUSED(index);
-	Q_UNUSED(url);
-	return false;
+    Q_UNUSED(index);
+    Q_UNUSED(url);
+    return false;
 }
 
 void BrowseFeature::activate() {
@@ -156,12 +156,12 @@ void BrowseFeature::activateChild(const QModelIndex& index) {
 }
 
 void BrowseFeature::onRightClick(const QPoint& globalPos) {
-	Q_UNUSED(globalPos);
+    Q_UNUSED(globalPos);
 }
 
 void BrowseFeature::onRightClickChild(const QPoint& globalPos, QModelIndex index) {
-	Q_UNUSED(globalPos);
-	Q_UNUSED(index);
+    Q_UNUSED(globalPos);
+    Q_UNUSED(index);
 }
 
 /*

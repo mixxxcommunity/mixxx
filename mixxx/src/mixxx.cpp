@@ -170,12 +170,21 @@ MixxxApp::MixxxApp(QApplication *a, struct CmdlineArgs args)
         qDebug() << "Found and will use custom keyboard preset" << userKeyboard;
         pKbdConfig = new ConfigObject<ConfigValueKbd>(userKeyboard);
     }
-    else
-        // Otherwise use the default
-        pKbdConfig =
-                new ConfigObject<ConfigValueKbd>(
-                    QString(qConfigPath)
-                    .append("keyboard/").append("Standard.kbd.cfg"));
+    else {
+        // Otherwise use the default config for local keyboard
+        QLocale locale = QApplication::keyboardInputLocale();
+
+        // check if a default keyboard exists
+        QString defaultKeyboard = QString(qConfigPath).append("keyboard/");
+        defaultKeyboard += locale.name();
+        defaultKeyboard += ".kbd.cfg";
+
+        if (!QFile::exists(defaultKeyboard)) {
+            qDebug() << defaultKeyboard << " not found, using Standard.kbd.cfg";
+            defaultKeyboard = QString(qConfigPath).append("keyboard/").append("Standard.kbd.cfg");
+        }
+        pKbdConfig = new ConfigObject<ConfigValueKbd>(defaultKeyboard);
+    }
 
     // TODO(XXX) leak pKbdConfig, MixxxKeyboard owns it? Maybe roll all keyboard
     // initialization into MixxxKeyboard

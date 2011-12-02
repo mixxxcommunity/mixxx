@@ -34,10 +34,8 @@ MixxxKeyboard::~MixxxKeyboard()
    delete m_pKbdConfigObject;
 }
 
-bool MixxxKeyboard::eventFilter(QObject *, QEvent * e)
-{
-    if (e->type()==QEvent::KeyPress)
-    {
+bool MixxxKeyboard::eventFilter(QObject *, QEvent * e) {
+    if (e->type() == QEvent::KeyPress) {
         QKeyEvent * ke = (QKeyEvent *)e;
 
         //qDebug() << "press";
@@ -45,22 +43,23 @@ bool MixxxKeyboard::eventFilter(QObject *, QEvent * e)
 
         if (kbdPress(getKeySeq(ke), false, autoRepeat)) {
             // Add key to active key list
-            if (!autoRepeat)
+            if (!autoRepeat) {
+                // Store key without modifier
+                // modifier is only relevant for press events
+                #error
+                ke->modifiers();
                 m_qActiveKeyList.append(ke->key());
-
+            }
             return true;
         }
-    }
-    else if (e->type()==QEvent::KeyRelease)
-    {
+    } else if (e->type()==QEvent::KeyRelease) {
         QKeyEvent * ke = (QKeyEvent *)e;
 
         // Run through list of active keys to see if the released key is active
         int key = -1;
         QListIterator<int> it(m_qActiveKeyList);
 
-        while (it.hasNext())
-        {
+        while (it.hasNext()) {
             key = it.next();
             if (key == ke->key())
             {
@@ -78,7 +77,6 @@ bool MixxxKeyboard::eventFilter(QObject *, QEvent * e)
             }
         }
     }
-
     return false;
 }
 

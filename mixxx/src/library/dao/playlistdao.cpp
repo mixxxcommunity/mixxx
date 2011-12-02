@@ -291,17 +291,17 @@ enum PlaylistDAO::hidden_type PlaylistDAO::getHiddenType(int playlistId){
 }
 
 bool PlaylistDAO::isHidden(int playlistId) {
-    // qDebug() << "PlaylistDAO::isHidden"
-    //          << QThread::currentThread() << m_database.connectionName();
+    //qDebug() << "PlaylistDAO::isHidden"
+    //         << QThread::currentThread() << m_database.connectionName();
 
-	enum hidden_type ht = getHiddenType(playlistId);
+    enum hidden_type ht = getHiddenType(playlistId);
 
-	if(ht==PLHT_NOT_HIDDEN){
-		return false;
-	}
-	else{
-		return true;
-	}
+    if(ht==PLHT_NOT_HIDDEN){
+        return false;
+    }
+    else{
+        return true;
+    }
 }
 
 void PlaylistDAO::removeTrackFromPlaylists(int trackId) {
@@ -429,12 +429,12 @@ void PlaylistDAO::addToAutoDJQueue(int playlistId, bool bTop) {
     int i = 2; // Start at position 2 because position 1 was already loaded to the deck
 
     while (query.next()) {
-    	if (bTop) {
-    		insertTrackIntoPlaylist(query.value(0).toInt(), autoDJId, i++);
-    	}
-    	else {
-    		appendTrackToPlaylist(query.value(0).toInt(), autoDJId);
-    	}
+        if (bTop) {
+            insertTrackIntoPlaylist(query.value(0).toInt(), autoDJId, i++);
+        }
+        else {
+            appendTrackToPlaylist(query.value(0).toInt(), autoDJId);
+        }
     }
 }
 

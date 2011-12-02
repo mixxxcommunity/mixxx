@@ -21,12 +21,12 @@ const QString PLAYLISTTRACKSTABLE_TITLE = "title";
 class PlaylistDAO : public QObject, public virtual DAO {
     Q_OBJECT
   public:
-	enum hidden_type {
-		PLHT_NOT_HIDDEN = 0,
-		PLHT_AUTO_DJ = 1,
-		PLHT_SET_LOG = 2,
-		PLHT_UNKNOWN = -1
-	};
+    enum hidden_type {
+        PLHT_NOT_HIDDEN = 0,
+        PLHT_AUTO_DJ = 1,
+        PLHT_SET_LOG = 2,
+        PLHT_UNKNOWN = -1
+    };
     PlaylistDAO(QSqlDatabase& database);
     virtual ~PlaylistDAO();
 
