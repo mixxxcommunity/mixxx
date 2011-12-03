@@ -43,9 +43,9 @@ public:
     ConfigObject<ConfigValueKbd>* getKeyboardConfig();
 
 private:
-    bool kbdPress(QKeySequence k, bool release, bool autoRepeat);
-    /** Returns a valid QKeySequency with modifier keys from a QKeyEvent */
-    QKeySequence getKeySeq(QKeyEvent *e);
+    bool kbdPress(QString k, bool release, bool autoRepeat);
+    /** Returns a valid QString with modifier keys from a QKeyEvent */
+    QString getKeySeq(QKeyEvent *e);
     /** List containing keys which is currently pressed */
     QList<int> m_qActiveKeyList;
     /** Pointer to keyboard config object */

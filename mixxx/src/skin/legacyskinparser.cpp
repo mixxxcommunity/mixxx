@@ -1005,9 +1005,17 @@ void LegacySkinParser::setupConnections(QDomNode node, QWidget* pWidget) {
             // Add keyboard shortcut info to tooltip string
             QString tooltip = pWidget->toolTip();
             QString shortcut = m_pKeyboard->getKeyboardConfig()->getValueString(configKey);
-            if (!shortcut.isEmpty() && !tooltip.contains(shortcut, Qt::CaseInsensitive)) {
-                tooltip.append(QString("\nShortcut: %1").arg(shortcut));
-                pWidget->setToolTip(tooltip);
+            if (!shortcut.isEmpty()) {
+                // translate shortcut to native text
+                shortcut = QKeySequence(shortcut, QKeySequence::PortableText).toString(QKeySequence::NativeText);
+
+                if (!tooltip.contains(shortcut, Qt::CaseInsensitive)) {
+                    tooltip += "\n";
+                    tooltip += tr("Shortcut");
+                    tooltip += ": ";
+                    tooltip += shortcut;
+                    pWidget->setToolTip(tooltip);
+                }
             }
         }
         con = con.nextSibling();

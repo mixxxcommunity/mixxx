@@ -180,8 +180,8 @@ MixxxApp::MixxxApp(QApplication *a, struct CmdlineArgs args)
         defaultKeyboard += ".kbd.cfg";
 
         if (!QFile::exists(defaultKeyboard)) {
-            qDebug() << defaultKeyboard << " not found, using Standard.kbd.cfg";
-            defaultKeyboard = QString(qConfigPath).append("keyboard/").append("Standard.kbd.cfg");
+            qDebug() << defaultKeyboard << " not found, using en_US.kbd.cfg";
+            defaultKeyboard = QString(qConfigPath).append("keyboard/").append("en_US.kbd.cfg");
         }
         pKbdConfig = new ConfigObject<ConfigValueKbd>(defaultKeyboard);
     }

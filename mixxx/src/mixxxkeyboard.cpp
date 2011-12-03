@@ -38,6 +38,8 @@ bool MixxxKeyboard::eventFilter(QObject *, QEvent * e) {
     if (e->type() == QEvent::KeyPress) {
         QKeyEvent * ke = (QKeyEvent *)e;
 
+        qDebug() << ke->key();
+
         //qDebug() << "press";
         bool autoRepeat = ke->isAutoRepeat();
 
@@ -46,8 +48,6 @@ bool MixxxKeyboard::eventFilter(QObject *, QEvent * e) {
             if (!autoRepeat) {
                 // Store key without modifier
                 // modifier is only relevant for press events
-                #error
-                ke->modifiers();
                 m_qActiveKeyList.append(ke->key());
             }
             return true;
@@ -80,7 +80,7 @@ bool MixxxKeyboard::eventFilter(QObject *, QEvent * e) {
     return false;
 }
 
-bool MixxxKeyboard::kbdPress(QKeySequence k, bool release, bool autoRepeat)
+bool MixxxKeyboard::kbdPress(QString k, bool release, bool autoRepeat)
 {
     bool react = false;
 
@@ -107,11 +107,10 @@ bool MixxxKeyboard::kbdPress(QKeySequence k, bool release, bool autoRepeat)
     return react;
 }
 
-QKeySequence MixxxKeyboard::getKeySeq(QKeyEvent * e)
+QString MixxxKeyboard::getKeySeq(QKeyEvent * e)
 {
-    QString modseq = QString::null;
-	QString keyseq = QString::null;
-
+    QString modseq;
+	QString keyseq;
 
 	if (e->modifiers() & Qt::ShiftModifier)
                modseq += "Shift+";
@@ -125,12 +124,13 @@ QKeySequence MixxxKeyboard::getKeySeq(QKeyEvent * e)
 	if (e->modifiers() & Qt::MetaModifier)
 		modseq += "Meta+";
 
-	keyseq = (QString)QKeySequence(e->key());
+	keyseq = e->text();
 
-	QString seq = modseq + keyseq;
-	QKeySequence k = QKeySequence(seq);
-	//qDebug() << "keyboard press: " << k;
-	return k;
+	if(!keyseq.isEmpty()) { // avoid returning e.g. "Meta+"
+        keyseq = modseq + keyseq;
+    }
+	qDebug() << "keyboard press: " << keyseq;
+	return keyseq;
 }
 
 ConfigObject<ConfigValueKbd>* MixxxKeyboard::getKeyboardConfig() {
