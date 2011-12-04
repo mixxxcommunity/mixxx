@@ -846,7 +846,8 @@ const char* LegacySkinParser::safeChannelString(QString channelStr) {
     QByteArray qba(channelStr.toAscii());
     char *safe = new char[qba.size() + 1]; // +1 for \0
     int i = 0;
-    while (safe[i] = qba[i]) ++i;
+    // Copy string
+    while ((safe[i] = qba[i])) ++i;
     s_channelStrs.append(safe);
     return safe;
 }
@@ -1008,14 +1009,11 @@ void LegacySkinParser::setupConnections(QDomNode node, QWidget* pWidget) {
             if (!shortcut.isEmpty()) {
                 // translate shortcut to native text
                 shortcut = QKeySequence(shortcut, QKeySequence::PortableText).toString(QKeySequence::NativeText);
-
-                if (!tooltip.contains(shortcut, Qt::CaseInsensitive)) {
-                    tooltip += "\n";
-                    tooltip += tr("Shortcut");
-                    tooltip += ": ";
-                    tooltip += shortcut;
-                    pWidget->setToolTip(tooltip);
-                }
+                tooltip += "\n";
+                tooltip += tr("Shortcut");
+                tooltip += ": ";
+                tooltip += shortcut;
+                pWidget->setToolTip(tooltip);
             }
         }
         con = con.nextSibling();

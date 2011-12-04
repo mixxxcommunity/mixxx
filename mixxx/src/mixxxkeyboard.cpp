@@ -38,73 +38,73 @@ bool MixxxKeyboard::eventFilter(QObject *, QEvent * e) {
     if (e->type() == QEvent::KeyPress) {
         QKeyEvent * ke = (QKeyEvent *)e;
 
-        qDebug() << ke->key();
+#ifdef __OSX__
+        // On Mac OSX the nativeScanCode is empty http://doc.qt.nokia.com/4.7/qkeyevent.html#nativeScanCode
+        // We may loose the release event if a the shift key is pressed later
+        // and there is character shift like "1" -> "!"
+        int keyId = ke->key();
+#else
+        int keyId = ke->nativeScanCode();
+#endif
 
-        //qDebug() << "press";
         bool autoRepeat = ke->isAutoRepeat();
 
-        if (kbdPress(getKeySeq(ke), false, autoRepeat)) {
-            // Add key to active key list
-            if (!autoRepeat) {
-                // Store key without modifier
-                // modifier is only relevant for press events
-                m_qActiveKeyList.append(ke->key());
+        //qDebug() << "key event =" << ke->key() << "AtoRepeat =" << autoRepeat;
+
+        if (!autoRepeat) {
+            QString keystring = getKeySeq(ke);
+            if (!keystring.isEmpty())
+            {
+                // Check if a shortcut is defined
+                ConfigKey * pConfigKey = m_pKbdConfigObject->get(ConfigValueKbd(keystring));
+
+                if (pConfigKey)
+                {
+                    ControlObject::getControl(*pConfigKey)->queueFromMidi(NOTE_ON, 1);
+                    // Add key to active key list
+                    m_qActiveKeyList.append(QPair<int, ConfigKey *>(keyId,pConfigKey));
+                }
             }
-            return true;
+        } else {
+            // Run through list of active keys to see if the released key is active
+            // Just for returning true if we are consuming this key event
+            QListIterator<QPair<int, ConfigKey *> > it(m_qActiveKeyList);
+            while (it.hasNext()) {
+                if (it.next().first == keyId)
+                {
+                    return true;
+                }
+            }
         }
     } else if (e->type()==QEvent::KeyRelease) {
         QKeyEvent * ke = (QKeyEvent *)e;
 
+#ifdef __OSX__
+        // On Mac OSX the nativeScanCode is empty
+        int keyId = ke->key();
+#else
+        int keyId = ke->nativeScanCode();
+#endif
+
+        //qDebug() << "key event =" << ke->key() << ke->nativeVirtualKey() << ke->nativeScanCode();
+
         // Run through list of active keys to see if the released key is active
-        int key = -1;
-        QListIterator<int> it(m_qActiveKeyList);
-
-        while (it.hasNext()) {
-            key = it.next();
-            if (key == ke->key())
+        // use removeAll because there my be doublets because of lost release events on Mac OSX
+        bool react = false;
+        for (int i = m_qActiveKeyList.size() - 1; i >= 0; i--) {
+            if (m_qActiveKeyList[i].first == keyId)
             {
-                //qDebug() << "release";
-
-                bool autoRepeat = ke->isAutoRepeat();
-                if (kbdPress(getKeySeq(ke), true, autoRepeat)) {
-                    if (!autoRepeat) {
-                        //qDebug() << "release else";
-                        m_qActiveKeyList.removeOne(key);
-                    }
-                    return true;
+                if (!react) {
+                    ControlObject::getControl(*(m_qActiveKeyList[i].second))->queueFromMidi(NOTE_OFF, 0);
+                    react = true; // Do not return here because of possible doublets on Mac OSX
+                                // due to lost release events
                 }
-                return false;
+                m_qActiveKeyList.removeAt(i);
             }
         }
+        return react;
     }
     return false;
-}
-
-bool MixxxKeyboard::kbdPress(QString k, bool release, bool autoRepeat)
-{
-    bool react = false;
-
-    if (!k.isEmpty())
-    {
-        // Check if a shortcut is defined
-        ConfigKey * pConfigKey = m_pKbdConfigObject->get(ConfigValueKbd(k));
-
-        react = pConfigKey != NULL;
-
-        if (pConfigKey && !autoRepeat)
-        {
-            if (release) {
-                //qDebug() << "Sending MIDI NOTE_OFF";
-                ControlObject::getControl(*pConfigKey)->queueFromMidi(NOTE_OFF, 0);
-            }
-            else
-            {
-                //qDebug() << "Sending MIDI NOTE_ON";
-                ControlObject::getControl(*pConfigKey)->queueFromMidi(NOTE_ON, 1);
-            }
-        }
-    }
-    return react;
 }
 
 QString MixxxKeyboard::getKeySeq(QKeyEvent * e)

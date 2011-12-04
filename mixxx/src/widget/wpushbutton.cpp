@@ -69,13 +69,17 @@ void WPushButton::setup(QDomNode node)
         state = state.nextSibling();
     }
 
-    m_bLeftClickForcePush = false;
-    if (selectNodeQString(node, "LeftClickIsPushButton").contains("true", Qt::CaseInsensitive))
+    if (selectNodeQString(node, "LeftClickIsPushButton").contains("true", Qt::CaseInsensitive)) {
         m_bLeftClickForcePush = true;
+    } else {
+        m_bLeftClickForcePush = false;
+    }
 
-    m_bRightClickForcePush = false;
-    if (selectNodeQString(node, "RightClickIsPushButton").contains("true", Qt::CaseInsensitive))
+    if (selectNodeQString(node, "RightClickIsPushButton").contains("true", Qt::CaseInsensitive)) {
         m_bRightClickForcePush = true;
+    } else {
+        m_bRightClickForcePush = false;
+    }
 
     // BJW: Removed toggle button detection so that buttons that are hardcoded as toggle in the source
     // don't isLeftButtonget overridden if a skin fails to set them to 2-state. Buttons still
@@ -196,7 +200,6 @@ void WPushButton::mousePressEvent(QMouseEvent * e)
     } else if (rightClick) {
         emit(valueChangedRightDown(emitValue));
     }
-
     update();
 }
 

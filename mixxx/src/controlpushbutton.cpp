@@ -31,7 +31,7 @@ ControlPushButton::~ControlPushButton() {
 }
 
 // Tell this PushButton whether or not it's a "toggle" push button...
-// This is only used for values from Midi
+// This is only used for values from Midi and Keyboard
 void ControlPushButton::setToggleButton(bool bIsToggleButton) {
     //qDebug() << "Setting " << m_Key.group << m_Key.item << "as toggle";
     m_bIsToggleButton = bIsToggleButton;
@@ -42,8 +42,9 @@ void ControlPushButton::setStates(int num_states) {
 }
 
 void ControlPushButton::setValueFromMidi(MidiCategory c, double v) {
-    //if (m_bMidiSimulateLatching)
+    // keyboard events are handled by this function as well
 
+    //if (m_bMidiSimulateLatching)
     //qDebug() << "bMidiSimulateLatching is true!";
     // Only react on NOTE_ON midi events if simulating latching...
 

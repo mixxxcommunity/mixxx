@@ -43,11 +43,10 @@ public:
     ConfigObject<ConfigValueKbd>* getKeyboardConfig();
 
 private:
-    bool kbdPress(QString k, bool release, bool autoRepeat);
     /** Returns a valid QString with modifier keys from a QKeyEvent */
     QString getKeySeq(QKeyEvent *e);
     /** List containing keys which is currently pressed */
-    QList<int> m_qActiveKeyList;
+    QList<QPair<int, ConfigKey*> > m_qActiveKeyList;
     /** Pointer to keyboard config object */
     ConfigObject<ConfigValueKbd> *m_pKbdConfigObject;
 };
