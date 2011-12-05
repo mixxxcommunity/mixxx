@@ -49,7 +49,7 @@ bool MixxxKeyboard::eventFilter(QObject *, QEvent * e) {
 
         bool autoRepeat = ke->isAutoRepeat();
 
-        //qDebug() << "key event =" << ke->key() << "AtoRepeat =" << autoRepeat;
+        //qDebug() << "key event =" << ke->key() << "AutoRepeat =" << autoRepeat;
 
         if (!autoRepeat) {
             QString keystring = getKeySeq(ke);
@@ -85,6 +85,7 @@ bool MixxxKeyboard::eventFilter(QObject *, QEvent * e) {
 #else
         int keyId = ke->nativeScanCode();
 #endif
+        bool autoRepeat = ke->isAutoRepeat();
 
         //qDebug() << "key event =" << ke->key() << ke->nativeVirtualKey() << ke->nativeScanCode();
 
@@ -94,12 +95,16 @@ bool MixxxKeyboard::eventFilter(QObject *, QEvent * e) {
         for (int i = m_qActiveKeyList.size() - 1; i >= 0; i--) {
             if (m_qActiveKeyList[i].first == keyId)
             {
-                if (!react) {
-                    ControlObject::getControl(*(m_qActiveKeyList[i].second))->queueFromMidi(NOTE_OFF, 0);
-                    react = true; // Do not return here because of possible doublets on Mac OSX
-                                // due to lost release events
+                if(!autoRepeat) {
+                    if (!react) {
+                        ControlObject::getControl(*(m_qActiveKeyList[i].second))->queueFromMidi(NOTE_OFF, 0);
+                        react = true; // Do not return here because of possible doublets on Mac OSX
+                                    // due to lost release events
+                    }
+                    m_qActiveKeyList.removeAt(i);
+                } else {
+                    return true;
                 }
-                m_qActiveKeyList.removeAt(i);
             }
         }
         return react;

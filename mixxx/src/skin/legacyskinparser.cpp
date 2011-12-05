@@ -1008,7 +1008,12 @@ void LegacySkinParser::setupConnections(QDomNode node, QWidget* pWidget) {
             QString shortcut = m_pKeyboard->getKeyboardConfig()->getValueString(configKey);
             if (!shortcut.isEmpty()) {
                 // translate shortcut to native text
+#if QT_VERSION >= 0x040700
                 shortcut = QKeySequence(shortcut, QKeySequence::PortableText).toString(QKeySequence::NativeText);
+#else
+                QKeySequence keySec = QKeySequence::fromString(shortcut, QKeySequence::PortableText);
+                shortcut = keySec.toString(QKeySequence::NativeText);
+#endif
                 tooltip += "\n";
                 tooltip += tr("Shortcut");
                 tooltip += ": ";
