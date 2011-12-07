@@ -95,8 +95,9 @@ bool PlaylistTableModel::addTrack(const QModelIndex& index, QString location) {
 }
 
 bool PlaylistTableModel::appendTrack(int trackId) {
-    if (trackId < 0)
+    if (trackId < 0) {
         return false;
+	}
 
     m_playlistDao.appendTrackToPlaylist(trackId, m_iPlaylistId);
 

@@ -227,7 +227,6 @@ class MixxxApp : public QMainWindow
     int noOutputDlg(bool *continueClicked);
     // Fullscreen patch
     QPoint m_winpos;
-
     bool m_NativeMenuBarSupport;
 };
 

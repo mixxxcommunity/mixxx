@@ -950,7 +950,6 @@ void MixxxApp::initMenuBar()
     menuBar()->addMenu(m_pHelpMenu);
 
     m_NativeMenuBarSupport = menuBar()->isNativeMenuBar();
-
 }
 
 void MixxxApp::slotlibraryMenuAboutToShow(){
@@ -1220,6 +1219,7 @@ void MixxxApp::slotHelpAbout()
 "Thanasis Liappis<br>"
 "Jens Nachtigall<br>"
 "Scott Ullrich<br>"
+"Jonas &Aring;dahl<br>"
 
 "</p>"
 "<p align=\"center\"><b>And special thanks to:</b></p>"

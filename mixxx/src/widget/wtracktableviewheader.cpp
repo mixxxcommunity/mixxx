@@ -13,7 +13,6 @@ WTrackTableViewHeader::WTrackTableViewHeader(Qt::Orientation orientation,
         : QHeaderView(orientation, parent),
           m_menu(tr("Show or hide columns."), this),
           m_signalMapper(this) {
-    //Allow the columns to be reordered.
     connect(&m_signalMapper, SIGNAL(mapped(int)),
             this, SLOT(showOrHideColumn(int)));
 }
