@@ -63,6 +63,7 @@ bool MixxxKeyboard::eventFilter(QObject *, QEvent * e) {
                     ControlObject::getControl(*pConfigKey)->queueFromMidi(NOTE_ON, 1);
                     // Add key to active key list
                     m_qActiveKeyList.append(QPair<int, ConfigKey *>(keyId,pConfigKey));
+                    return true;
                 }
             }
         } else {

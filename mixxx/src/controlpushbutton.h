@@ -20,6 +20,7 @@
 
 #include "controlobject.h"
 #include "defs.h"
+#include <QTimer>
 
 /**
   *@author Tue and Ken Haste Andersen
@@ -29,17 +30,24 @@ class ControlPushButton : public ControlObject
 {
     Q_OBJECT
 public:
+    enum MidiButtonMode {
+        PUSH,
+        TOGGLE,
+        POWERWINDOW
+    };
+
     ControlPushButton(ConfigKey key);
     ~ControlPushButton();
-    void setToggleButton(bool bIsToggleButton);
+    void setMidiButtonMode(enum MidiButtonMode mode);
     void setStates(int num_states);
 
 protected:
     void setValueFromMidi(MidiCategory c, double v);
 
 private:
-    bool m_bIsToggleButton;
+    enum MidiButtonMode m_midiButtonMode;
     int m_iNoStates;
+    QTimer m_pushTimer;
 };
 
 #endif

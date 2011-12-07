@@ -529,7 +529,7 @@ void LoopingControl::slotBeatLoop(double beats, bool keepStartPoint)
 BeatLoopingControl::BeatLoopingControl(const char* pGroup, double size)
         : m_dBeatLoopSize(size) {
     m_pPBActivateBeatLoop = new ControlPushButton(keyForControl(pGroup, "beatloop", size));
-    m_pPBActivateBeatLoop->setToggleButton(true);
+    m_pPBActivateBeatLoop->setMidiButtonMode(ControlPushButton::TOGGLE);
     m_pPBActivateBeatLoop->setStates(2);
     connect(m_pPBActivateBeatLoop, SIGNAL(valueChanged(double)),
             this, SLOT(slotBeatLoopActivate(double)),
