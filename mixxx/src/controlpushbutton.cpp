@@ -30,7 +30,7 @@ ControlPushButton::ControlPushButton(ConfigKey key) :
 ControlPushButton::~ControlPushButton() {
 }
 
-// Tell this PushButton whether or not it's a "toggle" push button...
+// Tell this PushButton how to act on rising and falling edges 
 // This is only used for values from Midi and Keyboard
 void ControlPushButton::setMidiButtonMode(enum MidiButtonMode mode) {
     //qDebug() << "Setting " << m_Key.group << m_Key.item << "as toggle";
@@ -45,6 +45,7 @@ void ControlPushButton::setValueFromMidi(MidiCategory c, double v) {
     // keyboard events are handled by this function as well
 
     //if (m_bMidiSimulateLatching)
+
     //qDebug() << "bMidiSimulateLatching is true!";
     // Only react on NOTE_ON midi events if simulating latching...
 

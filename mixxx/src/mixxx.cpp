@@ -1157,7 +1157,11 @@ void MixxxApp::slotHelpAbout()
 {
 
     DlgAbout *about = new DlgAbout(this);
-    about->version_label->setText(VERSION);
+    QString version_ident = VERSION;
+    version_ident += " (bzr #";
+    version_ident += BUILD_REV;
+    version_ident += ")";
+    about->version_label->setText(version_ident);
     QString credits =
     QString("<p align=\"center\"><b>Mixxx %1 Development Team</b></p>"
 "<p align=\"center\">"
