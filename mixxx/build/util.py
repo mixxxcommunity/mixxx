@@ -5,6 +5,9 @@ import re
 def get_bzr_revision():
     return os.popen("bzr revno").readline().strip()
 
+def get_bzr_modified():
+    return len(os.popen("bzr modified").readline().strip())
+
 def get_bzr_branch_name():
     output_lines = os.popen("bzr info").read().splitlines()
 
@@ -44,7 +47,7 @@ def get_mixxx_version():
         If nothing there, uses defs_version.h.
     """
     #have to handle out-of-tree building, that's why the '#' :(
-    buld = Script.File('#src/build.h')
+    buld = Script.File('build.h')
     defs = Script.File('#src/defs_version.h')
     version = ""
 

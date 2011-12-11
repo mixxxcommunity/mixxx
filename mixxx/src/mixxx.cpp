@@ -1155,7 +1155,6 @@ void MixxxApp::slotOptionsRecord(bool toggle)
 
 void MixxxApp::slotHelpAbout()
 {
-
     DlgAbout *about = new DlgAbout(this);
     QString version_ident = VERSION;
     version_ident += " (bzr #";
