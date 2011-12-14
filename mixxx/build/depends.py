@@ -436,6 +436,9 @@ class MixxxCore(Feature):
                    "library/rhythmbox/rhythmboxtrackmodel.cpp",
                    "library/rhythmbox/rhythmboxplaylistmodel.cpp",
 
+                   "library/banshee/bansheefeature.cpp",
+                   "library/banshee/bansheeplaylistmodel.cpp",
+
                    "library/itunes/itunesfeature.cpp",
                    "library/itunes/itunestrackmodel.cpp",
                    "library/itunes/itunesplaylistmodel.cpp",

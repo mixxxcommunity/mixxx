@@ -1,6 +1,6 @@
 
-#ifndef IPODFEATURE_H
-#define IPODFEATURE_H
+#ifndef BANSHEEFEATURE_H
+#define BANSHEEFEATURE_H
 
 #include <QStringListModel>
 #include <QtSql>
@@ -18,13 +18,13 @@ extern "C"
 #include <gpod/itdb.h>
 }
 
-class IPodPlaylistModel;
+class BansheePlaylistModel;
 
-class IPodFeature : public LibraryFeature {
+class BansheeFeature : public LibraryFeature {
  Q_OBJECT
  public:
-    IPodFeature(QObject* parent, TrackCollection* pTrackCollection);
-    virtual ~IPodFeature();
+    BansheeFeature(QObject* parent, TrackCollection* pTrackCollection);
+    virtual ~BansheeFeature();
     static bool isSupported();
 
     QVariant title();
@@ -54,7 +54,7 @@ class IPodFeature : public LibraryFeature {
     //returns the invisible rootItem for the sidebar model
     TreeItem* importLibrary();
     void addToAutoDJ(bool bTop);
-    QString detectMountPoint(QString iPodMountPoint);
+    QString detectMountPoint(QString BansheeMountPoint);
 
     QAction* m_pAddToAutoDJAction;
     QAction* m_pAddToAutoDJTopAction;
@@ -62,7 +62,7 @@ class IPodFeature : public LibraryFeature {
 
     QModelIndex m_lastRightClickedIndex;
 
-    IPodPlaylistModel* m_pIPodPlaylistModel;
+    BansheePlaylistModel* m_pBansheePlaylistModel;
     TreeItemModel m_childModel;
     QStringList m_playlists;
     TrackCollection* m_pTrackCollection;
@@ -81,7 +81,7 @@ class IPodFeature : public LibraryFeature {
 
     Itdb_iTunesDB* m_itdb;
 
-    static const QString IPOD_MOUNT_KEY;
+    static const QString BANSHEE_MOUNT_KEY;
 };
 
-#endif /* IPODFEATURE_H */
+#endif /* BANSHEEFEATURE_H */
