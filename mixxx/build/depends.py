@@ -438,6 +438,7 @@ class MixxxCore(Feature):
 
                    "library/banshee/bansheefeature.cpp",
                    "library/banshee/bansheeplaylistmodel.cpp",
+				   "library/banshee/bansheedbconnection.cpp",
 
                    "library/itunes/itunesfeature.cpp",
                    "library/itunes/itunestrackmodel.cpp",

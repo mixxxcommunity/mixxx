@@ -87,6 +87,9 @@ void BansheeFeature::activate(bool forceReload) {
 
         SettingsDAO settings(m_pTrackCollection->getDatabase());
 
+        // Besser aus der Textdatei Lesen
+//         tmp_string = m_pConfig->getValueString(ConfigKey(SHOUTCAST_PREF_KEY,"stream_website"));
+
         QString dbSetting(settings.getValue(BANSHEE_MOUNT_KEY));
         // if a path exists in the database, use it
         if (!dbSetting.isEmpty() && QFile::exists(dbSetting)) {
