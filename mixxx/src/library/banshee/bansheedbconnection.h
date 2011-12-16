@@ -30,12 +30,10 @@ public:
   public:
     BansheeDbConnection() : this (DatabaseFile)
     {
-        validate_schema = ApplicationContext.CommandLine.Contains ("validate-db-schema");
-    }
+   }
 
   private:
     BansheeDbFormatMigrator migrator;
     DatabaseConfigurationClient configuration;
-    bool validate_schema = false;
 */
 };

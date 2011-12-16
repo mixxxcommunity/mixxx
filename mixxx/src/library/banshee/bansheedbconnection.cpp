@@ -190,28 +190,6 @@ bool BansheeDbConnection::ValidateSchema ()
 
 */
 
-/*
-        private static string legacy_application_data = Path.Combine (Environment.GetFolderPath (
-            Environment.SpecialFolder.ApplicationData), "banshee");
-
-        public static string LegacyApplicationData {
-            get { return legacy_application_data; }
-        }
-
-        private static string application_data = Path.Combine (Environment.GetFolderPath (
-            Environment.SpecialFolder.ApplicationData), "banshee-1");
-
-        public static string ApplicationData {
-            get {
-                if (!Directory.Exists (application_data)) {
-                    Directory.CreateDirectory (application_data);
-                }
-
-                return application_data;
-            }
-        }
-*/
-
 
 // static
 QString BansheeDbConnection::getDatabaseFile() {

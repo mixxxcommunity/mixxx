@@ -73,8 +73,9 @@ Library::Library(QObject* parent, ConfigObject<ConfigValue>* pConfig, bool first
     //mouse or keyboard if you're using MIDI control and you scroll through them...)
     if (RhythmboxFeature::isSupported())
         addFeature(new RhythmboxFeature(this, m_pTrackCollection));
+    BansheeFeature::prepareDbPath(pConfig);
     if (BansheeFeature::isSupported())
-        addFeature(new BansheeFeature(this, m_pTrackCollection));
+        addFeature(new BansheeFeature(this, m_pTrackCollection, pConfig));
     if (ITunesFeature::isSupported() && pConfig->getValueString(ConfigKey("[Library]","ShowItunesLibrary"),"1").toInt())
         addFeature(new ITunesFeature(this, m_pTrackCollection));
 #ifdef __IPOD__

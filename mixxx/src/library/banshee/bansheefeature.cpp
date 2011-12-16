@@ -13,13 +13,19 @@
 
 
 const QString BansheeFeature::BANSHEE_MOUNT_KEY = "mixxx.BansheeFeature.mount";
+QString BansheeFeature::m_databaseFile;
 
-
-BansheeFeature::BansheeFeature(QObject* parent, TrackCollection* pTrackCollection)
+BansheeFeature::BansheeFeature(QObject* parent, TrackCollection* pTrackCollection, ConfigObject<ConfigValue>* pConfig)
         : LibraryFeature(parent),
           m_pTrackCollection(pTrackCollection),
           m_cancelImport(false)
 {
+    m_databaseFile = pConfig->getValueString(ConfigKey("[Banshee]","Database"));
+    if (!QFile::exists(m_databaseFile)) {
+        // Fall back to default
+        m_databaseFile = BansheeDbConnection::getDatabaseFile();
+    }
+
     m_pBansheePlaylistModel = new BansheePlaylistModel(this, m_pTrackCollection);
     m_isActivated = false;
     m_title = tr("Banshee");
@@ -37,8 +43,6 @@ BansheeFeature::BansheeFeature(QObject* parent, TrackCollection* pTrackCollectio
     m_pImportAsMixxxPlaylistAction = new QAction(tr("Import as Mixxx Playlist"), this);
     connect(m_pImportAsMixxxPlaylistAction, SIGNAL(triggered()),
             this, SLOT(slotImportAsMixxxPlaylist()));
-
-    qDebug() << QDesktopServices::storageLocation(QDesktopServices::ApplicationsLocation);
 }
 
 BansheeFeature::~BansheeFeature() {
@@ -59,16 +63,17 @@ BansheeFeature::~BansheeFeature() {
 
 // static
 bool BansheeFeature::isSupported() {
-
-    QString path = BansheeDbConnection::getDatabaseFile();
-    qDebug() << "banshee database Path" << path;
-
-    if (path.isEmpty()) {
-        return false;
-    }
-    return true;
+    return !m_databaseFile.isEmpty();
 }
 
+// static
+void BansheeFeature::prepareDbPath(ConfigObject<ConfigValue>* pConfig) {
+    m_databaseFile = pConfig->getValueString(ConfigKey("[Banshee]","Database"));
+    if (!QFile::exists(m_databaseFile)) {
+        // Fall back to default
+        m_databaseFile = BansheeDbConnection::getDatabaseFile();
+    }
+}
 
 QVariant BansheeFeature::title() {
     return m_title;

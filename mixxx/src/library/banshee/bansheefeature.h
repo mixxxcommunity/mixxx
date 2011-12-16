@@ -19,9 +19,10 @@ class BansheePlaylistModel;
 class BansheeFeature : public LibraryFeature {
  Q_OBJECT
  public:
-    BansheeFeature(QObject* parent, TrackCollection* pTrackCollection);
+    BansheeFeature(QObject* parent, TrackCollection* pTrackCollection, ConfigObject<ConfigValue>* pConfig);
     virtual ~BansheeFeature();
     static bool isSupported();
+    static void prepareDbPath(ConfigObject<ConfigValue>* pConfig);
 
     QVariant title();
     QIcon getIcon();
@@ -72,7 +73,8 @@ class BansheeFeature : public LibraryFeature {
     QString m_title;
     bool m_cancelImport;
 
-    QString m_dbItunesRoot;
+    static QString m_databaseFile;
+
     QString m_mixxxItunesRoot;
 
     static const QString BANSHEE_MOUNT_KEY;
