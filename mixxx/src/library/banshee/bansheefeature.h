@@ -13,10 +13,6 @@
 #include "library/treeitemmodel.h"
 #include "library/treeitem.h"
 
-extern "C"
-{
-#include <gpod/itdb.h>
-}
 
 class BansheePlaylistModel;
 
@@ -78,8 +74,6 @@ class BansheeFeature : public LibraryFeature {
 
     QString m_dbItunesRoot;
     QString m_mixxxItunesRoot;
-
-    Itdb_iTunesDB* m_itdb;
 
     static const QString BANSHEE_MOUNT_KEY;
 };

@@ -8,9 +8,6 @@
 #include "track/beatfactory.h"
 #include "track/beats.h"
 
-extern "C" {
-#include <glib-object.h> // g_type_init
-}
 
 const bool sDebug = false;
 
@@ -21,8 +18,8 @@ BansheePlaylistModel::BansheePlaylistModel(QObject* pParent, TrackCollection* pT
            m_iSortColumn(0),
            m_eSortOrder(Qt::AscendingOrder),
            m_pTrackCollection(pTrackCollection),
-           m_trackDAO(m_pTrackCollection->getTrackDAO()),
-           m_pPlaylist(NULL)
+           m_trackDAO(m_pTrackCollection->getTrackDAO())
+ //          m_pPlaylist(NULL)
 {
     initHeaderData();
 }
@@ -163,9 +160,11 @@ void BansheePlaylistModel::sort(int column, Qt::SortOrder order) {
 }
 
 int BansheePlaylistModel::rowCount(const QModelIndex& parent) const {
+/*
     if (m_pPlaylist && !parent.isValid()) {
         return m_sortedPlaylist.size();
     }
+    */
     return 0;
 }
 
@@ -194,7 +193,7 @@ QVariant BansheePlaylistModel::data(const QModelIndex& index, int role) const {
         return QVariant();
     }
 
-
+/*
     Itdb_Track* pTrack = getPTrackFromModelIndex(index);
     if (!pTrack) {
         return QVariant();
@@ -245,7 +244,7 @@ QVariant BansheePlaylistModel::data(const QModelIndex& index, int role) const {
 
         value = QVariant(ret);
     }
-
+*/
 
 /*
     // This value is the value in its most raw form. It was looked up either
@@ -295,13 +294,13 @@ QVariant BansheePlaylistModel::data(const QModelIndex& index, int role) const {
                 value = played ? Qt::Checked : Qt::Unchecked;
             } else {
             */
-            value = QVariant();
+           // value = QVariant();
             //}
             break;
         default:
             break;
     }
-    return value;
+    return QVariant();
 }
 
 bool BansheePlaylistModel::setData(const QModelIndex& index, const QVariant& value, int role) {
@@ -423,7 +422,7 @@ void BansheePlaylistModel::trackChanged(int trackId) {
 //static
 bool BansheePlaylistModel::columnLessThan(const playlist_member &s1, const playlist_member &s2) {
     bool ret;
-
+/*
     size_t structOffset = s1.pClass->m_headerList.at(s1.pClass->m_iSortColumn).second;
 
     if (structOffset == 0xffff) { // "#"
@@ -452,6 +451,7 @@ bool BansheePlaylistModel::columnLessThan(const playlist_member &s1, const playl
     if (s1.pClass->m_eSortOrder != Qt::AscendingOrder) {
         return !ret;
     }
+    */
     return ret;
 }
 
@@ -627,6 +627,7 @@ QVariant BansheePlaylistModel::getBaseValue(const QModelIndex& index, int role) 
     return getTrackValueForColumn(trackId, column);
 }
 
+/*
 void BansheePlaylistModel::setPlaylist(Itdb_Playlist* pPlaylist) {
     if (m_pPlaylist) {
         beginRemoveRows(QModelIndex(), 0, m_sortedPlaylist.size()-1);
@@ -683,8 +684,12 @@ void BansheePlaylistModel::setPlaylist(Itdb_Playlist* pPlaylist) {
 
         endInsertRows();
     }
-}
 
+}
+*/
+
+
+/*
 //static
 bool BansheePlaylistModel::findInUtf8Case(gchar* heystack, gchar* needles) {
     bool ret = true;
@@ -715,15 +720,17 @@ bool BansheePlaylistModel::findInUtf8Case(gchar* heystack, gchar* needles) {
     g_strfreev(needle);
     return ret;
 }
+*/
 
 TrackPointer BansheePlaylistModel::getTrack(const QModelIndex& index) const {
 
-    Itdb_Track* pTrack = getPTrackFromModelIndex(index);
-    if (!pTrack) {
+//    Itdb_Track* pTrack = getPTrackFromModelIndex(index);
+//    if (!pTrack) {
         return TrackPointer();
-    }
+/*
+}
 
-    QString location = itdb_get_mountpoint(m_pPlaylist->itdb);
+    QString location; // = itdb_get_mountpoint(m_pPlaylist->itdb);
     QString banshee_path; // = pTrack->banshee_path;
     banshee_path.replace(QString(":"), QString("/"));
     location += banshee_path;
@@ -767,21 +774,23 @@ TrackPointer BansheePlaylistModel::getTrack(const QModelIndex& index) const {
     }
 
     return pTrackP;
+    */
 }
 // Gets the on-disk location of the track at the given location.
 QString BansheePlaylistModel::getTrackLocation(const QModelIndex& index) const {
 
-    Itdb_Track* pTrack = getPTrackFromModelIndex(index);
-    if (!pTrack) {
+    //Itdb_Track* pTrack = getPTrackFromModelIndex(index);
+    //if (!pTrack) {
         return QString();
-    }
+ /*   }
 
-    QString location = itdb_get_mountpoint(m_pPlaylist->itdb);
+    QString location; // = itdb_get_mountpoint(m_pPlaylist->itdb);
     QString banshee_path; // = pTrack->banshee_path;
     banshee_path.replace(QString(":"), QString("/"));
     location += banshee_path;
 
     return location;
+    */
 }
 
 // Gets a significant hint of the track at the given QModelIndex
@@ -815,9 +824,9 @@ void BansheePlaylistModel::search(const QString& searchText) {
 
     if (m_currentSearch != searchText) {
         m_currentSearch = searchText;
-        if (itdb_playlist_is_mpl(m_pPlaylist)) {
-            setPlaylist(m_pPlaylist);
-        }
+ //       if (itdb_playlist_is_mpl(m_pPlaylist)) {
+//           setPlaylist(m_pPlaylist);
+ //       }
     }
 }
 
@@ -884,6 +893,7 @@ QItemDelegate* BansheePlaylistModel::delegateForColumn(const int i) {
     return NULL;
 }
 
+/*
 Itdb_Track* BansheePlaylistModel::getPTrackFromModelIndex(const QModelIndex& index) const {
     if (   !index.isValid()
         || m_pPlaylist == NULL
@@ -900,3 +910,4 @@ Itdb_Track* BansheePlaylistModel::getPTrackFromModelIndex(const QModelIndex& ind
     }
     return m_sortedPlaylist.at(row).pTrack;
 }
+*/

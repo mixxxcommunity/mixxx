@@ -6,13 +6,11 @@
 #include <QMenu>
 #include <QAction>
 
+#include "library/banshee/bansheedbconnection.h"
 #include "library/banshee/bansheefeature.h"
 #include "library/banshee/bansheeplaylistmodel.h"
 #include "library/dao/settingsdao.h"
 
-extern "C" {
-#include <glib-object.h> // g_type_init
-}
 
 const QString BansheeFeature::BANSHEE_MOUNT_KEY = "mixxx.BansheeFeature.mount";
 
@@ -20,8 +18,7 @@ const QString BansheeFeature::BANSHEE_MOUNT_KEY = "mixxx.BansheeFeature.mount";
 BansheeFeature::BansheeFeature(QObject* parent, TrackCollection* pTrackCollection)
         : LibraryFeature(parent),
           m_pTrackCollection(pTrackCollection),
-          m_cancelImport(false),
-          m_itdb( 0 )
+          m_cancelImport(false)
 {
     m_pBansheePlaylistModel = new BansheePlaylistModel(this, m_pTrackCollection);
     m_isActivated = false;
@@ -40,6 +37,8 @@ BansheeFeature::BansheeFeature(QObject* parent, TrackCollection* pTrackCollectio
     m_pImportAsMixxxPlaylistAction = new QAction(tr("Import as Mixxx Playlist"), this);
     connect(m_pImportAsMixxxPlaylistAction, SIGNAL(triggered()),
             this, SLOT(slotImportAsMixxxPlaylist()));
+
+    qDebug() << QDesktopServices::storageLocation(QDesktopServices::ApplicationsLocation);
 }
 
 BansheeFeature::~BansheeFeature() {
@@ -51,9 +50,7 @@ BansheeFeature::~BansheeFeature() {
         m_future.waitForFinished();
         qDebug() << "m_future finished";
     }
-    if (m_itdb) {
-        itdb_free( m_itdb );
-    }
+
     delete m_pBansheePlaylistModel;
     delete m_pAddToAutoDJAction;
     delete m_pAddToAutoDJTopAction;
@@ -62,8 +59,13 @@ BansheeFeature::~BansheeFeature() {
 
 // static
 bool BansheeFeature::isSupported() {
-    // itunes db might just be elsewhere, don't rely on it being in its
-    // normal place. And since we will load an itdb on any platform...
+
+    QString path = BansheeDbConnection::getDatabaseFile();
+    qDebug() << "banshee database Path" << path;
+
+    if (path.isEmpty()) {
+        return false;
+    }
     return true;
 }
 
@@ -121,7 +123,7 @@ void BansheeFeature::activate(bool forceReload) {
         emit (featureIsLoading(this));
     }
     else{
-        m_pBansheePlaylistModel->setPlaylist(itdb_playlist_mpl(m_itdb)); // Gets the master playlist
+        //m_pBansheePlaylistModel->setPlaylist(itdb_playlist_mpl(m_itdb)); // Gets the master playlist
         emit(showTrackModel(m_pBansheePlaylistModel));
     }
 }
@@ -173,13 +175,14 @@ void BansheeFeature::activateChild(const QModelIndex& index) {
     TreeItem *item = static_cast<TreeItem*>(index.internalPointer());
     qDebug() << "BansheeFeature::activateChild " << item->data() << " " << item->dataPath();
     QString playlist = item->dataPath().toString();
-    Itdb_Playlist* pPlaylist = (Itdb_Playlist*)playlist.toUInt();
+ /*   Itdb_Playlist* pPlaylist = (Itdb_Playlist*)playlist.toUInt();
 
     if (pPlaylist) {
         qDebug() << "Activating " << QString::fromUtf8(pPlaylist->name);
     }
     m_pBansheePlaylistModel->setPlaylist(pPlaylist);
     emit(showTrackModel(m_pBansheePlaylistModel));
+    */
 }
 
 TreeItemModel* BansheeFeature::getChildModel() {
@@ -230,14 +233,14 @@ bool BansheeFeature::dragMoveAcceptChild(const QModelIndex& index, QUrl url) {
  * via QtConcurrent::run
  */
 TreeItem* BansheeFeature::importLibrary() {
-    // Give thread a low priority
+   // Give thread a low priority
     QThread* thisThread = QThread::currentThread();
     thisThread->setPriority(QThread::LowestPriority);
 
     qDebug() << "BansheeFeature::importLibrary() ";
 
     TreeItem* playlist_root = new TreeItem();
-
+/*
     GError* err = 0;
     qDebug() << "Calling the libgpod db parser for:" << m_dbfile.toUtf8();
     m_itdb = itdb_parse(m_dbfile.toUtf8(), &err);
@@ -270,6 +273,7 @@ TreeItem* BansheeFeature::importLibrary() {
             }
         }
     }
+    */
     return playlist_root;
 }
 
@@ -320,7 +324,7 @@ void BansheeFeature::addToAutoDJ(bool bTop) {
         TreeItem *item = static_cast<TreeItem*>(m_lastRightClickedIndex.internalPointer());
         qDebug() << "BansheeFeature::addToAutoDJ " << item->data() << " " << item->dataPath();
         QString playlist = item->dataPath().toString();
-        Itdb_Playlist* pPlaylist = (Itdb_Playlist*)playlist.toUInt();
+ /*       Itdb_Playlist* pPlaylist = (Itdb_Playlist*)playlist.toUInt();
         if (pPlaylist) {
             BansheePlaylistModel* pPlaylistModelToAdd = new BansheePlaylistModel(this, m_pTrackCollection);
             pPlaylistModelToAdd->setPlaylist(pPlaylist);
@@ -342,6 +346,7 @@ void BansheeFeature::addToAutoDJ(bool bTop) {
             }
             delete pPlaylistModelToAdd;
         }
+        */
     }
 }
 
@@ -352,11 +357,12 @@ void BansheeFeature::slotImportAsMixxxPlaylist() {
         TreeItem *item = static_cast<TreeItem*>(m_lastRightClickedIndex.internalPointer());
         qDebug() << "BansheeFeature::slotImportAsMixxxPlaylist " << item->data() << " " << item->dataPath();
         QString playlist = item->dataPath().toString();
+/*
         Itdb_Playlist* pPlaylist = (Itdb_Playlist*)playlist.toUInt();
         playlist = QString::fromUtf8(pPlaylist->name);
         if (pPlaylist) {
             BansheePlaylistModel* pPlaylistModelToAdd = new BansheePlaylistModel(this, m_pTrackCollection);
-            pPlaylistModelToAdd->setPlaylist(pPlaylist);
+  //          pPlaylistModelToAdd->setPlaylist(pPlaylist);
             PlaylistDAO &playlistDao = m_pTrackCollection->getPlaylistDAO();
 
             int playlistId = playlistDao.getPlaylistIdFromName(playlist);
@@ -394,6 +400,7 @@ void BansheeFeature::slotImportAsMixxxPlaylist() {
 
             delete pPlaylistModelToAdd;
         }
+    */
     }
     emit(featureUpdated());
 }

@@ -64,8 +64,7 @@ IPodFeature::~IPodFeature() {
 
 // static
 bool IPodFeature::isSupported() {
-    // itunes db might just be elsewhere, don't rely on it being in its
-    // normal place. And since we will load an itdb on any platform...
+    // The iPod might be mount at any time at any location
     return true;
 }
 

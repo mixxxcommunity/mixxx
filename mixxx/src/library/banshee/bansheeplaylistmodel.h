@@ -10,10 +10,7 @@
 #include "library/trackcollection.h"
 #include "library/dao/trackdao.h"
 
-extern "C"
-{
-#include <gpod/itdb.h>
-}
+
 
 // BaseSqlTableModel is a custom-written SQL-backed table which aggressively
 // caches the contents of the table and supports lightweight updates.
@@ -25,7 +22,7 @@ class BansheePlaylistModel : public QAbstractTableModel , public virtual TrackMo
     struct playlist_member {
         BansheePlaylistModel* pClass;
         int pos;
-        Itdb_Track* pTrack;
+ //       Itdb_Track* pTrack;
     };
 
     BansheePlaylistModel(QObject* pParent, TrackCollection* pTrackCollection);
@@ -62,7 +59,7 @@ class BansheePlaylistModel : public QAbstractTableModel , public virtual TrackMo
     virtual QVariant headerData(int section, Qt::Orientation orientation,
                                 int role=Qt::DisplayRole) const;
 
-    void setPlaylist(Itdb_Playlist* pPlaylist);
+//    void setPlaylist(Itdb_Playlist* pPlaylist);
 
     ////////////////////////////////////////////////////////////////////////////
     // Other public methods
@@ -104,9 +101,9 @@ class BansheePlaylistModel : public QAbstractTableModel , public virtual TrackMo
     virtual int findSortInsertionPoint(int trackId, TrackPointer pTrack,
                                        const QVector<QPair<int, QHash<int, QVariant> > >& rowInfo);
 
-    Itdb_Track* getPTrackFromModelIndex(const QModelIndex& index) const;
+//    Itdb_Track* getPTrackFromModelIndex(const QModelIndex& index) const;
 
-    static bool findInUtf8Case(gchar* heystack, gchar* needles);
+//    static bool findInUtf8Case(gchar* heystack, gchar* needles);
 
     QString m_tableName;
     QStringList m_columnNames;
@@ -140,7 +137,7 @@ class BansheePlaylistModel : public QAbstractTableModel , public virtual TrackMo
     TrackCollection* m_pTrackCollection;
     TrackDAO& m_trackDAO;
 
-    Itdb_Playlist* m_pPlaylist;
+//    Itdb_Playlist* m_pPlaylist;
 };
 
 #endif /* BANSHEEPLAYLISTMODEL_H */

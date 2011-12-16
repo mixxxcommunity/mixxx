@@ -1,6 +1,10 @@
 // This file is based on BansheeDbConnection.cs from the Banshee source code
 
 #include <QtDebug>
+#include <QDesktopServices>
+#include <QSettings>
+#include <QFile>
+#include <QFileInfo>
 
 /*
 using System;
@@ -186,41 +190,62 @@ bool BansheeDbConnection::ValidateSchema ()
 
 */
 
+/*
+        private static string legacy_application_data = Path.Combine (Environment.GetFolderPath (
+            Environment.SpecialFolder.ApplicationData), "banshee");
+
+        public static string LegacyApplicationData {
+            get { return legacy_application_data; }
+        }
+
+        private static string application_data = Path.Combine (Environment.GetFolderPath (
+            Environment.SpecialFolder.ApplicationData), "banshee-1");
+
+        public static string ApplicationData {
+            get {
+                if (!Directory.Exists (application_data)) {
+                    Directory.CreateDirectory (application_data);
+                }
+
+                return application_data;
+            }
+        }
+*/
+
+
 // static
 QString BansheeDbConnection::getDatabaseFile() {
 
-/*
-    string proper_dbfile = Path.Combine (Paths.ApplicationData, "banshee.db");
-    if (File.Exists (proper_dbfile)) {
-        return proper_dbfile;
+    QString dbfile;
+
+    // Banshee Application Data Path
+    // on Windows - "%APPDATA%\banshee-1" ("<Drive>:\Documents and Settings\<login>\<Application Data>\banshee-1")
+    // on Unix and Mac OS X - "$HOME/.config/banshee-1"
+
+    QSettings ini(QSettings::IniFormat, QSettings::UserScope,
+            "banshee-1","banshee");
+    dbfile = QFileInfo(ini.fileName()).absolutePath();
+    dbfile += "/banshee.db";
+    if (QFile::exists(dbfile)) {
+        return dbfile;
     }
 
-    string dbfile = Path.Combine (Path.Combine (Environment.GetFolderPath (
-            Environment.SpecialFolder.ApplicationData),
-            "banshee"),
-            "banshee.db");
-
-    if (!File.Exists (dbfile)) {
-        string tdbfile = Path.Combine (Path.Combine (Path.Combine (Environment.GetFolderPath (
-                Environment.SpecialFolder.Personal),
-                ".gnome2"),
-                "banshee"),
-                "banshee.db");
-
-        dbfile = tdbfile;
+    // Legacy Banshee Application Data Path
+    QSettings ini2(QSettings::IniFormat, QSettings::UserScope,
+            "banshee","banshee");
+    dbfile = QFileInfo(ini2.fileName()).absolutePath();
+    dbfile += "/banshee.db";
+    if (QFile::exists(dbfile)) {
+        return dbfile;
     }
 
-    if (File.Exists (dbfile)) {
-        Log.InformationFormat ("Copying your old Banshee Database to {0}", proper_dbfile);
-        File.Copy (dbfile, proper_dbfile);
+    // Legacy Banshee Application Data Path
+    dbfile = QDesktopServices::storageLocation(QDesktopServices::HomeLocation);
+    dbfile += "/.gnome2/banshee/banshee.db";
+    if (QFile::exists(dbfile)) {
+        return dbfile;
     }
-*/
+
     return QString();
 }
-/*
-string BansheeDbConnection::IService.ServiceName {
-    get { return "DbConnection"; }
-        }
-    }
-}
-*/
+
