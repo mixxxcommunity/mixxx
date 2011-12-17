@@ -5,6 +5,7 @@
 #include <QFileDialog>
 #include <QMenu>
 #include <QAction>
+#include <QList>
 
 #include "library/banshee/bansheedbconnection.h"
 #include "library/banshee/bansheefeature.h"
@@ -20,17 +21,9 @@ BansheeFeature::BansheeFeature(QObject* parent, TrackCollection* pTrackCollectio
           m_pTrackCollection(pTrackCollection),
           m_cancelImport(false)
 {
-    m_databaseFile = pConfig->getValueString(ConfigKey("[Banshee]","Database"));
-    if (!QFile::exists(m_databaseFile)) {
-        // Fall back to default
-        m_databaseFile = BansheeDbConnection::getDatabaseFile();
-    }
-
-    m_pBansheePlaylistModel = new BansheePlaylistModel(this, m_pTrackCollection);
+    m_pBansheePlaylistModel = new BansheePlaylistModel(this, m_pTrackCollection, &m_connection);
     m_isActivated = false;
     m_title = tr("Banshee");
-
-    connect(&m_future_watcher, SIGNAL(finished()), this, SLOT(onTrackCollectionLoaded()));
 
     m_pAddToAutoDJAction = new QAction(tr("Add to Auto DJ bottom"),this);
     connect(m_pAddToAutoDJAction, SIGNAL(triggered()),
@@ -84,96 +77,62 @@ QIcon BansheeFeature::getIcon() {
 }
 
 void BansheeFeature::activate() {
-    activate(false);
-}
-
-void BansheeFeature::activate(bool forceReload) {
     //qDebug("BansheeFeature::activate()");
 
-    if (!m_isActivated || forceReload) {
+    if (!m_isActivated) {
 
-        SettingsDAO settings(m_pTrackCollection->getDatabase());
-
-        // Besser aus der Textdatei Lesen
-//         tmp_string = m_pConfig->getValueString(ConfigKey(SHOUTCAST_PREF_KEY,"stream_website"));
-
-        QString dbSetting(settings.getValue(BANSHEE_MOUNT_KEY));
-        // if a path exists in the database, use it
-        if (!dbSetting.isEmpty() && QFile::exists(dbSetting)) {
-            m_dbfile = dbSetting;
-        } else {
-            // No Path in settings
-            m_dbfile = "";
+        if (!QFile::exists(m_databaseFile)) {
+            // Fall back to default
+            m_databaseFile = BansheeDbConnection::getDatabaseFile();
         }
 
-        m_dbfile = detectMountPoint(m_dbfile);
-
-        if (!QFile::exists(m_dbfile)) {
-            m_dbfile = QFileDialog::getExistingDirectory(
-                NULL,
-                tr("Select your Banshee mount"));
-            if (m_dbfile.isEmpty()) {
-                return;
-            }
+        if (!QFile::exists(m_databaseFile)) {
+            // TODO(dsc): error handling
+            qDebug() << m_databaseFile << "does not exist";
         }
+
+        if (!m_connection.open(m_databaseFile)) {
+            QMessageBox::warning(
+                    NULL,
+                    tr("Error Loading Banshee database"),
+                    tr("There was an error loading your Banshee database at\n") +
+                    m_databaseFile);
+            return;
+        }
+
+        qDebug() << "Using Banshee Database Schema V" << m_connection.getSchemaVersion();
 
         m_isActivated =  true;
 
-        QThreadPool::globalInstance()->setMaxThreadCount(4); //Tobias decided to use 4
-        // Let a worker thread do the Banshee parsing
-        m_future = QtConcurrent::run(this, &BansheeFeature::importLibrary);
-        m_future_watcher.setFuture(m_future);
-        m_title = tr("(loading) Banshee"); // (loading) at start in respect to small displays
-        //calls a slot in the sidebar model such that '(loading)Banshee' is displayed.
-        emit (featureIsLoading(this));
-    }
-    else{
-        //m_pBansheePlaylistModel->setPlaylist(itdb_playlist_mpl(m_itdb)); // Gets the master playlist
-        emit(showTrackModel(m_pBansheePlaylistModel));
-    }
-}
+        qDebug() << "BansheeFeature::importLibrary() ";
 
-QString BansheeFeature::detectMountPoint( QString BansheeMountPoint) {
-    QFileInfoList mountpoints;
-    #ifdef __WINDOWS__
-      // Windows Banshee Detection
-      mountpoints = QDir::drives();
-    #elif __LINUX__
-      // Linux
-      mountpoints = QDir("/media").entryInfoList();
-      mountpoints += QDir("/mnt").entryInfoList();
-    #elif __OSX__
-      // Mac OSX
-      mountpoints = QDir("/Volumes").entryInfoList();
-    #endif
+        TreeItem* playlist_root = new TreeItem();
 
-    QListIterator<QFileInfo> i(mountpoints);
-    QFileInfo mp;
-    while (i.hasNext()) {
-        mp = (QFileInfo) i.next();
-        qDebug() << "mp:" << mp.filePath();
-        if( mp.filePath() != BansheeMountPoint ) {
-            if (QDir( QString(mp.filePath() + "/Banshee_Control") ).exists() ) {
-                qDebug() << "Banshee found at" << mp.filePath();
+        QList<QPair<QString, QString> > list = m_connection.getPlaylists();
 
-                // Multiple Banshee
-                if (!BansheeMountPoint.isEmpty()) {
-                    int ret = QMessageBox::warning(NULL, tr("Multiple Banshee Detected"),
-                           tr("Mixxx has detected another Banshee. \n\n")+
-                           tr("Choose Yes to use the newly found Banshee @ ")+ mp.filePath()+
-                           tr(" or to continue to search for other Banshee. \n")+
-                           tr("Choose No to use the existing Banshee @ ")+ BansheeMountPoint +
-                           tr( " and end detection. \n"),
-                           QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
-                    if (ret == QMessageBox::No) {
-                    break;
-                    }
-                }
-                BansheeMountPoint = mp.filePath();
+        QPair<QString, QString> playlist;
+        foreach (playlist, list) {
+            qDebug() << playlist.second;
+            // append the playlist to the child model
+            TreeItem *item = new TreeItem(playlist.second, playlist.first, this, playlist_root);
+            playlist_root->appendChild(item);
+        };
+
+        if(playlist_root){
+            m_childModel.setRootItem(playlist_root);
+            if (m_isActivated) {
+                activate();
             }
+            qDebug() << "Banshee library loaded: success";
         }
+
+        //calls a slot in the sidebarmodel such that 'isLoading' is removed from the feature title.
+        m_title = tr("Banshee");
+        emit(featureLoadingFinished(this));
     }
-    return BansheeMountPoint;
+
+    // m_pBansheePlaylistModel->setPlaylist(itdb_playlist_mpl(m_itdb)); // Gets the master playlist
+    emit(showTrackModel(m_pBansheePlaylistModel));
 }
 
 void BansheeFeature::activateChild(const QModelIndex& index) {
@@ -233,78 +192,6 @@ bool BansheeFeature::dragMoveAcceptChild(const QModelIndex& index, QUrl url) {
     return false;
 }
 
-/*
- * This method is executed in a separate thread
- * via QtConcurrent::run
- */
-TreeItem* BansheeFeature::importLibrary() {
-   // Give thread a low priority
-    QThread* thisThread = QThread::currentThread();
-    thisThread->setPriority(QThread::LowestPriority);
-
-    qDebug() << "BansheeFeature::importLibrary() ";
-
-    TreeItem* playlist_root = new TreeItem();
-/*
-    GError* err = 0;
-    qDebug() << "Calling the libgpod db parser for:" << m_dbfile.toUtf8();
-    m_itdb = itdb_parse(m_dbfile.toUtf8(), &err);
-
-    if (err) {
-        qDebug() << "There was an error, attempting to free db: "
-                 << err->message;
-        QMessageBox::warning(NULL, tr("Error Loading Banshee database"),
-                err->message);
-        g_error_free(err);
-        if (m_itdb) {
-            itdb_free(m_itdb);
-            m_itdb = 0;
-        }
-    } else if (m_itdb) {
-        GList* playlist_node;
-
-        for (playlist_node = g_list_first(m_itdb->playlists);
-             playlist_node != NULL;
-             playlist_node = g_list_next(playlist_node))
-        {
-            Itdb_Playlist* pPlaylist;
-            pPlaylist = (Itdb_Playlist*)playlist_node->data;
-            if (!itdb_playlist_is_mpl(pPlaylist)) {
-                QString playlistname = QString::fromUtf8(pPlaylist->name);
-                qDebug() << playlistname;
-                // append the playlist to the child model
-                TreeItem *item = new TreeItem(playlistname, QString::number((uint)pPlaylist), this, playlist_root);
-                playlist_root->appendChild(item);
-            }
-        }
-    }
-    */
-    return playlist_root;
-}
-
-void BansheeFeature::onTrackCollectionLoaded(){
-    TreeItem* root = m_future.result();
-    if(root){
-        m_childModel.setRootItem(root);
-        if (m_isActivated) {
-            activate();
-        }
-        qDebug() << "Banshee library loaded: success";
-        SettingsDAO settings(m_pTrackCollection->getDatabase());
-        settings.setValue(BANSHEE_MOUNT_KEY, m_dbfile);
-    }
-    else{
-        QMessageBox::warning(
-            NULL,
-            tr("Error Loading Banshee database"),
-            tr("There was an error loading your Banshee database. Some of "
-               "your Banshee tracks or playlists may not have loaded."));
-    }
-    //calls a slot in the sidebarmodel such that 'isLoading' is removed from the feature title.
-    m_title = tr("Banshee");
-    emit(featureLoadingFinished(this));
-    activate();
-}
 
 void BansheeFeature::onLazyChildExpandation(const QModelIndex &index){
     Q_UNUSED(index);

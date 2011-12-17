@@ -5,6 +5,8 @@
 #include <QSettings>
 #include <QFile>
 #include <QFileInfo>
+#include <QSqlError>
+#include "library/queryutil.h"
 
 /*
 using System;
@@ -29,14 +31,66 @@ using Banshee.Configuration;
 BansheeDbConnection::BansheeDbConnection() {
 
 
-
 }
 
 BansheeDbConnection::~BansheeDbConnection() {
-
-
-
+    qDebug() << "Close Banshee database";
+    m_database.close();
 }
+
+bool BansheeDbConnection::open(const QString& databaseFile) {
+    m_database = QSqlDatabase::addDatabase("QSQLITE", "BANSHE_DB_CONNECTION");
+    m_database.setHostName("localhost");
+    m_database.setDatabaseName(databaseFile);
+    m_database.setConnectOptions("SQLITE_OPEN_READONLY");
+
+    //Open the database connection in this thread.
+    if (!m_database.open()) {
+        m_database.setConnectOptions(); // clear options
+        qDebug() << "Failed to open Banshee database." << m_database.lastError();
+        return false;
+    } else {
+        // TODO(DSC): Verify schema
+        qDebug() << "Successful opened Banshee database";
+        return true;
+    }
+}
+
+int BansheeDbConnection::getSchemaVersion() {
+    QSqlQuery query(m_database);
+    query.prepare("SELECT Value FROM CoreConfiguration WHERE Key = \"DatabaseVersion\"");
+
+    if (query.exec()) {
+        if (query.next()) {
+            return query.value(0).toInt();
+        }
+    } else {
+        LOG_FAILED_QUERY(query);
+    }
+    return -1;
+}
+
+QList<QPair<QString, QString> > BansheeDbConnection::getPlaylists() {
+
+    QList<QPair<QString, QString> > list;
+    QPair<QString, QString> pair;
+
+    QSqlQuery query(m_database);
+    query.prepare("SELECT PlaylistID, Name FROM CorePlaylists");
+
+    if (query.exec()) {
+        while (query.next()) {
+            pair.first = query.value(0).toString();
+            pair.second = query.value(1).toString();
+            list.append(pair);
+        }
+    } else {
+        LOG_FAILED_QUERY(query);
+    }
+    return list;
+}
+
+
 /*
 BansheeDbConnection::BansheeDbConnection (string db_path) : base (db_path)
 {

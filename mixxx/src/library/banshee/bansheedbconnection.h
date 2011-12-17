@@ -1,24 +1,9 @@
-// This file is based on BansheeDbConnection.cs from the Banshee source code
-// #include <qstring.h>
+#ifndef BANSHEEDBCONNECTION_H
+#define BANSHEEDBCONNECTION_H
 
-/*
-using System;
-using System.Linq;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading;
+#include <QSqlDatabase>
 
-using Hyena;
-using Hyena.Data;
-using Hyena.Jobs;
-using Hyena.Data.Sqlite;
-
-using Banshee.Base;
-using Banshee.ServiceStack;
-using Banshee.Configuration;
-*/
-
-class BansheeDbConnection //  HyenaSqliteConnection, IInitializeService, IRequiredService
+class BansheeDbConnection
 {
 public:
     BansheeDbConnection();
@@ -26,14 +11,13 @@ public:
 
     static QString getDatabaseFile();
 
-    /*
-  public:
-    BansheeDbConnection() : this (DatabaseFile)
-    {
-   }
+    bool open(const QString& databaseFile);
+    int getSchemaVersion();
+    QList<QPair<QString, QString> > getPlaylists();
 
-  private:
-    BansheeDbFormatMigrator migrator;
-    DatabaseConfigurationClient configuration;
-*/
+private:
+    QSqlDatabase m_database;
+
 };
+
+#endif // BANSHEEDBCONNECTION_H

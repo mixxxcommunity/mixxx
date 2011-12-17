@@ -204,7 +204,7 @@ QString ConfigObject<ValueType>::getValueString(ConfigKey k)
 }
 
 template <class ValueType>
-QString ConfigObject<ValueType>::getValueString(ConfigKey k, QString default_string)
+QString ConfigObject<ValueType>::getValueString(ConfigKey k, const QString& default_string)
 {
     QString ret = get(k)->val->value;
     if (ret.isEmpty()) {

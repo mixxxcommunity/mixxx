@@ -2,7 +2,9 @@
 #include <QtDebug>
 #include <QTime>
 
+
 #include "library/banshee/bansheeplaylistmodel.h"
+#include "library/banshee/bansheedbconnection.h"
 #include "mixxxutils.cpp"
 #include "library/starrating.h"
 #include "track/beatfactory.h"
@@ -11,15 +13,15 @@
 
 const bool sDebug = false;
 
-BansheePlaylistModel::BansheePlaylistModel(QObject* pParent, TrackCollection* pTrackCollection)
+BansheePlaylistModel::BansheePlaylistModel(QObject* pParent, TrackCollection* pTrackCollection, BansheeDbConnection* pConnection)
         :  TrackModel(pTrackCollection->getDatabase(),
                 "mixxx.db.model.banshee_playlist"),
            QAbstractTableModel(pParent),
            m_iSortColumn(0),
            m_eSortOrder(Qt::AscendingOrder),
            m_pTrackCollection(pTrackCollection),
-           m_trackDAO(m_pTrackCollection->getTrackDAO())
- //          m_pPlaylist(NULL)
+           m_trackDAO(m_pTrackCollection->getTrackDAO()),
+           m_pConnection(pConnection)
 {
     initHeaderData();
 }

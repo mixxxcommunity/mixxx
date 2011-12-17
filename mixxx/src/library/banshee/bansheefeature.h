@@ -12,6 +12,7 @@
 #include "library/trackcollection.h"
 #include "library/treeitemmodel.h"
 #include "library/treeitem.h"
+#include "library/banshee/bansheedbconnection.h"
 
 
 class BansheePlaylistModel;
@@ -36,12 +37,10 @@ class BansheeFeature : public LibraryFeature {
 
   public slots:
     void activate();
-    void activate(bool forceReload);
     void activateChild(const QModelIndex& index);
     void onRightClick(const QPoint& globalPos);
     void onRightClickChild(const QPoint& globalPos, QModelIndex index);
     void onLazyChildExpandation(const QModelIndex& index);
-    void onTrackCollectionLoaded();
     void slotAddToAutoDJ();
     void slotAddToAutoDJTop();
     void slotImportAsMixxxPlaylist();
@@ -49,9 +48,7 @@ class BansheeFeature : public LibraryFeature {
   private:
     static QString getiTunesMusicPath();
     //returns the invisible rootItem for the sidebar model
-    TreeItem* importLibrary();
     void addToAutoDJ(bool bTop);
-    QString detectMountPoint(QString BansheeMountPoint);
 
     QAction* m_pAddToAutoDJAction;
     QAction* m_pAddToAutoDJTopAction;
@@ -64,6 +61,9 @@ class BansheeFeature : public LibraryFeature {
     QStringList m_playlists;
     TrackCollection* m_pTrackCollection;
     //a new DB connection for the worker thread
+
+    BansheeDbConnection m_connection;
+
     QSqlDatabase m_database;
     bool m_isActivated;
     QString m_dbfile;

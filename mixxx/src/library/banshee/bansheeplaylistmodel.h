@@ -10,7 +10,7 @@
 #include "library/trackcollection.h"
 #include "library/dao/trackdao.h"
 
-
+class BansheeDbConnection;
 
 // BaseSqlTableModel is a custom-written SQL-backed table which aggressively
 // caches the contents of the table and supports lightweight updates.
@@ -25,7 +25,7 @@ class BansheePlaylistModel : public QAbstractTableModel , public virtual TrackMo
  //       Itdb_Track* pTrack;
     };
 
-    BansheePlaylistModel(QObject* pParent, TrackCollection* pTrackCollection);
+    BansheePlaylistModel(QObject* pParent, TrackCollection* pTrackCollection, BansheeDbConnection* pConnection);
     virtual ~BansheePlaylistModel();
 
     ////////////////////////////////////////////////////////////////////////////
@@ -137,7 +137,7 @@ class BansheePlaylistModel : public QAbstractTableModel , public virtual TrackMo
     TrackCollection* m_pTrackCollection;
     TrackDAO& m_trackDAO;
 
-//    Itdb_Playlist* m_pPlaylist;
+    BansheeDbConnection* m_pConnection;
 };
 
 #endif /* BANSHEEPLAYLISTMODEL_H */
