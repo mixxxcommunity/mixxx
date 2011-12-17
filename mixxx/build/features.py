@@ -226,7 +226,12 @@ class IPod(Feature):
         if not self.enabled(build):
             return
 
+        gpod_found = conf.CheckLib(['libgpod','gpod'])
         build.env.Append(CPPDEFINES = '__IPOD__')
+
+        if not gpod_found:
+            raise Exception('Could not find libgpod or its development headers. Please install it or compile Mixxx without iPod support using the ipod=0 flag.')
+
         if build.platform_is_windows:
             build.env.Append(LIBS = 'gpod');
             # You must check v-this-v directory out from http://publicsvn.songbirdnest.com/vendor-binaries/trunk/windows-i686-msvc8/libgpod/
