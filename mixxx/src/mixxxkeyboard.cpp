@@ -49,7 +49,7 @@ bool MixxxKeyboard::eventFilter(QObject *, QEvent * e) {
 
         bool autoRepeat = ke->isAutoRepeat();
 
-        //qDebug() << "key event =" << ke->key() << "AutoRepeat =" << autoRepeat;
+        qDebug() << "key event =" << ke->key() << "AutoRepeat =" << autoRepeat << "KeyId =" << keyId;
 
         if (!autoRepeat) {
             QString keystring = getKeySeq(ke);
@@ -88,7 +88,7 @@ bool MixxxKeyboard::eventFilter(QObject *, QEvent * e) {
 #endif
         bool autoRepeat = ke->isAutoRepeat();
 
-        //qDebug() << "key event =" << ke->key() << ke->nativeVirtualKey() << ke->nativeScanCode();
+        qDebug() << "key event =" << ke->key() << "AutoRepeat =" << autoRepeat << "KeyId =" << keyId;
 
         // Run through list of active keys to see if the released key is active
         // use removeAll because there my be doublets because of lost release events on Mac OSX

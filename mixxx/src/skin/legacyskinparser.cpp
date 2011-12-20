@@ -1004,21 +1004,24 @@ void LegacySkinParser::setupConnections(QDomNode node, QWidget* pWidget) {
                 emitOption, state);
 
             // Add keyboard shortcut info to tooltip string
-            QString tooltip = pWidget->toolTip();
-            QString shortcut = m_pKeyboard->getKeyboardConfig()->getValueString(configKey);
-            if (!shortcut.isEmpty()) {
-                // translate shortcut to native text
-#if QT_VERSION >= 0x040700
-                shortcut = QKeySequence(shortcut, QKeySequence::PortableText).toString(QKeySequence::NativeText);
-#else
-                QKeySequence keySec = QKeySequence::fromString(shortcut, QKeySequence::PortableText);
-                shortcut = keySec.toString(QKeySequence::NativeText);
-#endif
-                tooltip += "\n";
-                tooltip += tr("Shortcut");
-                tooltip += ": ";
-                tooltip += shortcut;
-                pWidget->setToolTip(tooltip);
+            if (connectValueFromWidget) {
+                // do not add Shortcut string for feedback connections
+                QString tooltip = pWidget->toolTip();
+                QString shortcut = m_pKeyboard->getKeyboardConfig()->getValueString(configKey);
+                if (!shortcut.isEmpty()) {
+                    // translate shortcut to native text
+    #if QT_VERSION >= 0x040700
+                    shortcut = QKeySequence(shortcut, QKeySequence::PortableText).toString(QKeySequence::NativeText);
+    #else
+                    QKeySequence keySec = QKeySequence::fromString(shortcut, QKeySequence::PortableText);
+                    shortcut = keySec.toString(QKeySequence::NativeText);
+    #endif
+                    tooltip += "\n";
+                    tooltip += tr("Shortcut");
+                    tooltip += ": ";
+                    tooltip += shortcut;
+                    pWidget->setToolTip(tooltip);
+                }
             }
         }
         con = con.nextSibling();
