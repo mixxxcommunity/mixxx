@@ -157,50 +157,48 @@ void WPushButton::mousePressEvent(QMouseEvent * e)
     bool leftClick = e->button() == Qt::LeftButton;
     bool rightClick = e->button() == Qt::RightButton;
 
-    // The value to emit.
-    double emitValue = m_fValue;
-
     if (m_powerWindowStyle && m_iNoStates == 2) {
-        if (m_fValue == 0.0f) {
-            m_clickTimer.setSingleShot(true);
-            m_clickTimer.start(300);
+        if (leftClick) {
+            if (m_fValue == 0.0f) {
+                m_clickTimer.setSingleShot(true);
+                m_clickTimer.start(300);
+            }
+            m_fValue = 1.0f;
+            m_bPressed = true;
+            emit(valueChangedLeftDown(1.0f));
+            update();
         }
-        m_fValue = emitValue = 1.0f;
-    } else if (m_iNoStates == 1) {
-        // Calculate new state if it is a one state button
-        m_fValue = emitValue = (m_fValue == 0.0f) ? 1.0f : 0.0f;
-    } else if (leftClick) {
-        // Update state on press if it is a n-state button and not a pushbutton
-        if (m_bLeftClickForcePush) {
-            emitValue = 1.0f;
-        } else {
-            m_fValue = emitValue = (int)(m_fValue+1.)%m_iNoStates;
-        }
+        return;
     }
 
-    // Do not allow right-clicks to change the state of the button. This is how
-    // Mixxx <1.8.0 worked so keep it that way. For a multi-state button, really
-    // only one click type (left/right) should be able to change the state. One
-    // problem with this is that you can get the button out of sync with its
-    // underlying control. For example the PFL buttons on Jus's skins could get
-    // out of sync with the button state. rryan 9/2010
-
-    // else if (rightClick) {
-    //     if (m_bRightClickForcePush) {
-    //         emitValue = 1.0f;
-    //     } else {
-    //         m_fValue = emitValue = (int)(m_fValue+1.)%m_iNoStates;
-    //     }
-    // }
-
-    m_bPressed = true;
+    if (rightClick) {
+        // This is the secondary button function, it does not change m_fValue
+        // due the leak of visual feedback we do not allow a toggle function
+        if (m_bRightClickForcePush) {
+            m_bPressed = true;
+            emit(valueChangedRightDown(1.0f));
+            update();
+        }
+        return;
+    }
 
     if (leftClick) {
+        double emitValue;
+        if (m_iNoStates == 1) {
+            // This is a Pushbutton
+            m_fValue = emitValue = 1.0f;
+        }  else if (m_bLeftClickForcePush) {
+            // This may a button with different functions on each mouse button
+            // m_fValue is changed by a separate feedback connection
+            emitValue = 1.0f;
+        } else {
+            // Toggle thru the states
+            m_fValue = emitValue = (int)(m_fValue+1.)%m_iNoStates;
+        }
+        m_bPressed = true;
         emit(valueChangedLeftDown(emitValue));
-    } else if (rightClick) {
-        emit(valueChangedRightDown(emitValue));
+        update();
     }
-    update();
 }
 
 void WPushButton::mouseReleaseEvent(QMouseEvent * e)
@@ -208,30 +206,50 @@ void WPushButton::mouseReleaseEvent(QMouseEvent * e)
     bool leftClick = e->button() == Qt::LeftButton;
     bool rightClick = e->button() == Qt::RightButton;
 
-    // The value to emit
-    double emitValue = m_fValue;
-
     if (m_powerWindowStyle && m_iNoStates == 2) {
-        if (    !m_clickTimer.isActive()
-             && !(QApplication::mouseButtons() & Qt::RightButton)
-             && m_bPressed) {
-            // Release Button after Timer, but not if right button is clicked
-            m_fValue = emitValue = 0.0f;
+        if (leftClick) {
+            if (    !m_clickTimer.isActive()
+                 && !(QApplication::mouseButtons() & Qt::RightButton)
+                 && m_bPressed) {
+                // Release Button after Timer, but not if right button is clicked
+                m_fValue = 0.0f;
+                emit(valueChangedLeftUp(0.0f));
+            }
+            m_bPressed = false;
         }
-    } else if (m_iNoStates==1) // && e->button()==Qt::LeftButton)
-    {   // Update state if it is a one state button.
-        m_fValue = emitValue = (m_fValue == 0.0f) ? 1.0f : 0.0f;
-    } else if ((leftClick && m_bLeftClickForcePush) || (rightClick && m_bRightClickForcePush)) {
-        emitValue = 0.0f;
+        else if (rightClick) {
+            m_bPressed = false;
+        }
+        update();
+        return;
     }
 
-    m_bPressed = false;
+    if (rightClick) {
+        // This is the secondary button function, it does not change m_fValue
+        // due the leak of visual feedback we do not allow a toggle function
+        if (m_bRightClickForcePush) {
+            m_bPressed = false;
+            emit(valueChangedRightDown(0.0f));
+            update();
+        }
+        return;
+    }
 
     if (leftClick) {
-        emit(valueChangedLeftUp(emitValue));
-    } else if (rightClick) {
-        emit(valueChangedRightUp(emitValue));
+        double emitValue;
+        if (m_iNoStates == 1) {
+            // This is a Pushbutton
+            m_fValue = emitValue = 0.0f;
+        }  else if (m_bLeftClickForcePush) {
+            // This may a button with different functions on each mouse button
+            // m_fValue is changed by a separate feedback connection
+            emitValue = 0.0f;
+        } else {
+            // Nothing special happens when releasing a toggle button
+            emitValue = m_fValue;
+        }
+        m_bPressed = false;
+        emit(valueChangedLeftDown(emitValue));
+        update();
     }
-
-    update();
 }
