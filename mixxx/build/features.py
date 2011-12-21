@@ -257,10 +257,7 @@ class MSVCDebug(Feature):
         return "MSVC Debugging"
 
     def enabled(self, build):
-        if build.toolchain_is_msvs: 
-            build.flags['msvcdebug'] = 1
-        else: 
-            build.flags['msvcdebug'] = util.get_flags(build.env, 'msvcdebug', 0)
+        build.flags['msvcdebug'] = util.get_flags(build.env, 'msvcdebug', 0)
         if int(build.flags['msvcdebug']):
             return True
         return False
@@ -482,10 +479,10 @@ class QDebug(Feature):
         return "Debugging message output"
 
     def enabled(self, build):
+        # Meh, repeating this can't hurt, and we require knowing the status of msvcdebug.
+        build.flags['msvcdebug'] = util.get_flags(build.env, 'msvcdebug', 0)
         build.flags['qdebug'] = util.get_flags(build.env, 'qdebug', 0)
         if build.platform_is_windows:
-            # Meh, repeating this can't hurt, and we require knowing the status of msvcdebug.
-       	    build.flags['msvcdebug'] = 1
             if int(build.flags['msvcdebug']):
                 # Turn general debugging flag on too if msvcdebug is specified
                 build.flags['qdebug'] = 1
@@ -718,10 +715,7 @@ class Optimize(Feature):
 
     def enabled(self, build):
         # Meh, repeating this can't hurt, and we require knowing the status of msvcdebug.
-        if build.toolchain_is_msvs: 
-            build.flags['msvcdebug'] = 1
-        else: 
-            build.flags['msvcdebug'] = util.get_flags(build.env, 'msvcdebug', 0)
+        build.flags['msvcdebug'] = util.get_flags(build.env, 'msvcdebug', 0)
         build.flags['optimize'] = util.get_flags(build.env, 'optimize', 1)
         if int(build.flags['optimize']):
             return True
