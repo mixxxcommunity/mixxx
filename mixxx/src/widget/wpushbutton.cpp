@@ -154,11 +154,10 @@ void WPushButton::paintEvent(QPaintEvent *)
 
 void WPushButton::mousePressEvent(QMouseEvent * e)
 {
-    bool leftClick = e->button() == Qt::LeftButton;
-    bool rightClick = e->button() == Qt::RightButton;
+    Qt::MouseButton klickButton = e->button();
 
     if (m_powerWindowStyle && m_iNoStates == 2) {
-        if (leftClick) {
+        if (klickButton == Qt::LeftButton) {
             if (m_fValue == 0.0f) {
                 m_clickTimer.setSingleShot(true);
                 m_clickTimer.start(300);
@@ -171,7 +170,7 @@ void WPushButton::mousePressEvent(QMouseEvent * e)
         return;
     }
 
-    if (rightClick) {
+    if (klickButton == Qt::RightButton) {
         // This is the secondary button function, it does not change m_fValue
         // due the leak of visual feedback we do not allow a toggle function
         if (m_bRightClickForcePush) {
@@ -182,15 +181,15 @@ void WPushButton::mousePressEvent(QMouseEvent * e)
         return;
     }
 
-    if (leftClick) {
+    if (klickButton == Qt::LeftButton) {
         double emitValue;
-        if (m_iNoStates == 1) {
-            // This is a Pushbutton
-            m_fValue = emitValue = 1.0f;
-        }  else if (m_bLeftClickForcePush) {
+        if (m_bLeftClickForcePush) {
             // This may a button with different functions on each mouse button
             // m_fValue is changed by a separate feedback connection
             emitValue = 1.0f;
+        } else if (m_iNoStates == 1) {
+            // This is a Pushbutton
+            m_fValue = emitValue = 1.0f;
         } else {
             // Toggle thru the states
             m_fValue = emitValue = (int)(m_fValue+1.)%m_iNoStates;
@@ -203,11 +202,10 @@ void WPushButton::mousePressEvent(QMouseEvent * e)
 
 void WPushButton::mouseReleaseEvent(QMouseEvent * e)
 {
-    bool leftClick = e->button() == Qt::LeftButton;
-    bool rightClick = e->button() == Qt::RightButton;
+    Qt::MouseButton klickButton = e->button();
 
     if (m_powerWindowStyle && m_iNoStates == 2) {
-        if (leftClick) {
+        if (klickButton == Qt::LeftButton) {
             if (    !m_clickTimer.isActive()
                  && !(QApplication::mouseButtons() & Qt::RightButton)
                  && m_bPressed) {
@@ -217,15 +215,15 @@ void WPushButton::mouseReleaseEvent(QMouseEvent * e)
             }
             m_bPressed = false;
         }
-        else if (rightClick) {
+        else if (klickButton == Qt::RightButton) {
             m_bPressed = false;
         }
         update();
         return;
     }
 
-    if (rightClick) {
-        // This is the secondary button function, it does not change m_fValue
+    if (klickButton == Qt::RightButton) {
+        // This is the secondary klickButton function, it does not change m_fValue
         // due the leak of visual feedback we do not allow a toggle function
         if (m_bRightClickForcePush) {
             m_bPressed = false;
@@ -235,15 +233,15 @@ void WPushButton::mouseReleaseEvent(QMouseEvent * e)
         return;
     }
 
-    if (leftClick) {
+    if (klickButton == Qt::LeftButton) {
         double emitValue;
-        if (m_iNoStates == 1) {
-            // This is a Pushbutton
-            m_fValue = emitValue = 0.0f;
-        }  else if (m_bLeftClickForcePush) {
-            // This may a button with different functions on each mouse button
+        if (m_bLeftClickForcePush) {
+            // This may a klickButton with different functions on each mouse button
             // m_fValue is changed by a separate feedback connection
             emitValue = 0.0f;
+        } else if (m_iNoStates == 1) {
+            // This is a Pushbutton
+            m_fValue = emitValue = 0.0f;
         } else {
             // Nothing special happens when releasing a toggle button
             emitValue = m_fValue;
