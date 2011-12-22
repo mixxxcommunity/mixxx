@@ -46,35 +46,30 @@ bool MixxxKeyboard::eventFilter(QObject *, QEvent * e) {
 #else
         int keyId = ke->nativeScanCode();
 #endif
+        qDebug() << "key event =" << ke->key() << "KeyId =" << keyId;
 
-        bool autoRepeat = ke->isAutoRepeat();
-
-        qDebug() << "key event =" << ke->key() << "AutoRepeat =" << autoRepeat << "KeyId =" << keyId;
-
-        if (!autoRepeat) {
-            QString keystring = getKeySeq(ke);
-            if (!keystring.isEmpty())
+        // Run through list of active keys to see if the pressed key is already active
+        // Just for returning true if we are consuming this key event
+        QListIterator<QPair<int, ConfigKey *> > it(m_qActiveKeyList);
+        while (it.hasNext()) {
+            if (it.next().first == keyId)
             {
-                // Check if a shortcut is defined
-                ConfigKey * pConfigKey = m_pKbdConfigObject->get(ConfigValueKbd(keystring));
-
-                if (pConfigKey)
-                {
-                    ControlObject::getControl(*pConfigKey)->queueFromMidi(NOTE_ON, 1);
-                    // Add key to active key list
-                    m_qActiveKeyList.append(QPair<int, ConfigKey *>(keyId,pConfigKey));
-                    return true;
-                }
+                return true;
             }
-        } else {
-            // Run through list of active keys to see if the released key is active
-            // Just for returning true if we are consuming this key event
-            QListIterator<QPair<int, ConfigKey *> > it(m_qActiveKeyList);
-            while (it.hasNext()) {
-                if (it.next().first == keyId)
-                {
-                    return true;
-                }
+        }
+
+        QString keystring = getKeySeq(ke);
+        if (!keystring.isEmpty())
+        {
+            // Check if a shortcut is defined
+            ConfigKey * pConfigKey = m_pKbdConfigObject->get(ConfigValueKbd(keystring));
+
+            if (pConfigKey)
+            {
+                ControlObject::getControl(*pConfigKey)->queueFromMidi(NOTE_ON, 1);
+                // Add key to active key list
+                m_qActiveKeyList.append(QPair<int, ConfigKey *>(keyId,pConfigKey));
+                return true;
             }
         }
     } else if (e->type()==QEvent::KeyRelease) {
@@ -91,24 +86,21 @@ bool MixxxKeyboard::eventFilter(QObject *, QEvent * e) {
         qDebug() << "key event =" << ke->key() << "AutoRepeat =" << autoRepeat << "KeyId =" << keyId;
 
         // Run through list of active keys to see if the released key is active
-        // use removeAll because there my be doublets because of lost release events on Mac OSX
-        bool react = false;
         for (int i = m_qActiveKeyList.size() - 1; i >= 0; i--) {
             if (m_qActiveKeyList[i].first == keyId)
             {
                 if(!autoRepeat) {
-                    if (!react) {
-                        ControlObject::getControl(*(m_qActiveKeyList[i].second))->queueFromMidi(NOTE_OFF, 0);
-                        react = true; // Do not return here because of possible doublets on Mac OSX
-                                    // due to lost release events
-                    }
+                    ControlObject::getControl(*(m_qActiveKeyList[i].second))->queueFromMidi(NOTE_OFF, 0);
                     m_qActiveKeyList.removeAt(i);
-                } else {
-                    return true;
                 }
+                return true;
             }
         }
-        return react;
+    } else {
+        if (e->type() == QEvent::KeyboardLayoutChange) {
+            // This event is not fired on ubunty natty, why?
+            qDebug() << "QEvent::KeyboardLayoutChange";
+        }
     }
     return false;
 }
