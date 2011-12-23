@@ -166,12 +166,17 @@ MixxxApp::MixxxApp(QApplication *a, struct CmdlineArgs args)
 
     ConfigObject<ConfigValueKbd>* pKbdConfig = NULL;
 
-    if (QFile::exists(userKeyboard)) {
-        qDebug() << "Found and will use custom keyboard preset" << userKeyboard;
-        pKbdConfig = new ConfigObject<ConfigValueKbd>(userKeyboard);
+    QString shortcutSource = m_pConfig->getValueString(ConfigKey("[Controls]", "ShortcutsSource"),"1");
+
+    if (shortcutSource == "2") {
+        // Custom Keyboard
+        if (QFile::exists(userKeyboard)) {
+            qDebug() << "Found and will use custom keyboard preset" << userKeyboard;
+            pKbdConfig = new ConfigObject<ConfigValueKbd>(userKeyboard);
+        }
     }
-    else {
-        // Otherwise use the default config for local keyboard
+    else if (shortcutSource == "1") {
+        // Use the default config for local keyboard
         QLocale locale = QApplication::keyboardInputLocale();
 
         // check if a default keyboard exists

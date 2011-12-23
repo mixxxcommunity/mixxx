@@ -163,6 +163,18 @@ DlgPrefControls::DlgPrefControls(QWidget * parent, MixxxApp * mixxx,
     ComboBoxAllowTrackLoadToPlayingDeck->setCurrentIndex(m_pConfig->getValueString(ConfigKey("[Controls]", "AllowTrackLoadToPlayingDeck")).toInt());
     connect(ComboBoxAllowTrackLoadToPlayingDeck, SIGNAL(activated(int)), this, SLOT(slotSetAllowTrackLoadToPlayingDeck(int)));
 
+
+    //
+    // ComboShortcutsSource
+    //
+    ComboBoxShortcutsSource->addItem(tr("Disabled"));
+    ComboBoxShortcutsSource->addItem(tr("Default"));
+    ComboBoxShortcutsSource->addItem(tr("Custom"));
+    ComboBoxShortcutsSource->setCurrentIndex(m_pConfig->getValueString(ConfigKey("[Controls]", "ShortcutsSource"),"1").toInt());
+    connect(ComboBoxShortcutsSource, SIGNAL(activated(int)), this, SLOT(slotSetShortcutsSource(int)));
+
+
+
     //
     // Default Cue Behavior
     //
@@ -368,6 +380,11 @@ void DlgPrefControls::slotSetVisuals(int)
 void DlgPrefControls::slotSetAllowTrackLoadToPlayingDeck(int)
 {
     m_pConfig->set(ConfigKey("[Controls]","AllowTrackLoadToPlayingDeck"), ConfigValue(ComboBoxAllowTrackLoadToPlayingDeck->currentIndex()));
+}
+
+void DlgPrefControls::slotSetShortcutsSource(int)
+{
+    m_pConfig->set(ConfigKey("[Controls]","ShortcutsSource"), ConfigValue(ComboBoxShortcutsSource->currentIndex()));
 }
 
 void DlgPrefControls::slotSetCueDefault(int)

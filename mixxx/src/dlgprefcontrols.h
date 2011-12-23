@@ -55,6 +55,7 @@ public slots:
     void slotSetPositionDisplay(int);
     void slotSetPositionDisplay(double);
     void slotSetAllowTrackLoadToPlayingDeck(int);
+    void slotSetShortcutsSource(int);
     void slotSetCueDefault(int);
     void slotSetCueRecall(int);
     void slotSetRateRamp(bool);
