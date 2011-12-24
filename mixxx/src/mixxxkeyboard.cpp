@@ -131,6 +131,10 @@ QString MixxxKeyboard::getKeySeq(QKeyEvent * e)
 	return keyseq;
 }
 
+void MixxxKeyboard::setKeyboardConfig(ConfigObject<ConfigValueKbd> * pKbdConfigObject) {
+    m_pKbdConfigObject = pKbdConfigObject;
+}
+
 ConfigObject<ConfigValueKbd>* MixxxKeyboard::getKeyboardConfig() {
     return m_pKbdConfigObject;
 }

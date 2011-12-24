@@ -70,25 +70,75 @@ int BansheeDbConnection::getSchemaVersion() {
     return -1;
 }
 
-QList<QPair<QString, QString> > BansheeDbConnection::getPlaylists() {
+QList<struct BansheeDbConnection::Playlist> BansheeDbConnection::getPlaylists() {
 
-    QList<QPair<QString, QString> > list;
-    QPair<QString, QString> pair;
+    QList<struct BansheeDbConnection::Playlist> list;
+    struct BansheeDbConnection::Playlist playlist;
 
     QSqlQuery query(m_database);
     query.prepare("SELECT PlaylistID, Name FROM CorePlaylists");
 
     if (query.exec()) {
         while (query.next()) {
-            pair.first = query.value(0).toString();
-            pair.second = query.value(1).toString();
-            list.append(pair);
+            playlist.playlistId = query.value(0).toString();
+            playlist.name = query.value(1).toString();
+            list.append(playlist);
         }
     } else {
         LOG_FAILED_QUERY(query);
     }
     return list;
 }
+
+QList<struct BansheeDbConnection::PlaylistEntry> BansheeDbConnection::getPlaylistEntries(int playlistId) {
+
+    QList<struct BansheeDbConnection::PlaylistEntry> list;
+    struct BansheeDbConnection::PlaylistEntry entry;
+
+    QSqlQuery query(m_database);
+/*
+    QString queryString = QString(
+        "CREATE TEMPORARY VIEW IF NOT EXISTS %1 AS "
+        "SELECT %2 FROM PlaylistTracks "
+        "INNER JOIN library ON library.id = PlaylistTracks.track_id "
+        "WHERE PlaylistTracks.playlist_id = %3 AND library.mixxx_deleted = 0")
+            .arg(escaper.escapeString(playlistTableName))
+            .arg(columns.join(","))
+            .arg(playlistId);
+    query.prepare(queryString);
+    if (!query.exec()) {
+        LOG_FAILED_QUERY(query);
+    }
+*/
+
+    QString queryString = QString(
+        "SELECT "
+        "CorePlaylistEntries.TrackID, "
+        "CorePlaylistEntries.ViewOrder, "
+        "CoreTracks.Title, "
+        "CoreTracks.Uri "
+        "FROM CorePlaylistEntries "
+        "INNER JOIN CoreTracks ON CoreTracks.TrackID = CorePlaylistEntries.TrackID "
+        "WHERE CorePlaylistEntries.PlaylistID = %1")
+            .arg(playlistId);
+    query.prepare(queryString);
+
+    if (query.exec()) {
+        while (query.next()) {
+            entry.trackId = query.value(0).toInt();
+            entry.viewOrder = query.value(1).toInt();
+            m_trackMap[entry.trackId].title = query.value(2).toString();
+            m_trackMap[entry.trackId].uri = query.value(3).toString();
+            entry.pTrack = &m_trackMap[entry.trackId];
+            qDebug() << entry.pTrack->title << entry.pTrack->uri;
+            list.append(entry);
+        }
+    } else {
+        LOG_FAILED_QUERY(query);
+    }
+    return list;
+}
+
 
 
 /*

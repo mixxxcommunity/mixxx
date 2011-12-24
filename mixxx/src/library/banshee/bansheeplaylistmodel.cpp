@@ -21,7 +21,8 @@ BansheePlaylistModel::BansheePlaylistModel(QObject* pParent, TrackCollection* pT
            m_eSortOrder(Qt::AscendingOrder),
            m_pTrackCollection(pTrackCollection),
            m_trackDAO(m_pTrackCollection->getTrackDAO()),
-           m_pConnection(pConnection)
+           m_pConnection(pConnection),
+           m_playlistId(-1)
 {
     initHeaderData();
 }
@@ -629,17 +630,37 @@ QVariant BansheePlaylistModel::getBaseValue(const QModelIndex& index, int role) 
     return getTrackValueForColumn(trackId, column);
 }
 
-/*
-void BansheePlaylistModel::setPlaylist(Itdb_Playlist* pPlaylist) {
-    if (m_pPlaylist) {
+
+
+void BansheePlaylistModel::setPlaylist(int playlistId) {
+
+    if (m_playlistId == playlistId) {
+        qDebug() << "Already focused on playlist " << playlistId;
+        return;
+    }
+
+
+
+    if (m_playlistId >= 0) {
         beginRemoveRows(QModelIndex(), 0, m_sortedPlaylist.size()-1);
-        m_pPlaylist = NULL;
-        m_sortedPlaylist.clear();
+        m_playlistId = -1;
+//        d_sortedPlaylist.clear();
         endRemoveRows();
     }
 
-    if (pPlaylist) {
-        beginInsertRows(QModelIndex(), 0, pPlaylist->num-1);
+    if (playlistId >= 0) {
+//        if (m_pConnection->isOpen()) {
+
+//        }
+            //qDebug() << "PlaylistTableModel::setPlaylist" << playlistId;
+
+        QList<struct BansheeDbConnection::PlaylistEntry> list;
+
+        list = m_pConnection->getPlaylistEntries(playlistId);
+
+        beginInsertRows(QModelIndex(), 0, list.count()-1);
+ /*
+
         m_pPlaylist = pPlaylist;
         // walk thought linked list and collect playlist position
 
@@ -683,12 +704,12 @@ void BansheePlaylistModel::setPlaylist(Itdb_Playlist* pPlaylist) {
 
         }
         qSort(m_sortedPlaylist.begin(), m_sortedPlaylist.end(), columnLessThan);
-
+*/
         endInsertRows();
     }
 
 }
-*/
+
 
 
 /*

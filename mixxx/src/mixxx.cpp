@@ -164,18 +164,15 @@ MixxxApp::MixxxApp(QApplication *a, struct CmdlineArgs args)
         QDir::homePath().append("/").append(SETTINGS_PATH)
             .append("Custom.kbd.cfg");
 
-    ConfigObject<ConfigValueKbd>* pKbdConfig = NULL;
+    //Empty keyboard configuration
+    m_pKbdConfig_empty = new ConfigObject<ConfigValueKbd>("");
 
     QString shortcutSource = m_pConfig->getValueString(ConfigKey("[Controls]", "ShortcutsSource"),"1");
 
-    if (shortcutSource == "2") {
-        // Custom Keyboard
-        if (QFile::exists(userKeyboard)) {
-            qDebug() << "Found and will use custom keyboard preset" << userKeyboard;
-            pKbdConfig = new ConfigObject<ConfigValueKbd>(userKeyboard);
-        }
-    }
-    else if (shortcutSource == "1") {
+    if (   shortcutSource == "2" && QFile::exists(userKeyboard)) {
+        qDebug() << "Found and will use custom keyboard preset" << userKeyboard;
+        m_pKbdConfig = new ConfigObject<ConfigValueKbd>(userKeyboard);
+    } else if (shortcutSource != "0") {
         // Use the default config for local keyboard
         QLocale locale = QApplication::keyboardInputLocale();
 
@@ -187,14 +184,21 @@ MixxxApp::MixxxApp(QApplication *a, struct CmdlineArgs args)
         if (!QFile::exists(defaultKeyboard)) {
             qDebug() << defaultKeyboard << " not found, using en_US.kbd.cfg";
             defaultKeyboard = QString(qConfigPath).append("keyboard/").append("en_US.kbd.cfg");
+            if (!QFile::exists(defaultKeyboard)) {
+                qDebug() << defaultKeyboard << " not found, starting without shortcuts";
+                defaultKeyboard = ""; 
+            }
         }
-        pKbdConfig = new ConfigObject<ConfigValueKbd>(defaultKeyboard);
-    }
+        m_pKbdConfig = new ConfigObject<ConfigValueKbd>(defaultKeyboard);
+    } else {
+        m_pKbdConfig = new ConfigObject<ConfigValueKbd>("");
+    }; 
+
 
     // TODO(XXX) leak pKbdConfig, MixxxKeyboard owns it? Maybe roll all keyboard
     // initialization into MixxxKeyboard
     // Workaround for today: MixxxKeyboard calls delete
-    m_pKeyboard = new MixxxKeyboard(pKbdConfig);
+    m_pKeyboard = new MixxxKeyboard(m_pKbdConfig);
 
     //create RecordingManager
     m_pRecordingManager = new RecordingManager(m_pConfig);
@@ -723,6 +727,7 @@ void MixxxApp::initActions()
 
     m_pOptionsBeatMark = new QAction(tr("&Audio Beat Marks"), this);
 
+    m_pOptionsKeyboard = new QAction(tr("Enable &keyboard mapping"), this);
     m_pOptionsFullScreen = new QAction(tr("&Full Screen"), this);
 
 #ifdef __APPLE__
@@ -866,6 +871,14 @@ void MixxxApp::initActions()
     connect(m_pOptionsRecord, SIGNAL(toggled(bool)),
             this, SLOT(slotOptionsRecord(bool)));
 
+    m_pOptionsKeyboard->setCheckable(true);
+    m_pOptionsKeyboard->setChecked(true);
+    m_pOptionsKeyboard->setStatusTip(tr("Toggle Keyboard On/Off"));
+    m_pOptionsFullScreen->setWhatsThis(
+        tr("Enable/Disable keyboard mappings"));
+    connect(m_pOptionsKeyboard, SIGNAL(toggled(bool)),
+            this, SLOT(slotOptionsKeyboard(bool)));
+
     m_pOptionsFullScreen->setCheckable(true);
     m_pOptionsFullScreen->setChecked(false);
     m_pOptionsFullScreen->setStatusTip(tr("Full Screen"));
@@ -930,6 +943,7 @@ void MixxxApp::initMenuBar()
 #ifdef __SHOUTCAST__
     m_pOptionsMenu->addAction(m_pOptionsShoutcast);
 #endif
+    m_pOptionsMenu->addAction(m_pOptionsKeyboard);
     m_pOptionsMenu->addAction(m_pOptionsFullScreen);
     m_pOptionsMenu->addSeparator();
     m_pOptionsMenu->addAction(m_pOptionsPreferences);
@@ -1054,6 +1068,20 @@ void MixxxApp::slotFileQuit()
 void MixxxApp::slotOptionsBeatMark(bool)
 {
 // BEAT MARK STUFF
+}
+
+void MixxxApp::slotOptionsKeyboard(bool toggle)
+{
+    if (toggle) {
+        //qDebug() << "Enable keyboard shortcuts/mappings";
+        m_pKeyboard->setKeyboardConfig(m_pKbdConfig);
+    }
+
+    else {
+        //qDebug() << "Disable keyboard shortcuts/mappings";
+        m_pKeyboard->setKeyboardConfig(m_pKbdConfig_empty);
+    }
+
 }
 
 void MixxxApp::slotOptionsFullScreen(bool toggle)

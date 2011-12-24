@@ -108,13 +108,13 @@ void BansheeFeature::activate() {
 
         TreeItem* playlist_root = new TreeItem();
 
-        QList<QPair<QString, QString> > list = m_connection.getPlaylists();
+        QList<struct BansheeDbConnection::Playlist> list = m_connection.getPlaylists();
 
-        QPair<QString, QString> playlist;
+        struct BansheeDbConnection::Playlist playlist;
         foreach (playlist, list) {
-            qDebug() << playlist.second;
+            qDebug() << playlist.name;
             // append the playlist to the child model
-            TreeItem *item = new TreeItem(playlist.second, playlist.first, this, playlist_root);
+            TreeItem *item = new TreeItem(playlist.name, playlist.playlistId, this, playlist_root);
             playlist_root->appendChild(item);
         };
 
@@ -131,7 +131,7 @@ void BansheeFeature::activate() {
         emit(featureLoadingFinished(this));
     }
 
-    // m_pBansheePlaylistModel->setPlaylist(itdb_playlist_mpl(m_itdb)); // Gets the master playlist
+    m_pBansheePlaylistModel->setPlaylist(17); // Gets the master playlist
     emit(showTrackModel(m_pBansheePlaylistModel));
 }
 

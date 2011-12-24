@@ -59,7 +59,7 @@ class BansheePlaylistModel : public QAbstractTableModel , public virtual TrackMo
     virtual QVariant headerData(int section, Qt::Orientation orientation,
                                 int role=Qt::DisplayRole) const;
 
-//    void setPlaylist(Itdb_Playlist* pPlaylist);
+    void setPlaylist(int playlistId);
 
     ////////////////////////////////////////////////////////////////////////////
     // Other public methods
@@ -138,6 +138,7 @@ class BansheePlaylistModel : public QAbstractTableModel , public virtual TrackMo
     TrackDAO& m_trackDAO;
 
     BansheeDbConnection* m_pConnection;
+    int m_playlistId;
 };
 
 #endif /* BANSHEEPLAYLISTMODEL_H */
