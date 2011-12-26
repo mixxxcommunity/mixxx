@@ -163,7 +163,13 @@ void LoopingControl::slotLoopHalve(double v) {
         if (m_pActiveBeatLoop != NULL) {
             int active_index = m_beatLoops.indexOf(m_pActiveBeatLoop);
             if (active_index - 1 >= 0) {
-                slotBeatLoopActivate(m_beatLoops[active_index - 1]);
+                if (m_bLoopingEnabled) {
+                    slotBeatLoopActivate(m_beatLoops[active_index - 1]);
+                } else {
+                    // Calling scale clears the active beatloop.
+                    slotLoopScale(0.5);
+                    m_pActiveBeatLoop = m_beatLoops[active_index - 1];
+                }
             }
         } else {
             slotLoopScale(0.5);
@@ -178,7 +184,13 @@ void LoopingControl::slotLoopDouble(double v) {
         if (m_pActiveBeatLoop != NULL) {
             int active_index = m_beatLoops.indexOf(m_pActiveBeatLoop);
             if (active_index + 1 < m_beatLoops.size()) {
-                slotBeatLoopActivate(m_beatLoops[active_index + 1]);
+                if (m_bLoopingEnabled) {
+                    slotBeatLoopActivate(m_beatLoops[active_index + 1]);
+                } else {
+                    // Calling scale clears the active beatloop.
+                    slotLoopScale(2.0);
+                    m_pActiveBeatLoop = m_beatLoops[active_index + 1];
+                }
             }
         } else {
             slotLoopScale(2.0);
@@ -273,6 +285,9 @@ void LoopingControl::hintReader(QList<Hint>& hintList) {
 }
 
 void LoopingControl::slotLoopIn(double val) {
+    if (!m_pTrack) {
+        return;
+    }
     if (val) {
         clearActiveBeatLoop();
 
@@ -288,7 +303,7 @@ void LoopingControl::slotLoopIn(double val) {
         if (m_bLoopingEnabled &&
             (m_iLoopEndSample - pos) < MINIMUM_AUDIBLE_LOOP_SIZE) {
             pos = m_iLoopEndSample;
-            if (m_pQuantizeEnabled->get() > 0.0) {
+            if (m_pQuantizeEnabled->get() > 0.0 && m_pBeats) {
                 // 1 would have just returned loop_in, so give 2 to get the beat
                 // following loop_in
                 int nextbeat = m_pBeats->findNthBeat(pos, 2);
@@ -316,6 +331,9 @@ void LoopingControl::slotLoopIn(double val) {
 }
 
 void LoopingControl::slotLoopOut(double val) {
+    if (!m_pTrack) {
+        return;
+    }
     if (val) {
         int pos =
                 (m_pQuantizeEnabled->get() > 0.0 && m_pClosestBeat->get() != -1) ?
@@ -332,13 +350,14 @@ void LoopingControl::slotLoopOut(double val) {
         //  use the smallest pre-defined beatloop instead (when possible)
         if (pos - m_iLoopStartSample < MINIMUM_AUDIBLE_LOOP_SIZE) {
             pos = m_iLoopStartSample;
-            if (m_pQuantizeEnabled->get() > 0.0) {
+            if (m_pQuantizeEnabled->get() > 0.0 && m_pBeats) {
                 // 1 would have just returned loop_in, so give 2 to get the beat
                 // following loop_in
                 int nextbeat = m_pBeats->findNthBeat(m_iLoopStartSample, 2);
                 pos += (nextbeat - pos) * s_dBeatSizes[0];
+            } else {
+                pos += MINIMUM_AUDIBLE_LOOP_SIZE;
             }
-            else pos += MINIMUM_AUDIBLE_LOOP_SIZE;
         }
 
         if (pos != -1 && !even(pos)) {
@@ -361,6 +380,9 @@ void LoopingControl::slotLoopOut(double val) {
 }
 
 void LoopingControl::slotReloopExit(double val) {
+    if (!m_pTrack) {
+        return;
+    }
     if (val) {
         // If we're looping, stop looping
         if (m_bLoopingEnabled) {
@@ -378,6 +400,10 @@ void LoopingControl::slotReloopExit(double val) {
 }
 
 void LoopingControl::slotLoopStartPos(double pos) {
+    if (!m_pTrack) {
+        return;
+    }
+
     int newpos = pos;
     if (newpos != -1 && !even(newpos)) {
         newpos--;
@@ -390,6 +416,7 @@ void LoopingControl::slotLoopStartPos(double pos) {
     }
 
     m_iLoopStartSample = newpos;
+    m_pCOLoopStartPosition->set(newpos);
 
     if (m_iLoopEndSample != -1 &&
         m_iLoopEndSample < m_iLoopStartSample) {
@@ -400,8 +427,11 @@ void LoopingControl::slotLoopStartPos(double pos) {
 }
 
 void LoopingControl::slotLoopEndPos(double pos) {
-    int newpos = pos;
+    if (!m_pTrack) {
+        return;
+    }
 
+    int newpos = pos;
     if (newpos != -1 && !even(newpos)) {
         newpos--;
     }
@@ -410,6 +440,7 @@ void LoopingControl::slotLoopEndPos(double pos) {
     // start point (but not -1).
     if (m_iLoopStartSample == -1 ||
         (newpos != -1 && newpos < m_iLoopStartSample)) {
+        m_pCOLoopEndPosition->set(m_iLoopEndSample);
         return;
     }
 
@@ -419,6 +450,7 @@ void LoopingControl::slotLoopEndPos(double pos) {
         setLoopingEnabled(false);
     }
     m_iLoopEndSample = newpos;
+    m_pCOLoopEndPosition->set(newpos);
 }
 
 void LoopingControl::notifySeek(double dNewPlaypos) {
@@ -476,15 +508,14 @@ void LoopingControl::slotUpdatedTrackBeats()
 }
 
 void LoopingControl::slotBeatLoopActivate(BeatLoopingControl* pBeatLoopControl) {
-    bool beatLoopAlreadyActive = m_pActiveBeatLoop != NULL;
-    if (beatLoopAlreadyActive && m_pActiveBeatLoop != pBeatLoopControl) {
-        m_pActiveBeatLoop->deactivate();
+    if (!m_pTrack) {
+        return;
     }
-    m_pActiveBeatLoop = pBeatLoopControl;
-    m_pActiveBeatLoop->activate();
 
     // Maintain the current start point if there is an active beat loop and we
-    // are currently looping
+    // are currently looping. slotBeatLoop will update m_pActiveBeatLoop if
+    // applicable
+    bool beatLoopAlreadyActive = m_pActiveBeatLoop != NULL;
     slotBeatLoop(pBeatLoopControl->getSize(),
                  beatLoopAlreadyActive && m_bLoopingEnabled);
 }
@@ -500,19 +531,37 @@ void LoopingControl::clearActiveBeatLoop() {
     }
 }
 
-void LoopingControl::slotBeatLoop(double beats, bool keepStartPoint)
-{
+void LoopingControl::slotBeatLoop(double beats, bool keepStartPoint) {
+    if (!m_pTrack) {
+        return;
+    }
+
+    // O(n) search, but there are only ~10-ish beatloop controls so this is
+    // fine.
+    foreach (BeatLoopingControl* pBeatLoopControl, m_beatLoops) {
+        if (pBeatLoopControl->getSize() == beats) {
+            if (m_pActiveBeatLoop &&
+                m_pActiveBeatLoop != pBeatLoopControl) {
+                m_pActiveBeatLoop->deactivate();
+            }
+            m_pActiveBeatLoop = pBeatLoopControl;
+            pBeatLoopControl->activate();
+        }
+    }
+
     // give loop_in and loop_out defaults so we can detect problems
     int loop_in = -1;
     int loop_out = -1;
     int samples = m_pTrackSamples->get();
 
     if (!m_pBeats) {
+        clearActiveBeatLoop();
         return;
     }
 
     // For now we do not handle negative beatloops.
     if (beats < 0) {
+        clearActiveBeatLoop();
         return;
     }
 
@@ -584,29 +633,56 @@ void LoopingControl::slotBeatLoop(double beats, bool keepStartPoint)
 }
 
 BeatLoopingControl::BeatLoopingControl(const char* pGroup, double size)
-        : m_dBeatLoopSize(size) {
-    m_pPBActivateBeatLoop = new ControlPushButton(
-        keyForControl(pGroup, "beatloop", size));
-    m_pPBActivateBeatLoop->setMidiButtonMode(ControlPushButton::TOGGLE);
-    m_pPBActivateBeatLoop->setStates(2);
-    connect(m_pPBActivateBeatLoop, SIGNAL(valueChanged(double)),
-            this, SLOT(slotBeatLoopActivate(double)),
+        : m_dBeatLoopSize(size),
+          m_bActive(false) {
+    // This is the original beatloop control which is now deprecated. Its value
+    // is the state of the beatloop control (1 for enabled, 0 for disabled).
+    m_pLegacy = new ControlPushButton(
+        keyForControl(pGroup, "beatloop_%1", size));
+    m_pLegacy->setStates(2);
+    m_pLegacy->setMidiButtonMode(ControlPushButton::TOGGLE);
+    connect(m_pLegacy, SIGNAL(valueChanged(double)),
+            this, SLOT(slotLegacy(double)),
             Qt::DirectConnection);
+    // A push-button which activates the beatloop.
+    m_pActivate = new ControlPushButton(
+        keyForControl(pGroup, "beatloop_%1_activate", size));
+    connect(m_pActivate, SIGNAL(valueChanged(double)),
+            this, SLOT(slotActivate(double)),
+            Qt::DirectConnection);
+    // A push-button which toggles the beatloop as active or inactive.
+    m_pToggle = new ControlPushButton(
+        keyForControl(pGroup, "beatloop_%1_toggle", size));
+    connect(m_pToggle, SIGNAL(valueChanged(double)),
+            this, SLOT(slotToggle(double)),
+            Qt::DirectConnection);
+
+    // An indicator control which is 1 if the beatloop is enabled and 0 if not.
+    m_pEnabled = new ControlObject(
+        keyForControl(pGroup, "beatloop_%1_enabled", size));
 }
 
 BeatLoopingControl::~BeatLoopingControl() {
-    delete m_pPBActivateBeatLoop;
+    delete m_pActivate;
+    delete m_pToggle;
+    delete m_pEnabled;
+    delete m_pLegacy;
 }
 
 void BeatLoopingControl::deactivate() {
-    m_pPBActivateBeatLoop->set(0);
+    m_bActive = false;
+    m_pEnabled->set(0);
+    m_pLegacy->set(0);
 }
 
 void BeatLoopingControl::activate() {
-    m_pPBActivateBeatLoop->set(1);
+    m_bActive = true;
+    m_pEnabled->set(1);
+    m_pLegacy->set(1);
 }
 
-void BeatLoopingControl::slotBeatLoopActivate(double v) {
+void BeatLoopingControl::slotLegacy(double v) {
+    //qDebug() << "slotLegacy" << m_dBeatLoopSize << "v" << v;
     if (v > 0) {
         emit(activateBeatLoop(this));
     } else {
@@ -614,11 +690,31 @@ void BeatLoopingControl::slotBeatLoopActivate(double v) {
     }
 }
 
+void BeatLoopingControl::slotActivate(double v) {
+    //qDebug() << "slotActivate" << m_dBeatLoopSize << "v" << v;
+    if (!v) {
+        return;
+    }
+    emit(activateBeatLoop(this));
+}
+
+void BeatLoopingControl::slotToggle(double v) {
+    //qDebug() << "slotToggle" << m_dBeatLoopSize << "v" << v;
+    if (!v) {
+        return;
+    }
+    if (m_bActive) {
+        emit(deactivateBeatLoop(this));
+    } else {
+        emit(activateBeatLoop(this));
+    }
+}
+
 ConfigKey BeatLoopingControl::keyForControl(const char* pGroup,
                                             QString ctrlName, double num) {
     ConfigKey key;
     key.group = pGroup;
-    key.item = QString("%1_%2").arg(ctrlName).arg(num);
+    key.item = ctrlName.arg(num);
     return key;
 }
 
