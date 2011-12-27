@@ -708,29 +708,29 @@ int MixxxApp::noOutputDlg(bool *continueClicked)
 void MixxxApp::initActions()
 {
     m_pFileLoadSongPlayer1 = new QAction(tr("&Load Song (Player 1)..."), this);
-    m_pFileLoadSongPlayer1->setShortcut(tr("Ctrl+O"));
+    m_pFileLoadSongPlayer1->setShortcut(QKeySequence(tr("Ctrl+O")));
     m_pFileLoadSongPlayer1->setShortcutContext(Qt::ApplicationShortcut);
 
     m_pFileLoadSongPlayer2 = new QAction(tr("&Load Song (Player 2)..."), this);
-    m_pFileLoadSongPlayer2->setShortcut(tr("Ctrl+Shift+O"));
+    m_pFileLoadSongPlayer2->setShortcut(QKeySequence(tr("Ctrl+Shift+O")));
     m_pFileLoadSongPlayer2->setShortcutContext(Qt::ApplicationShortcut);
 
     m_pFileQuit = new QAction(tr("&Exit"), this);
-    m_pFileQuit->setShortcut(tr("Ctrl+Q"));
+    m_pFileQuit->setShortcut(QKeySequence(tr("Ctrl+Q")));
     m_pFileQuit->setShortcutContext(Qt::ApplicationShortcut);
 
     m_pLibraryRescan = new QAction(tr("&Rescan Library"), this);
 
     m_pPlaylistsNew = new QAction(tr("Add &new playlist"), this);
-    m_pPlaylistsNew->setShortcut(tr("Ctrl+N"));
+    m_pPlaylistsNew->setShortcut(QKeySequence(tr("Ctrl+N")));
     m_pPlaylistsNew->setShortcutContext(Qt::ApplicationShortcut);
 
     m_pCratesNew = new QAction(tr("Add new &crate"), this);
-    m_pCratesNew->setShortcut(tr("Ctrl+C"));
+    m_pCratesNew->setShortcut(QKeySequence(tr("Ctrl+C")));
     m_pCratesNew->setShortcutContext(Qt::ApplicationShortcut);
 
     m_pPlaylistsImport = new QAction(tr("&Import playlist"), this);
-    m_pPlaylistsImport->setShortcut(tr("Ctrl+I"));
+    m_pPlaylistsImport->setShortcut(QKeySequence(tr("Ctrl+I")));
     m_pPlaylistsImport->setShortcutContext(Qt::ApplicationShortcut);
 
     m_pOptionsBeatMark = new QAction(tr("&Audio Beat Marks"), this);
@@ -739,9 +739,9 @@ void MixxxApp::initActions()
     m_pOptionsFullScreen = new QAction(tr("&Full Screen"), this);
 
 #ifdef __APPLE__
-    m_pOptionsFullScreen->setShortcut(tr("Ctrl+F"));
+    m_pOptionsFullScreen->setShortcut(QKeySequence(tr("Ctrl+F")));
 #else
-    m_pOptionsFullScreen->setShortcut(tr("F11"));
+    m_pOptionsFullScreen->setShortcut(QKeySequence(tr("F11")));
 #endif
 
     m_pOptionsFullScreen->setShortcutContext(Qt::ApplicationShortcut);
@@ -749,7 +749,7 @@ void MixxxApp::initActions()
     // connect(shortcut, SIGNAL(triggered()), this, SLOT(slotQuitFullScreen()));
 
     m_pOptionsPreferences = new QAction(tr("&Preferences"), this);
-    m_pOptionsPreferences->setShortcut(tr("Ctrl+P"));
+    m_pOptionsPreferences->setShortcut(QKeySequence(tr("Ctrl+P")));
     m_pOptionsPreferences->setShortcutContext(Qt::ApplicationShortcut);
 
     m_pHelpAboutApp = new QAction(tr("&About"), this);
@@ -760,22 +760,22 @@ void MixxxApp::initActions()
 
 #ifdef __VINYLCONTROL__
     m_pOptionsVinylControl = new QAction(tr("Enable &Vinyl Control 1"), this);
-    m_pOptionsVinylControl->setShortcut(tr("Ctrl+Y"));
+    m_pOptionsVinylControl->setShortcut(QKeySequence(tr("Ctrl+Y")));
     m_pOptionsVinylControl->setShortcutContext(Qt::ApplicationShortcut);
 
     m_pOptionsVinylControl2 = new QAction(tr("Enable &Vinyl Control 2"), this);
-    m_pOptionsVinylControl2->setShortcut(tr("Ctrl+U"));
+    m_pOptionsVinylControl2->setShortcut(QKeySequence(tr("Ctrl+U")));
     m_pOptionsVinylControl2->setShortcutContext(Qt::ApplicationShortcut);
 #endif
 
 #ifdef __SHOUTCAST__
     m_pOptionsShoutcast = new QAction(tr("Enable live broadcasting"), this);
-    m_pOptionsShoutcast->setShortcut(tr("Ctrl+L"));
+    m_pOptionsShoutcast->setShortcut(QKeySequence(tr("Ctrl+L")));
     m_pOptionsShoutcast->setShortcutContext(Qt::ApplicationShortcut);
 #endif
 
     m_pOptionsRecord = new QAction(tr("&Record Mix"), this);
-    m_pOptionsRecord->setShortcut(tr("Ctrl+R"));
+    m_pOptionsRecord->setShortcut(QKeySequence(tr("Ctrl+R")));
     m_pOptionsRecord->setShortcutContext(Qt::ApplicationShortcut);
 
     m_pFileLoadSongPlayer1->setStatusTip(tr("Opens a song in player 1"));
