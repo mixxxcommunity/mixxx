@@ -229,6 +229,8 @@ template <class ValueType> bool ConfigObject<ValueType>::Parse()
         QString groupStr, line;
         QTextStream text(&configfile);
 
+        text.setCodec("UTF-8");
+
         while (!text.atEnd())
         {
             line = text.readLine().trimmed();
@@ -297,6 +299,8 @@ template <class ValueType> void ConfigObject<ValueType>::Save()
     else
     {
         QTextStream stream(&file);
+        stream.setCodec("UTF-8");
+
         QString grp = "";
 
         QListIterator<ConfigOption<ValueType>* > iterator(list);

@@ -142,13 +142,13 @@ MixxxApp::MixxxApp(QApplication *a, struct CmdlineArgs args)
 
     // Load Qt translations for this locale
     QTranslator* qtTranslator = new QTranslator(a);
-   if( qtTranslator->load("qt_" + locale,
-           QLibraryInfo::location(QLibraryInfo::TranslationsPath))) {
-       a->installTranslator(qtTranslator);
-   }
-   else{
-       delete qtTranslator;
-   }
+    if( qtTranslator->load("qt_" + locale,
+            QLibraryInfo::location(QLibraryInfo::TranslationsPath))) {
+        a->installTranslator(qtTranslator);
+    }
+    else{
+        delete qtTranslator;
+    }
 
     // Load Mixxx specific translations for this locale
     QTranslator* mixxxTranslator = new QTranslator(a);
@@ -156,12 +156,12 @@ MixxxApp::MixxxApp(QApplication *a, struct CmdlineArgs args)
     qDebug() << "Loading translations for locale" << locale
             << "from translations folder" << translationsFolder << ":"
             << (mixxxLoaded ? "success" : "fail");
-   if (mixxxLoaded) {
-       a->installTranslator(mixxxTranslator);
-   }
-   else {
-       delete mixxxTranslator;
-   }
+    if (mixxxLoaded) {
+        a->installTranslator(mixxxTranslator);
+    }
+    else {
+        delete mixxxTranslator;
+    }
 
     // Store the path in the config database
     m_pConfig->set(ConfigKey("[Config]", "Path"), ConfigValue(qConfigPath));
