@@ -131,22 +131,20 @@ void BansheeFeature::activate() {
         emit(featureLoadingFinished(this));
     }
 
-    m_pBansheePlaylistModel->setPlaylist(17); // Gets the master playlist
+    m_pBansheePlaylistModel->setPlaylist(0); // Gets the master playlist
     emit(showTrackModel(m_pBansheePlaylistModel));
 }
 
 void BansheeFeature::activateChild(const QModelIndex& index) {
     TreeItem *item = static_cast<TreeItem*>(index.internalPointer());
-    qDebug() << "BansheeFeature::activateChild " << item->data() << " " << item->dataPath();
+    //qDebug() << "BansheeFeature::activateChild " << item->data() << " " << item->dataPath();
     QString playlist = item->dataPath().toString();
- /*   Itdb_Playlist* pPlaylist = (Itdb_Playlist*)playlist.toUInt();
-
-    if (pPlaylist) {
-        qDebug() << "Activating " << QString::fromUtf8(pPlaylist->name);
+    int playlistID = playlist.toInt();
+    if (playlistID > 0) {
+        qDebug() << "Activating " << item->data().toString();
+        m_pBansheePlaylistModel->setPlaylist(playlistID);
+        emit(showTrackModel(m_pBansheePlaylistModel));
     }
-    m_pBansheePlaylistModel->setPlaylist(pPlaylist);
-    emit(showTrackModel(m_pBansheePlaylistModel));
-    */
 }
 
 TreeItemModel* BansheeFeature::getChildModel() {

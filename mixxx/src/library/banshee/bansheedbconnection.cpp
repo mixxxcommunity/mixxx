@@ -110,17 +110,31 @@ QList<struct BansheeDbConnection::PlaylistEntry> BansheeDbConnection::getPlaylis
         LOG_FAILED_QUERY(query);
     }
 */
+    QString queryString;
 
-    QString queryString = QString(
-        "SELECT "
-        "CorePlaylistEntries.TrackID, "
-        "CorePlaylistEntries.ViewOrder, "
-        "CoreTracks.Title, "
-        "CoreTracks.Uri "
-        "FROM CorePlaylistEntries "
-        "INNER JOIN CoreTracks ON CoreTracks.TrackID = CorePlaylistEntries.TrackID "
-        "WHERE CorePlaylistEntries.PlaylistID = %1")
-            .arg(playlistId);
+    if (playlistId == 0) {
+        // Create Master Playlist
+        queryString = QString(
+            "SELECT "
+            "TrackID, "
+            "TrackID, "
+            "Title, "
+            "Uri "
+            "FROM CoreTracks");
+     } else {
+        // SELECT playlist from CorePlaylistEntries
+        queryString = QString(
+            "SELECT "
+            "CorePlaylistEntries.TrackID, "
+            "CorePlaylistEntries.ViewOrder, "
+            "CoreTracks.Title, "
+            "CoreTracks.Uri "
+            "FROM CorePlaylistEntries "
+            "INNER JOIN CoreTracks ON CoreTracks.TrackID = CorePlaylistEntries.TrackID "
+            "WHERE CorePlaylistEntries.PlaylistID = %1")
+                .arg(playlistId);
+    }
+
     query.prepare(queryString);
 
     if (query.exec()) {
@@ -130,7 +144,7 @@ QList<struct BansheeDbConnection::PlaylistEntry> BansheeDbConnection::getPlaylis
             m_trackMap[entry.trackId].title = query.value(2).toString();
             m_trackMap[entry.trackId].uri = query.value(3).toString();
             entry.pTrack = &m_trackMap[entry.trackId];
-            qDebug() << entry.pTrack->title << entry.pTrack->uri;
+            //qDebug() << entry.pTrack->title << entry.pTrack->uri;
             list.append(entry);
         }
     } else {

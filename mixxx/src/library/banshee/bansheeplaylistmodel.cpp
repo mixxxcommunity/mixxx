@@ -34,10 +34,12 @@ BansheePlaylistModel::~BansheePlaylistModel() {
 void BansheePlaylistModel::initHeaderData() {
     // Set the column heading labels, rename them for translations and have
     // proper capitalization
-/*
-    m_headerList.append(qMakePair(QString(tr("#")),          (size_t)0xffff));
-    m_headerList.append(qMakePair(QString(tr("Artist")),     offsetof(Itdb_Track, artist)));
-    m_headerList.append(qMakePair(QString(tr("Title")),      offsetof(Itdb_Track, title)));
+
+    m_headerList.append(qMakePair(QString(tr("#")), VIEW_ORDER));
+//    m_headerList.append(qMakePair(QString(tr("Artist")),     offsetof(Itdb_Track, artist)));
+    m_headerList.append(qMakePair(QString(tr("Title")), TITLE));
+    m_headerList.append(qMakePair(QString(tr("Uri")), URI));
+ /*
     m_headerList.append(qMakePair(QString(tr("Album")),      offsetof(Itdb_Track, album)));
     m_headerList.append(qMakePair(QString(tr("Year")),       offsetof(Itdb_Track, year)));
     m_headerList.append(qMakePair(QString(tr("Duration")),   offsetof(Itdb_Track, tracklen)));
@@ -52,6 +54,20 @@ void BansheePlaylistModel::initHeaderData() {
     m_headerList.append(qMakePair(QString(tr("Comment")),    offsetof(Itdb_Track, comment)));
 */
 }
+
+QVariant BansheePlaylistModel::headerData(int section, Qt::Orientation orientation, int role) const {
+    if (role != Qt::DisplayRole)
+        return QAbstractTableModel::headerData(section, orientation, role);
+
+    if (   orientation == Qt::Horizontal
+        && role == Qt::DisplayRole
+        && section < m_headerList.size()
+    ) {
+        return QVariant(m_headerList.at(section).first);
+    }
+    return QAbstractTableModel::headerData(section, orientation, role);
+}
+
 
 void BansheePlaylistModel::initDefaultSearchColumns() {
     QStringList searchColumns;
@@ -73,20 +89,6 @@ void BansheePlaylistModel::setSearchColumns(const QStringList& searchColumns) {
         m_searchColumnIndices[i] = fieldIndex(m_searchColumns[i]);
     }
 }
-
-QVariant BansheePlaylistModel::headerData(int section, Qt::Orientation orientation, int role) const {
-    if (role != Qt::DisplayRole)
-        return QAbstractTableModel::headerData(section, orientation, role);
-
-    if (   orientation == Qt::Horizontal
-        && role == Qt::DisplayRole
-        && section < m_headerList.size()
-    ) {
-        return QVariant(m_headerList.at(section).first);
-    }
-    return QAbstractTableModel::headerData(section, orientation, role);
-}
-
 
 int BansheePlaylistModel::findSortInsertionPoint(int trackId, TrackPointer pTrack,
                                               const QVector<QPair<int, QHash<int, QVariant> > >& rowInfo) {
@@ -158,16 +160,15 @@ void BansheePlaylistModel::sort(int column, Qt::SortOrder order) {
     m_eSortOrder = order;
 
     emit layoutAboutToBeChanged();
-    qSort(m_sortedPlaylist.begin(), m_sortedPlaylist.end(), columnLessThan);
+//     qSort(m_sortedPlaylist.begin(), m_sortedPlaylist.end(), columnLessThan);
     emit layoutChanged();
 }
 
 int BansheePlaylistModel::rowCount(const QModelIndex& parent) const {
-/*
-    if (m_pPlaylist && !parent.isValid()) {
+
+    if (!parent.isValid()) {
         return m_sortedPlaylist.size();
     }
-    */
     return 0;
 }
 
@@ -187,14 +188,35 @@ int BansheePlaylistModel::fieldIndex(const QString& fieldName) const {
 }
 
 QVariant BansheePlaylistModel::data(const QModelIndex& index, int role) const {
-    //qDebug() << this << "data()";
+    // qDebug() << this << "data()";
+
+    QVariant value = QVariant();
+
     if (    role != Qt::DisplayRole
          && role != Qt::EditRole
          && role != Qt::CheckStateRole
          && role != Qt::ToolTipRole
     ) {
-        return QVariant();
+        return value;
     }
+
+    int row = index.row();
+    if (row < m_sortedPlaylist.size()) {
+        switch (m_headerList.at(index.column()).second) {
+        case VIEW_ORDER:
+            value = m_sortedPlaylist.at(row).viewOrder;
+            break;
+        case TITLE:
+            value = m_sortedPlaylist.at(row).pTrack->title;
+            break;
+        case URI:
+            value = m_sortedPlaylist.at(row).pTrack->uri;
+            break;
+        default:
+            break; // Not supported
+        }
+    }
+
 
 /*
     Itdb_Track* pTrack = getPTrackFromModelIndex(index);
@@ -203,7 +225,7 @@ QVariant BansheePlaylistModel::data(const QModelIndex& index, int role) const {
     }
 
     size_t structOffset = m_headerList.at(index.column()).second;
-    QVariant value = QVariant();
+
 
     if (!pTrack) {
         return QVariant();
@@ -297,13 +319,13 @@ QVariant BansheePlaylistModel::data(const QModelIndex& index, int role) const {
                 value = played ? Qt::Checked : Qt::Unchecked;
             } else {
             */
-           // value = QVariant();
+            value = QVariant();
             //}
             break;
         default:
             break;
     }
-    return QVariant();
+    return value;
 }
 
 bool BansheePlaylistModel::setData(const QModelIndex& index, const QVariant& value, int role) {
@@ -420,42 +442,6 @@ void BansheePlaylistModel::trackChanged(int trackId) {
         emit(dataChanged(left, right));
     }
 */
-}
-
-//static
-bool BansheePlaylistModel::columnLessThan(const playlist_member &s1, const playlist_member &s2) {
-    bool ret;
-/*
-    size_t structOffset = s1.pClass->m_headerList.at(s1.pClass->m_iSortColumn).second;
-
-    if (structOffset == 0xffff) { // "#"
-        ret = s1.pos < s2.pos;
-    } else if (structOffset == offsetof(Itdb_Track, year)) {
-        ret = s1.pTrack->year < s2.pTrack->year;
-    } else if (structOffset == offsetof(Itdb_Track, tracklen)) {
-        ret = s1.pTrack->tracklen < s2.pTrack->tracklen;
-    } else if (structOffset == offsetof(Itdb_Track, rating)) {
-        ret = s1.pTrack->rating < s2.pTrack->rating;
-    } else if (structOffset == offsetof(Itdb_Track, track_nr)) {
-        ret = s1.pTrack->track_nr < s2.pTrack->track_nr;
-    } else if (structOffset == offsetof(Itdb_Track, BPM)) {
-        ret = s1.pTrack->BPM < s2.pTrack->BPM;
-    } else if (structOffset == offsetof(Itdb_Track, bitrate)) {
-        ret = s1.pTrack->bitrate < s2.pTrack->bitrate;
-    } else if (structOffset == offsetof(Itdb_Track, time_added)) {
-        ret = s1.pTrack->time_added < s2.pTrack->time_added;
-    } else {
-        // for the gchar* elements
-        QString string1 = QString::fromUtf8(*(gchar**)((char*)(s1.pTrack) + structOffset));
-        QString string2 = QString::fromUtf8(*(gchar**)((char*)(s2.pTrack) + structOffset));
-        ret = string1.toLower() < string2.toLower();
-    }
-
-    if (s1.pClass->m_eSortOrder != Qt::AscendingOrder) {
-        return !ret;
-    }
-    */
-    return ret;
 }
 
 int BansheePlaylistModel::compareColumnValues(int iColumnNumber, Qt::SortOrder eSortOrder,
@@ -639,8 +625,6 @@ void BansheePlaylistModel::setPlaylist(int playlistId) {
         return;
     }
 
-
-
     if (m_playlistId >= 0) {
         beginRemoveRows(QModelIndex(), 0, m_sortedPlaylist.size()-1);
         m_playlistId = -1;
@@ -658,7 +642,10 @@ void BansheePlaylistModel::setPlaylist(int playlistId) {
 
         list = m_pConnection->getPlaylistEntries(playlistId);
 
-        beginInsertRows(QModelIndex(), 0, list.count()-1);
+        beginInsertRows(QModelIndex(), 0, list.size()-1);
+
+        m_sortedPlaylist = list;
+
  /*
 
         m_pPlaylist = pPlaylist;
@@ -819,10 +806,10 @@ QString BansheePlaylistModel::getTrackLocation(const QModelIndex& index) const {
 // Gets a significant hint of the track at the given QModelIndex
 // This is used to restore the selection after WTrackTableView::doSortByColumn
 int BansheePlaylistModel::getTrackId(const QModelIndex& index) const {
-    // in our case the position in the playlist is as significant hint  
+    // in our case the position in the playlist is a significant hint
     int row = index.row();
     if (row < m_sortedPlaylist.size()) {
-        return m_sortedPlaylist.at(index.row()).pos;
+        return m_sortedPlaylist.at(index.row()).viewOrder;
     }
     else {
         return 0;
@@ -833,7 +820,7 @@ const QLinkedList<int> BansheePlaylistModel::getTrackRows(int trackId) const {
     // In this case we get the position as trackId, returned from getTrackId above.
     QLinkedList<int> ret;
     for (int i = 0; i < m_sortedPlaylist.size(); ++i) {
-        if (m_sortedPlaylist.at(i).pos == trackId ){
+        if (m_sortedPlaylist.at(i).viewOrder == trackId ){
             ret.push_back(i);
             break;
         }

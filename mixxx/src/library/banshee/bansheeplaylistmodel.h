@@ -9,8 +9,7 @@
 #include "library/trackmodel.h"
 #include "library/trackcollection.h"
 #include "library/dao/trackdao.h"
-
-class BansheeDbConnection;
+#include "library/banshee/bansheedbconnection.h"
 
 // BaseSqlTableModel is a custom-written SQL-backed table which aggressively
 // caches the contents of the table and supports lightweight updates.
@@ -18,11 +17,10 @@ class BansheePlaylistModel : public QAbstractTableModel , public virtual TrackMo
 {
     Q_OBJECT
   public:
-
-    struct playlist_member {
-        BansheePlaylistModel* pClass;
-        int pos;
- //       Itdb_Track* pTrack;
+    enum Columns {
+        VIEW_ORDER,
+        TITLE,
+        URI
     };
 
     BansheePlaylistModel(QObject* pParent, TrackCollection* pTrackCollection, BansheeDbConnection* pConnection);
@@ -94,9 +92,6 @@ class BansheePlaylistModel : public QAbstractTableModel , public virtual TrackMo
     inline void setTrackValueForColumn(TrackPointer pTrack, int column, QVariant value);
     QVariant getBaseValue(const QModelIndex& index, int role = Qt::DisplayRole) const;
 
-    static bool columnLessThan(const playlist_member &s1, const playlist_member &s2);
-
-
     virtual int compareColumnValues(int iColumnNumber, Qt::SortOrder eSortOrder, QVariant val1, QVariant val2);
     virtual int findSortInsertionPoint(int trackId, TrackPointer pTrack,
                                        const QVector<QPair<int, QHash<int, QVariant> > >& rowInfo);
@@ -130,9 +125,9 @@ class BansheePlaylistModel : public QAbstractTableModel , public virtual TrackMo
     QString m_currentSearch;
     QString m_currentSearchFilter;
 
-    QList<QPair<QString, size_t> > m_headerList;
+    QList<QPair<QString, enum Columns> > m_headerList;
 
-    QList<BansheePlaylistModel::playlist_member> m_sortedPlaylist;
+    QList<struct BansheeDbConnection::PlaylistEntry> m_sortedPlaylist;
 
     TrackCollection* m_pTrackCollection;
     TrackDAO& m_trackDAO;
