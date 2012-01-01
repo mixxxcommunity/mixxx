@@ -36,13 +36,15 @@ void BansheePlaylistModel::initHeaderData() {
     // proper capitalization
 
     m_headerList.append(qMakePair(QString(tr("#")), VIEW_ORDER));
-//    m_headerList.append(qMakePair(QString(tr("Artist")),     offsetof(Itdb_Track, artist)));
+    m_headerList.append(qMakePair(QString(tr("Artist")), ARTIST));
     m_headerList.append(qMakePair(QString(tr("Title")), TITLE));
+    m_headerList.append(qMakePair(QString(tr("Duration")), DURATION));
     m_headerList.append(qMakePair(QString(tr("Uri")), URI));
+
  /*
     m_headerList.append(qMakePair(QString(tr("Album")),      offsetof(Itdb_Track, album)));
     m_headerList.append(qMakePair(QString(tr("Year")),       offsetof(Itdb_Track, year)));
-    m_headerList.append(qMakePair(QString(tr("Duration")),   offsetof(Itdb_Track, tracklen)));
+
     m_headerList.append(qMakePair(QString(tr("Rating")),     offsetof(Itdb_Track, rating)));
     m_headerList.append(qMakePair(QString(tr("Genre")),      offsetof(Itdb_Track, genre)));
     m_headerList.append(qMakePair(QString(tr("Type")),       offsetof(Itdb_Track, filetype)));
@@ -202,12 +204,22 @@ QVariant BansheePlaylistModel::data(const QModelIndex& index, int role) const {
 
     int row = index.row();
     if (row < m_sortedPlaylist.size()) {
+        int duration;
         switch (m_headerList.at(index.column()).second) {
         case VIEW_ORDER:
             value = m_sortedPlaylist.at(row).viewOrder;
             break;
+        case ARTIST:
+            value = m_sortedPlaylist.at(row).pArtist->name;
+            break;
         case TITLE:
             value = m_sortedPlaylist.at(row).pTrack->title;
+            break;
+        case DURATION:
+            duration = m_sortedPlaylist.at(row).pTrack->duration;
+            if (duration) {
+                value = MixxxUtils::millisecondsToMinutes(duration, true);
+            }
             break;
         case URI:
             value = m_sortedPlaylist.at(row).pTrack->uri;
@@ -734,58 +746,80 @@ bool BansheePlaylistModel::findInUtf8Case(gchar* heystack, gchar* needles) {
 
 TrackPointer BansheePlaylistModel::getTrack(const QModelIndex& index) const {
 
-//    Itdb_Track* pTrack = getPTrackFromModelIndex(index);
-//    if (!pTrack) {
+    int row = index.row();
+    if (row >= m_sortedPlaylist.size()) {
         return TrackPointer();
-/*
-}
+    }
 
-    QString location; // = itdb_get_mountpoint(m_pPlaylist->itdb);
-    QString banshee_path; // = pTrack->banshee_path;
-    banshee_path.replace(QString(":"), QString("/"));
-    location += banshee_path;
+    QUrl url = m_sortedPlaylist.at(row).pTrack->uri;
 
-    qDebug() << location;
+    QString location;
+    location = url.toLocalFile();
+
+    qDebug() << location << " = " << url;
+
+    if (location.isEmpty()) {
+        // Try to convert a smb path location = url.toLocalFile();
+        QString temp_location = url.toString();
+
+        if (temp_location.startsWith("smb://")) {
+            // smb://daniel-desktop/volume/Musik/Lastfm/Limp Bizkit/Chocolate Starfish And The Hot Dog Flavored Water/06 - Rollin' (Air Raid Vehicle).mp3"
+
+            // QDesktopServices::storageLocation(QDesktopServices::HomeLocation);
+            // QDir::homePath()
+
+            location = QDir::homePath() + "/.gvfs/";
+            location += temp_location.section('/', 3, 3);
+            location += " auf ";
+            location += temp_location.section('/', 2, 2);
+            location += "/";
+            location += temp_location.section('/', 4);
+
+            qDebug() << location;
+        } else {
+            // uri not supported
+            qDebug() << "Track url not supported: " << url;
+            return TrackPointer();
+        }
+    }
 
     TrackDAO& track_dao = m_pTrackCollection->getTrackDAO();
     int track_id = track_dao.getTrackId(location);
+    bool track_already_in_library = track_id >= 0;
     if (track_id < 0) {
         // Add Track to library
         track_id = track_dao.addTrack(location, true);
     }
 
-    TrackPointer pTrackP;
+    TrackPointer pTrack;
 
     if (track_id < 0) {
-        // Add Track to library failed
-        // Create own TrackInfoObject
-        pTrackP = TrackPointer(new TrackInfoObject(location), &QObject::deleteLater);
-    }
-    else {
-        pTrackP = track_dao.getTrack(track_id);
+        // Add Track to library failed, create a transient TrackInfoObject
+        pTrack = TrackPointer(new TrackInfoObject(location), &QObject::deleteLater);
+    } else {
+        pTrack = track_dao.getTrack(track_id);
     }
 
-    // Overwrite metadata from Banshee
-    // Note: This will be written to the mixxx library as well
-    // This is OK here because the location ist still pointing to the Banshee device
-    pTrackP->setArtist(QString::fromUtf8(pTrack->artist));
-    pTrackP->setTitle(QString::fromUtf8(pTrack->title));
-    pTrackP->setAlbum(QString::fromUtf8(pTrack->album));
-    pTrackP->setYear(QString::number(pTrack->year));
-    pTrackP->setGenre(QString::fromUtf8(pTrack->genre));
-    float bpm = (float)pTrack->BPM;
-    pTrackP->setBpm(bpm);
-    pTrackP->setComment(QString::fromUtf8(pTrack->comment));
+    // If this track was not in the Mixxx library it is now added and will be
+    // saved with the metadata from iTunes. If it was already in the library
+    // then we do not touch it so that we do not over-write the user's metadata.
+    if (!track_already_in_library) {
+        pTrack->setArtist(m_sortedPlaylist.at(row).pArtist->name);
+        pTrack->setTitle(m_sortedPlaylist.at(row).pTrack->title);
+        //pTrack->setAlbum(album);
+        //pTrack->setYear(year);
+        //pTrack->setGenre(genre);
+        //pTrack->setBpm(bpm);
 
-    // If the track has a BPM, then give it a static beatgrid.
-    if (bpm) {
-        BeatsPointer pBeats = BeatFactory::makeBeatGrid(pTrackP, bpm, 0);
-        pTrackP->setBeats(pBeats);
+        // If the track has a BPM, then give it a static beatgrid.
+        //if (bpm > 0) {
+        //    BeatsPointer pBeats = BeatFactory::makeBeatGrid(pTrack, bpm, 0);
+        //    pTrack->setBeats(pBeats);
+        //}
     }
-
-    return pTrackP;
-    */
+    return pTrack;
 }
+
 // Gets the on-disk location of the track at the given location.
 QString BansheePlaylistModel::getTrackLocation(const QModelIndex& index) const {
 

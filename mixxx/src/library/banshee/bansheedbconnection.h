@@ -16,12 +16,19 @@ public:
     struct Track {
         QString title;
         QUrl uri;
+        int duration;
+        int artistId;
+    };
+
+    struct Artist {
+        QString name;
     };
 
     struct PlaylistEntry {
         int trackId;
         int viewOrder;
         struct Track* pTrack;
+        struct Artist* pArtist;
     };
 
     BansheeDbConnection();
@@ -37,6 +44,7 @@ public:
 private:
     QSqlDatabase m_database;
     QMap<int, struct Track> m_trackMap;
+    QMap<int, struct Artist> m_artistMap;
 
 };
 

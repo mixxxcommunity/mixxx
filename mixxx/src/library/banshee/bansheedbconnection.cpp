@@ -92,10 +92,14 @@ QList<struct BansheeDbConnection::Playlist> BansheeDbConnection::getPlaylists() 
 
 QList<struct BansheeDbConnection::PlaylistEntry> BansheeDbConnection::getPlaylistEntries(int playlistId) {
 
+    QTime time;
+    time.start();
+
     QList<struct BansheeDbConnection::PlaylistEntry> list;
     struct BansheeDbConnection::PlaylistEntry entry;
 
     QSqlQuery query(m_database);
+    query.setForwardOnly(true); // Saves about 50% time
 /*
     QString queryString = QString(
         "CREATE TEMPORARY VIEW IF NOT EXISTS %1 AS "
@@ -116,21 +120,30 @@ QList<struct BansheeDbConnection::PlaylistEntry> BansheeDbConnection::getPlaylis
         // Create Master Playlist
         queryString = QString(
             "SELECT "
-            "TrackID, "
-            "TrackID, "
-            "Title, "
-            "Uri "
-            "FROM CoreTracks");
+            "CoreTracks.TrackID, "  // 0
+            "CoreTracks.TrackID, "  // 1
+            "CoreTracks.Title, "    // 2
+            "CoreTracks.Uri, "      // 3
+            "CoreTracks.Duration, " // 4
+            "CoreTracks.ArtistID, " // 5
+            "CoreArtists.Name "     // 6
+            "FROM CoreTracks "
+            "INNER JOIN CoreArtists ON CoreArtists.ArtistID = CoreTracks.ArtistID "
+                );
      } else {
         // SELECT playlist from CorePlaylistEntries
         queryString = QString(
             "SELECT "
-            "CorePlaylistEntries.TrackID, "
-            "CorePlaylistEntries.ViewOrder, "
-            "CoreTracks.Title, "
-            "CoreTracks.Uri "
+            "CorePlaylistEntries.TrackID, "   // 0
+            "CorePlaylistEntries.ViewOrder, " // 1
+            "CoreTracks.Title, "              // 2
+            "CoreTracks.Uri, "                // 3
+            "CoreTracks.Duration, "           // 4
+            "CoreTracks.ArtistID, "           // 5
+            "CoreArtists.Name "               // 6
             "FROM CorePlaylistEntries "
             "INNER JOIN CoreTracks ON CoreTracks.TrackID = CorePlaylistEntries.TrackID "
+            "INNER JOIN CoreArtists ON CoreArtists.ArtistID = CoreTracks.ArtistID "
             "WHERE CorePlaylistEntries.PlaylistID = %1")
                 .arg(playlistId);
     }
@@ -142,14 +155,27 @@ QList<struct BansheeDbConnection::PlaylistEntry> BansheeDbConnection::getPlaylis
             entry.trackId = query.value(0).toInt();
             entry.viewOrder = query.value(1).toInt();
             m_trackMap[entry.trackId].title = query.value(2).toString();
-            m_trackMap[entry.trackId].uri = query.value(3).toString();
+            m_trackMap[entry.trackId].uri = QUrl::fromEncoded(query.value(3).toByteArray(), QUrl::StrictMode);
+            m_trackMap[entry.trackId].duration = query.value(4).toInt();
+            int artistId = query.value(5).toInt();
+            m_trackMap[entry.trackId].artistId = artistId;
+            m_artistMap[artistId].name = query.value(6).toString();
             entry.pTrack = &m_trackMap[entry.trackId];
-            //qDebug() << entry.pTrack->title << entry.pTrack->uri;
+            entry.pArtist = &m_artistMap[artistId];
             list.append(entry);
         }
     } else {
         LOG_FAILED_QUERY(query);
     }
+
+    qDebug() << "BansheeDbConnection::getPlaylistEntries(), took " << time.elapsed() << "ms";
+    // Benchmark:
+    // 98 ms for select CorePlaylistEntries first Time
+    // 51 ms for select CorePlaylistEntries second Time
+    // 151 ms for select CorePlaylistEntries first Time with one join
+    // 46 ms for select CorePlaylistEntries second Time with one join
+
+
     return list;
 }
 

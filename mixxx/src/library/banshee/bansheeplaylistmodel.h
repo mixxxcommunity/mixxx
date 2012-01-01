@@ -19,7 +19,9 @@ class BansheePlaylistModel : public QAbstractTableModel , public virtual TrackMo
   public:
     enum Columns {
         VIEW_ORDER,
+        ARTIST,
         TITLE,
+        DURATION,
         URI
     };
 
