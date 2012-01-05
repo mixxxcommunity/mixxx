@@ -763,10 +763,9 @@ TrackPointer BansheePlaylistModel::getTrack(const QModelIndex& index) const {
         QString temp_location = url.toString();
 
         if (temp_location.startsWith("smb://")) {
+            // Hack for samba mounts works only on German GNOME Linux
             // smb://daniel-desktop/volume/Musik/Lastfm/Limp Bizkit/Chocolate Starfish And The Hot Dog Flavored Water/06 - Rollin' (Air Raid Vehicle).mp3"
-
-            // QDesktopServices::storageLocation(QDesktopServices::HomeLocation);
-            // QDir::homePath()
+            // TODO(xxx): use gio instead
 
             location = QDir::homePath() + "/.gvfs/";
             location += temp_location.section('/', 3, 3);
@@ -883,30 +882,6 @@ bool BansheePlaylistModel::isColumnInternal(int column) {
     return false;
 }
 
-QMimeData* BansheePlaylistModel::mimeData(const QModelIndexList &indexes) const {
-    QMimeData *mimeData = new QMimeData();
-    QList<QUrl> urls;
-
-    //Ok, so the list of indexes we're given contains separates indexes for
-    //each column, so even if only one row is selected, we'll have like 7 indexes.
-    //We need to only count each row once:
-    QList<int> rows;
-
-    foreach (QModelIndex index, indexes) {
-        if (index.isValid()) {
-            if (!rows.contains(index.row())) {
-                rows.push_back(index.row());
-                QUrl url = QUrl::fromLocalFile(getTrackLocation(index));
-                if (!url.isValid())
-                    qDebug() << "ERROR invalid url\n";
-                else
-                    urls.append(url);
-            }
-        }
-    }
-    mimeData->setUrls(urls);
-    return mimeData;
-}
     /** if no header state exists, we may hide some columns so that the user can reactivate them **/
 bool BansheePlaylistModel::isColumnHiddenByDefault(int column) {
     Q_UNUSED(column);

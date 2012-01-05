@@ -46,7 +46,6 @@ class BansheePlaylistModel : public QAbstractTableModel , public virtual TrackMo
     virtual void moveTrack(const QModelIndex& sourceIndex, const QModelIndex& destIndex);
 
     virtual Qt::ItemFlags flags(const QModelIndex &index) const;
-    QMimeData* mimeData(const QModelIndexList &indexes) const;
 
     QItemDelegate* delegateForColumn(const int i);
     TrackModel::CapabilitiesFlags getCapabilities() const;

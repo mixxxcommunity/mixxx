@@ -214,10 +214,10 @@ void BansheeFeature::addToAutoDJ(bool bTop) {
         TreeItem *item = static_cast<TreeItem*>(m_lastRightClickedIndex.internalPointer());
         qDebug() << "BansheeFeature::addToAutoDJ " << item->data() << " " << item->dataPath();
         QString playlist = item->dataPath().toString();
- /*       Itdb_Playlist* pPlaylist = (Itdb_Playlist*)playlist.toUInt();
-        if (pPlaylist) {
-            BansheePlaylistModel* pPlaylistModelToAdd = new BansheePlaylistModel(this, m_pTrackCollection);
-            pPlaylistModelToAdd->setPlaylist(pPlaylist);
+        int playlistID = playlist.toInt();
+        if (playlistID > 0) {
+            BansheePlaylistModel* pPlaylistModelToAdd = new BansheePlaylistModel(this, m_pTrackCollection, &m_connection);
+            pPlaylistModelToAdd->setPlaylist(playlistID);
             PlaylistDAO &playlistDao = m_pTrackCollection->getPlaylistDAO();
             int autoDJId = playlistDao.getPlaylistIdFromName(AUTODJ_TABLE);
 
@@ -236,7 +236,6 @@ void BansheeFeature::addToAutoDJ(bool bTop) {
             }
             delete pPlaylistModelToAdd;
         }
-        */
     }
 }
 
@@ -245,29 +244,28 @@ void BansheeFeature::slotImportAsMixxxPlaylist() {
 
     if (m_lastRightClickedIndex.isValid()) {
         TreeItem *item = static_cast<TreeItem*>(m_lastRightClickedIndex.internalPointer());
-        qDebug() << "BansheeFeature::slotImportAsMixxxPlaylist " << item->data() << " " << item->dataPath();
-        QString playlist = item->dataPath().toString();
-/*
-        Itdb_Playlist* pPlaylist = (Itdb_Playlist*)playlist.toUInt();
-        playlist = QString::fromUtf8(pPlaylist->name);
-        if (pPlaylist) {
-            BansheePlaylistModel* pPlaylistModelToAdd = new BansheePlaylistModel(this, m_pTrackCollection);
-  //          pPlaylistModelToAdd->setPlaylist(pPlaylist);
+        QString playlistName = item->data().toString();
+        QString playlistStId = item->dataPath().toString();
+        int playlistID = playlistStId.toInt();
+        qDebug() << "BansheeFeature::slotImportAsMixxxPlaylist " << playlistName << " " << playlistStId;
+        if (playlistID > 0) {
+            BansheePlaylistModel* pPlaylistModelToAdd = new BansheePlaylistModel(this, m_pTrackCollection, &m_connection);
+            pPlaylistModelToAdd->setPlaylist(playlistID);
             PlaylistDAO &playlistDao = m_pTrackCollection->getPlaylistDAO();
 
-            int playlistId = playlistDao.getPlaylistIdFromName(playlist);
+            int playlistId = playlistDao.getPlaylistIdFromName(playlistName);
             int i = 1;
 
             if (playlistId != -1) {
                 // Calculate a unique name
-                playlist += "(%1)";
+                playlistName += "(%1)";
                 while (playlistId != -1) {
                     i++;
-                    playlistId = playlistDao.getPlaylistIdFromName(playlist.arg(i));
+                    playlistId = playlistDao.getPlaylistIdFromName(playlistName.arg(i));
                 }
-                playlist = playlist.arg(i);
+                playlistName = playlistName.arg(i);
             }
-            playlistId = playlistDao.createPlaylist(playlist);
+            playlistId = playlistDao.createPlaylist(playlistName);
 
             if (playlistId != -1) {
                 // Copy Tracks
@@ -285,12 +283,11 @@ void BansheeFeature::slotImportAsMixxxPlaylist() {
                 QMessageBox::warning(NULL,
                                      tr("Playlist Creation Failed"),
                                      tr("An unknown error occurred while creating playlist: ")
-                                      + playlist);
+                                      + playlistName);
             }
 
             delete pPlaylistModelToAdd;
         }
-    */
     }
     emit(featureUpdated());
 }
