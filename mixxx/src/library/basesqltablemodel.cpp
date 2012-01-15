@@ -43,6 +43,8 @@ void BaseSqlTableModel::initHeaderData() {
                   Qt::Horizontal, tr("Album"));
     setHeaderData(fieldIndex(LIBRARYTABLE_GENRE),
                   Qt::Horizontal, tr("Genre"));
+    setHeaderData(fieldIndex(LIBRARYTABLE_COMPOSER),
+                  Qt::Horizontal, tr("Composer"));
     setHeaderData(fieldIndex(LIBRARYTABLE_YEAR),
                   Qt::Horizontal, tr("Year"));
     setHeaderData(fieldIndex(LIBRARYTABLE_FILETYPE),
@@ -610,6 +612,8 @@ void BaseSqlTableModel::setTrackValueForColumn(TrackPointer pTrack, int column,
         pTrack->setYear(value.toString());
     } else if (fieldIndex(LIBRARYTABLE_GENRE) == column) {
         pTrack->setGenre(value.toString());
+    } else if (fieldIndex(LIBRARYTABLE_COMPOSER) == column) {
+        pTrack->setComposer(value.toString());
     } else if (fieldIndex(LIBRARYTABLE_FILETYPE) == column) {
         pTrack->setType(value.toString());
     } else if (fieldIndex(LIBRARYTABLE_TRACKNUMBER) == column) {

@@ -20,12 +20,12 @@ def get_bzr_branch_name():
         match = checkout_matcher.match(line)
         if not match:
             match = parent_matcher.match(line)
-        if match: 
+        if match:
             match = match.groupdict()
             project = match['project']
             branch_name = match['branch_name']
             owner = match['owner']
-           	
+
             # Strip ~ from owner name
             owner = owner.replace('~', '')
 
@@ -33,8 +33,8 @@ def get_bzr_branch_name():
             if branch_name:
                 branch_name = branch_name.replace('_', '-')
 
-            # Detect release Branch 
-            if owner == '%2Bbranch' and project == 'mixxx': 
+            # Detect release Branch
+            if owner == '%2Bbranch' and project == 'mixxx':
                 if branch_name:
                     return 'release-%s.x' % branch_name
                 return 'trunk'
@@ -44,7 +44,9 @@ def get_bzr_branch_name():
                 return branch_name
 
             return "%s~%s" % (owner, branch_name)
-
+    # Fall back on branch nick.
+    print "ERROR: Could not determine branch name from output of 'bzr info'. Please file a bug with the output of 'bzr info' attached."
+    return os.popen('bzr nick').readline().strip()
 
 def get_build_dir(platformString, bitwidth):
     build_dir = '%s%s_build' % (platformString[0:3],bitwidth)
