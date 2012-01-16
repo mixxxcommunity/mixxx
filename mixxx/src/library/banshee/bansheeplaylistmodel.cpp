@@ -677,119 +677,48 @@ QVariant BansheePlaylistModel::getBaseValue(const QModelIndex& index, int role) 
 
 void BansheePlaylistModel::setPlaylist(int playlistId) {
 
-    if (m_playlistId == playlistId) {
-        qDebug() << "Already focused on playlist " << playlistId;
-        return;
-    }
-
     if (m_playlistId >= 0) {
         beginRemoveRows(QModelIndex(), 0, m_sortedPlaylist.size()-1);
         m_playlistId = -1;
-//        d_sortedPlaylist.clear();
+        m_sortedPlaylist.clear();
         endRemoveRows();
     }
 
     if (playlistId >= 0) {
-//        if (m_pConnection->isOpen()) {
-
-//        }
-            //qDebug() << "PlaylistTableModel::setPlaylist" << playlistId;
-
         QList<struct BansheeDbConnection::PlaylistEntry> list;
+
+        m_playlistId = playlistId;
 
         list = m_pConnection->getPlaylistEntries(playlistId);
 
         beginInsertRows(QModelIndex(), 0, list.size()-1);
 
-        QByteArray search = m_currentSearch.toUtf8();
-
- //       foreach (struct BansheeDbConnection::PlaylistEntry entry, list) {
-
- //       }
-
-        m_sortedPlaylist = list;
-
-
- /*
-
-
-
-        for (track_node = g_list_first(pPlaylist->members);
-             track_node != NULL;
-             track_node = g_list_next(track_node))
-        {
-            struct playlist_member plMember;
-            plMember.pClass = this;
-            plMember.pTrack = (Itdb_Track*)track_node->data;
-            plMember.pos = ++pl_position;
-
-            // Filter
-            bool add = false;
-            if( itdb_playlist_is_mpl(pPlaylist) && search.size()){
-                // Apply filter only for the master playlist "BANSHEE"
-                gchar* haystack = g_strconcat(
-                        plMember.pTrack->artist,
-                        plMember.pTrack->title,
-                        plMember.pTrack->album,
-                        plMember.pTrack->comment,
-                        plMember.pTrack->genre,
-                        NULL);
-
-                if( findInUtf8Case(haystack, search.data())) {
-                    add = true;
+        foreach (struct BansheeDbConnection::PlaylistEntry entry, list) {
+            bool found = true;
+            QStringList search = m_currentSearch.split(" ", QString::SkipEmptyParts);
+            foreach (const QString &str, search) {
+                if (entry.pArtist->name.contains(str, Qt::CaseInsensitive)) {
+                } else if (entry.pTrack->title.contains(str, Qt::CaseInsensitive)) {
+                } else {
+                    // search String part not found, don't add entry to m_sortedPlaylist
+                    found = false;
+                    break;
                 }
-                g_free(haystack);
-            } else {
-                add = true;
+                    // entry.pTrack->album +
+                    // entry.pTrack->comment +
+                    // plMember.pTrack->genre +)
             }
 
-            if (add) {
-                m_sortedPlaylist.append(plMember);
-            }
-
-        }
-        */
-//         qSort(m_sortedPlaylist.begin(), m_sortedPlaylist.end(), columnLessThan);
-
-        // Set default sort
-        sort(0, Qt::DescendingOrder);
-    }
-}
-
-
-
-/*
-//static
-bool BansheePlaylistModel::findInUtf8Case(gchar* heystack, gchar* needles) {
-    bool ret = true;
-    if (heystack == NULL) {
-        return false;
-    }
-    if (needles == NULL) {
-        return true;
-    }
-
-    gchar* heystack_casefold = g_utf8_casefold(heystack, -1);
-    gchar* needles_casefold = g_utf8_casefold(needles, -1);
-    gchar** needle = g_strsplit_set(needles_casefold, " ", 0);
-
-    qDebug() << "find" << heystack_casefold;
-
-    // all needles must be found, implicit AND
-    for (int i = 0; needle[i]; i++) {
-        if (needle[i][0] != 0) {
-            if (!g_strrstr(heystack_casefold, needle[i])) {
-                ret = false;
-                break;
+            if (found) {
+                m_sortedPlaylist.append(entry);
             }
         }
+
+        endInsertRows();
+
+        sort(m_iSortColumn, m_eSortOrder);
     }
-    g_free(heystack_casefold);
-    g_free(needles_casefold);
-    g_strfreev(needle);
-    return ret;
 }
-*/
 
 TrackPointer BansheePlaylistModel::getTrack(const QModelIndex& index) const {
 
@@ -885,6 +814,7 @@ QString BansheePlaylistModel::getTrackLocation(const QModelIndex& index) const {
 
 // Gets a significant hint of the track at the given QModelIndex
 // This is used to restore the selection after WTrackTableView::doSortByColumn
+// We user here the view Order because a track might be more than one time in a playlist
 int BansheePlaylistModel::getTrackId(const QModelIndex& index) const {
     // in our case the position in the playlist is a significant hint
     int row = index.row();
@@ -914,9 +844,7 @@ void BansheePlaylistModel::search(const QString& searchText) {
 
     if (m_currentSearch != searchText) {
         m_currentSearch = searchText;
- //       if (itdb_playlist_is_mpl(m_pPlaylist)) {
-//           setPlaylist(m_pPlaylist);
- //       }
+        setPlaylist(m_playlistId);
     }
 }
 
@@ -958,22 +886,3 @@ QItemDelegate* BansheePlaylistModel::delegateForColumn(const int i) {
     Q_UNUSED(i);
     return NULL;
 }
-
-/*
-Itdb_Track* BansheePlaylistModel::getPTrackFromModelIndex(const QModelIndex& index) const {
-    if (   !index.isValid()
-        || m_pPlaylist == NULL
-    ) {
-        return NULL;
-    }
-
-    int row = index.row();
-    int column = index.column();
-
-    if (row >= m_sortedPlaylist.size() || column >= m_headerList.size()) {
-        // index is outside the valid range
-        return NULL;
-    }
-    return m_sortedPlaylist.at(row).pTrack;
-}
-*/
