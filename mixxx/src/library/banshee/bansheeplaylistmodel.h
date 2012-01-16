@@ -25,6 +25,13 @@ class BansheePlaylistModel : public QAbstractTableModel , public virtual TrackMo
         URI
     };
 
+    struct ColumnsInfo {
+        enum Columns id;
+        QString lable;
+        bool (*lessThen)(struct BansheeDbConnection::PlaylistEntry &s1, struct BansheeDbConnection::PlaylistEntry &s2);
+        bool (*greaterThen)(struct BansheeDbConnection::PlaylistEntry &s1, struct BansheeDbConnection::PlaylistEntry &s2);
+    };
+
     BansheePlaylistModel(QObject* pParent, TrackCollection* pTrackCollection, BansheeDbConnection* pConnection);
     virtual ~BansheePlaylistModel();
 
@@ -97,6 +104,13 @@ class BansheePlaylistModel : public QAbstractTableModel , public virtual TrackMo
     virtual int findSortInsertionPoint(int trackId, TrackPointer pTrack,
                                        const QVector<QPair<int, QHash<int, QVariant> > >& rowInfo);
 
+    void appendColumnsInfo(
+            enum Columns id,
+            QString lable,
+            bool (*lessThen)(struct BansheeDbConnection::PlaylistEntry &s1, struct BansheeDbConnection::PlaylistEntry &s2),
+            bool (*greaterThen)(struct BansheeDbConnection::PlaylistEntry &s1, struct BansheeDbConnection::PlaylistEntry &s2));
+
+
 //    Itdb_Track* getPTrackFromModelIndex(const QModelIndex& index) const;
 
 //    static bool findInUtf8Case(gchar* heystack, gchar* needles);
@@ -126,7 +140,7 @@ class BansheePlaylistModel : public QAbstractTableModel , public virtual TrackMo
     QString m_currentSearch;
     QString m_currentSearchFilter;
 
-    QList<QPair<QString, enum Columns> > m_headerList;
+    QList<struct ColumnsInfo> m_headerList;
 
     QList<struct BansheeDbConnection::PlaylistEntry> m_sortedPlaylist;
 
