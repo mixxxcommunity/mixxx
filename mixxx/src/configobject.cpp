@@ -228,7 +228,6 @@ template <class ValueType> bool ConfigObject<ValueType>::Parse()
         int group = 0;
         QString groupStr, line;
         QTextStream text(&configfile);
-
         text.setCodec("UTF-8");
 
         while (!text.atEnd())

@@ -722,41 +722,15 @@ void BansheePlaylistModel::setPlaylist(int playlistId) {
 
 TrackPointer BansheePlaylistModel::getTrack(const QModelIndex& index) const {
 
-    int row = index.row();
-    if (row >= m_sortedPlaylist.size()) {
+    QString location;
+
+    location = getTrackLocation(index);
+
+    if (location.isEmpty()) {
         return TrackPointer();
     }
 
-    QUrl url = m_sortedPlaylist.at(row).pTrack->uri;
-
-    QString location;
-    location = url.toLocalFile();
-
-    qDebug() << location << " = " << url;
-
-    if (location.isEmpty()) {
-        // Try to convert a smb path location = url.toLocalFile();
-        QString temp_location = url.toString();
-
-        if (temp_location.startsWith("smb://")) {
-            // Hack for samba mounts works only on German GNOME Linux
-            // smb://daniel-desktop/volume/Musik/Lastfm/Limp Bizkit/Chocolate Starfish And The Hot Dog Flavored Water/06 - Rollin' (Air Raid Vehicle).mp3"
-            // TODO(xxx): use gio instead
-
-            location = QDir::homePath() + "/.gvfs/";
-            location += temp_location.section('/', 3, 3);
-            location += " auf ";
-            location += temp_location.section('/', 2, 2);
-            location += "/";
-            location += temp_location.section('/', 4);
-
-            qDebug() << location;
-        } else {
-            // uri not supported
-            qDebug() << "Track url not supported: " << url;
-            return TrackPointer();
-        }
-    }
+    int row = index.row();
 
     TrackDAO& track_dao = m_pTrackCollection->getTrackDAO();
     int track_id = track_dao.getTrackId(location);
@@ -797,19 +771,42 @@ TrackPointer BansheePlaylistModel::getTrack(const QModelIndex& index) const {
 
 // Gets the on-disk location of the track at the given location.
 QString BansheePlaylistModel::getTrackLocation(const QModelIndex& index) const {
+    int row = index.row();
 
-    //Itdb_Track* pTrack = getPTrackFromModelIndex(index);
-    //if (!pTrack) {
+    if (row >= m_sortedPlaylist.size()) {
         return QString();
- /*   }
+    }
 
-    QString location; // = itdb_get_mountpoint(m_pPlaylist->itdb);
-    QString banshee_path; // = pTrack->banshee_path;
-    banshee_path.replace(QString(":"), QString("/"));
-    location += banshee_path;
+    QUrl url = m_sortedPlaylist.at(row).pTrack->uri;
 
-    return location;
-    */
+    QString location;
+    location = url.toLocalFile();
+
+    qDebug() << location << " = " << url;
+
+    if (!location.isEmpty()) {
+        return location;
+    }
+
+    // Try to convert a smb path location = url.toLocalFile();
+    QString temp_location = url.toString();
+
+    if (temp_location.startsWith("smb://")) {
+        // Hack for samba mounts works only on German GNOME Linux
+        // smb://daniel-desktop/volume/Musik/Lastfm/Limp Bizkit/Chocolate Starfish And The Hot Dog Flavored Water/06 - Rollin' (Air Raid Vehicle).mp3"
+        // TODO(xxx): use gio instead
+
+        location = QDir::homePath() + "/.gvfs/";
+        location += temp_location.section('/', 3, 3);
+        location += " auf ";
+        location += temp_location.section('/', 2, 2);
+        location += "/";
+        location += temp_location.section('/', 4);
+
+        return location;
+    }
+
+    return QString();
 }
 
 // Gets a significant hint of the track at the given QModelIndex
