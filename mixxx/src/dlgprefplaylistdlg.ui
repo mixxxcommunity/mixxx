@@ -182,6 +182,26 @@ playback and outbound link statistics</string>
        </widget>
       </item>
       <item row="3" column="0">
+       <widget class="QCheckBox" name="checkBox_show_rhythmbox">
+        <property name="text">
+         <string>Show Rhythmbox Library</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QCheckBox" name="checkBox_show_banshee">
+        <property name="text">
+         <string>Show Banshee Library</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
        <widget class="QCheckBox" name="checkBox_show_itunes">
         <property name="text">
          <string>Show iTunes Library</string>
@@ -191,10 +211,20 @@ playback and outbound link statistics</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="0">
+      <item row="6" column="0">
        <widget class="QCheckBox" name="checkBox_show_ipod">
         <property name="text">
          <string>Show iPod</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="0">
+       <widget class="QCheckBox" name="checkBox_show_tracktor">
+        <property name="text">
+         <string>Show Tracktor Library</string>
         </property>
         <property name="checked">
          <bool>true</bool>

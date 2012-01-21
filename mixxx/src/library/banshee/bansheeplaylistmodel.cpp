@@ -143,6 +143,7 @@ QVariant BansheePlaylistModel::data(const QModelIndex& index, int role) const {
     }
 
     int ivalue;
+    float fvalue;
     QDateTime timeAdded;
 
     int row = index.row();
@@ -200,7 +201,8 @@ QVariant BansheePlaylistModel::data(const QModelIndex& index, int role) const {
         case BPM:
             ivalue = m_sortedPlaylist.at(row).pTrack->bpm;
             if (ivalue) {
-                value = ivalue;
+                fvalue = ivalue/10.0;
+                value = fvalue;
             }
             break;
         case BITRATE:
@@ -325,14 +327,14 @@ void BansheePlaylistModel::setPlaylist(int playlistId) {
             foreach (const QString &str, search) {
                 if (entry.pArtist->name.contains(str, Qt::CaseInsensitive)) {
                 } else if (entry.pTrack->title.contains(str, Qt::CaseInsensitive)) {
+                } else if (entry.pAlbum->title.contains(str, Qt::CaseInsensitive)) {
+                } else if (entry.pTrack->comment.contains(str, Qt::CaseInsensitive)) {
+                } else if (entry.pTrack->genre.contains(str, Qt::CaseInsensitive)) {
                 } else {
                     // search String part not found, don't add entry to m_sortedPlaylist
                     found = false;
                     break;
                 }
-                    // entry.pTrack->album +
-                    // entry.pTrack->comment +
-                    // plMember.pTrack->genre +)
             }
 
             if (found) {
@@ -381,16 +383,22 @@ TrackPointer BansheePlaylistModel::getTrack(const QModelIndex& index) const {
     if (!track_already_in_library) {
         pTrack->setArtist(m_sortedPlaylist.at(row).pArtist->name);
         pTrack->setTitle(m_sortedPlaylist.at(row).pTrack->title);
-        //pTrack->setAlbum(album);
-        //pTrack->setYear(year);
-        //pTrack->setGenre(genre);
-        //pTrack->setBpm(bpm);
-
+        pTrack->setDuration(m_sortedPlaylist.at(row).pTrack->duration);
+        pTrack->setAlbum(m_sortedPlaylist.at(row).pAlbum->title);
+        pTrack->setYear(QString::number(m_sortedPlaylist.at(row).pTrack->year));
+        pTrack->setRating(m_sortedPlaylist.at(row).pTrack->rating);
+        pTrack->setGenre(m_sortedPlaylist.at(row).pTrack->genre);
+        pTrack->setTrackNumber(QString::number(m_sortedPlaylist.at(row).pTrack->tracknumber));
+        float bpm = ((float)m_sortedPlaylist.at(row).pTrack->bpm)/10.0;
+        pTrack->setBpm(bpm);
+        pTrack->setBitrate(m_sortedPlaylist.at(row).pTrack->bitrate);
+        pTrack->setComment(m_sortedPlaylist.at(row).pTrack->comment);
+        pTrack->setComposer(m_sortedPlaylist.at(row).pTrack->composer);
         // If the track has a BPM, then give it a static beatgrid.
-        //if (bpm > 0) {
-        //    BeatsPointer pBeats = BeatFactory::makeBeatGrid(pTrack, bpm, 0);
-        //    pTrack->setBeats(pBeats);
-        //}
+        if (bpm > 0) {
+            BeatsPointer pBeats = BeatFactory::makeBeatGrid(pTrack, bpm, 0);
+            pTrack->setBeats(pBeats);
+        }
     }
     return pTrack;
 }
