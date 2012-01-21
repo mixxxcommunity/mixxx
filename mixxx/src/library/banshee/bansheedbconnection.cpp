@@ -1,5 +1,3 @@
-// This file is based on BansheeDbConnection.cs from the Banshee source code
-
 #include <QtDebug>
 #include <QDesktopServices>
 #include <QSettings>
@@ -8,29 +6,9 @@
 #include <QSqlError>
 #include "library/queryutil.h"
 
-/*
-using System;
-using System.Linq;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading;
-
-using Hyena;
-using Hyena.Data;
-using Hyena.Jobs;
-using Hyena.Data.Sqlite;
-
-using Banshee.Base;
-using Banshee.ServiceStack;
-using Banshee.Configuration;
-*/
-
 #include "bansheedbconnection.h"
 
-
 BansheeDbConnection::BansheeDbConnection() {
-
-
 }
 
 BansheeDbConnection::~BansheeDbConnection() {
@@ -120,15 +98,28 @@ QList<struct BansheeDbConnection::PlaylistEntry> BansheeDbConnection::getPlaylis
         // Create Master Playlist
         queryString = QString(
             "SELECT "
-            "CoreTracks.TrackID, "  // 0
-            "CoreTracks.TrackID, "  // 1
-            "CoreTracks.Title, "    // 2
-            "CoreTracks.Uri, "      // 3
-            "CoreTracks.Duration, " // 4
-            "CoreTracks.ArtistID, " // 5
-            "CoreArtists.Name "     // 6
+            "CoreTracks.TrackID, "        // 0
+            "CoreTracks.TrackID, "        // 1
+            "CoreTracks.Title, "          // 2
+            "CoreTracks.Uri, "            // 3
+            "CoreTracks.Duration, "       // 4
+            "CoreTracks.ArtistID, "       // 5
+            "CoreArtists.Name, "          // 6
+            "CoreTracks.Year, "           // 7
+            "CoreTracks.AlbumID, "        // 8
+            "CoreAlbums.Title, "          // 9
+            "CoreTracks.Rating, "         // 10
+            "CoreTracks.Genre, "          // 11
+            "CoreTracks.TrackNumber, "    // 12
+            "CoreTracks.DateAddedStamp, " // 13
+            "CoreTracks.BPM, "            // 14
+            "CoreTracks.BitRate, "        // 15
+            "CoreTracks.Comment, "        // 16
+            "CoreTracks.PlayCount, "      // 17
+            "CoreTracks.Composer "        // 18
             "FROM CoreTracks "
             "INNER JOIN CoreArtists ON CoreArtists.ArtistID = CoreTracks.ArtistID "
+            "INNER JOIN CoreAlbums ON CoreAlbums.AlbumID = CoreTracks.AlbumID "
                 );
      } else {
         // SELECT playlist from CorePlaylistEntries
@@ -140,10 +131,23 @@ QList<struct BansheeDbConnection::PlaylistEntry> BansheeDbConnection::getPlaylis
             "CoreTracks.Uri, "                // 3
             "CoreTracks.Duration, "           // 4
             "CoreTracks.ArtistID, "           // 5
-            "CoreArtists.Name "               // 6
+            "CoreArtists.Name, "              // 6
+            "CoreTracks.Year, "               // 7
+            "CoreTracks.AlbumID, "            // 8
+            "CoreAlbums.Title, "              // 9
+            "CoreTracks.Rating, "             // 10
+            "CoreTracks.Genre, "              // 11
+            "CoreTracks.TrackNumber, "        // 12
+            "CoreTracks.DateAddedStamp, "     // 13
+            "CoreTracks.BPM, "                // 14
+            "CoreTracks.BitRate, "            // 15
+            "CoreTracks.Comment, "            // 16
+            "CoreTracks.PlayCount, "          // 17
+            "CoreTracks.Composer "            // 18
             "FROM CorePlaylistEntries "
             "INNER JOIN CoreTracks ON CoreTracks.TrackID = CorePlaylistEntries.TrackID "
             "INNER JOIN CoreArtists ON CoreArtists.ArtistID = CoreTracks.ArtistID "
+            "INNER JOIN CoreAlbums ON CoreAlbums.AlbumID = CoreTracks.AlbumID "
             "WHERE CorePlaylistEntries.PlaylistID = %1")
                 .arg(playlistId);
     }
@@ -157,11 +161,26 @@ QList<struct BansheeDbConnection::PlaylistEntry> BansheeDbConnection::getPlaylis
             m_trackMap[entry.trackId].title = query.value(2).toString();
             m_trackMap[entry.trackId].uri = QUrl::fromEncoded(query.value(3).toByteArray(), QUrl::StrictMode);
             m_trackMap[entry.trackId].duration = query.value(4).toInt();
+
             int artistId = query.value(5).toInt();
             m_trackMap[entry.trackId].artistId = artistId;
             m_artistMap[artistId].name = query.value(6).toString();
+            m_trackMap[entry.trackId].year = query.value(7).toInt();
+            int albumId = query.value(8).toInt();
+            m_albumMap[albumId].title = query.value(9).toString();
+            m_trackMap[entry.trackId].rating = query.value(10).toInt();
+            m_trackMap[entry.trackId].genre = query.value(11).toString();
+            m_trackMap[entry.trackId].tracknumber = query.value(12).toInt();
+            m_trackMap[entry.trackId].dateadded = query.value(13).toInt();
+            m_trackMap[entry.trackId].bpm = query.value(14).toInt();
+            m_trackMap[entry.trackId].bitrate = query.value(15).toInt();
+            m_trackMap[entry.trackId].comment = query.value(16).toString();
+            m_trackMap[entry.trackId].playcount = query.value(17).toInt();
+            m_trackMap[entry.trackId].composer = query.value(18).toString();
+
             entry.pTrack = &m_trackMap[entry.trackId];
             entry.pArtist = &m_artistMap[artistId];
+            entry.pAlbum = &m_albumMap[albumId];
             list.append(entry);
         }
     } else {
@@ -178,162 +197,6 @@ QList<struct BansheeDbConnection::PlaylistEntry> BansheeDbConnection::getPlaylis
 
     return list;
 }
-
-
-
-/*
-BansheeDbConnection::BansheeDbConnection (string db_path) : base (db_path)
-{
-    // Each cache page is about 1.5K, so 32768 pages = 49152K = 48M
-    int cache_size = (TableExists ("CoreTracks") && Query<long> ("SELECT COUNT(*) FROM CoreTracks") > 10000) ? 32768 : 16384;
-    Execute ("PRAGMA cache_size = ?", cache_size);
-    Execute ("PRAGMA synchronous = OFF");
-    Execute ("PRAGMA temp_store = MEMORY");
-
-    // TODO didn't want this on b/c smart playlists used to rely on it, but
-    // now they shouldn't b/c we have smart custom functions we use for sorting/searching.
-    // See BGO #603665 for discussion about turning this back on.
-    //Execute ("PRAGMA case_sensitive_like=ON");
-
-    Log.DebugFormat ("Opened SQLite (version {1}) connection to {0}", db_path, ServerVersion);
-
-    migrator = new BansheeDbFormatMigrator (this);
-    configuration = new DatabaseConfigurationClient (this);
-
-    if (ApplicationContext.CommandLine.Contains ("debug-sql")) {
-        Hyena.Data.Sqlite.HyenaSqliteCommand.LogAll = true;
-        WarnIfCalledFromThread = ThreadAssist.MainThread;
-    }
-}
-
-
-
-BansheeDbConnection::BansheeDbConnection () : this (DatabaseFile) {
-    validate_schema = ApplicationContext.CommandLine.Contains ("validate-db-schema");
-}
-
-IEnumerable<string> BansheeDbConnection::SortedTableColumns (string table) {
-    return GetSchema (table).Keys.OrderBy (n => n);
-}
-
-void BansheeDbConnection::IInitializeService.Initialize () {
-    lock (this) {
-        migrator.Migrate ();
-        migrator = null;
-
-        try {
-            OptimizeDatabase ();
-        } catch (Exception e) {
-            Log.Exception ("Error determining if ANALYZE is necessary", e);
-        }
-
-        // Update cached sorting keys
-        BeginTransaction ();
-        try {
-            SortKeyUpdater.Update ();
-            CommitTransaction ();
-        } catch {
-            RollbackTransaction ();
-        }
-    }
-
-    if (Banshee.Metrics.BansheeMetrics.EnableCollection.Get ()) {
-        Banshee.Metrics.BansheeMetrics.Start ();
-    }
-
-    if (validate_schema) {
-        ValidateSchema ();
-    }
-}
-
-void BansheeDbConnection::OptimizeDatabase ()
-{
-    bool needs_analyze = false;
-    long analyze_threshold = configuration.Get<long> ("Database", "AnalyzeThreshold", 100);
-    string [] tables_with_indexes = {"CoreTracks", "CoreArtists", "CoreAlbums",
-            "CorePlaylistEntries", "PodcastItems", "PodcastEnclosures",
-             "PodcastSyndications", "CoverArtDownloads"};
-
-    if (TableExists ("sqlite_stat1")) {
-        foreach (string table_name in tables_with_indexes) {
-            if (TableExists (table_name)) {
-                long count = Query<long> (String.Format ("SELECT COUNT(*) FROM {0}", table_name));
-                string stat = Query<string> ("SELECT stat FROM sqlite_stat1 WHERE tbl = ? LIMIT 1", table_name);
-                // stat contains space-separated integers,
-                // the first is the number of records in the table
-                long items_indexed = stat != null ? long.Parse (stat.Split (' ')[0]) : 0;
-
-                if (Math.Abs (count - items_indexed) > analyze_threshold) {
-                    needs_analyze = true;
-                    break;
-                }
-            }
-        }
-    } else {
-        needs_analyze = true;
-    }
-
-    if (needs_analyze) {
-        Log.DebugFormat ("Running ANALYZE against database to improve performance");
-        Execute ("ANALYZE");
-    }
-}
-
-BansheeDbConnection::BansheeDbFormatMigrator Migrator {
-    get { lock (this) { return migrator; } }
-}
-
-bool BansheeDbConnection::ValidateSchema ()
-{
-    bool is_valid = true;
-    var new_db_path = Paths.GetTempFileName (Paths.TempDir);
-    var new_db = new BansheeDbConnection (new_db_path);
-    ((IInitializeService)new_db).Initialize ();
-
-    Hyena.Log.DebugFormat ("Validating db schema for {0}", DbPath);
-
-    var tables = new_db.QueryEnumerable<string> (
-            "select name from sqlite_master where type='table' order by name"
-    );
-
-    foreach (var table in tables) {
-        if (!TableExists (table)) {
-            Log.ErrorFormat ("Table {0} does not exist!", table);
-            is_valid = false;
-        } else {
-            var a = new_db.SortedTableColumns (table);
-            var b = SortedTableColumns (table);
-
-            a.Except (b).ForEach (c => { is_valid = false; Hyena.Log.ErrorFormat ("Table {0} should contain column {1}", table, c); });
-            b.Except (a).ForEach (c => Hyena.Log.DebugFormat ("Table {0} has extra (probably obsolete) column {1}", table, c));
-        }
-    }
-
-    using (var reader = new_db.Query (
-            "select name,sql from sqlite_master where type='index' AND name NOT LIKE 'sqlite_autoindex%' order by name")) {
-        while (reader.Read ()) {
-            string name = (string)reader[0];
-            string sql = (string)reader[1];
-            if (!IndexExists (name)) {
-                Log.ErrorFormat ("Index {0} does not exist!", name);
-                is_valid = false;
-            } else {
-                string our_sql = Query<string> ("select sql from sqlite_master where type='index' and name=?", name);
-                if (our_sql != sql) {
-                    Log.ErrorFormat ("Index definition of {0} differs, should be `{1}` but is `{2}`", name, sql, our_sql);
-                    is_valid = false;
-                }
-            }
-        }
-    }
-
-    Hyena.Log.DebugFormat ("Done validating db schema for {0}", DbPath);
-    System.IO.File.Delete (new_db_path);
-    return is_valid;
-}
-
-*/
-
 
 // static
 QString BansheeDbConnection::getDatabaseFile() {

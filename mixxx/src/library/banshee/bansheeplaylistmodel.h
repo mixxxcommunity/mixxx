@@ -22,7 +22,18 @@ class BansheePlaylistModel : public QAbstractTableModel , public virtual TrackMo
         ARTIST,
         TITLE,
         DURATION,
-        URI
+        URI,
+        ALBUM,
+        YEAR,
+        RATING,
+        GENRE,
+        TRACKNUMBER,
+        DATEADDED,
+        BPM,
+        BITRATE,
+        COMMENT,
+        PLAYCOUNT,
+        COMPOSER
     };
 
     struct ColumnsInfo {
@@ -73,7 +84,6 @@ class BansheePlaylistModel : public QAbstractTableModel , public virtual TrackMo
 
     virtual const QString currentSearch() const;
     virtual void setSort(int column, Qt::SortOrder order);
-    virtual int fieldIndex(const QString& fieldName) const;
 
   protected:
     /** Use this if you want a model that is read-only. */
@@ -84,8 +94,6 @@ class BansheePlaylistModel : public QAbstractTableModel , public virtual TrackMo
     // Set the columns used for searching. Names must correspond to the column
     // names in the table provided to setTable. Must be called after setTable is
     // called.
-    virtual void setSearchColumns(const QStringList& searchColumns);
-    // virtual QString orderByClause() const;
     virtual void initHeaderData();
     virtual void initDefaultSearchColumns();
 
@@ -95,14 +103,6 @@ class BansheePlaylistModel : public QAbstractTableModel , public virtual TrackMo
   private:
     inline TrackPointer lookupCachedTrack(int trackId) const;
     inline QVariant getTrackValueForColumn(TrackPointer pTrack, int column) const;
-    inline QVariant getTrackValueForColumn(int trackId, int column,
-                                           TrackPointer pTrack=TrackPointer()) const;
-    inline void setTrackValueForColumn(TrackPointer pTrack, int column, QVariant value);
-    QVariant getBaseValue(const QModelIndex& index, int role = Qt::DisplayRole) const;
-
-    virtual int compareColumnValues(int iColumnNumber, Qt::SortOrder eSortOrder, QVariant val1, QVariant val2);
-    virtual int findSortInsertionPoint(int trackId, TrackPointer pTrack,
-                                       const QVector<QPair<int, QHash<int, QVariant> > >& rowInfo);
 
     void appendColumnsInfo(
             enum Columns id,
@@ -118,14 +118,9 @@ class BansheePlaylistModel : public QAbstractTableModel , public virtual TrackMo
     QString m_tableName;
     QStringList m_columnNames;
     QString m_columnNamesJoined;
-    QHash<QString, int> m_columnIndex;
     QSet<QString> m_tableColumns;
     QString m_tableColumnsJoined;
     QSet<int> m_tableColumnIndices;
-
-    QStringList m_searchColumns;
-    QVector<int> m_searchColumnIndices;
-    QString m_idColumn;
 
     int m_iSortColumn;
     Qt::SortOrder m_eSortOrder;

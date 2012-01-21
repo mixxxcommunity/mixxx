@@ -18,10 +18,24 @@ public:
         QUrl uri;
         int duration;
         int artistId;
+        int year;
+        int rating;
+        QString genre;
+        int tracknumber;
+        int dateadded;
+        int bpm;
+        int bitrate;
+        QString comment;
+        int playcount;
+        QString composer;
     };
 
     struct Artist {
         QString name;
+    };
+
+    struct Album {
+        QString title;
     };
 
     struct PlaylistEntry {
@@ -29,6 +43,7 @@ public:
         int viewOrder;
         struct Track* pTrack;
         struct Artist* pArtist;
+        struct Album* pAlbum;
     };
 
     BansheeDbConnection();
@@ -56,10 +71,44 @@ public:
     static bool uriLessThen(struct PlaylistEntry &s1, PlaylistEntry &s2) { return s1.pTrack->uri.toString() < s2.pTrack->uri.toString(); };
     static bool uriGreaterThen(struct PlaylistEntry &s1, PlaylistEntry &s2) { return s1.pTrack->uri.toString() > s2.pTrack->uri.toString(); }
 
+    static bool albumLessThen(struct PlaylistEntry &s1, PlaylistEntry &s2) { return s1.pAlbum->title < s2.pAlbum->title; };
+    static bool albumGreaterThen(struct PlaylistEntry &s1, PlaylistEntry &s2) { return s1.pAlbum->title > s2.pAlbum->title; }
+
+    static bool yearLessThen(struct PlaylistEntry &s1, PlaylistEntry &s2) { return s1.pTrack->year < s2.pTrack->year; };
+    static bool yearGreaterThen(struct PlaylistEntry &s1, PlaylistEntry &s2) { return s1.pTrack->year > s2.pTrack->year; }
+
+    static bool ratingLessThen(struct PlaylistEntry &s1, PlaylistEntry &s2) { return s1.pTrack->rating < s2.pTrack->rating; };
+    static bool ratingGreaterThen(struct PlaylistEntry &s1, PlaylistEntry &s2) { return s1.pTrack->rating > s2.pTrack->rating; }
+
+    static bool genreLessThen(struct PlaylistEntry &s1, PlaylistEntry &s2) { return s1.pTrack->genre < s2.pTrack->genre; };
+    static bool genreGreaterThen(struct PlaylistEntry &s1, PlaylistEntry &s2) { return s1.pTrack->genre > s2.pTrack->genre; }
+
+    static bool tracknumberLessThen(struct PlaylistEntry &s1, PlaylistEntry &s2) { return s1.pTrack->tracknumber < s2.pTrack->tracknumber; };
+    static bool tracknumberGreaterThen(struct PlaylistEntry &s1, PlaylistEntry &s2) { return s1.pTrack->tracknumber > s2.pTrack->tracknumber; }
+
+    static bool dateaddedLessThen(struct PlaylistEntry &s1, PlaylistEntry &s2) { return s1.pTrack->dateadded < s2.pTrack->dateadded; };
+    static bool dateaddedGreaterThen(struct PlaylistEntry &s1, PlaylistEntry &s2) { return s1.pTrack->dateadded > s2.pTrack->dateadded; }
+
+    static bool bpmLessThen(struct PlaylistEntry &s1, PlaylistEntry &s2) { return s1.pTrack->bpm < s2.pTrack->bpm; };
+    static bool bpmGreaterThen(struct PlaylistEntry &s1, PlaylistEntry &s2) { return s1.pTrack->bpm > s2.pTrack->bpm; }
+
+    static bool bitrateLessThen(struct PlaylistEntry &s1, PlaylistEntry &s2) { return s1.pTrack->bitrate < s2.pTrack->bitrate; };
+    static bool bitrateGreaterThen(struct PlaylistEntry &s1, PlaylistEntry &s2) { return s1.pTrack->bitrate > s2.pTrack->bitrate; }
+
+    static bool commentLessThen(struct PlaylistEntry &s1, PlaylistEntry &s2) { return s1.pTrack->comment < s2.pTrack->comment; };
+    static bool commentGreaterThen(struct PlaylistEntry &s1, PlaylistEntry &s2) { return s1.pTrack->comment > s2.pTrack->comment; }
+
+    static bool playcountLessThen(struct PlaylistEntry &s1, PlaylistEntry &s2) { return s1.pTrack->playcount < s2.pTrack->playcount; };
+    static bool playcountGreaterThen(struct PlaylistEntry &s1, PlaylistEntry &s2) { return s1.pTrack->playcount > s2.pTrack->playcount; }
+
+    static bool composerLessThen(struct PlaylistEntry &s1, PlaylistEntry &s2) { return s1.pTrack->composer < s2.pTrack->composer; };
+    static bool composerGreaterThen(struct PlaylistEntry &s1, PlaylistEntry &s2) { return s1.pTrack->composer > s2.pTrack->composer; }
+
 private:
     QSqlDatabase m_database;
     QMap<int, struct Track> m_trackMap;
     QMap<int, struct Artist> m_artistMap;
+    QMap<int, struct Album> m_albumMap;
 
 };
 
