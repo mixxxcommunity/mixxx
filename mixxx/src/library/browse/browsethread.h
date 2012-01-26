@@ -41,6 +41,7 @@ class BrowseThread : public QThread {
     void populateModel();
 
     QMutex m_mutex;
+    QMutex m_path_mutex;
     QWaitCondition m_locationUpdated;
     QList<int> m_searchColumns;
     QString m_path;
