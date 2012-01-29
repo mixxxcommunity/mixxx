@@ -143,15 +143,10 @@ void LibraryScanner::run()
     qRegisterMetaType<QSet<int> >("QSet<int>");
 
     if (!m_database.isValid()) {
-    	m_database = QSqlDatabase::addDatabase("QSQLITE", "LIBRARY_SCANNER");
+    	m_database = QSqlDatabase::cloneDatabase(m_pCollection->getDatabase(), "LIBRARY_SCANNER");
     }
 
     if (!m_database.isOpen()) {
-        m_database.setHostName("localhost");
-        m_database.setDatabaseName(MIXXX_DB_PATH);
-        m_database.setUserName("mixxx");
-        m_database.setPassword("mixxx");
-
         //Open the database connection in this thread.
         if (!m_database.open()) {
             qDebug() << "Failed to open database from library scanner thread." << m_database.lastError();
@@ -177,6 +172,8 @@ void LibraryScanner::run()
     //Try to upgrade the library from 1.7 (XML) to 1.8+ (DB) if needed. If the
     //upgrade_filename already exists, then do not try to upgrade since we have
     //already done it.
+    // TODO(XXX) SETTINGS_PATH may change in new Mixxx Versions. Here we need
+    // the SETTINGS_PATH from Mixxx V <= 1.7
     QString upgrade_filename = QDir::homePath().append("/").append(SETTINGS_PATH).append("DBUPGRADED");
     qDebug() << "upgrade filename is " << upgrade_filename;
     QFile upgradefile(upgrade_filename);

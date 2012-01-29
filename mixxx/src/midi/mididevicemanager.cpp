@@ -21,6 +21,7 @@
 #include "midiledhandler.h"
 #include "../mixxxcontrol.h"
 #include "midimapping.h"
+#include "mixxx.h"
 
 #define DEVICE_CONFIG_PATH BINDINGS_PATH.append("MixxxMIDIDevices")
 
@@ -68,7 +69,7 @@ void MidiDeviceManager::saveMappings(bool onlyActive) {
         }
 
         filenames.append(filename);
-        mapping->savePreset(BINDINGS_PATH.append(filename + MIDI_MAPPING_EXTENSION));
+        mapping->savePreset(BINDINGS_PATH + filename + MIDI_MAPPING_EXTENSION);
     }
 }
 
@@ -143,7 +144,7 @@ int MidiDeviceManager::setupDevices()
         }
 
         filenames.append(filename);
-        mapping->loadPreset(BINDINGS_PATH.append(filename + MIDI_MAPPING_EXTENSION),true);
+        mapping->loadPreset(BINDINGS_PATH + filename + MIDI_MAPPING_EXTENSION,true);
 
         if ( m_pConfig->getValueString(ConfigKey("[Midi]", name.replace(" ", "_"))) != "1" )
             continue;

@@ -31,10 +31,11 @@
 #include "midiledhandler.h"
 #include "configobject.h"
 #include "errordialoghandler.h"
+#include "mixxx.h"
 
 #define REQUIRED_SCRIPT_FILE "midi-mappings-scripts.js"
 #define XML_SCHEMA_VERSION "1"
-#define DEFAULT_DEVICE_PRESET BINDINGS_PATH.append(m_deviceName.right(m_deviceName.size()-m_deviceName.indexOf(" ")-1).replace(" ", "_") + MIDI_MAPPING_EXTENSION)
+#define DEFAULT_DEVICE_PRESET (BINDINGS_PATH + m_deviceName.right(m_deviceName.size()-m_deviceName.indexOf(" ")-1).replace(" ", "_") + MIDI_MAPPING_EXTENSION)
 
 // static QString toHex(QString numberStr) {
 //     return "0x" + QString("0" + QString::number(numberStr.toUShort(), 16).toUpper()).right(2);

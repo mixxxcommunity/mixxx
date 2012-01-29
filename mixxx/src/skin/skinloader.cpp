@@ -25,7 +25,7 @@ SkinLoader::~SkinLoader() {
 QString SkinLoader::getConfiguredSkinPath() {
     const QString defaultSkin = "Deere1280x800-WXGA";//XXX: App Store //"Outline1024x600-Netbook";
 
-    QString qSkinPath = m_pConfig->getConfigPath();
+    QString qSkinPath = m_pConfig->getResourcePath();
     qSkinPath.append("skins/");
 
     QDir skinPath(qSkinPath);

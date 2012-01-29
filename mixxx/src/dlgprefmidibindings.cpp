@@ -29,6 +29,7 @@
 #include "midi/mididevicemanager.h"
 #include "configobject.h"
 #include "midi/midimapping.h"
+#include "mixxx.h"
 
 #ifdef __MIDISCRIPT__
 #include "midi/midiscriptengine.h"
@@ -179,7 +180,7 @@ void DlgPrefMidiBindings::enumeratePresets()
     // paths to search for midi presets
     QList<QString> midiDirPaths;
     midiDirPaths.append(LPRESETS_PATH);
-    midiDirPaths.append(m_pConfig->getConfigPath().append("midi/"));
+    midiDirPaths.append(m_pConfig->getResourcePath().append("midi/"));
 
     QListIterator<QString> itpth(midiDirPaths);
     while (itpth.hasNext()) {
@@ -315,7 +316,7 @@ void DlgPrefMidiBindings::slotLoadMidiMapping(const QString &name) {
 
     QString filename = LPRESETS_PATH + name + MIDI_MAPPING_EXTENSION;
     QFile ftest(filename);
-    if ( !ftest.exists() ) filename = m_pConfig->getConfigPath().append("midi/") + name + MIDI_MAPPING_EXTENSION;
+    if ( !ftest.exists() ) filename = m_pConfig->getResourcePath().append("midi/") + name + MIDI_MAPPING_EXTENSION;
 
     if (!filename.isNull()) m_pMidiDevice->getMidiMapping()->loadPreset(filename, true);    // It's applied on prefs close
     m_pInputMappingTableView->update();
@@ -329,7 +330,7 @@ void DlgPrefMidiBindings::slotLoadMidiMapping(const QString &name) {
  */
 void DlgPrefMidiBindings::slotExportXML() {
     QString fileName = QFileDialog::getSaveFileName(this,
-            tr("Export Mixxx MIDI Bindings"), m_pConfig->getConfigPath().append("midi/"),
+            tr("Export Mixxx MIDI Bindings"), m_pConfig->getResourcePath().append("midi/"),
             tr("Preset Files (*.midi.xml)"));
     if (!fileName.isNull()) m_pMidiDevice->getMidiMapping()->savePreset(fileName);
 }

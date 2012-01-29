@@ -26,11 +26,11 @@ TrackCollection::TrackCollection(ConfigObject<ConfigValue>* pConfig)
     qDebug() << "Available QtSQL drivers:" << QSqlDatabase::drivers();
 
     m_db.setHostName("localhost");
-    m_db.setDatabaseName(MIXXX_DB_PATH);
+    m_db.setDatabaseName(pConfig->getSettingsPath().append("/mixxxdb.sqlite"));
     m_db.setUserName("mixxx");
     m_db.setPassword("mixxx");
     bool ok = m_db.open();
-    qDebug() << __FILE__ << "DB status:" << ok;
+    qDebug() << "DB status:" << m_db.databaseName() << "=" << ok;
     if (m_db.lastError().isValid()) {
         qDebug() << "Error loading database:" << m_db.lastError();
     }

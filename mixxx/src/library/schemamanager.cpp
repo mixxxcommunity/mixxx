@@ -38,7 +38,7 @@ bool SchemaManager::upgradeToSchemaVersion(ConfigObject<ConfigValue>* config,
         }
     }
 
-    QString schemaFilename = config->getConfigPath();
+    QString schemaFilename = config->getResourcePath();
     schemaFilename.append("schema.xml");
     qDebug() << "Loading schema" << schemaFilename;
     QDomElement schemaRoot = WWidget::openXMLFile(schemaFilename, "schema");

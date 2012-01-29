@@ -71,10 +71,8 @@ extern "C" void crashDlg()
         "Mixxx has encountered a serious error and needs to close.");
 }
 
-
-MixxxApp::MixxxApp(QApplication *a, struct CmdlineArgs args)
+MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
 {
-    m_pApp = a;
 
     QString buildBranch, buildRevision, buildFlags;
 #ifdef BUILD_BRANCH
@@ -103,6 +101,7 @@ MixxxApp::MixxxApp(QApplication *a, struct CmdlineArgs args)
     }
     QString buildInfoFormatted = QString("(%1)").arg(buildInfo.join("; "));
 
+    // This is the first line in mixxx.log
     qDebug() << "Mixxx" << VERSION << buildInfoFormatted << "is starting...";
     qDebug() << "Qt version is:" << qVersion();
 
@@ -128,59 +127,58 @@ MixxxApp::MixxxApp(QApplication *a, struct CmdlineArgs args)
     // Check to see if this is the first time this version of Mixxx is run
     // after an upgrade and make any needed changes.
     Upgrade upgrader;
-    m_pConfig = upgrader.versionUpgrade();
+    m_pConfig = upgrader.versionUpgrade(args.getSettingsPath());
     bool bFirstRun = upgrader.isFirstRun();
     bool bUpgraded = upgrader.isUpgraded();
-    QString qConfigPath = m_pConfig->getConfigPath();
-    QString translationsFolder = qConfigPath + "translations/";
+
+    QString resourcePath = m_pConfig->getResourcePath();
+    QString translationsFolder = resourcePath + "translations/";
 
     // Load Qt base translations
-    QString locale = args.locale;
+    QString locale = args.getLocale();
     if (locale == "") {
         locale = QLocale::system().name();
     }
 
     // Load Qt translations for this locale from the system translation
     // path. This is the lowest precedence QTranslator.
-    QTranslator* qtTranslator = new QTranslator(a);
+    QTranslator* qtTranslator = new QTranslator(pApp);
     if (qtTranslator->load("qt_" + locale,
                           QLibraryInfo::location(QLibraryInfo::TranslationsPath))) {
-        a->installTranslator(qtTranslator);
+        pApp->installTranslator(qtTranslator);
     } else {
         delete qtTranslator;
     }
 
     // Load Qt translations for this locale from the Mixxx translations
     // folder.
-    QTranslator* mixxxQtTranslator = new QTranslator(a);
+    QTranslator* mixxxQtTranslator = new QTranslator(pApp);
     if (mixxxQtTranslator->load("qt_" + locale, translationsFolder)) {
-        a->installTranslator(mixxxQtTranslator);
+        pApp->installTranslator(mixxxQtTranslator);
     } else {
         delete mixxxQtTranslator;
     }
 
     // Load Mixxx specific translations for this locale from the Mixxx
     // translations folder.
-    QTranslator* mixxxTranslator = new QTranslator(a);
+    QTranslator* mixxxTranslator = new QTranslator(pApp);
     bool mixxxLoaded = mixxxTranslator->load("mixxx_" + locale,
                                              translationsFolder);
     qDebug() << "Loading translations for locale" << locale
              << "from translations folder" << translationsFolder << ":"
              << (mixxxLoaded ? "success" : "fail");
     if (mixxxLoaded) {
-        a->installTranslator(mixxxTranslator);
+        pApp->installTranslator(mixxxTranslator);
     } else {
         delete mixxxTranslator;
     }
 
     // Store the path in the config database
-    m_pConfig->set(ConfigKey("[Config]", "Path"), ConfigValue(qConfigPath));
+    m_pConfig->set(ConfigKey("[Config]", "Path"), ConfigValue(resourcePath));
 
     // Read keyboard configuration and set kdbConfig object in WWidget
     // Check first in user's Mixxx directory
-    QString userKeyboard =
-        QDir::homePath().append("/").append(SETTINGS_PATH)
-            .append("Custom.kbd.cfg");
+    QString userKeyboard = args.getSettingsPath() + "Custom.kbd.cfg";
 
     //Empty keyboard configuration
     m_pKbdConfig_empty = new ConfigObject<ConfigValueKbd>("");
@@ -195,13 +193,13 @@ MixxxApp::MixxxApp(QApplication *a, struct CmdlineArgs args)
         QLocale locale = QApplication::keyboardInputLocale();
 
         // check if a default keyboard exists
-        QString defaultKeyboard = QString(qConfigPath).append("keyboard/");
+        QString defaultKeyboard = QString(resourcePath).append("keyboard/");
         defaultKeyboard += locale.name();
         defaultKeyboard += ".kbd.cfg";
 
         if (!QFile::exists(defaultKeyboard)) {
             qDebug() << defaultKeyboard << " not found, using en_US.kbd.cfg";
-            defaultKeyboard = QString(qConfigPath).append("keyboard/").append("en_US.kbd.cfg");
+            defaultKeyboard = QString(resourcePath).append("keyboard/").append("en_US.kbd.cfg");
             if (!QFile::exists(defaultKeyboard)) {
                 qDebug() << defaultKeyboard << " not found, starting without shortcuts";
                 defaultKeyboard = ""; 
@@ -277,8 +275,8 @@ MixxxApp::MixxxApp(QApplication *a, struct CmdlineArgs args)
     // sqlite driver if this path doesn't exist. Normally config->Save()
     // above would make it but if it doesn't get run for whatever reason
     // we get hosed -- bkgood
-    if (!QDir(QDir::homePath().append("/").append(SETTINGS_PATH)).exists()) {
-        QDir().mkpath(QDir::homePath().append("/").append(SETTINGS_PATH));
+    if (!QDir(args.getSettingsPath()).exists()) {
+        QDir().mkpath(args.getSettingsPath());
     }
 
 
@@ -345,20 +343,6 @@ MixxxApp::MixxxApp(QApplication *a, struct CmdlineArgs args)
     }
     m_pConfig->set(ConfigKey("[Library]", "SupportedFileExtensions"),
         QStringList(SoundSourceProxy::supportedFileExtensions()).join(","));
-
-    // Call inits to invoke all other construction parts
-
-    // Verify path for xml track file.
-    QFile trackfile(
-        m_pConfig->getValueString(ConfigKey("[Playlist]", "Listfile")));
-    if (m_pConfig->getValueString(ConfigKey("[Playlist]", "Listfile"))
-            .length() < 1 || !trackfile.exists())
-    {
-        m_pConfig->set(ConfigKey("[Playlist]", "Listfile"),
-            QDir::homePath().append("/").append(SETTINGS_PATH)
-                .append(TRACK_FILE));
-        m_pConfig->Save();
-    }
 
     // Intialize default BPM system values
     if (m_pConfig->getValueString(ConfigKey("[BPM]", "BPMRangeStart"))
@@ -428,8 +412,10 @@ MixxxApp::MixxxApp(QApplication *a, struct CmdlineArgs args)
     // Load tracks in args.qlMusicFiles (command line arguments) into player
     // 1 and 2:
     for (int i = 0; i < (int)m_pPlayerManager->numDecks()
-            && i < args.qlMusicFiles.count(); ++i) {
-        m_pPlayerManager->slotLoadToDeck(args.qlMusicFiles.at(i), i+1);
+            && i < args.getMusicFiles().count(); ++i) {
+        if ( SoundSourceProxy::isFilenameSupported(args.getMusicFiles().at(i))) {
+            m_pPlayerManager->slotLoadToDeck(args.getMusicFiles().at(i), i+1);
+        }
     }
 
     //Automatically load specially marked promotional tracks on first run
@@ -475,13 +461,14 @@ MixxxApp::MixxxApp(QApplication *a, struct CmdlineArgs args)
 
     //Install an event filter to catch certain QT events, such as tooltips.
     //This allows us to turn off tooltips.
-    m_pApp->installEventFilter(this); // The eventfilter is located in this
+    pApp->installEventFilter(this); // The eventfilter is located in this
                                       // Mixxx class as a callback.
 
     // If we were told to start in fullscreen mode on the command-line,
     // then turn on fullscreen mode.
-    if (args.bStartInFullscreen)
+    if (args.getStartInFullscreen()) {
         slotOptionsFullScreen(true);
+    }
 
     // Refresh the GUI (workaround for Qt 4.6 display bug)
     /* // TODO(bkgood) delete this block if the moving of setCentralWidget
@@ -1093,13 +1080,10 @@ void MixxxApp::slotOptionsKeyboard(bool toggle)
     if (toggle) {
         //qDebug() << "Enable keyboard shortcuts/mappings";
         m_pKeyboard->setKeyboardConfig(m_pKbdConfig);
-    }
-
-    else {
+    } else {
         //qDebug() << "Disable keyboard shortcuts/mappings";
         m_pKeyboard->setKeyboardConfig(m_pKbdConfig_empty);
     }
-
 }
 
 void MixxxApp::slotOptionsFullScreen(bool toggle)
@@ -1404,7 +1388,7 @@ void MixxxApp::slotHelpTranslation() {
 }
 
 void MixxxApp::slotHelpManual() {
-    QDir configDir(m_pConfig->getConfigPath());
+    QDir resourceDir(m_pConfig->getResourcePath());
     // Default to the mixxx.org hosted version of the manual.
     QUrl qManualUrl(MIXXX_MANUAL_URL);
 #if defined(__APPLE__)
@@ -1412,16 +1396,16 @@ void MixxxApp::slotHelpManual() {
     // web-hosted version.
 #elif defined(__WINDOWS__)
     // On Windows, the manual PDF sits in the same folder as the 'skins' folder.
-    if (configDir.exists(MIXXX_MANUAL_FILENAME)) {
+    if (resourceDir.exists(MIXXX_MANUAL_FILENAME)) {
         qManualUrl = QUrl::fromLocalFile(
-            configDir.absoluteFilePath(MIXXX_MANUAL_FILENAME));
+                resourceDir.absoluteFilePath(MIXXX_MANUAL_FILENAME));
     }
 #elif defined(__LINUX__)
     // On GNU/Linux, the manual is installed to e.g. /usr/share/mixxx/doc/
-    configDir.cd("doc");
-    if (configDir.exists(MIXXX_MANUAL_FILENAME)) {
+    resourceDir.cd("doc");
+    if (resourceDir.exists(MIXXX_MANUAL_FILENAME)) {
         qManualUrl = QUrl::fromLocalFile(
-            configDir.absoluteFilePath(MIXXX_MANUAL_FILENAME));
+                resourceDir.absoluteFilePath(MIXXX_MANUAL_FILENAME));
     }
 #else
     // No idea, default to the mixxx.org hosted version.

@@ -24,34 +24,28 @@ RecordingManager::RecordingManager(ConfigObject<ConfigValue>* pConfig) :
     QDir os_music_folder_dir(m_pConfig->getValueString(ConfigKey("[Playlist]", "Directory")));
     //Check if there's a folder Mixxx within the music directory
     QDir mixxxDir(os_music_folder_dir.absolutePath() +"/Mixxx");
+    m_recordingDir = mixxxDir.absolutePath() +"/Recordings";
+    m_split_size = getFileSplitSize();
 
-    if(!mixxxDir.exists()) {
-
-        if(os_music_folder_dir.mkdir("Mixxx")) {
+    if (!mixxxDir.exists()) {
+        if (os_music_folder_dir.mkdir("Mixxx")) {
             qDebug() << "Created folder 'Mixxx' within default OS Music directory";
-
-            if(mixxxDir.mkdir("Recordings"))
-                qDebug() << "Created folder 'Recordings' successfully";
-            else
-                qDebug() << "Could not create folder 'Recordings' within 'Mixxx'";
-        }
-        else{
+        } else {
             qDebug() << "Failed to create folder 'Mixxx'' within default OS Music directory."
                      << "Please verify that there's no file called 'Mixxx'.";
+            return;
         }
     }
-    else{ // the Mixxx directory already exists
-        qDebug() << "Found folder 'Mixxx' within default OS music directory";
-        QDir recordDir(mixxxDir.absolutePath() +"Recordings");
-        if(!recordDir.exists()) {
-            if(mixxxDir.mkdir("Recordings"))
-                qDebug() << "Created folder 'Recordings' successfully";
-            else
-                qDebug() << "Could not create folder 'Recordings' within 'Mixxx'";
+
+    QDir recordDir(m_recordingDir);
+    if (!recordDir.exists()) {
+        if (mixxxDir.mkdir("Recordings")) {
+            qDebug() << "Created folder 'Recordings' successfully";
+        }
+        else {
+            qDebug() << "Could not create folder 'Recordings' within 'Mixxx'";
         }
     }
-    m_recordingDir = os_music_folder_dir.absolutePath() +"/Mixxx/Recordings";
-    m_split_size = getFileSplitSize();
 }
 
 RecordingManager::~RecordingManager()

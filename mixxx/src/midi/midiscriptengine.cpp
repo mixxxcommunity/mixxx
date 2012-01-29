@@ -21,6 +21,7 @@
 #include "mididevice.h"
 #include "midiscriptengine.h"
 #include "errordialoghandler.h"
+#include "mixxx.h"
 
 // #include <QScriptSyntaxCheckResult>
 
@@ -189,10 +190,12 @@ void MidiScriptEngine::loadScriptFiles(QList<QString> scriptFileNames) {
 
     // scriptPaths holds the paths to search in when we're looking for scripts
     QList<QString> scriptPaths;
-    scriptPaths.append(QDir::homePath().append("/").append(SETTINGS_PATH).append("presets/"));
 
-    ConfigObject<ConfigValue> *config = new ConfigObject<ConfigValue>(QDir::homePath().append("/").append(SETTINGS_PATH).append(SETTINGS_FILE));
-    scriptPaths.append(config->getConfigPath().append("midi/"));
+    // Construct a list of strings based on the command line arguments
+    scriptPaths.append(CmdlineArgs::Instance().getSettingsPath() + "presets/");
+
+    ConfigObject<ConfigValue> *config = new ConfigObject<ConfigValue>(CmdlineArgs::Instance().getSettingsPath() + SETTINGS_FILE);
+    scriptPaths.append(config->getResourcePath().append("midi/"));
     delete config;
 
     QListIterator<QString> it(scriptFileNames);
