@@ -264,7 +264,7 @@ ConfigObject<ConfigValue>* Upgrade::versionUpgrade(const QString& settingsPath) 
         }
         //Reload the configuration file from the new location. 
         //(We want to make sure we save to the new location...)
-        config = new ConfigObject<ConfigValue>(settingsPath.append(SETTINGS_FILE));
+        config = new ConfigObject<ConfigValue>(settingsPath + SETTINGS_FILE);
 #endif
     }
     // For the next release
