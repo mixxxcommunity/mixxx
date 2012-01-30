@@ -116,7 +116,7 @@ void BrowseThread::populateModel() {
         // the current task becomes "dirty"
         m_path_mutex.lock();
         if(thisPath != m_path){
-            qDebug() << "Exit populateModel()";
+            qDebug() << "Abort populateModel()";
             m_path_mutex.unlock();
             return populateModel();
         }
@@ -179,12 +179,12 @@ void BrowseThread::populateModel() {
         if(row % 10 == 0){
             // this is a blocking operation
             emit(rowsAppended(rows, thisModelObserver));
-            qDebug() << "Append " << rows.count() << " from " << filepath;
+            //qDebug() << "Append " << rows.count() << " from " << filepath;
             rows.clear();
         }
         // Sleep additionally for 10ms which prevents us from GUI freezes
         msleep(20);
     }
     emit(rowsAppended(rows, thisModelObserver));
-    qDebug() << "Append last " << rows.count() << " from " << thisPath;
+    //qDebug() << "Append last " << rows.count() << " from " << thisPath;
 }
