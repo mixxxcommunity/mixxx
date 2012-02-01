@@ -250,7 +250,8 @@ class IPod(Feature):
 
     def sources(self, build):
         return ['library/ipod/ipodfeature.cpp',
-                'library/ipod/ipodplaylistmodel.cpp']
+                'library/ipod/ipodplaylistmodel.cpp',
+                'library/ipod/gpoditdb.cpp']
 
 class MSVCDebug(Feature):
     def description(self):

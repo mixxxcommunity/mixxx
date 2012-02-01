@@ -19,6 +19,7 @@ extern "C"
 }
 
 class IPodPlaylistModel;
+class GPodItdb;
 
 class IPodFeature : public LibraryFeature {
  Q_OBJECT
@@ -78,6 +79,8 @@ class IPodFeature : public LibraryFeature {
 
     QString m_dbItunesRoot;
     QString m_mixxxItunesRoot;
+
+    GPodItdb* m_gPodItdb;
 
     Itdb_iTunesDB* m_itdb;
 

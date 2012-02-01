@@ -7,6 +7,7 @@
 #include <QAction>
 
 #include "library/ipod/ipodfeature.h"
+#include "library/ipod/gpoditdb.h"
 
 #include "library/itunes/itunestrackmodel.h"
 #include "library/ipod/ipodplaylistmodel.h"
@@ -22,12 +23,14 @@ const QString IPodFeature::IPOD_MOUNT_KEY = "mixxx.IPodFeature.mount";
 IPodFeature::IPodFeature(QObject* parent, TrackCollection* pTrackCollection)
         : LibraryFeature(parent),
           m_pTrackCollection(pTrackCollection),
+          m_isActivated(false),
           m_cancelImport(false),
-          m_itdb( 0 )
+          m_itdb(NULL)
 {
-    m_pIPodPlaylistModel = new IPodPlaylistModel(this, m_pTrackCollection);
-    m_isActivated = false;
     m_title = tr("iPod");
+    m_pIPodPlaylistModel = new IPodPlaylistModel(this, m_pTrackCollection);
+
+    m_gPodItdb = new GPodItdb();
 
     connect(&m_future_watcher, SIGNAL(finished()), this, SLOT(onTrackCollectionLoaded()));
 
@@ -54,18 +57,19 @@ IPodFeature::~IPodFeature() {
         qDebug() << "m_future finished";
     }
     if (m_itdb) {
-        itdb_free( m_itdb );
+        itdb_free(m_itdb);
     }
     delete m_pIPodPlaylistModel;
     delete m_pAddToAutoDJAction;
     delete m_pAddToAutoDJTopAction;
     delete m_pImportAsMixxxPlaylistAction;
+    delete m_gPodItdb;
 }
 
 // static
 bool IPodFeature::isSupported() {
     // The iPod might be mount at any time at any location
-    return true;
+    return true; //m_gPodItdb->isSupported();
 }
 
 
@@ -237,8 +241,12 @@ TreeItem* IPodFeature::importLibrary() {
     TreeItem* playlist_root = new TreeItem();
 
     GError* err = 0;
-    qDebug() << "Calling the libgpod db parser for:" << m_dbfile.toUtf8();
-    m_itdb = itdb_parse(m_dbfile.toUtf8(), &err);
+    qDebug() << "Calling the libgpod db parser for:" << m_dbfile;
+    if (m_itdb) {
+        itdb_free(m_itdb);
+        m_itdb = NULL;
+    }
+    m_itdb = itdb_parse(QDir::toNativeSeparators(m_dbfile).toLocal8Bit(), &err);
 
     if (err) {
         qDebug() << "There was an error, attempting to free db: "
