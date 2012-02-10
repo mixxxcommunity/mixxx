@@ -18,6 +18,9 @@
 #ifdef __IPOD__
 #include "library/ipod/ipodfeature.h"
 #endif // __IPOD__
+#ifdef __CLEMENTINE__
+#include "library/clementine/clementinefeature.h"
+#endif // __CLEMENTINE__
 #include "library/mixxxlibraryfeature.h"
 #include "library/autodjfeature.h"
 #include "library/playlistfeature.h"
@@ -78,6 +81,13 @@ Library::Library(QObject* parent, ConfigObject<ConfigValue>* pConfig, bool first
         if (BansheeFeature::isSupported())
             addFeature(new BansheeFeature(this, m_pTrackCollection, pConfig));
     }
+#ifdef __CLEMENTINE__
+    if (pConfig->getValueString(ConfigKey("[Library]","ShowBansheeLibrary"),"1").toInt()) {
+        ClementineFeature::prepareDbPath(pConfig);
+        //if (ClementineFeature::isSupported())
+            addFeature(new ClementineFeature(this, m_pTrackCollection, pConfig));
+    }
+#endif // __CLEMENTINE__
     if (ITunesFeature::isSupported() && pConfig->getValueString(ConfigKey("[Library]","ShowItunesLibrary"),"1").toInt())
         addFeature(new ITunesFeature(this, m_pTrackCollection));
 #ifdef __IPOD__

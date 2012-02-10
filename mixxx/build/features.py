@@ -253,6 +253,39 @@ class IPod(Feature):
                 'library/ipod/ipodplaylistmodel.cpp',
                 'library/ipod/gpoditdb.cpp']
 
+class Clementine(Feature):
+    def description(self):
+        return "Clementine Support"
+
+    def enabled(self, build):
+        build.flags['clementine'] = util.get_flags(build.env, 'clementine', 0)
+        if int(build.flags['clementine']):
+            return True
+        return False
+
+    def add_options(self, build, vars):
+        vars.Add('clementine', 'Set to 1 to enable clementine support', 0)
+
+    def configure(self, build, conf):
+        if not self.enabled(build):
+            return
+
+        if build.platform_is_linux:
+            build.env.Append(CPPDEFINES = '__CLEMENTINE__')
+            build.env.Append(CPPPATH = "#lib/clementine-player/src")
+            build.env.Append(CPPPATH = "#lib/gtest-1.5.0/include")
+            build.env.Append(LIBPATH = "#lib/clementine-player") 
+            build.env.Append(LIBS = 'clementine_lib')
+            build.env.Append(LIBS = 'liblibclementine-common')
+            build.env.Append(LIBS = 'sha2')
+            return
+        else:
+            raise Exception('clementine is not supported yet.')
+
+    def sources(self, build):
+        return ['library/clementine/clementinefeature.cpp']
+
+
 class MSVCDebug(Feature):
     def description(self):
         return "MSVC Debugging"
