@@ -19,16 +19,12 @@ QString ClementineFeature::m_databaseFile;
 ClementineFeature::ClementineFeature(QObject* parent, TrackCollection* pTrackCollection, ConfigObject<ConfigValue>* pConfig)
         : LibraryFeature(parent),
           m_pTrackCollection(pTrackCollection),
-          m_cancelImport(false)
+          m_cancelImport(false),
+          m_pClementineDatabaseThread(NULL)
 {
-
-    m_pClementineDatabaseThread = new BackgroundThreadImplementation<Database, Database>(NULL);
-
-    m_pClementineDatabaseThread->Start(true);
-
     //    m_pBansheePlaylistModel = new BansheePlaylistModel(this, m_pTrackCollection, &m_connection);
     m_isActivated = false;
-    m_title = tr("Banshee");
+    m_title = tr("Clementine");
 
     m_pAddToAutoDJAction = new QAction(tr("Add to Auto DJ bottom"),this);
     connect(m_pAddToAutoDJAction, SIGNAL(triggered()),
@@ -44,6 +40,11 @@ ClementineFeature::ClementineFeature(QObject* parent, TrackCollection* pTrackCol
 }
 
 ClementineFeature::~ClementineFeature() {
+
+    if (m_pClementineDatabaseThread) {
+        delete m_pClementineDatabaseThread;
+    }
+
     qDebug() << "~ClementineFeature()";
     // stop import thread, if still running
     m_cancelImport = true;
@@ -78,7 +79,7 @@ QVariant ClementineFeature::title() {
 }
 
 QIcon ClementineFeature::getIcon() {
-    return QIcon(":/images/library/ic_library_banshee.png");
+    return QIcon(":/images/library/ic_library_clementine.png");
 }
 
 void ClementineFeature::activate() {
@@ -86,34 +87,35 @@ void ClementineFeature::activate() {
 
     if (!m_isActivated) {
 
-        if (!QFile::exists(m_databaseFile)) {
+        //if (!QFile::exists(m_databaseFile)) {
             // Fall back to default
-//            m_databaseFile = BansheeDbConnection::getDatabaseFile();
-        }
+        //}
 
-        if (!QFile::exists(m_databaseFile)) {
-            // TODO(dsc): error handling
-            qDebug() << m_databaseFile << "does not exist";
-        }
+        m_pClementineDatabaseThread = new BackgroundThreadImplementation<Database, Database>(NULL);
+        m_pClementineDatabaseThread->Start(true);
 
-//        if (!m_connection.open(m_databaseFile))
-        {
+        int db_version = m_pClementineDatabaseThread->Worker()->startup_schema_version();
+        int feature_version = m_pClementineDatabaseThread->Worker()->current_schema_version();
+
+        if (db_version != feature_version) {
+
             QMessageBox::warning(
                     NULL,
-                    tr("Error Loading Banshee database"),
-                    tr("There was an error loading your Banshee database at\n") +
-                    m_databaseFile);
+                    tr("Error Loading Clementine database"),
+                    tr("There was an error loading your Clementine database\n") +
+                    QString(tr("Version mismatch: Database version: %1 Feature version: %2\n")).arg(db_version != feature_version));
             return;
         }
 
-//        qDebug() << "Using Banshee Database Schema V" << m_connection.getSchemaVersion();
+        qDebug() << "Using Clementine Database Schema V" << db_version;
 
         m_isActivated =  true;
 
         qDebug() << "ClementineFeature::importLibrary() ";
 
-        TreeItem* playlist_root = new TreeItem();
 /*
+        TreeItem* playlist_root = new TreeItem();
+
         QList<struct BansheeDbConnection::Playlist> list = m_connection.getPlaylists();
 
         struct BansheeDbConnection::Playlist playlist;
@@ -123,7 +125,7 @@ void ClementineFeature::activate() {
             TreeItem *item = new TreeItem(playlist.name, playlist.playlistId, this, playlist_root);
             playlist_root->appendChild(item);
         };
-*/
+
         if(playlist_root){
             m_childModel.setRootItem(playlist_root);
             if (m_isActivated) {
@@ -131,9 +133,10 @@ void ClementineFeature::activate() {
             }
             qDebug() << "Banshee library loaded: success";
         }
+*/
 
         //calls a slot in the sidebarmodel such that 'isLoading' is removed from the feature title.
-        m_title = tr("Banshee");
+        m_title = tr("Clementine");
         emit(featureLoadingFinished(this));
     }
 
