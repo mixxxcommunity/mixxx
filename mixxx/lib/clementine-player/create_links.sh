@@ -1,7 +1,7 @@
 #!/bin/bash
-# This script ceates the links to the clementine Player headers and librarys 
+# This script ceates the links to the clementine Player headers and libraries 
 
-ln -s ../../../../clementine-player/src src
-ln -s ../../../../clementine-player/bin/src/libclementine_lib.a libclementine_lib.a
-ln -s ../../../../clementine-player/bin/ext/libclementine-common/liblibclementine-common.a liblibclementine-common.a
-ln -s ../../../../clementine-player/bin/3rdparty/sha2/libsha2.a libsha2.a
+ln -s ../../../../daschuer-mixxx-clementine/src src
+ln -s ../../../../daschuer-mixxx-clementine/bin/src/libclementine_lib.a libclementine_lib.a
+ln -s ../../../../daschuer-mixxx-clementine/bin/ext/libclementine-common/liblibclementine-common.a liblibclementine-common.a
+ln -s ../../../../daschuer-mixxx-clementine/bin/3rdparty/sha2/libsha2.a libsha2.a

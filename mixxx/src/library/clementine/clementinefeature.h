@@ -16,7 +16,9 @@
 
 #include "core/database.h"
 #include "core/backgroundthread.h"
+#include "widgets/errordialog.h"
 
+class ErrorDialog;
 
 // class BansheePlaylistModel;
 
@@ -47,6 +49,7 @@ class ClementineFeature : public LibraryFeature {
     void slotAddToAutoDJ();
     void slotAddToAutoDJTop();
     void slotImportAsMixxxPlaylist();
+    void showErrorDialog(const QString& message);
 
   private:
     static QString getiTunesMusicPath();
@@ -68,6 +71,8 @@ class ClementineFeature : public LibraryFeature {
 //    BansheeDbConnection m_connection;
 
     BackgroundThread<Database>* m_pClementineDatabaseThread;
+
+    ErrorDialog* m_error_dialog;
 
     QSqlDatabase m_database;
     bool m_isActivated;

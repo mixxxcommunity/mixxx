@@ -94,6 +94,9 @@ void ClementineFeature::activate() {
         m_pClementineDatabaseThread = new BackgroundThreadImplementation<Database, Database>(NULL);
         m_pClementineDatabaseThread->Start(true);
 
+        // Database connections
+        connect(m_pClementineDatabaseThread->Worker().get(), SIGNAL(Error(QString)), SLOT(ShowErrorDialog(QString)));
+
         int db_version = m_pClementineDatabaseThread->Worker()->startup_schema_version();
         int feature_version = m_pClementineDatabaseThread->Worker()->current_schema_version();
 
@@ -110,6 +113,7 @@ void ClementineFeature::activate() {
         qDebug() << "Using Clementine Database Schema V" << db_version;
 
         m_isActivated =  true;
+
 
         qDebug() << "ClementineFeature::importLibrary() ";
 
@@ -301,4 +305,11 @@ void ClementineFeature::slotImportAsMixxxPlaylist() {
         }
     }
     emit(featureUpdated());
+}
+
+void ClementineFeature::showErrorDialog(const QString& message) {
+    if (!m_error_dialog) {
+        m_error_dialog = new ErrorDialog();
+    }
+    m_error_dialog->ShowMessage(message);
 }
