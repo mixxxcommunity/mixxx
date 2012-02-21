@@ -19,6 +19,7 @@
 #include "widgets/errordialog.h"
 
 class ErrorDialog;
+class LibraryViewContainer;
 
 // class BansheePlaylistModel;
 
@@ -37,6 +38,10 @@ class ClementineFeature : public LibraryFeature {
     bool dropAcceptChild(const QModelIndex& index, QUrl url);
     bool dragMoveAccept(QUrl url);
     bool dragMoveAcceptChild(const QModelIndex& index, QUrl url);
+
+    void bindWidget(WLibrarySidebar* sidebarWidget,
+                    WLibrary* libraryWidget,
+                    MixxxKeyboard* keyboard);
 
     TreeItemModel* getChildModel();
 
@@ -73,6 +78,7 @@ class ClementineFeature : public LibraryFeature {
     BackgroundThread<Database>* m_pClementineDatabaseThread;
 
     ErrorDialog* m_error_dialog;
+    LibraryViewContainer* m_library_view;
 
     QSqlDatabase m_database;
     bool m_isActivated;

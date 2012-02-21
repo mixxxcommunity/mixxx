@@ -12,6 +12,8 @@
 // #include "library/banshee/bansheeplaylistmodel.h"
 #include "library/dao/settingsdao.h"
 
+#include "library/libraryviewcontainer.h"
+
 
 const QString ClementineFeature::CLEMENTINE_MOUNT_KEY = "mixxx.ClementineFeature.mount";
 QString ClementineFeature::m_databaseFile;
@@ -20,7 +22,8 @@ ClementineFeature::ClementineFeature(QObject* parent, TrackCollection* pTrackCol
         : LibraryFeature(parent),
           m_pTrackCollection(pTrackCollection),
           m_cancelImport(false),
-          m_pClementineDatabaseThread(NULL)
+          m_pClementineDatabaseThread(NULL),
+          m_library_view(NULL)
 {
     //    m_pBansheePlaylistModel = new BansheePlaylistModel(this, m_pTrackCollection, &m_connection);
     m_isActivated = false;
@@ -43,6 +46,9 @@ ClementineFeature::~ClementineFeature() {
 
     if (m_pClementineDatabaseThread) {
         delete m_pClementineDatabaseThread;
+    }
+    if (m_library_view) {
+        delete m_library_view;
     }
 
     qDebug() << "~ClementineFeature()";
@@ -110,9 +116,20 @@ void ClementineFeature::activate() {
             return;
         }
 
+        m_library_view = new LibraryViewContainer();
+
+        //m_library_view->view()->setModel(library_sort_model_);
+        //m_library_view->view()->SetLibrary(library_->model());
+        //m_library_view->view()->SetTaskManager(task_manager_);
+        //m_library_view->view()->SetDeviceManager(devices_);
+        //m_library_view->view()->SetCoverProviders(cover_providers_);
+
+       //emit(switchToView(m_sAutoDJViewName));
+
         qDebug() << "Using Clementine Database Schema V" << db_version;
 
         m_isActivated =  true;
+
 
 
         qDebug() << "ClementineFeature::importLibrary() ";
@@ -146,6 +163,23 @@ void ClementineFeature::activate() {
 
 //    m_pBansheePlaylistModel->setPlaylist(0); // Gets the master playlist
 //    emit(showTrackModel(m_pBansheePlaylistModel));
+}
+
+void ClementineFeature::bindWidget(WLibrarySidebar* /*sidebarWidget*/,
+                               WLibrary* libraryWidget,
+                               MixxxKeyboard* keyboard) {
+/*
+    m_pAutoDJView = new DlgAutoDJ(libraryWidget,
+                                           m_pConfig,
+                                           m_pTrackCollection,
+                                           keyboard);
+    m_pAutoDJView->installEventFilter(keyboard);
+    libraryWidget->registerView(m_sAutoDJViewName, m_pAutoDJView);
+    connect(m_pAutoDJView, SIGNAL(loadTrack(TrackPointer)),
+            this, SIGNAL(loadTrack(TrackPointer)));
+    connect(m_pAutoDJView, SIGNAL(loadTrackToPlayer(TrackPointer, QString)),
+            this, SIGNAL(loadTrackToPlayer(TrackPointer, QString)));
+*/
 }
 
 void ClementineFeature::activateChild(const QModelIndex& index) {
