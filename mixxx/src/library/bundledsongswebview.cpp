@@ -31,7 +31,7 @@ BundledSongsWebView::BundledSongsWebView(QWidget* parent,
                                          QString localURL, bool firstRun,
                                          ConfigObject<ConfigValue>* config) :
     QWebView(parent),
-    LibraryView(),
+    AbstractLibraryView(),
     m_pTrackCollection(trackCollection),
     m_bFirstRun(firstRun),
     m_pConfig(config)

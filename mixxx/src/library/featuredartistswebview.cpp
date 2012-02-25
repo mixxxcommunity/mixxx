@@ -22,7 +22,7 @@
 
 #define LOAD_TIMEOUT 10000
 
-FeaturedArtistsWebView::FeaturedArtistsWebView(QWidget* parent, QString libraryPath, QString remoteURL, SongDownloader* downloader) : QWebView(parent), LibraryView()
+FeaturedArtistsWebView::FeaturedArtistsWebView(QWidget* parent, QString libraryPath, QString remoteURL, SongDownloader* downloader) : QWebView(parent), AbstractLibraryView()
 {
     m_sLibraryPath = libraryPath;
     m_sRemoteURL = remoteURL;

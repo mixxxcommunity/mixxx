@@ -16,7 +16,7 @@ class AnalyserQueue;
 class QSqlTableModel;
 class ControlObjectThreadMain;
 
-class DlgAutoDJ : public QWidget, public Ui::DlgAutoDJ, public virtual LibraryView {
+class DlgAutoDJ : public QWidget, public Ui::DlgAutoDJ, public virtual AbstractLibraryView {
     Q_OBJECT
   public:
     DlgAutoDJ(QWidget *parent, ConfigObject<ConfigValue>* pConfig,

@@ -109,7 +109,7 @@ void LibraryControl::slotLoadSelectedTrackToGroup(QString group) {
     if (m_pLibraryWidget == NULL)
         return;
 
-    LibraryView* activeView = m_pLibraryWidget->getActiveView();
+    AbstractLibraryView* activeView = m_pLibraryWidget->getActiveView();
     if (!activeView) {
         return;
     }
@@ -122,7 +122,7 @@ void LibraryControl::slotLoadSelectedIntoFirstStopped(double v) {
 
     if (v > 0)
     {
-        LibraryView* activeView = m_pLibraryWidget->getActiveView();
+        AbstractLibraryView* activeView = m_pLibraryWidget->getActiveView();
         if (!activeView) {
             return;
         }
@@ -134,7 +134,7 @@ void LibraryControl::slotSelectNextTrack(double v) {
     if (m_pLibraryWidget == NULL)
         return;
     if (v > 0) {
-        LibraryView* activeView = m_pLibraryWidget->getActiveView();
+        AbstractLibraryView* activeView = m_pLibraryWidget->getActiveView();
         if (!activeView) {
             return;
         }
@@ -146,7 +146,7 @@ void LibraryControl::slotSelectPrevTrack(double v) {
     if (m_pLibraryWidget == NULL)
         return;
     if (v > 0) {
-        LibraryView* activeView = m_pLibraryWidget->getActiveView();
+        AbstractLibraryView* activeView = m_pLibraryWidget->getActiveView();
         if (!activeView) {
             return;
         }
@@ -161,7 +161,7 @@ void LibraryControl::slotSelectTrackKnob(double v)
 
     int i = (int)v;
 
-    LibraryView* activeView = m_pLibraryWidget->getActiveView();
+    AbstractLibraryView* activeView = m_pLibraryWidget->getActiveView();
     if (!activeView) {
         return;
     }

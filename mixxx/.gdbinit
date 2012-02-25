@@ -7,6 +7,7 @@ dir ~/workspace/qt/src/network
 dir ~/workspace/qt/src/sql
 dir ~/workspace/qt/src/sql/drivers/sqlite
 dir ~/workspace/sqlite/sqlite3-3.7.4
+dir ~/workspace/daschuer-mixxx-clementine/src
 
 python
 import sys

@@ -33,7 +33,7 @@ public:
     // to this widget before calling setup().
     void setup(QDomNode node);
 
-    LibraryView* getActiveView() const;
+    AbstractLibraryView* getActiveView() const;
 
 public slots:
     // Show the view registered with the given name. Does nothing if the current

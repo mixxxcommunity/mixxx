@@ -8,14 +8,17 @@
 #include <QList>
 
 // #include "library/clementine/bansheedbconnection.h"
-#include "library/clementine/clementinefeature.h"
+#include "clementinefeature.h"
+#include "clementineview.h"
+#include "widget/wlibrary.h"
 // #include "library/banshee/bansheeplaylistmodel.h"
 #include "library/dao/settingsdao.h"
 
-#include "library/libraryviewcontainer.h"
 
 
 const QString ClementineFeature::CLEMENTINE_MOUNT_KEY = "mixxx.ClementineFeature.mount";
+const QString ClementineFeature::m_sClementineViewName = QString("Clementine");
+
 QString ClementineFeature::m_databaseFile;
 
 ClementineFeature::ClementineFeature(QObject* parent, TrackCollection* pTrackCollection, ConfigObject<ConfigValue>* pConfig)
@@ -23,7 +26,7 @@ ClementineFeature::ClementineFeature(QObject* parent, TrackCollection* pTrackCol
           m_pTrackCollection(pTrackCollection),
           m_cancelImport(false),
           m_pClementineDatabaseThread(NULL),
-          m_library_view(NULL)
+          m_view(NULL)
 {
     //    m_pBansheePlaylistModel = new BansheePlaylistModel(this, m_pTrackCollection, &m_connection);
     m_isActivated = false;
@@ -47,8 +50,8 @@ ClementineFeature::~ClementineFeature() {
     if (m_pClementineDatabaseThread) {
         delete m_pClementineDatabaseThread;
     }
-    if (m_library_view) {
-        delete m_library_view;
+    if (m_view) {
+        delete m_view;
     }
 
     qDebug() << "~ClementineFeature()";
@@ -97,11 +100,12 @@ void ClementineFeature::activate() {
             // Fall back to default
         //}
 
+
         m_pClementineDatabaseThread = new BackgroundThreadImplementation<Database, Database>(NULL);
         m_pClementineDatabaseThread->Start(true);
 
         // Database connections
-        connect(m_pClementineDatabaseThread->Worker().get(), SIGNAL(Error(QString)), SLOT(ShowErrorDialog(QString)));
+        connect(m_pClementineDatabaseThread->Worker().get(), SIGNAL(Error(QString)), SLOT(showErrorDialog(QString)));
 
         int db_version = m_pClementineDatabaseThread->Worker()->startup_schema_version();
         int feature_version = m_pClementineDatabaseThread->Worker()->current_schema_version();
@@ -116,13 +120,6 @@ void ClementineFeature::activate() {
             return;
         }
 
-        m_library_view = new LibraryViewContainer();
-
-        //m_library_view->view()->setModel(library_sort_model_);
-        //m_library_view->view()->SetLibrary(library_->model());
-        //m_library_view->view()->SetTaskManager(task_manager_);
-        //m_library_view->view()->SetDeviceManager(devices_);
-        //m_library_view->view()->SetCoverProviders(cover_providers_);
 
        //emit(switchToView(m_sAutoDJViewName));
 
@@ -168,18 +165,23 @@ void ClementineFeature::activate() {
 void ClementineFeature::bindWidget(WLibrarySidebar* /*sidebarWidget*/,
                                WLibrary* libraryWidget,
                                MixxxKeyboard* keyboard) {
-/*
-    m_pAutoDJView = new DlgAutoDJ(libraryWidget,
-                                           m_pConfig,
-                                           m_pTrackCollection,
-                                           keyboard);
-    m_pAutoDJView->installEventFilter(keyboard);
-    libraryWidget->registerView(m_sAutoDJViewName, m_pAutoDJView);
-    connect(m_pAutoDJView, SIGNAL(loadTrack(TrackPointer)),
+
+    m_view = new ClementineView((QWidget*)libraryWidget);
+
+    //m_view->view()->setModel(library_sort_model_);
+    //m_view->view()->SetLibrary(library_->model());
+    //m_view->view()->SetTaskManager(task_manager_);
+    //m_view->view()->SetDeviceManager(devices_);
+    //m_view->view()->SetCoverProviders(cover_providers_);
+
+    // m_pAutoDJView->installEventFilter(keyboard);
+
+    libraryWidget->registerView(m_sClementineViewName, m_view);
+
+    connect(m_view, SIGNAL(loadTrack(TrackPointer)),
             this, SIGNAL(loadTrack(TrackPointer)));
-    connect(m_pAutoDJView, SIGNAL(loadTrackToPlayer(TrackPointer, QString)),
+    connect(m_view, SIGNAL(loadTrackToPlayer(TrackPointer, QString)),
             this, SIGNAL(loadTrackToPlayer(TrackPointer, QString)));
-*/
 }
 
 void ClementineFeature::activateChild(const QModelIndex& index) {

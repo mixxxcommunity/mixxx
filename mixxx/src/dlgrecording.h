@@ -18,7 +18,7 @@ class AnalyserQueue;
 class QSqlTableModel;
 class ControlObjectThreadMain;
 
-class DlgRecording : public QWidget, public Ui::DlgRecording, public virtual LibraryView {
+class DlgRecording : public QWidget, public Ui::DlgRecording, public virtual AbstractLibraryView {
     Q_OBJECT
   public:
     DlgRecording(QWidget *parent, ConfigObject<ConfigValue>* pConfig,

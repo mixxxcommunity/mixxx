@@ -12,7 +12,7 @@
 #include "trackinfoobject.h"
 
 
-class WLibraryTableView : public QTableView, public virtual LibraryView {
+class WLibraryTableView : public QTableView, public virtual AbstractLibraryView {
     Q_OBJECT
 
   public:

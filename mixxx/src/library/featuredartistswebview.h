@@ -25,7 +25,7 @@
 
 class SongDownloader;
 
-class FeaturedArtistsWebView : public QWebView, public LibraryView
+class FeaturedArtistsWebView : public QWebView, public AbstractLibraryView
 {
     Q_OBJECT
     public:

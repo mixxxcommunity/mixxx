@@ -8,7 +8,7 @@
 
 #include "library/libraryview.h"
 
-class WLibraryTextBrowser : public QTextBrowser, public virtual LibraryView {
+class WLibraryTextBrowser : public QTextBrowser, public virtual AbstractLibraryView {
     Q_OBJECT
   public:
     WLibraryTextBrowser(QWidget* parent = NULL);

@@ -22,7 +22,7 @@ bool WLibrary::registerView(QString name, QWidget* view) {
     if (m_viewMap.contains(name)) {
         return false;
     }
-    if (dynamic_cast<LibraryView*>(view) == NULL) {
+    if (dynamic_cast<AbstractLibraryView*>(view) == NULL) {
         qDebug() << "WARNING: Attempted to register a view with WLibrary that does not implement the LibraryView interface. Ignoring.";
         return false;
     }
@@ -37,7 +37,7 @@ void WLibrary::setup(QDomNode node) {
 
     while(views_it.hasNext()) {
         QWidget* widget = views_it.next();
-        dynamic_cast<LibraryView*>(widget)->setup(node);
+        dynamic_cast<AbstractLibraryView*>(widget)->setup(node);
     }
 }
 
@@ -49,7 +49,7 @@ void WLibrary::switchToView(const QString& name) {
         if (widget != NULL && currentWidget() != widget) {
             //qDebug() << "WLibrary::setCurrentWidget" << name;
             setCurrentWidget(widget);
-            dynamic_cast<LibraryView*>(widget)->onShow();
+            dynamic_cast<AbstractLibraryView*>(widget)->onShow();
         }
     }
 }
@@ -57,7 +57,7 @@ void WLibrary::switchToView(const QString& name) {
 void WLibrary::search(const QString& name) {
     QMutexLocker lock(&m_mutex);
     QWidget* current = currentWidget();
-    LibraryView* view = dynamic_cast<LibraryView*>(current);
+    AbstractLibraryView* view = dynamic_cast<AbstractLibraryView*>(current);
     lock.unlock();
     view->onSearch(name);
 }
@@ -65,7 +65,7 @@ void WLibrary::search(const QString& name) {
 void WLibrary::searchCleared() {
     QMutexLocker lock(&m_mutex);
     QWidget* current = currentWidget();
-    LibraryView* view = dynamic_cast<LibraryView*>(current);
+    AbstractLibraryView* view = dynamic_cast<AbstractLibraryView*>(current);
     lock.unlock();
     view->onSearchCleared();
 }
@@ -73,11 +73,11 @@ void WLibrary::searchCleared() {
 void WLibrary::searchStarting() {
     QMutexLocker lock(&m_mutex);
     QWidget* current = currentWidget();
-    LibraryView* view = dynamic_cast<LibraryView*>(current);
+    AbstractLibraryView* view = dynamic_cast<AbstractLibraryView*>(current);
     lock.unlock();
     view->onSearchStarting();
 }
 
-LibraryView* WLibrary::getActiveView() const {
-    return dynamic_cast<LibraryView*>(currentWidget());
+AbstractLibraryView* WLibrary::getActiveView() const {
+    return dynamic_cast<AbstractLibraryView*>(currentWidget());
 }

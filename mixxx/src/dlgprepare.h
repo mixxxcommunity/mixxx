@@ -11,7 +11,7 @@ class PrepareLibraryTableModel;
 class WPrepareCratesTableView;
 class WPrepareLibraryTableView;
 
-class DlgPrepare : public QWidget, public Ui::DlgPrepare, public virtual LibraryView {
+class DlgPrepare : public QWidget, public Ui::DlgPrepare, public virtual AbstractLibraryView {
     Q_OBJECT
   public:
     DlgPrepare(QWidget *parent,

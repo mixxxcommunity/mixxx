@@ -27,7 +27,7 @@ class TrackCollection;
 
 #define MIXXX_PROMO_HTML_LOCATION "promo/promotracks.html"
 
-class BundledSongsWebView : public QWebView, public LibraryView
+class BundledSongsWebView : public QWebView, public AbstractLibraryView
 {
     Q_OBJECT
     Q_PROPERTY(bool m_statTracking READ statTracking WRITE setStatTracking)

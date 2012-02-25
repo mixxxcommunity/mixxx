@@ -19,7 +19,7 @@
 #include "widgets/errordialog.h"
 
 class ErrorDialog;
-class LibraryViewContainer;
+class ClementineView;
 
 // class BansheePlaylistModel;
 
@@ -61,6 +61,8 @@ class ClementineFeature : public LibraryFeature {
     //returns the invisible rootItem for the sidebar model
     void addToAutoDJ(bool bTop);
 
+    const static QString m_sClementineViewName;
+
     QAction* m_pAddToAutoDJAction;
     QAction* m_pAddToAutoDJTopAction;
     QAction* m_pImportAsMixxxPlaylistAction;
@@ -78,7 +80,7 @@ class ClementineFeature : public LibraryFeature {
     BackgroundThread<Database>* m_pClementineDatabaseThread;
 
     ErrorDialog* m_error_dialog;
-    LibraryViewContainer* m_library_view;
+    ClementineView* m_view;
 
     QSqlDatabase m_database;
     bool m_isActivated;

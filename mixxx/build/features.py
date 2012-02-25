@@ -281,17 +281,14 @@ class Clementine(Feature):
             build.env.Append(LIBS = 'chardet')
             build.env.Append(LIBS = 'qjson')
             build.env.Append(LIBS = 'clementine-spotifyblob-messages')
-            build.env.Append(LIBS = 'gstreamer-0.10')
-            build.env.Append(LIBS = 'gstbase-0.10')
+            build.env.ParseConfig('pkg-config gstreamer-base-0.10 --silence-errors --cflags --libs')			
             build.env.Append(LIBS = 'gstapp-0.10')
             build.env.Append(LIBS = 'gstcdda-0.10')
             build.env.Append(LIBS = 'gsttag-0.10')
-            build.env.Append(LIBS = 'glib-2.0')
-            build.env.Append(LIBS = 'xml2')
-            build.env.Append(LIBS = 'gobject-2.0')
-            build.env.Append(LIBS = 'gpod')
+            build.env.ParseConfig('pkg-config libimobiledevice-1.0 --silence-errors --cflags --libs')          
+            #build.env.Append(LIBS = 'gpod')
             build.env.Append(LIBS = 'gio-2.0')
-            build.env.Append(LIBS = 'imobiledevice')
+
             build.env.Append(LIBS = 'plist')
             build.env.Append(LIBS = 'usbmuxd')
             build.env.Append(LIBS = 'mtp')
@@ -306,12 +303,15 @@ class Clementine(Feature):
             build.env.Append(LIBS = 'qtiocompressor')
             build.env.Append(LIBS = 'gstafcsrc')
             build.env.Append(LIBS = 'liblibclementine-tagreader')
+            build.env.Append(LIBS = 'gstbase-0.10')
+            build.env.ParseConfig('pkg-config libimobiledevice-1.0 --silence-errors --cflags --libs') 
             return
         else:
             raise Exception('clementine is not supported yet.')
 
     def sources(self, build):
-        return ['library/clementine/clementinefeature.cpp']
+        return ['library/clementine/clementinefeature.cpp', 
+                'library/clementine/clementineview.cpp']
 
 
 class MSVCDebug(Feature):
