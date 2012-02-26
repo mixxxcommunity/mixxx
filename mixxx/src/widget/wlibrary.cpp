@@ -5,7 +5,7 @@
 #include <QMutexLocker>
 
 #include "widget/wlibrary.h"
-#include "library/libraryview.h"
+#include "library/abstractlibraryview.h"
 #include "mixxxkeyboard.h"
 
 WLibrary::WLibrary(QWidget* parent)

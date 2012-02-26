@@ -5,7 +5,7 @@
 #include "ui_dlgrecording.h"
 #include "configobject.h"
 #include "trackinfoobject.h"
-#include "library/libraryview.h"
+#include "library/abstractlibraryview.h"
 #include "library/trackcollection.h"
 #include "library/browse/browsetablemodel.h"
 #include "library/proxytrackmodel.h"

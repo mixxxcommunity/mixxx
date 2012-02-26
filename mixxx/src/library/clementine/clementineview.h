@@ -10,10 +10,17 @@
 
 #include <QtCore/qobject.h>
 
-#include "../libraryview.h"
+#include "library/abstractlibraryview.h"
+
+// From clementine-player
 #include "library/libraryviewcontainer.h"
 
-class ClementineView: public LibraryViewContainer, public virtual AbstractLibraryView {
+class QSortFilterProxyModel;
+class LibraryViewContainer;
+class Library;
+class TaskManager;
+
+class ClementineView: public QWidget, public virtual AbstractLibraryView {
     Q_OBJECT
 public:
     ClementineView(QWidget* parent = NULL);
@@ -38,8 +45,13 @@ public:
     // 1, the view should move to the next selection in the list.
     void moveSelection(int delta) {};
 
+    void connectLibrary(Library* library, TaskManager* task_manager);
+
 //signals:
 //    void loadTrack(TrackPointer tio);
+private:
+    LibraryViewContainer* m_libraryViewContainer;
+    QSortFilterProxyModel* m_librarySortModel;
 
 };
 

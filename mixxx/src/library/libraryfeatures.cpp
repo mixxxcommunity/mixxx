@@ -3,7 +3,7 @@
 
 #include <QItemSelectionModel>
 
-#include "library/library.h"
+#include "library/libraryfeatures.h"
 #include "library/libraryfeature.h"
 #include "library/librarytablemodel.h"
 #include "library/sidebarmodel.h"
@@ -38,9 +38,9 @@
 
 // This is is the name which we use to register the WTrackTableView with the
 // WLibrary
-const QString Library::m_sTrackViewName = QString("WTrackTableView");
+const QString LibraryFeatures::m_sTrackViewName = QString("WTrackTableView");
 
-Library::Library(QObject* parent, ConfigObject<ConfigValue>* pConfig, bool firstRun,
+LibraryFeatures::LibraryFeatures(QObject* parent, ConfigObject<ConfigValue>* pConfig, bool firstRun,
                  RecordingManager* pRecordingManager)
     : m_pConfig(pConfig),
       m_pRecordingManager(pRecordingManager) {
@@ -107,7 +107,7 @@ Library::Library(QObject* parent, ConfigObject<ConfigValue>* pConfig, bool first
     }
 }
 
-Library::~Library() {
+LibraryFeatures::~LibraryFeatures() {
     QMutableListIterator<LibraryFeature*> features_it(m_features);
     while(features_it.hasNext()) {
         LibraryFeature* feature = features_it.next();
@@ -125,7 +125,7 @@ Library::~Library() {
     delete m_pTrackCollection;
 }
 
-void Library::bindWidget(WLibrarySidebar* pSidebarWidget,
+void LibraryFeatures::bindWidget(WLibrarySidebar* pSidebarWidget,
                          WLibrary* pLibraryWidget,
                          MixxxKeyboard* pKeyboard) {
     WTrackTableView* pTrackTableView =
@@ -171,7 +171,7 @@ void Library::bindWidget(WLibrarySidebar* pSidebarWidget,
 
 }
 
-void Library::addFeature(LibraryFeature* feature) {
+void LibraryFeatures::addFeature(LibraryFeature* feature) {
     Q_ASSERT(feature);
     m_features.push_back(feature);
     m_pSidebarModel->addLibraryFeature(feature);
@@ -187,7 +187,7 @@ void Library::addFeature(LibraryFeature* feature) {
             this, SLOT(slotRestoreSearch(const QString&)));
 }
 
-void Library::slotShowTrackModel(QAbstractItemModel* model) {
+void LibraryFeatures::slotShowTrackModel(QAbstractItemModel* model) {
     //qDebug() << "Library::slotShowTrackModel" << model;
     TrackModel* trackModel = dynamic_cast<TrackModel*>(model);
     Q_ASSERT(trackModel);
@@ -196,41 +196,41 @@ void Library::slotShowTrackModel(QAbstractItemModel* model) {
     emit(restoreSearch(trackModel->currentSearch()));
 }
 
-void Library::slotSwitchToView(const QString& view) {
+void LibraryFeatures::slotSwitchToView(const QString& view) {
     //qDebug() << "Library::slotSwitchToView" << view;
     emit(switchToView(view));
 }
 
-void Library::slotLoadTrack(TrackPointer pTrack) {
+void LibraryFeatures::slotLoadTrack(TrackPointer pTrack) {
     emit(loadTrack(pTrack));
 }
 
-void Library::slotLoadTrackToPlayer(TrackPointer pTrack, QString group) {
+void LibraryFeatures::slotLoadTrackToPlayer(TrackPointer pTrack, QString group) {
     emit(loadTrackToPlayer(pTrack, group));
 }
 
-void Library::slotRestoreSearch(const QString& text) {
+void LibraryFeatures::slotRestoreSearch(const QString& text) {
     emit(restoreSearch(text));
 }
 
-void Library::slotRefreshLibraryModels()
+void LibraryFeatures::slotRefreshLibraryModels()
 {
    m_pMixxxLibraryFeature->refreshLibraryModels();
    m_pPrepareFeature->refreshLibraryModels();
 }
 
-void Library::slotCreatePlaylist()
+void LibraryFeatures::slotCreatePlaylist()
 {
     m_pPlaylistFeature->slotCreatePlaylist();
 }
 
-void Library::slotCreateCrate()
+void LibraryFeatures::slotCreateCrate()
 {
     m_pCrateFeature->slotCreateCrate();
 }
 
 
-QList<TrackPointer> Library::getTracksToAutoLoad()
+QList<TrackPointer> LibraryFeatures::getTracksToAutoLoad()
 {
     if (m_pPromoTracksFeature)
         return m_pPromoTracksFeature->getTracksToAutoLoad();

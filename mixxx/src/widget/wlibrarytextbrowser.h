@@ -6,7 +6,7 @@
 
 #include <QTextBrowser>
 
-#include "library/libraryview.h"
+#include "library/abstractlibraryview.h"
 
 class WLibraryTextBrowser : public QTextBrowser, public virtual AbstractLibraryView {
     Q_OBJECT

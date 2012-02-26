@@ -11,7 +11,7 @@
 #include "skin/skinparser.h"
 #include "vinylcontrol/vinylcontrolmanager.h"
 
-class Library;
+class LibraryFeatures;
 class MixxxKeyboard;
 class PlayerManager;
 class WAbstractControl;
@@ -21,7 +21,7 @@ class LegacySkinParser : public QObject, public SkinParser {
   public:
     LegacySkinParser(ConfigObject<ConfigValue>* pConfig,
                      MixxxKeyboard* pKeyboard, PlayerManager* pPlayerManager,
-                     Library* pLibrary, VinylControlManager* pVCMan);
+                     LibraryFeatures* pLibrary, VinylControlManager* pVCMan);
     virtual ~LegacySkinParser();
 
     virtual bool canParse(QString skinPath);
@@ -74,7 +74,7 @@ class LegacySkinParser : public QObject, public SkinParser {
     ConfigObject<ConfigValue>* m_pConfig;
     MixxxKeyboard* m_pKeyboard;
     PlayerManager* m_pPlayerManager;
-    Library* m_pLibrary;
+    LibraryFeatures* m_pLibrary;
     VinylControlManager* m_pVCManager;
     QWidget *m_pParent;
     static QList<const char*> s_channelStrs;

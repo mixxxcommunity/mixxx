@@ -10,13 +10,13 @@
 #include "analyserqueue.h"
 #include "controlobject.h"
 #include "samplerbank.h"
-#include "library/library.h"
+#include "library/libraryfeatures.h"
 #include "library/trackcollection.h"
 #include "engine/enginemaster.h"
 
 PlayerManager::PlayerManager(ConfigObject<ConfigValue> *pConfig,
                              EngineMaster* pEngine,
-                             Library* pLibrary)
+                             LibraryFeatures* pLibrary)
         : m_pConfig(pConfig),
           m_pEngine(pEngine),
           m_pLibrary(pLibrary),

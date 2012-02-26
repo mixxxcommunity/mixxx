@@ -22,7 +22,7 @@
 #include <QUrl>
 #include "configobject.h"
 #include "trackinfoobject.h"
-#include "library/libraryview.h"
+#include "library/abstractlibraryview.h"
 class TrackCollection;
 
 #define MIXXX_PROMO_HTML_LOCATION "promo/promotracks.html"

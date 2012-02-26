@@ -273,6 +273,7 @@ class Clementine(Feature):
         if build.platform_is_linux:
             build.env.Append(CPPDEFINES = '__CLEMENTINE__')
             build.env.Append(CPPPATH = "#lib/clementine-player/src")
+            build.env.Append(CPPPATH = "#lib/clementine-player/include")
             build.env.Append(CPPPATH = "#lib/gtest-1.5.0/include")
             build.env.Append(LIBPATH = "#lib/clementine-player") 
             build.env.Append(LIBS = 'clementine_lib')

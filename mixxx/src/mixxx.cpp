@@ -35,7 +35,7 @@
 #include "analyserqueue.h"
 #include "playermanager.h"
 
-#include "library/library.h"
+#include "library/libraryfeatures.h"
 #include "library/librarytablemodel.h"
 #include "library/libraryscanner.h"
 
@@ -281,7 +281,7 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
 
 
 
-    m_pLibrary = new Library(this, m_pConfig,
+    m_pLibrary = new LibraryFeatures(this, m_pConfig,
                              bFirstRun || bUpgraded,
                              m_pRecordingManager);
     qRegisterMetaType<TrackPointer>("TrackPointer");

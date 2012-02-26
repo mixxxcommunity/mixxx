@@ -4,7 +4,7 @@
 #include <QItemSelection>
 #include "ui_dlgprepare.h"
 #include "configobject.h"
-#include "library/libraryview.h"
+#include "library/abstractlibraryview.h"
 #include "library/trackcollection.h"
 
 class PrepareLibraryTableModel;

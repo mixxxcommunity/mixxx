@@ -16,7 +16,7 @@
 #include "mixxxkeyboard.h"
 #include "playermanager.h"
 #include "basetrackplayer.h"
-#include "library/library.h"
+#include "library/libraryfeatures.h"
 #include "waveformviewerfactory.h"
 #include "xmlparse.h"
 
@@ -59,7 +59,7 @@ QMutex LegacySkinParser::s_safeStringMutex;
 LegacySkinParser::LegacySkinParser(ConfigObject<ConfigValue>* pConfig,
                                    MixxxKeyboard* pKeyboard,
                                    PlayerManager* pPlayerManager,
-                                   Library* pLibrary,
+                                   LibraryFeatures* pLibrary,
                                    VinylControlManager* pVCMan)
         : m_pConfig(pConfig),
           m_pKeyboard(pKeyboard),

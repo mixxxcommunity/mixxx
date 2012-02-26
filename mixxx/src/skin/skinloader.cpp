@@ -9,7 +9,7 @@
 #include "skin/skinloader.h"
 #include "skin/legacyskinparser.h"
 
-#include "library/library.h"
+#include "library/libraryfeatures.h"
 #include "playermanager.h"
 
 SkinLoader::SkinLoader(ConfigObject<ConfigValue>* pConfig) :
@@ -53,7 +53,7 @@ QString SkinLoader::getConfiguredSkinPath() {
 QWidget* SkinLoader::loadDefaultSkin(QWidget* pParent,
                                        MixxxKeyboard* pKeyboard,
                                        PlayerManager* pPlayerManager,
-                                       Library* pLibrary,
+                                       LibraryFeatures* pLibrary,
                                        VinylControlManager* pVCMan) {
     QString skinPath = getConfiguredSkinPath();
 

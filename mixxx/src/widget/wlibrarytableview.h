@@ -8,7 +8,7 @@
 #include <QTableView>
 
 #include "configobject.h"
-#include "library/libraryview.h"
+#include "library/abstractlibraryview.h"
 #include "trackinfoobject.h"
 
 

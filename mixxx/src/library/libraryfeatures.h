@@ -1,11 +1,11 @@
-// library.h
+// libraryfeatures.h
 // Created 8/23/2009 by RJ Ryan (rryan@mit.edu)
 
-// A Library class is a container for all the model-side aspects of the library.
+// A LibraryFeatures class is a container for all the model-side aspects of the library.
 // A library widget can be attached to the Library object by calling bindWidget.
 
-#ifndef LIBRARY_H
-#define LIBRARY_H
+#ifndef LIBRARYFEATURES_H
+#define LIBRARYFEATURES_H
 
 #include <QList>
 #include <QObject>
@@ -31,13 +31,13 @@ class CrateFeature;
 class LibraryControl;
 class MixxxKeyboard;
 
-class Library : public QObject {
+class LibraryFeatures : public QObject {
     Q_OBJECT
 public:
-    Library(QObject* parent,
+    LibraryFeatures(QObject* parent,
             ConfigObject<ConfigValue>* pConfig,
             bool firstRun, RecordingManager* pRecordingManager);
-    virtual ~Library();
+    virtual ~LibraryFeatures();
 
     void bindWidget(WLibrarySidebar* sidebarWidget,
                     WLibrary* libraryWidget,

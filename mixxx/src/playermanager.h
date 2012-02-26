@@ -14,7 +14,7 @@ class Deck;
 class Sampler;
 class BaseTrackPlayer;
 
-class Library;
+class LibraryFeatures;
 class EngineMaster;
 class AnalyserQueue;
 
@@ -23,7 +23,7 @@ class PlayerManager : public QObject {
   public:
     PlayerManager(ConfigObject<ConfigValue> *pConfig,
                   EngineMaster* pEngine,
-                  Library* pLibrary);
+                  LibraryFeatures* pLibrary);
     virtual ~PlayerManager();
 
     // Add a deck to the PlayerManager
@@ -74,7 +74,7 @@ class PlayerManager : public QObject {
     TrackPointer lookupTrack(QString location);
     ConfigObject<ConfigValue>* m_pConfig;
     EngineMaster* m_pEngine;
-    Library* m_pLibrary;
+    LibraryFeatures* m_pLibrary;
     AnalyserQueue* m_pAnalyserQueue;
     ControlObject* m_pCONumDecks;
     ControlObject* m_pCONumSamplers;

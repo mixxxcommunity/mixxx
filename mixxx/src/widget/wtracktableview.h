@@ -6,7 +6,7 @@
 
 #include "configobject.h"
 #include "trackinfoobject.h"
-#include "library/libraryview.h"
+#include "library/abstractlibraryview.h"
 #include "library/searchthread.h"
 #include "library/trackmodel.h" // Can't forward declare enums
 #include "widget/wlibrarytableview.h"

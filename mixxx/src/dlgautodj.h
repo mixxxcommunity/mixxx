@@ -6,7 +6,7 @@
 #include "configobject.h"
 #include "trackinfoobject.h"
 #include "library/dao/playlistdao.h"
-#include "library/libraryview.h"
+#include "library/abstractlibraryview.h"
 #include "library/trackcollection.h"
 #include "mixxxkeyboard.h"
 

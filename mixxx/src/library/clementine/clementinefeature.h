@@ -20,6 +20,7 @@
 
 class ErrorDialog;
 class ClementineView;
+class Library;
 
 // class BansheePlaylistModel;
 
@@ -78,6 +79,7 @@ class ClementineFeature : public LibraryFeature {
 //    BansheeDbConnection m_connection;
 
     BackgroundThread<Database>* m_pClementineDatabaseThread;
+    Library* m_pLibrary;
 
     ErrorDialog* m_error_dialog;
     ClementineView* m_view;

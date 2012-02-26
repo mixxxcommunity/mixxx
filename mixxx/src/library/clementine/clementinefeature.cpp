@@ -14,6 +14,10 @@
 // #include "library/banshee/bansheeplaylistmodel.h"
 #include "library/dao/settingsdao.h"
 
+// from clementine-player
+#include "library/library.h"
+#include "core/taskmanager.h"
+
 
 
 const QString ClementineFeature::CLEMENTINE_MOUNT_KEY = "mixxx.ClementineFeature.mount";
@@ -26,6 +30,7 @@ ClementineFeature::ClementineFeature(QObject* parent, TrackCollection* pTrackCol
           m_pTrackCollection(pTrackCollection),
           m_cancelImport(false),
           m_pClementineDatabaseThread(NULL),
+          m_pLibrary(NULL),
           m_view(NULL)
 {
     //    m_pBansheePlaylistModel = new BansheePlaylistModel(this, m_pTrackCollection, &m_connection);
@@ -125,8 +130,11 @@ void ClementineFeature::activate() {
 
         qDebug() << "Using Clementine Database Schema V" << db_version;
 
-        m_isActivated =  true;
+        TaskManager task_manager;
 
+        m_pLibrary = new Library(m_pClementineDatabaseThread, &task_manager, this);
+
+        m_view->connectLibrary(m_pLibrary, &task_manager);
 
 
         qDebug() << "ClementineFeature::importLibrary() ";
@@ -153,10 +161,14 @@ void ClementineFeature::activate() {
         }
 */
 
+        m_isActivated =  true;
+
         //calls a slot in the sidebarmodel such that 'isLoading' is removed from the feature title.
         m_title = tr("Clementine");
         emit(featureLoadingFinished(this));
     }
+
+    emit(switchToView(m_sClementineViewName));
 
 //    m_pBansheePlaylistModel->setPlaylist(0); // Gets the master playlist
 //    emit(showTrackModel(m_pBansheePlaylistModel));

@@ -54,7 +54,7 @@ class ScriptEngine;
 class Player;
 class LibraryScanner;
 class AnalyserQueue;
-class Library;
+class LibraryFeatures;
 class MidiDeviceManager;
 class MixxxKeyboard;
 class SkinLoader;
@@ -175,7 +175,7 @@ class MixxxApp : public QMainWindow
     /** Library scanner object */
     LibraryScanner* m_pLibraryScanner;
     // The library management object
-    Library* m_pLibrary;
+    LibraryFeatures* m_pLibrary;
 
     /** file_menu contains all items of the menubar entry "File" */
     QMenu *m_pFileMenu;

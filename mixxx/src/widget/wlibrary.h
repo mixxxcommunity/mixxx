@@ -10,7 +10,7 @@
 #include <QStackedWidget>
 #include <QString>
 
-#include "library/libraryview.h"
+#include "library/abstractlibraryview.h"
 
 class MixxxKeyboard;
 

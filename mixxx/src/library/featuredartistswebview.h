@@ -21,7 +21,7 @@
 #include <QWebView>
 #include <QUrl>
 #include "trackinfoobject.h"
-#include "library/libraryview.h"
+#include "library/abstractlibraryview.h"
 
 class SongDownloader;
 

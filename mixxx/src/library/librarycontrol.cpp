@@ -9,7 +9,7 @@
 #include "widget/wlibrary.h"
 #include "widget/wlibrarysidebar.h"
 #include "library/librarycontrol.h"
-#include "library/libraryview.h"
+#include "library/abstractlibraryview.h"
 
 LoadToGroupController::LoadToGroupController(QObject* pParent, const QString group)
         : QObject(pParent),
