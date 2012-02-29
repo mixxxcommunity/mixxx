@@ -18,6 +18,8 @@
 // from clementine-player
 #include "library/library.h"
 #include "core/taskmanager.h"
+#include "core/tagreaderclient.h"
+
 
 
 
@@ -102,10 +104,13 @@ void ClementineFeature::activate() {
 
     if (!m_isActivated) {
 
-        //if (!QFile::exists(m_databaseFile)) {
-            // Fall back to default
-        //}
+        // Create the tag loader on another thread.
+        TagReaderClient* tag_reader_client = new TagReaderClient;
 
+        QThread tag_reader_thread;
+        tag_reader_thread.start();
+        tag_reader_client->moveToThread(&tag_reader_thread);
+        tag_reader_client->Start();
 
         m_pClementineDatabaseThread = new BackgroundThreadImplementation<Database, Database>(NULL);
         m_pClementineDatabaseThread->Start(true);

@@ -43,7 +43,7 @@ void ClementineView::connectLibrary(Library* library, TaskManager* task_manager)
     m_libraryViewContainer->view()->SetLibrary(library->model());
     m_libraryViewContainer->view()->SetTaskManager(task_manager);
     // m_libraryViewContainer->view()->SetDeviceManager(devices_);
-    // m_libraryViewContainer->view()->SetCoverProviders(cover_providers_);
+   // m_libraryViewContainer->view()->SetCoverProviders(cover_providers_);
 
     //m_libraryViewContainer->filter()->SetSettingsGroup(kSettingsGroup);
     m_libraryViewContainer->filter()->SetLibraryModel(library->model());
