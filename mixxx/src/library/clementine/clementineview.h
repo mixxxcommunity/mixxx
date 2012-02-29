@@ -50,6 +50,8 @@ public:
 //signals:
 //    void loadTrack(TrackPointer tio);
 private:
+    void setupLibraryFilerWidget();
+
     LibraryViewContainer* m_libraryViewContainer;
     QSortFilterProxyModel* m_librarySortModel;
 

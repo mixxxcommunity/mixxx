@@ -7,6 +7,7 @@
 #include <QAction>
 #include <QList>
 
+
 // #include "library/clementine/bansheedbconnection.h"
 #include "clementinefeature.h"
 #include "clementineview.h"
