@@ -50,6 +50,7 @@ void ClementineView::connectLibrary(Library* library, TaskManager* task_manager)
 
 }
 
+
 void ClementineView::setupLibraryFilerWidget() {
 
     // Library filter widget

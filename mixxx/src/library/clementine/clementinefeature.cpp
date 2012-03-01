@@ -108,11 +108,13 @@ void ClementineFeature::activate() {
         TagReaderClient* tag_reader_client = new TagReaderClient;
 
         QThread tag_reader_thread;
+        tag_reader_thread.setObjectName("TagReader");
         tag_reader_thread.start();
         tag_reader_client->moveToThread(&tag_reader_thread);
         tag_reader_client->Start();
 
         m_pClementineDatabaseThread = new BackgroundThreadImplementation<Database, Database>(NULL);
+        m_pClementineDatabaseThread->setObjectName("ClementineDatabase");
         m_pClementineDatabaseThread->Start(true);
 
         // Database connections

@@ -78,7 +78,14 @@ void MessageHandler(QtMsgType type, const char *input)
     static QMutex mutex;
     QMutexLocker locker(&mutex);
     QByteArray ba;
-    ba = "[" + QThread::currentThread()->objectName().toLocal8Bit() + "]: " + input + "\n";
+    QThread* thread = QThread::currentThread();
+    if (thread) {
+        ba = "[" + QThread::currentThread()->objectName().toLocal8Bit() + "]: ";
+    } else {
+        ba = "[?]: ";
+    }
+    ba += input;
+    ba += "\n";
 
     if(!Logfile.isOpen())
     {
