@@ -21,6 +21,7 @@
 class ErrorDialog;
 class ClementineView;
 class Library;
+class QMimeData;
 
 // class BansheePlaylistModel;
 
@@ -56,6 +57,7 @@ class ClementineFeature : public LibraryFeature {
     void slotAddToAutoDJTop();
     void slotImportAsMixxxPlaylist();
     void showErrorDialog(const QString& message);
+    void slotLibraryViewRightClicked(QMimeData*);
 
   private:
     static QString getiTunesMusicPath();
@@ -98,6 +100,8 @@ class ClementineFeature : public LibraryFeature {
     QString m_mixxxItunesRoot;
 
     static const QString CLEMENTINE_MOUNT_KEY;
+
+    QMimeData* m_pData;
 };
 
 #endif /* CLEMENTINEFEATURE_H */

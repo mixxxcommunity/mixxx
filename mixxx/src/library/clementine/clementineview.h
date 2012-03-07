@@ -10,6 +10,8 @@
 
 #include <QtCore/qobject.h>
 
+#include <trackinfoobject.h>
+
 #include "library/abstractlibraryview.h"
 
 // From clementine-player
@@ -19,11 +21,17 @@ class QSortFilterProxyModel;
 class LibraryViewContainer;
 class Library;
 class TaskManager;
+class QModelIndex;
+class QMimeData;
+class ClementineFeature;
+class TrackCollection;
+class Song;
+class QUrl;
 
 class ClementineView: public QWidget, public virtual AbstractLibraryView {
     Q_OBJECT
 public:
-    ClementineView(QWidget* parent = NULL);
+    ClementineView(QWidget* parent, TrackCollection* pTrackCollection);
     virtual ~ClementineView();
 
     void setup(QDomNode node) {};
@@ -49,12 +57,25 @@ public:
 
 //signals:
 //    void loadTrack(TrackPointer tio);
+
+  public slots:
+    void slotLibraryViewRightClicked(QMimeData* data);
+    void slotSendToAutoDJ();
+    void slotSendToAutoDJTop();
+    void loadSelectionToGroup(QString group);
+//    void loadTrackToPlayer(TrackPointer, QString);
+
 private:
     void setupLibraryFilerWidget();
+    void addToAutoDJ(bool bTop);
+    TrackPointer getTrack(const Song& song);
+    TrackPointer getTrack(const QUrl& url);
 
     LibraryViewContainer* m_libraryViewContainer;
     QSortFilterProxyModel* m_librarySortModel;
+    TrackCollection* m_pTrackCollection;
 
+    QMimeData* m_pData;
 };
 
 #endif /* CLEMENTINEVIEW_H_ */

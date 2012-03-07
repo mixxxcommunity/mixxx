@@ -186,7 +186,7 @@ void ClementineFeature::bindWidget(WLibrarySidebar* /*sidebarWidget*/,
                                WLibrary* libraryWidget,
                                MixxxKeyboard* keyboard) {
 
-    m_view = new ClementineView((QWidget*)libraryWidget);
+    m_view = new ClementineView((QWidget*)libraryWidget, m_pTrackCollection);
 
     //m_view->view()->setModel(library_sort_model_);
     //m_view->view()->SetLibrary(library_->model());
@@ -277,6 +277,52 @@ void ClementineFeature::slotAddToAutoDJTop() {
 }
 
 void ClementineFeature::addToAutoDJ(bool bTop) {
+
+    PlaylistDAO& playlistDao = m_pTrackCollection->getPlaylistDAO();
+    int iAutoDJPlaylistId = playlistDao.getPlaylistIdFromName(AUTODJ_TABLE);
+
+    if (iAutoDJPlaylistId == -1) {
+        return;
+    }
+
+    if (m_pData->hasUrls()) {
+        foreach (QUrl url, m_pData->urls()) {
+            qDebug() << "-----" << url;
+            if (bTop) {
+                // Load track to position two because position one is already loaded to the player
+//                playlistDao.insertTrackIntoPlaylist(url, iAutoDJPlaylistId, 2);
+            }
+            else {
+//                playlistDao.appendTrackToPlaylist(url, iAutoDJPlaylistId);
+            }
+        }
+    }
+        /*
+     *
+     *
+
+
+
+        QModelIndexList indices = selectionModel()->selectedRows();
+
+        TrackModel* trackModel = getTrackModel();
+        foreach (QModelIndex index, indices) {
+            TrackPointer pTrack;
+            if (trackModel &&
+                (pTrack = trackModel->getTrack(index))) {
+                int iTrackId = pTrack->getId();
+                if (iTrackId != -1) {
+                    if (bTop) {
+                        // Load track to position two because position one is already loaded to the player
+                        playlistDao.insertTrackIntoPlaylist(iTrackId, iAutoDJPlaylistId, 2);
+                    }
+                    else {
+                        playlistDao.appendTrackToPlaylist(iTrackId, iAutoDJPlaylistId);
+                    }
+                }
+            }
+        }
+
     // qDebug() << "slotAddToAutoDJ() row:" << m_lastRightClickedIndex.data();
 
     if (m_lastRightClickedIndex.isValid()) {
@@ -285,7 +331,7 @@ void ClementineFeature::addToAutoDJ(bool bTop) {
         QString playlist = item->dataPath().toString();
         int playlistID = playlist.toInt();
         if (playlistID > 0) {
-/*            BansheePlaylistModel* pPlaylistModelToAdd = new BansheePlaylistModel(this, m_pTrackCollection, &m_connection);
+           BansheePlaylistModel* pPlaylistModelToAdd = new BansheePlaylistModel(this, m_pTrackCollection, &m_connection);
             pPlaylistModelToAdd->setPlaylist(playlistID);
             PlaylistDAO &playlistDao = m_pTrackCollection->getPlaylistDAO();
             int autoDJId = playlistDao.getPlaylistIdFromName(AUTODJ_TABLE);
@@ -304,9 +350,9 @@ void ClementineFeature::addToAutoDJ(bool bTop) {
                 }
             }
             delete pPlaylistModelToAdd;
-            */
-        }
+            }
     }
+    */
 }
 
 void ClementineFeature::slotImportAsMixxxPlaylist() {
@@ -369,3 +415,67 @@ void ClementineFeature::showErrorDialog(const QString& message) {
     }
     m_error_dialog->ShowMessage(message);
 }
+
+void ClementineFeature::slotLibraryViewRightClicked(QMimeData* data) {
+    // setup Context Menu actions
+    qDebug() << "slotLibraryViewRightClicked";
+
+    m_pData = data;
+
+}
+/*
+TrackPointer BansheePlaylistModel::getTrack(const QModelIndex& index) const {
+
+    QString location;
+
+    location = getTrackLocation(index);
+
+    if (location.isEmpty()) {
+        return TrackPointer();
+    }
+
+    int row = index.row();
+
+    TrackDAO& track_dao = m_pTrackCollection->getTrackDAO();
+    int track_id = track_dao.getTrackId(location);
+    bool track_already_in_library = track_id >= 0;
+    if (track_id < 0) {
+        // Add Track to library
+        track_id = track_dao.addTrack(location, true);
+    }
+
+    TrackPointer pTrack;
+
+    if (track_id < 0) {
+        // Add Track to library failed, create a transient TrackInfoObject
+        pTrack = TrackPointer(new TrackInfoObject(location), &QObject::deleteLater);
+    } else {
+        pTrack = track_dao.getTrack(track_id);
+    }
+
+    // If this track was not in the Mixxx library it is now added and will be
+    // saved with the metadata from iTunes. If it was already in the library
+    // then we do not touch it so that we do not over-write the user's metadata.
+    if (!track_already_in_library) {
+        pTrack->setArtist(m_sortedPlaylist.at(row).pArtist->name);
+        pTrack->setTitle(m_sortedPlaylist.at(row).pTrack->title);
+        pTrack->setDuration(m_sortedPlaylist.at(row).pTrack->duration);
+        pTrack->setAlbum(m_sortedPlaylist.at(row).pAlbum->title);
+        pTrack->setYear(QString::number(m_sortedPlaylist.at(row).pTrack->year));
+        pTrack->setRating(m_sortedPlaylist.at(row).pTrack->rating);
+        pTrack->setGenre(m_sortedPlaylist.at(row).pTrack->genre);
+        pTrack->setTrackNumber(QString::number(m_sortedPlaylist.at(row).pTrack->tracknumber));
+        float bpm = ((float)m_sortedPlaylist.at(row).pTrack->bpm)/10.0;
+        pTrack->setBpm(bpm);
+        pTrack->setBitrate(m_sortedPlaylist.at(row).pTrack->bitrate);
+        pTrack->setComment(m_sortedPlaylist.at(row).pTrack->comment);
+        pTrack->setComposer(m_sortedPlaylist.at(row).pTrack->composer);
+        // If the track has a BPM, then give it a static beatgrid.
+        if (bpm > 0) {
+            BeatsPointer pBeats = BeatFactory::makeBeatGrid(pTrack, bpm, 0);
+            pTrack->setBeats(pBeats);
+        }
+    }
+    return pTrack;
+}
+*/

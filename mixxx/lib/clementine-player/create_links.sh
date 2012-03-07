@@ -22,3 +22,5 @@ ln -s ../../../../../../daschuer-mixxx-clementine/ext/libclementine-common/core/
 ln -s ../../../../../../daschuer-mixxx-clementine/ext/libclementine-common/core/workerpool.h include/core/workerpool.h
 ln -s ../../../../../../daschuer-mixxx-clementine/ext/libclementine-common/core/closure.h include/core/closure.h
 
+ln -s ../../daschuer-mixxx-clementine/bin/clementine-tagreader ../../clementine-tagreader
+
