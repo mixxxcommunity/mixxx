@@ -10,7 +10,10 @@
 
 #include <QtCore/qobject.h>
 
+#include "configobject.h"
 #include <trackinfoobject.h>
+
+#include <QSignalMapper>
 
 #include "library/abstractlibraryview.h"
 
@@ -27,11 +30,13 @@ class ClementineFeature;
 class TrackCollection;
 class Song;
 class QUrl;
+class QMenu;
+
 
 class ClementineView: public QWidget, public virtual AbstractLibraryView {
     Q_OBJECT
 public:
-    ClementineView(QWidget* parent, TrackCollection* pTrackCollection);
+    ClementineView(QWidget* parent, ConfigObject<ConfigValue>* pConfig, TrackCollection* pTrackCollection);
     virtual ~ClementineView();
 
     void setup(QDomNode node) {};
@@ -55,11 +60,13 @@ public:
 
     void connectLibrary(Library* library, TaskManager* task_manager);
 
-//signals:
-//    void loadTrack(TrackPointer tio);
+  signals:
+    void loadTrack(TrackPointer tio);
+    void loadTrackToPlayer(TrackPointer tio, QString group);
 
   public slots:
     void slotLibraryViewRightClicked(QMimeData* data);
+    void slotAddToClementinePlaylist(QMimeData* data);
     void slotSendToAutoDJ();
     void slotSendToAutoDJTop();
     void loadSelectionToGroup(QString group);
@@ -73,9 +80,16 @@ private:
 
     LibraryViewContainer* m_libraryViewContainer;
     QSortFilterProxyModel* m_librarySortModel;
+
+    ConfigObject<ConfigValue>* m_pConfig;
     TrackCollection* m_pTrackCollection;
 
     QMimeData* m_pData;
+
+    QSignalMapper m_playlistMapper;
+    QSignalMapper m_crateMapper;
+    QSignalMapper m_groupMapper;
+    QSignalMapper m_samplerMapper;
 };
 
 #endif /* CLEMENTINEVIEW_H_ */

@@ -14,6 +14,8 @@
 #include "library/treeitem.h"
 // #include "library/banshee/bansheedbconnection.h"
 
+#include "configobject.h"
+
 #include "core/database.h"
 #include "core/backgroundthread.h"
 #include "widgets/errordialog.h"
@@ -102,6 +104,8 @@ class ClementineFeature : public LibraryFeature {
     static const QString CLEMENTINE_MOUNT_KEY;
 
     QMimeData* m_pData;
+
+    ConfigObject<ConfigValue>* m_pConfig;
 };
 
 #endif /* CLEMENTINEFEATURE_H */

@@ -34,7 +34,8 @@ ClementineFeature::ClementineFeature(QObject* parent, TrackCollection* pTrackCol
           m_cancelImport(false),
           m_pClementineDatabaseThread(NULL),
           m_pLibrary(NULL),
-          m_view(NULL)
+          m_view(NULL),
+          m_pConfig(pConfig)
 {
     //    m_pBansheePlaylistModel = new BansheePlaylistModel(this, m_pTrackCollection, &m_connection);
     m_isActivated = false;
@@ -186,7 +187,7 @@ void ClementineFeature::bindWidget(WLibrarySidebar* /*sidebarWidget*/,
                                WLibrary* libraryWidget,
                                MixxxKeyboard* keyboard) {
 
-    m_view = new ClementineView((QWidget*)libraryWidget, m_pTrackCollection);
+    m_view = new ClementineView((QWidget*)libraryWidget, m_pConfig, m_pTrackCollection);
 
     //m_view->view()->setModel(library_sort_model_);
     //m_view->view()->SetLibrary(library_->model());

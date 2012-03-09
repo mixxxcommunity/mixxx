@@ -9,6 +9,8 @@
 #include "clementinefeature.h"
 #include "trackinfoobject.h"
 #include "track/beatfactory.h"
+#include "controlobjectthreadmain.h"
+#include "controlobject.h"
 
 // from clementine
 #include "library/libraryviewcontainer.h"
@@ -21,15 +23,17 @@
 
 #include <QSortFilterProxyModel>
 #include <QModelIndexList>
+#include <QSignalMapper>
+#include <QAction>
+#include <QMenu>
 
-
-ClementineView::ClementineView(QWidget* parent, TrackCollection* pTrackCollection)
+ClementineView::ClementineView(QWidget* parent, ConfigObject<ConfigValue>* pConfig, TrackCollection* pTrackCollection)
     : QWidget(parent),
       m_libraryViewContainer(new LibraryViewContainer(this)),
       m_librarySortModel(new QSortFilterProxyModel(this)),
+      m_pConfig(pConfig),
+      m_pData(NULL),
       m_pTrackCollection(pTrackCollection) {
-
-
 
 }
 
@@ -51,8 +55,12 @@ void ClementineView::connectLibrary(Library* library, TaskManager* task_manager)
     //m_libraryViewContainer->view()->SetDeviceManager(devices_);
     //m_libraryViewContainer->view()->SetCoverProviders(cover_providers_);
 
+    // Is emmited also for doubleClick
+    connect(m_libraryViewContainer->view(), SIGNAL(AddToPlaylistSignal(QMimeData*)),
+            SLOT(slotAddToClementinePlaylist(QMimeData*)));
+
     connect(m_libraryViewContainer->view(), SIGNAL(RightClicked(QMimeData*)),
-            this, SLOT(slotLibraryViewRightClicked(QMimeData*)));
+            SLOT(slotLibraryViewRightClicked(QMimeData*)));
 
     m_libraryViewContainer->view()->AddSongActionSeparator();
 
@@ -65,40 +73,52 @@ void ClementineView::connectLibrary(Library* library, TaskManager* task_manager)
     m_libraryViewContainer->view()->AddSongActionSeparator();
 
 
-/*
-    ControlObjectThreadMain* pNumSamplers = new ControlObjectThreadMain(
-        ControlObject::getControl(ConfigKey("[Master]", "num_samplers")));
+    connect(&m_groupMapper, SIGNAL(mapped(QString)),
+            SLOT(loadSelectionToGroup(QString)));
+
     ControlObjectThreadMain* pNumDecks = new ControlObjectThreadMain(
-        ControlObject::getControl(ConfigKey("[Master]", "num_decks")));
+            ControlObject::getControl(ConfigKey("[Master]", "num_decks")));
+    int iNumDecks = pNumDecks->get();
+    delete pNumDecks;
 
     // Load to Deck Actions
-    int iNumDecks = pNumDecks->get();
     for (int i = 1; i <= iNumDecks; ++i) {
-        //QString deckGroup = QString("[Channel%1]").arg(i);
+        QString deckGroup = QString("[Channel%1]").arg(i);
         //bool deckPlaying = ControlObject::getControl(
-        //ConfigKey(deckGroup, "play"))->get() == 1.0f;
+        //      ConfigKey(deckGroup, "play"))->get() == 1.0f;
         //bool deckEnabled = !deckPlaying && oneSongSelected;
-        m_libraryViewContainer->view()->AddSongAction(QIcon(),
-                tr("Load to Deck %1").arg(i), &m_deckMapper, SLOT(map()));
-        }
+
+        QAction* pAction = m_libraryViewContainer->view()->AddSongAction(QIcon(),
+                tr("Load to Deck %1").arg(i), &m_groupMapper, SLOT(map()));
+        //pAction->setEnabled(deckEnabled);
+        m_groupMapper.setMapping(pAction, deckGroup);
     }
 
-    int iNumSamplers = m_pNumSamplers->get();
+
+    ControlObjectThreadMain* pNumSamplers = new ControlObjectThreadMain(
+            ControlObject::getControl(ConfigKey("[Master]", "num_samplers")));
+    int iNumSamplers = pNumSamplers->get();
+    delete pNumSamplers;
+
     if (iNumSamplers > 0) {
-        QMenu menu = m_libraryViewContainer->view()->AddSongActionMenu();
+        QMenu* menu = m_libraryViewContainer->view()->AddSongActionMenu();
+        menu->setTitle(tr("Load to Sampler"));
         for (int i = 1; i <= iNumSamplers; ++i) {
-            //QString samplerGroup = QString("[Sampler%1]").arg(i);
+            QString samplerGroup = QString("[Sampler%1]").arg(i);
             //bool samplerPlaying = ControlObject::getControl(
             //        ConfigKey(samplerGroup, "play"))->get() == 1.0f;
             //bool samplerEnabled = !samplerPlaying && oneSongSelected;
-            menu->addAction(QIcon();
-                    tr("Sampler %1").arg(i), &m_samplerMapper, SLOT(map()));
+            QAction* pAction = new QAction(tr("Sampler %1").arg(i), menu);
+            //pAction->setEnabled(samplerEnabled);
+            menu->addAction(pAction);
+            m_groupMapper.setMapping(pAction, samplerGroup);
+            connect(pAction, SIGNAL(triggered()), &m_groupMapper, SLOT(map()));
         }
     }
 
     m_libraryViewContainer->view()->AddSongActionSeparator();
 
-
+/*
     PlaylistDAO& playlistDao = m_pTrackCollection->getPlaylistDAO();
     int numPlaylists = playlistDao.playlistCount();
 
@@ -215,7 +235,7 @@ void ClementineView::addToAutoDJ(bool bTop) {
     PlaylistDAO& playlistDao = m_pTrackCollection->getPlaylistDAO();
     int iAutoDJPlaylistId = playlistDao.getPlaylistIdFromName(AUTODJ_TABLE);
 
-    if (iAutoDJPlaylistId == -1) {
+    if (iAutoDJPlaylistId == -1 || !m_pData) {
         return;
     }
 
@@ -234,7 +254,11 @@ void ClementineView::addToAutoDJ(bool bTop) {
                 }
             }
         }
-    } else if (songData->hasUrls()) {
+    //} else if (const GeneratorMimeData* generator_data = qobject_cast<const GeneratorMimeData*>(data)) {
+    //    InsertSmartPlaylist(generator_data->generator_, row, play_now, enqueue_now);
+    //} else if (const PlaylistItemMimeData* item_data = qobject_cast<const PlaylistItemMimeData*>(data)) {
+    //    InsertItems(item_data->items_, row, play_now, enqueue_now);
+    } else if (m_pData->hasUrls()) {
         foreach (QUrl url, m_pData->urls()) {
             qDebug() << "-----" << url;
             TrackPointer pTrack = getTrack(url);
@@ -250,6 +274,7 @@ void ClementineView::addToAutoDJ(bool bTop) {
             }
         }
     }
+    delete m_pData;
 }
 
 /*
@@ -312,7 +337,10 @@ void ClementineView::slotImportAsMixxxPlaylist() {
 void ClementineView::loadSelectionToGroup(QString group) {
     // If the track load override is disabled, check to see if a track is
     // playing before trying to load it
- /*
+    if (!m_pData) {
+        return;
+    }
+
     if ( !(m_pConfig->getValueString(ConfigKey("[Controls]","AllowTrackLoadToPlayingDeck")).toInt()) ) {
         bool groupPlaying = (ControlObject::getControl(
                 ConfigKey(group, "play"))->get() == 1.0f);
@@ -321,7 +349,6 @@ void ClementineView::loadSelectionToGroup(QString group) {
             return;
         }
     }
- */
 
     TrackPointer pTrack;
 
@@ -331,7 +358,7 @@ void ClementineView::loadSelectionToGroup(QString group) {
             pTrack = getTrack(song);
             break;
         }
-    } else if (songData->hasUrls()) {
+    } else if (m_pData->hasUrls()) {
         foreach (QUrl url, m_pData->urls()) {
             qDebug() << "-----" << url;
             pTrack = getTrack(url);
@@ -340,8 +367,10 @@ void ClementineView::loadSelectionToGroup(QString group) {
     }
 
     if (pTrack) {
-//        emit(loadTrackToPlayer(pTrack, group));
+        emit(loadTrackToPlayer(pTrack, group));
     }
+
+    delete m_pData;
 }
 
 void ClementineView::slotLibraryViewRightClicked(QMimeData* data) {
@@ -349,104 +378,42 @@ void ClementineView::slotLibraryViewRightClicked(QMimeData* data) {
     qDebug() << "slotLibraryViewRightClicked";
 
     m_pData = data;
-
-    /*
-        // Load to Deck Actions
-        int iNumDecks = m_pNumDecks->get();
-        for (int i = 1; i <= iNumDecks; ++i) {
-            //QString deckGroup = QString("[Channel%1]").arg(i);
-            //bool deckPlaying = ControlObject::getControl(
-            //ConfigKey(deckGroup, "play"))->get() == 1.0f;
-            //bool deckEnabled = !deckPlaying && oneSongSelected;
-            m_libraryViewContainer->view()->AddSongAction(QIcon(),
-                    tr("Load to Deck %1").arg(i), &m_deckMapper, SLOT(map()));
-            }
-        }
-
-        int iNumSamplers = m_pNumSamplers->get();
-        if (iNumSamplers > 0) {
-            QMenu menu = m_libraryViewContainer->view()->AddSongActionMenu();
-            for (int i = 1; i <= iNumSamplers; ++i) {
-                //QString samplerGroup = QString("[Sampler%1]").arg(i);
-                //bool samplerPlaying = ControlObject::getControl(
-                //        ConfigKey(samplerGroup, "play"))->get() == 1.0f;
-                //bool samplerEnabled = !samplerPlaying && oneSongSelected;
-                menu->addAction(QIcon();
-                        tr("Sampler %1").arg(i), &m_samplerMapper, SLOT(map()));
-            }
-        }
-
-        m_libraryViewContainer->view()->AddSongActionSeparator();
-
-
-        PlaylistDAO& playlistDao = m_pTrackCollection->getPlaylistDAO();
-        int numPlaylists = playlistDao.playlistCount();
-
-        for (int i = 0; i < numPlaylists; ++i) {
-            int iPlaylistId = playlistDao.getPlaylistId(i);
-
-            if (!playlistDao.isHidden(iPlaylistId)) {
-
-                QString playlistName = playlistDao.getPlaylistName(iPlaylistId);
-
-                m_libraryViewContainer->view()->AddSongAction(QIcon(),
-                             tr("Load to Deck %1").arg(i), &m_deckMapper, SLOT(map()));
-
-
-                QAction* pAction = new QAction(playlistName, m_pPlaylistMenu);
-                bool locked = playlistDao.isPlaylistLocked(iPlaylistId);
-                pAction->setEnabled(!locked);
-                m_pPlaylistMenu->addAction(pAction);
-                m_playlistMapper.setMapping(pAction, iPlaylistId);
-                connect(pAction, SIGNAL(triggered()), &m_playlistMapper, SLOT(map()));
-            }
-        }
-
-        if (modelHasCapabilities(TrackModel::TRACKMODELCAPS_ADDTOCRATE)) {
-            m_pCrateMenu->clear();
-            CrateDAO& crateDao = m_pTrackCollection->getCrateDAO();
-            int numCrates = crateDao.crateCount();
-            for (int i = 0; i < numCrates; ++i) {
-                int iCrateId = crateDao.getCrateId(i);
-                // No leak because making the menu the parent means they will be
-                // auto-deleted
-                QAction* pAction = new QAction(crateDao.crateName(iCrateId), m_pCrateMenu);
-                bool locked = crateDao.isCrateLocked(iCrateId);
-                pAction->setEnabled(!locked);
-                m_pCrateMenu->addAction(pAction);
-                m_crateMapper.setMapping(pAction, iCrateId);
-                connect(pAction, SIGNAL(triggered()), &m_crateMapper, SLOT(map()));
-            }
-
-            m_pMenu->addMenu(m_pCrateMenu);
-        }
-
-        bool locked = modelHasCapabilities(TrackModel::TRACKMODELCAPS_LOCKED);
-        m_pRemoveAct->setEnabled(!locked);
-        m_pMenu->addSeparator();
-        if (modelHasCapabilities(TrackModel::TRACKMODELCAPS_REMOVE)) {
-            m_pMenu->addAction(m_pRemoveAct);
-        }
-        if (modelHasCapabilities(TrackModel::TRACKMODELCAPS_RELOCATE)) {
-            m_pMenu->addAction(m_pRelocate);
-        }
-        if (modelHasCapabilities(TrackModel::TRACKMODELCAPS_RELOADMETADATA)) {
-            m_pMenu->addAction(m_pReloadMetadataAct);
-        }
-        m_pPropertiesAct->setEnabled(oneSongSelected);
-        m_pMenu->addAction(m_pPropertiesAct);
-
-        //Create the right-click menu
-        m_pMenu->popup(event->globalPos());
-
-
-        m_libraryViewContainer->filter()->SetLibraryModel(library->model());
-        //m_libraryViewContainer->filter()->SetSettingsGroup(kSettingsGroup);
-         *
-         *
-         */
 }
 
+void ClementineView::slotAddToClementinePlaylist(QMimeData* data) {
+    if (!data) {
+        return;
+    }
+
+    if (const SongMimeData* songData = qobject_cast<const SongMimeData*>(data)) {
+        // Should we replace the flags with the user's preference?
+        if (songData->override_user_settings_) {
+            // Do nothing
+        } else if (songData->from_doubleclick_) {
+            TrackPointer pTrack;
+            foreach (Song song, songData->songs) {
+                qDebug() << "-----" << song.title();
+                pTrack = getTrack(song);
+                break;
+            }
+            if (pTrack) {
+                emit(loadTrack(pTrack));
+            }
+            //ApplyAddBehaviour(doubleclick_addmode_, mime_data);
+            //ApplyPlayBehaviour(doubleclick_playmode_, mime_data);
+        } else {
+            //ApplyPlayBehaviour(menu_playmode_, mime_data);
+        }
+
+        // Should we create a new playlist for the songs?
+        //if(mime_data->open_in_new_playlist_) {
+            //playlists_->New(mime_data->get_name_for_new_playlist());
+        //}
+    }
+
+    //playlists_->current()->dropMimeData(data, Qt::CopyAction, -1, 0, QModelIndex());
+    delete data;
+}
 
 TrackPointer ClementineView::getTrack(const Song& song) {
     QString location;
@@ -526,3 +493,5 @@ TrackPointer ClementineView::getTrack(const QUrl& url) {
     }
     return pTrack;
 }
+
+
