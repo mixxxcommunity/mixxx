@@ -31,6 +31,7 @@ class TrackCollection;
 class Song;
 class QUrl;
 class QMenu;
+class QHBoxLayout;
 
 
 class ClementineView: public QWidget, public virtual AbstractLibraryView {
@@ -66,15 +67,17 @@ public:
 
   public slots:
     void slotLibraryViewRightClicked(QMimeData* data);
-    void slotAddToClementinePlaylist(QMimeData* data);
     void slotSendToAutoDJ();
     void slotSendToAutoDJTop();
+    void slotAddToMixxxPlaylist(int iPlaylistId);
+    void slotAddToClementinePlaylist(QMimeData* data);
     void loadSelectionToGroup(QString group);
-//    void loadTrackToPlayer(TrackPointer, QString);
+    void addSelectionToCrate(int iCrateId);
+
 
 private:
     void setupLibraryFilerWidget();
-    void addToAutoDJ(bool bTop);
+    void addToMixxPlaylist(int iPlaylistId, bool bTop);
     TrackPointer getTrack(const Song& song);
     TrackPointer getTrack(const QUrl& url);
 
@@ -90,6 +93,12 @@ private:
     QSignalMapper m_crateMapper;
     QSignalMapper m_groupMapper;
     QSignalMapper m_samplerMapper;
+
+    QMenu* m_pMenuSampler;
+    QMenu* m_pMenuCrate;
+    QMenu* m_pMenuPlaylist;
+
+    QHBoxLayout* m_horizontalLayout;
 };
 
 #endif /* CLEMENTINEVIEW_H_ */

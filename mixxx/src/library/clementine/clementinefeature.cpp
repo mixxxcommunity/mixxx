@@ -59,9 +59,9 @@ ClementineFeature::~ClementineFeature() {
     if (m_pClementineDatabaseThread) {
         delete m_pClementineDatabaseThread;
     }
-    if (m_view) {
-        delete m_view;
-    }
+//    if (m_view) {
+//        delete m_view;
+//    }
 
     qDebug() << "~ClementineFeature()";
     // stop import thread, if still running
