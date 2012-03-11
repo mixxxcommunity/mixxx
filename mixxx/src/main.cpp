@@ -152,22 +152,31 @@ int main(int argc, char * argv[])
 
 
     // Construct a list of strings based on the command line arguments
-    CmdlineArgs& args = CmdlineArgs::Instance();
-    if (!args.Parse(argc, argv)) {
-        puts("Mixxx digital DJ software v");
-        puts(VERSION);
-        puts(" - Command line options");
-        puts(
+    struct CmdlineArgs args;
+    args.bStartInFullscreen = false; //Initialize vars
+
+    // Only match supported file types since command line options are also parsed elsewhere
+    QRegExp fileRx(SoundSourceProxy::supportedFileExtensionsRegex(), Qt::CaseInsensitive);
+
+   for (int i = 0; i < argc; ++i) {
+       if (   argv[i] == QString("-h")
+            || argv[i] == QString("--h")
+            || argv[i] == QString("--help")
+    ) {
+           fputs("Mixxx digital DJ software v",stdout);
+           fputs(VERSION,stdout);
+           fputs(" - Command line options",stdout);
+           fputs(
                    "\n(These are case-sensitive.)\n\n\
     [FILE]                  Load the specified music file(s) at start-up.\n\
                             Each must be one of the following file types:\n\
-                            ");
+                            ",stdout);
 
-        QString fileExtensions = SoundSourceProxy::supportedFileExtensionsString();
-        QByteArray fileExtensionsBA = QString(fileExtensions).toUtf8();
-        puts(fileExtensionsBA.constData());
-        puts("\n\n");
-        puts("\
+            QString fileExtensions = SoundSourceProxy::supportedFileExtensionsString();
+            QByteArray fileExtensionsBA = QString(fileExtensions).toUtf8();
+            fputs(fileExtensionsBA.constData(),stdout);
+            fputs("\n\n",stdout);
+            fputs("\
                             Each file you specify will be loaded into the\n\
                             next virtual deck.\n\
 \n\
@@ -193,10 +202,20 @@ int main(int argc, char * argv[])
 \n\
     -f, --fullScreen        Starts Mixxx in full-screen mode\n\
 \n\
-    -h, --help              Display this help message and exit");
+    -h, --help              Display this help message and exit",stdout);
 
-        puts("\n\n(For more information, see http://mixxx.org/wiki/doku.php/command_line_options)\n");
-        return 0;
+            fputs("\n\n(For more information, see http://mixxx.org/wiki/doku.php/command_line_options)\n",stdout);
+            return(0);
+        }
+
+        if (argv[i]==QString("-f").toLower() || argv[i]==QString("--f") || argv[i]==QString("--fullScreen"))
+        {
+            args.bStartInFullscreen = true;
+        } else if (argv[i] == QString("--locale") && i+1 < argc) {
+            args.locale = argv[i+1];
+        } else if (fileRx.indexIn(argv[i]) != -1) {
+            args.qlMusicFiles += argv[i];
+        }
     }
 
     //it seems like this code should be inline in MessageHandler() but for some reason having it there corrupts the messages sometimes -kousu 2/2009
