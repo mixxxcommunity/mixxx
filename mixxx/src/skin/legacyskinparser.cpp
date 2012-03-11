@@ -1069,7 +1069,7 @@ void LegacySkinParser::addShortcutToToolTip(QWidget* pWidget, const QString& sho
     QString nativeShortcut = QKeySequence(shortcut, QKeySequence::PortableText).toString(QKeySequence::NativeText);
 #else
     QKeySequence keySec = QKeySequence::fromString(shortcut, QKeySequence::PortableText);
-    shortcut = keySec.toString(QKeySequence::NativeText);
+    QString nativeShortcut = keySec.toString(QKeySequence::NativeText);
 #endif
 
     tooltip += "\n";
