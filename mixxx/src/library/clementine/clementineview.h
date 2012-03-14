@@ -19,6 +19,8 @@
 
 // From clementine-player
 #include "library/libraryviewcontainer.h"
+#include "playlist/playlistcontainer.h"
+#include "core/backgroundthread.h"
 
 class QSortFilterProxyModel;
 class LibraryViewContainer;
@@ -32,6 +34,9 @@ class Song;
 class QUrl;
 class QMenu;
 class QHBoxLayout;
+class PlaylistBackend;
+class PlaylistSequence;
+class Database;
 
 
 class ClementineView: public QWidget, public virtual AbstractLibraryView {
@@ -54,12 +59,12 @@ public:
     // the specified group. Does nothing otherwise.
     void loadSelectedTrackToGroup(QString group) {};
 
-    // If a selection is applicable for this view, request that the selection be
+    // If a selePlaylistSequencection is applicable for this view, request that the selection be
     // increased or decreased by the provided delta. For example, for a value of
     // 1, the view should move to the next selection in the list.
     void moveSelection(int delta) {};
 
-    void connectLibrary(Library* library, TaskManager* task_manager);
+    void connectLibrary(Library* library, BackgroundThread<Database>* db_thread, TaskManager* task_manager);
 
   signals:
     void loadTrack(TrackPointer tio);
@@ -82,6 +87,13 @@ private:
     TrackPointer getTrack(const QUrl& url);
 
     LibraryViewContainer* m_libraryViewContainer;
+    PlaylistContainer* m_playlistContainer;
+    PlaylistManager* m_playlistsManager;
+    PlaylistBackend* m_playlistBackend;
+    PlaylistSequence* m_playlistSequence;
+
+
+
     QSortFilterProxyModel* m_librarySortModel;
 
     ConfigObject<ConfigValue>* m_pConfig;

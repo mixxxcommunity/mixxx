@@ -143,7 +143,10 @@ void ClementineFeature::activate() {
 
         m_pLibrary = new Library(m_pClementineDatabaseThread, &task_manager, this);
 
-        m_view->connectLibrary(m_pLibrary, &task_manager);
+        m_view->connectLibrary(m_pLibrary, m_pClementineDatabaseThread, &task_manager);
+
+
+
 
 
         qDebug() << "ClementineFeature::importLibrary() ";

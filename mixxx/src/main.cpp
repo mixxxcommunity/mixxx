@@ -180,8 +180,8 @@ int main(int argc, char * argv[])
                             locations.\n\
 \n\
     --settingsPath PATH     Top-level directory where Mixxx should look\n\
-                            for settings. Default is:", stdout);
-        printf("\
+                            for settings. Default is:\n", stdout);
+        fprintf(stdout, "\
                             %s\n", args.getSettingsPath().toLocal8Bit().data());
         fputs("\
 \n\

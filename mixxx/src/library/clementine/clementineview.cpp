@@ -20,6 +20,10 @@
 #include "library/libraryfilterwidget.h"
 #include "core/taskmanager.h"
 #include "playlist/songmimedata.h"
+#include "playlist/playlistbackend.h"
+#include "playlist/playlistsequence.h"
+#include "playlist/playlistview.h"
+
 
 #include <QSortFilterProxyModel>
 #include <QModelIndexList>
@@ -27,23 +31,35 @@
 #include <QAction>
 #include <QMenu>
 #include <QHBoxLayout>
+#include <QSplitter>
 
 ClementineView::ClementineView(QWidget* parent, ConfigObject<ConfigValue>* pConfig, TrackCollection* pTrackCollection)
     : QWidget(parent),
       m_libraryViewContainer(new LibraryViewContainer(this)),
+      m_playlistContainer(new PlaylistContainer(this)),
       m_librarySortModel(new QSortFilterProxyModel(this)),
       m_pConfig(pConfig),
       m_pData(NULL),
       m_pTrackCollection(pTrackCollection) {
+    /*
     m_horizontalLayout = new QHBoxLayout(this);
     m_horizontalLayout->setContentsMargins(0, 0, 0, 0);
     m_horizontalLayout->addWidget(m_libraryViewContainer);
+    */
+
+    QHBoxLayout* horizontalLayout = new QHBoxLayout(this);
+    QSplitter* splitter = new QSplitter(this);
+    horizontalLayout->setContentsMargins(0, 0, 0, 0);
+    horizontalLayout->addWidget(splitter);
+    splitter->setOrientation(Qt::Horizontal);
+    splitter->addWidget(m_libraryViewContainer);
+    splitter->addWidget(m_playlistContainer);
 }
 
 ClementineView::~ClementineView() {
 }
 
-void ClementineView::connectLibrary(Library* library, TaskManager* task_manager) {
+void ClementineView::connectLibrary(Library* library, BackgroundThread<Database>* db_thread, TaskManager* task_manager) {
 
     qDebug() << "Creating models";
     m_librarySortModel->setSourceModel((QAbstractItemModel*)library->model());
@@ -128,6 +144,81 @@ void ClementineView::connectLibrary(Library* library, TaskManager* task_manager)
 
     m_libraryViewContainer->filter()->SetLibraryModel(library->model());
     //m_libraryViewContainer->filter()->SetSettingsGroup(kSettingsGroup);
+
+
+    /////////////////////////////////////////////
+    // PlaylistContainer
+    m_playlistsManager = new PlaylistManager(task_manager, NULL);
+    m_playlistBackend = new PlaylistBackend;
+    m_playlistBackend->moveToThread(db_thread);
+    m_playlistBackend->SetDatabase(db_thread->Worker());
+    m_playlistSequence = new PlaylistSequence(this);
+    m_playlistSequence->hide();
+
+    m_playlistContainer->SetManager(m_playlistsManager);
+    // Load playlists
+    m_playlistsManager->Init(library->backend(), m_playlistBackend,
+            m_playlistSequence, m_playlistContainer);
+
+    // Reload playlist settings, for BG and glowing
+    m_playlistContainer->view()->ReloadSettings();
+
+    //connect(m_playlistContainer, SIGNAL(ViewSelectionModelChanged()), SLOT(PlaylistViewSelectionModelChanged()));
+    //m_playlistContainer->SetPlayer(player);
+    //connect(ui_->action_jump, SIGNAL(triggered()), ui_->playlist->view(), SLOT(JumpToCurrentlyPlayingTrack()));
+    //ui_->playlist->SetActions(ui_->action_new_playlist, ui_->action_save_playlist,
+    //                          ui_->action_load_playlist,
+    //                          ui_->action_next_playlist,    /* These two actions aren't associated */
+    //ui_->action_previous_playlist /* to a button but to the main window */ );
+    // Add the shuffle and repeat action groups to the menu
+    //ui_->action_shuffle_mode->setMenu(ui_->playlist_sequence->shuffle_menu());
+    //ui_->action_repeat_mode->setMenu(ui_->playlist_sequence->repeat_menu());
+    //connect(player_, SIGNAL(Paused()), ui_->playlist->view(), SLOT(StopGlowing()));
+    //connect(player_, SIGNAL(Playing()), ui_->playlist->view(), SLOT(StartGlowing()));
+    //connect(player_, SIGNAL(Stopped()), ui_->playlist->view(), SLOT(StopGlowing()));
+    //connect(player_, SIGNAL(Paused()), ui_->playlist, SLOT(ActivePaused()));
+    //connect(player_, SIGNAL(Playing()), ui_->playlist, SLOT(ActivePlaying()));
+    //connect(player_, SIGNAL(Stopped()), ui_->playlist, SLOT(ActiveStopped()));
+    //connect(ui_->playlist->view(), SIGNAL(doubleClicked(QModelIndex)), SLOT(PlayIndex(QModelIndex)));
+    //connect(ui_->playlist->view(), SIGNAL(PlayItem(QModelIndex)), SLOT(PlayIndex(QModelIndex)));
+    //connect(ui_->playlist->view(), SIGNAL(PlayPause()), player_, SLOT(PlayPause()));
+    //connect(ui_->playlist->view(), SIGNAL(RightClicked(QPoint,QModelIndex)), SLOT(PlaylistRightClick(QPoint,QModelIndex)));
+    //connect(ui_->playlist->view(), SIGNAL(SeekTrack(int)), ui_->track_slider, SLOT(Seek(int)));
+    //connect(ui_->playlist->view(), SIGNAL(BackgroundPropertyChanged()), SLOT(RefreshStyleSheet()));
+    // Playlist menu
+    //playlist_play_pause_ = playlist_menu_->addAction(tr("Play"), this, SLOT(PlaylistPlay()));
+    //playlist_menu_->addAction(ui_->action_stop);
+    //playlist_stop_after_ = playlist_menu_->addAction(IconLoader::Load("media-playback-stop"), tr("Stop after this track"), this, SLOT(PlaylistStopAfter()));
+    //playlist_queue_ = playlist_menu_->addAction("", this, SLOT(PlaylistQueue()));
+    //playlist_queue_->setShortcut(QKeySequence("Ctrl+D"));
+    //ui_->playlist->addAction(playlist_queue_);
+    //playlist_menu_->addSeparator();
+    //playlist_menu_->addAction(ui_->action_remove_from_playlist);
+    //playlist_undoredo_ = playlist_menu_->addSeparator();
+    //playlist_menu_->addAction(ui_->action_edit_track);
+    //playlist_menu_->addAction(ui_->action_edit_value);
+    //playlist_menu_->addAction(ui_->action_renumber_tracks);
+    //playlist_menu_->addAction(ui_->action_selection_set_value);
+    //playlist_menu_->addAction(ui_->action_auto_complete_tags);
+    //playlist_menu_->addSeparator();
+    //playlist_copy_to_library_ = playlist_menu_->addAction(IconLoader::Load("edit-copy"), tr("Copy to library..."), this, SLOT(PlaylistCopyToLibrary()));
+    //playlist_move_to_library_ = playlist_menu_->addAction(IconLoader::Load("go-jump"), tr("Move to library..."), this, SLOT(PlaylistMoveToLibrary()));
+    //playlist_organise_ = playlist_menu_->addAction(IconLoader::Load("edit-copy"), tr("Organise files..."), this, SLOT(PlaylistMoveToLibrary()));
+    //playlist_copy_to_device_ = playlist_menu_->addAction(IconLoader::Load("multimedia-player-ipod-mini-blue"), tr("Copy to device..."), this, SLOT(PlaylistCopyToDevice()));
+    //playlist_delete_ = playlist_menu_->addAction(IconLoader::Load("edit-delete"), tr("Delete from disk..."), this, SLOT(PlaylistDelete()));
+    //playlist_open_in_browser_ = playlist_menu_->addAction(IconLoader::Load("document-open-folder"), tr("Show in file browser..."), this, SLOT(PlaylistOpenInBrowser()));
+    //playlist_menu_->addSeparator();
+    //playlist_menu_->addAction(ui_->action_clear_playlist);
+    //playlist_menu_->addAction(ui_->action_shuffle);
+
+    //connect(ui_->playlist, SIGNAL(UndoRedoActionsChanged(QAction*,QAction*)),
+    //        SLOT(PlaylistUndoRedoChanged(QAction*,QAction*)));
+
+
+
+
+
+
 }
 
 
