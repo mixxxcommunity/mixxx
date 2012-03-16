@@ -40,7 +40,8 @@ ClementineView::ClementineView(QWidget* parent, ConfigObject<ConfigValue>* pConf
       m_librarySortModel(new QSortFilterProxyModel(this)),
       m_pConfig(pConfig),
       m_pData(NULL),
-      m_pTrackCollection(pTrackCollection) {
+      m_pTrackCollection(pTrackCollection),
+      m_playlistAddToAnother(NULL) {
     /*
     m_horizontalLayout = new QHBoxLayout(this);
     m_horizontalLayout->setContentsMargins(0, 0, 0, 0);
@@ -163,61 +164,91 @@ void ClementineView::connectLibrary(Library* library, BackgroundThread<Database>
     // Reload playlist settings, for BG and glowing
     m_playlistContainer->view()->ReloadSettings();
 
-    //connect(m_playlistContainer, SIGNAL(ViewSelectionModelChanged()), SLOT(PlaylistViewSelectionModelChanged()));
+    // Create actions for buttons on Top of playlist
+    QAction* m_actionNewPlaylist;
+    QAction* m_actionSavePlaylist;
+    QAction* m_actionLoadPlaylist;
+
+    m_actionNewPlaylist = new QAction(this);
+    m_actionSavePlaylist = new QAction(this);
+    m_actionLoadPlaylist = new QAction(this);
+
+    m_actionNewPlaylist->setIcon(IconLoader::Load("document-new"));
+    m_actionSavePlaylist->setIcon(IconLoader::Load("document-save"));
+    m_actionLoadPlaylist->setIcon(IconLoader::Load("document-open"));
+
+    m_playlistContainer->SetActions(m_actionNewPlaylist,
+            m_actionSavePlaylist,
+            m_actionLoadPlaylist,
+            NULL, NULL);
+
+    connect(m_playlistContainer->view(), SIGNAL(doubleClicked(QModelIndex)),
+            SLOT(slotPlayIndex(QModelIndex)));
+
+
+
+    // Playlists Context menu Setup
+    m_playlistMenu = new QMenu(this);
+
+    // m_playlistMenu->addAction(ui_->action_remove_from_playlist);
+
+    m_playlistUndoRedo = m_playlistMenu->addSeparator();
+
+    /*
+
+    playlist_menu_->addAction(ui_->action_edit_track);
+    playlist_menu_->addAction(ui_->action_edit_value);
+    playlist_menu_->addAction(ui_->action_renumber_tracks);
+    playlist_menu_->addAction(ui_->action_selection_set_value);
+    playlist_menu_->addAction(ui_->action_auto_complete_tags);
+    playlist_menu_->addSeparator();
+    */
+
+    /*
+    playlist_copy_to_library_ = playlist_menu_->addAction(IconLoader::Load("edit-copy"), tr("Copy to library..."), this, SLOT(PlaylistCopyToLibrary()));
+    playlist_move_to_library_ = playlist_menu_->addAction(IconLoader::Load("go-jump"), tr("Move to library..."), this, SLOT(PlaylistMoveToLibrary()));
+    playlist_organise_ = playlist_menu_->addAction(IconLoader::Load("edit-copy"), tr("Organise files..."), this, SLOT(PlaylistMoveToLibrary()));
+    */
+
+    /*
+    playlist_delete_ = playlist_menu_->addAction(IconLoader::Load("edit-delete"), tr("Delete from disk..."), this, SLOT(PlaylistDelete()));
+    playlist_open_in_browser_ = playlist_menu_->addAction(IconLoader::Load("document-open-folder"), tr("Show in file browser..."), this, SLOT(PlaylistOpenInBrowser()));
+    */
+
+    /*
+    playlist_menu_->addSeparator();
+    playlist_menu_->addAction(ui_->action_clear_playlist);
+    playlist_menu_->addAction(ui_->action_shuffle);
+    */
+
+    connect(m_playlistContainer->view(), SIGNAL(RightClicked(QPoint,QModelIndex)), SLOT(slotPlaylistRightClick(QPoint,QModelIndex)));
+
+    connect(m_playlistContainer, SIGNAL(UndoRedoActionsChanged(QAction*,QAction*)),
+            SLOT(slotPlaylistUndoRedoChanged(QAction*,QAction*)));
+
+
+/*
+
+
+    connect(m_playlistContainer->view(), SIGNAL(PlayItem(QModelIndex)), SLOT(PlayIndex(QModelIndex)));
+    connect(m_playlistContainer->view(), SIGNAL(PlayPause()), player_, SLOT(PlayPause()));
+    connect(m_playlistContainer->view(), SIGNAL(RightClicked(QPoint,QModelIndex)), SLOT(PlaylistRightClick(QPoint,QModelIndex)));
+    connect(m_playlistContainer->view(), SIGNAL(SeekTrack(int)), ui_->track_slider, SLOT(Seek(int)));
+    connect(m_playlistContainer->view(), SIGNAL(BackgroundPropertyChanged()), SLOT(RefreshStyleSheet()));
+    */
+
+
+
     //m_playlistContainer->SetPlayer(player);
-    //connect(ui_->action_jump, SIGNAL(triggered()), ui_->playlist->view(), SLOT(JumpToCurrentlyPlayingTrack()));
-    //ui_->playlist->SetActions(ui_->action_new_playlist, ui_->action_save_playlist,
-    //                          ui_->action_load_playlist,
-    //                          ui_->action_next_playlist,    /* These two actions aren't associated */
-    //ui_->action_previous_playlist /* to a button but to the main window */ );
-    // Add the shuffle and repeat action groups to the menu
-    //ui_->action_shuffle_mode->setMenu(ui_->playlist_sequence->shuffle_menu());
-    //ui_->action_repeat_mode->setMenu(ui_->playlist_sequence->repeat_menu());
     //connect(player_, SIGNAL(Paused()), ui_->playlist->view(), SLOT(StopGlowing()));
     //connect(player_, SIGNAL(Playing()), ui_->playlist->view(), SLOT(StartGlowing()));
     //connect(player_, SIGNAL(Stopped()), ui_->playlist->view(), SLOT(StopGlowing()));
     //connect(player_, SIGNAL(Paused()), ui_->playlist, SLOT(ActivePaused()));
     //connect(player_, SIGNAL(Playing()), ui_->playlist, SLOT(ActivePlaying()));
     //connect(player_, SIGNAL(Stopped()), ui_->playlist, SLOT(ActiveStopped()));
-    //connect(ui_->playlist->view(), SIGNAL(doubleClicked(QModelIndex)), SLOT(PlayIndex(QModelIndex)));
-    //connect(ui_->playlist->view(), SIGNAL(PlayItem(QModelIndex)), SLOT(PlayIndex(QModelIndex)));
-    //connect(ui_->playlist->view(), SIGNAL(PlayPause()), player_, SLOT(PlayPause()));
-    //connect(ui_->playlist->view(), SIGNAL(RightClicked(QPoint,QModelIndex)), SLOT(PlaylistRightClick(QPoint,QModelIndex)));
-    //connect(ui_->playlist->view(), SIGNAL(SeekTrack(int)), ui_->track_slider, SLOT(Seek(int)));
-    //connect(ui_->playlist->view(), SIGNAL(BackgroundPropertyChanged()), SLOT(RefreshStyleSheet()));
-    // Playlist menu
-    //playlist_play_pause_ = playlist_menu_->addAction(tr("Play"), this, SLOT(PlaylistPlay()));
-    //playlist_menu_->addAction(ui_->action_stop);
-    //playlist_stop_after_ = playlist_menu_->addAction(IconLoader::Load("media-playback-stop"), tr("Stop after this track"), this, SLOT(PlaylistStopAfter()));
-    //playlist_queue_ = playlist_menu_->addAction("", this, SLOT(PlaylistQueue()));
-    //playlist_queue_->setShortcut(QKeySequence("Ctrl+D"));
-    //ui_->playlist->addAction(playlist_queue_);
-    //playlist_menu_->addSeparator();
-    //playlist_menu_->addAction(ui_->action_remove_from_playlist);
-    //playlist_undoredo_ = playlist_menu_->addSeparator();
-    //playlist_menu_->addAction(ui_->action_edit_track);
-    //playlist_menu_->addAction(ui_->action_edit_value);
-    //playlist_menu_->addAction(ui_->action_renumber_tracks);
-    //playlist_menu_->addAction(ui_->action_selection_set_value);
-    //playlist_menu_->addAction(ui_->action_auto_complete_tags);
-    //playlist_menu_->addSeparator();
-    //playlist_copy_to_library_ = playlist_menu_->addAction(IconLoader::Load("edit-copy"), tr("Copy to library..."), this, SLOT(PlaylistCopyToLibrary()));
-    //playlist_move_to_library_ = playlist_menu_->addAction(IconLoader::Load("go-jump"), tr("Move to library..."), this, SLOT(PlaylistMoveToLibrary()));
-    //playlist_organise_ = playlist_menu_->addAction(IconLoader::Load("edit-copy"), tr("Organise files..."), this, SLOT(PlaylistMoveToLibrary()));
-    //playlist_copy_to_device_ = playlist_menu_->addAction(IconLoader::Load("multimedia-player-ipod-mini-blue"), tr("Copy to device..."), this, SLOT(PlaylistCopyToDevice()));
-    //playlist_delete_ = playlist_menu_->addAction(IconLoader::Load("edit-delete"), tr("Delete from disk..."), this, SLOT(PlaylistDelete()));
-    //playlist_open_in_browser_ = playlist_menu_->addAction(IconLoader::Load("document-open-folder"), tr("Show in file browser..."), this, SLOT(PlaylistOpenInBrowser()));
-    //playlist_menu_->addSeparator();
-    //playlist_menu_->addAction(ui_->action_clear_playlist);
-    //playlist_menu_->addAction(ui_->action_shuffle);
 
-    //connect(ui_->playlist, SIGNAL(UndoRedoActionsChanged(QAction*,QAction*)),
-    //        SLOT(PlaylistUndoRedoChanged(QAction*,QAction*)));
-
-
-
-
-
+    //connect(ui_->action_jump, SIGNAL(triggered()), ui_->playlist->view(), SLOT(JumpToCurrentlyPlayingTrack()));
+    //connect(m_playlistContainer, SIGNAL(ViewSelectionModelChanged()), SLOT(PlaylistViewSelectionModelChanged()));
 
 }
 
@@ -411,6 +442,36 @@ void ClementineView::loadSelectionToGroup(QString group) {
 
     delete m_pData;
 }
+
+void ClementineView::slotPlayIndex(const QModelIndex& index) {
+    if (!index.isValid())
+        return;
+
+    int row = index.row();
+    if (index.model() == m_playlistsManager->current()->proxy()) {
+        // The index was in the proxy model (might've been filtered), so we need
+        // to get the actual row in the source model.
+        row = m_playlistsManager->current()->proxy()->mapToSource(index).row();
+    }
+
+    m_playlistsManager->SetActiveToCurrent();
+    m_playlistsManager->active()->set_current_row(-1);
+    m_playlistsManager->active()->set_current_row(row);
+
+    if (m_playlistsManager->active()->current_row() == -1) {
+        // Maybe index didn't exist in the playlist.
+        return;
+    }
+
+    PlaylistItemPtr current_item = m_playlistsManager->active()->current_item();
+    // const QUrl url = current_item->Url();
+    TrackPointer pTrack = getTrack(current_item->Metadata());
+
+    if (pTrack) {
+        emit(loadTrack(pTrack));
+    }
+}
+
 
 void ClementineView::slotLibraryViewRightClicked(QMimeData* data) {
     // setup Context Menu actions
@@ -649,4 +710,164 @@ TrackPointer ClementineView::getTrack(const QUrl& url) {
     return pTrack;
 }
 
+void ClementineView::slotPlaylistUndoRedoChanged(QAction *undo, QAction *redo) {
+  m_playlistMenu->insertAction(m_playlistUndoRedo, undo);
+  m_playlistMenu->insertAction(m_playlistUndoRedo, redo);
+}
 
+void ClementineView::slotPlaylistRightClick(const QPoint& global_pos, const QModelIndex& index) {
+    QModelIndex source_index =
+            m_playlistsManager->current()->proxy()->mapToSource(index);
+
+    m_playlistMenuIndex = source_index;
+
+    // Are any of the selected songs editable or queued?
+    QModelIndexList selection =
+            m_playlistContainer->view()->selectionModel()->selection().indexes();
+
+    m_pData = m_playlistsManager->current()->proxy()->mimeData(selection);
+
+    bool cue_selected = false;
+    int editable = 0;
+    int streams = 0;
+    int in_queue = 0;
+    int not_in_queue = 0;
+    foreach (const QModelIndex& index, selection) {
+        if (index.column() != 0) {
+            continue;
+        }
+
+        PlaylistItemPtr item = m_playlistsManager->current()->item_at(index.row());
+        if (item->Metadata().has_cue()) {
+            cue_selected = true;
+        } else if (item->Metadata().IsEditable()) {
+            editable++;
+        }
+
+        if (item->Metadata().is_stream()) {
+            streams++;
+        }
+
+        if (index.data(Playlist::Role_QueuePosition).toInt() == -1) {
+            not_in_queue++;
+        } else {
+            in_queue++;
+        }
+    }
+
+    int all = not_in_queue + in_queue;
+
+    // this is available when we have one or many files and at least one of
+    // those is not CUE related
+    //ui_->action_edit_track->setEnabled(editable);
+    //ui_->action_edit_track->setVisible(editable);
+    //ui_->action_auto_complete_tags->setEnabled(editable);
+    //ui_->action_auto_complete_tags->setVisible(editable);
+    // the rest of the read / write actions work only when there are no CUEs
+    // involved
+    if (cue_selected) {
+        editable = 0;
+    }
+
+    // no 'show in browser' action if only streams are selected
+    //playlist_open_in_browser_->setVisible(streams != all);
+
+    bool track_column = (index.column() == Playlist::Column_Track);
+    //ui_->action_renumber_tracks->setVisible(editable >= 2 && track_column);
+    //ui_->action_selection_set_value->setVisible(editable >= 2 && !track_column);
+    //ui_->action_edit_value->setVisible(editable);
+    //ui_->action_remove_from_playlist->setEnabled(!selection.isEmpty());
+
+    //playlist_copy_to_library_->setVisible(false);
+    //playlist_move_to_library_->setVisible(false);
+    //playlist_organise_->setVisible(false);
+    //playlist_delete_->setVisible(false);
+    //playlist_copy_to_device_->setVisible(false);
+
+    /*
+    if (!index.isValid()) {
+        ui_->action_selection_set_value->setVisible(false);
+        ui_->action_edit_value->setVisible(false);
+    } else {
+        Playlist::Column column = (Playlist::Column) index.column();
+        bool column_is_editable = Playlist::column_is_editable(column)
+                && editable;
+
+        ui_->action_selection_set_value->setVisible(
+                ui_->action_selection_set_value->isVisible()
+                        && column_is_editable);
+        ui_->action_edit_value->setVisible(
+                ui_->action_edit_value->isVisible() && column_is_editable);
+
+        QString column_name = Playlist::column_name(column);
+        QString column_value =
+                playlists_->current()->data(source_index).toString();
+        if (column_value.length() > 25)
+            column_value = column_value.left(25) + "...";
+
+        ui_->action_selection_set_value->setText(
+                tr("Set %1 to \"%2\"...").arg(column_name.toLower()).arg(
+                        column_value));
+        ui_->action_edit_value->setText(
+                tr("Edit tag \"%1\"...").arg(column_name));
+
+        // Is it a library item?
+        PlaylistItemPtr item = playlists_->current()->item_at(
+                source_index.row());
+        if (item->IsLocalLibraryItem() && item->Metadata().id() != -1) {
+            playlist_organise_->setVisible(editable);
+        } else {
+            playlist_copy_to_library_->setVisible(editable);
+            playlist_move_to_library_->setVisible(editable);
+        }
+
+        playlist_delete_->setVisible(editable);
+        playlist_copy_to_device_->setVisible(editable);
+
+        // Remove old item actions, if any.
+        foreach(QAction* action, playlistitem_actions_) {
+            playlist_menu_->removeAction(action);
+        }
+
+        // Get the new item actions, and add them
+        playlistitem_actions_ = item->actions();
+        playlist_menu_->insertActions(ui_->action_clear_playlist,
+                playlistitem_actions_);
+    }
+    */
+
+    // if it isn't the first time we right click, we need to remove the menu previously created
+    if (m_playlistAddToAnother != NULL) {
+        m_playlistMenu->removeAction(m_playlistAddToAnother);
+        delete m_playlistAddToAnother;
+    }
+
+    // create the playlist submenu
+    QMenu* add_to_another_menu = new QMenu(tr("Add to another Clementine playlist"), this);
+    add_to_another_menu->setIcon((IconLoader::Load("add")));
+
+    PlaylistBackend::Playlist playlist;
+    foreach (playlist, m_playlistBackend->GetAllPlaylists()) {
+        //don't add the current playlist
+        if (playlist.id != m_playlistsManager->current()->id()) {
+            QAction* existing_playlist = new QAction(this);
+            existing_playlist->setText(playlist.name);
+            existing_playlist->setData(playlist.id);
+            add_to_another_menu->addAction(existing_playlist);
+        }
+    }
+    add_to_another_menu->addSeparator();
+   //add to a new playlist
+    QAction* new_playlist = new QAction(this);
+    new_playlist->setText(tr("New playlist"));
+    new_playlist->setData(-1); //fake id
+    add_to_another_menu->addAction(new_playlist);
+    //m_playlistAddToAnother = m_playlistMenu->insertMenu(
+    //        ui_->action_remove_from_playlist, add_to_another_menu);
+    m_playlistAddToAnother = m_playlistMenu->addMenu(add_to_another_menu);
+
+    connect(add_to_another_menu, SIGNAL(triggered(QAction*)),
+            SLOT(AddToPlaylist(QAction*)));
+
+    m_playlistMenu->popup(global_pos);
+}

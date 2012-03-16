@@ -14,6 +14,7 @@
 #include <trackinfoobject.h>
 
 #include <QSignalMapper>
+#include <QModelIndex>
 
 #include "library/abstractlibraryview.h"
 
@@ -26,7 +27,6 @@ class QSortFilterProxyModel;
 class LibraryViewContainer;
 class Library;
 class TaskManager;
-class QModelIndex;
 class QMimeData;
 class ClementineFeature;
 class TrackCollection;
@@ -78,6 +78,9 @@ public:
     void slotAddToClementinePlaylist(QMimeData* data);
     void loadSelectionToGroup(QString group);
     void addSelectionToCrate(int iCrateId);
+    void slotPlayIndex(const QModelIndex& index);
+    void slotPlaylistUndoRedoChanged(QAction*,QAction*);
+    void slotPlaylistRightClick(const QPoint& global_pos, const QModelIndex& index);
 
 
 private:
@@ -100,6 +103,7 @@ private:
     TrackCollection* m_pTrackCollection;
 
     QMimeData* m_pData;
+    QModelIndex m_playlistMenuIndex;
 
     QSignalMapper m_playlistMapper;
     QSignalMapper m_crateMapper;
@@ -111,6 +115,30 @@ private:
     QMenu* m_pMenuPlaylist;
 
     QHBoxLayout* m_horizontalLayout;
+
+    QAction* m_actionNewPlaylist;
+    QAction* m_actionSavePlaylist;
+    QAction* m_actionLoadPlaylist;
+
+    QMenu* m_playlistMenu;
+    QAction* m_playlistUndoRedo;
+    QAction* m_playlistAddToAnother;
+
+
+
+    /*
+    QAction* playlist_organise_;
+    QAction* playlist_copy_to_library_;
+    QAction* playlist_move_to_library_;
+    QAction* playlist_copy_to_device_;
+    QAction* playlist_delete_;
+    QAction* playlist_open_in_browser_;
+    QAction* playlist_queue_;
+
+    QList<QAction*> playlistitem_actions_;
+    QModelIndex playlist_menu_index_;
+    */
+
 };
 
 #endif /* CLEMENTINEVIEW_H_ */
