@@ -19,6 +19,7 @@
 #include "library/library.h"
 #include "core/taskmanager.h"
 #include "core/tagreaderclient.h"
+#include "core/application.h"
 
 
 
@@ -32,8 +33,7 @@ ClementineFeature::ClementineFeature(QObject* parent, TrackCollection* pTrackCol
         : LibraryFeature(parent),
           m_pTrackCollection(pTrackCollection),
           m_cancelImport(false),
-          m_pClementineDatabaseThread(NULL),
-          m_pLibrary(NULL),
+          m_pClementineApp(NULL),
           m_view(NULL),
           m_pConfig(pConfig)
 {
@@ -56,8 +56,8 @@ ClementineFeature::ClementineFeature(QObject* parent, TrackCollection* pTrackCol
 
 ClementineFeature::~ClementineFeature() {
 
-    if (m_pClementineDatabaseThread) {
-        delete m_pClementineDatabaseThread;
+    if (m_pClementineApp) {
+        delete m_pClementineApp;
     }
 //    if (m_view) {
 //        delete m_view;
@@ -105,48 +105,31 @@ void ClementineFeature::activate() {
 
     if (!m_isActivated) {
 
-        // Create the tag loader on another thread.
-        TagReaderClient* tag_reader_client = new TagReaderClient;
+        m_pClementineApp = new Application(Application::MIXXX_MODE, this);
 
-        QThread tag_reader_thread;
-        tag_reader_thread.setObjectName("TagReader");
-        tag_reader_thread.start();
-        tag_reader_client->moveToThread(&tag_reader_thread);
-        tag_reader_client->Start();
+        // setup connections
+        connect(m_pClementineApp->database(), SIGNAL(Error(QString)), SLOT(showErrorDialog(QString)));
+        connect(m_pClementineApp, SIGNAL(ErrorAdded(QString)), SLOT(showErrorDialog(QString)));
+        //connect(app, SIGNAL(SettingsDialogRequested(SettingsDialog::Page)),
+        //        SLOT(OpenSettingsDialogAtPage(SettingsDialog::Page)));
 
-        m_pClementineDatabaseThread = new BackgroundThreadImplementation<Database, Database>(NULL);
-        m_pClementineDatabaseThread->setObjectName("ClementineDatabase");
-        m_pClementineDatabaseThread->Start(true);
-
-        // Database connections
-        connect(m_pClementineDatabaseThread->Worker().get(), SIGNAL(Error(QString)), SLOT(showErrorDialog(QString)));
-
-        int db_version = m_pClementineDatabaseThread->Worker()->startup_schema_version();
-        int feature_version = m_pClementineDatabaseThread->Worker()->current_schema_version();
+        int db_version = m_pClementineApp->database()->startup_schema_version();
+        int feature_version = m_pClementineApp->database()->current_schema_version();
 
         if (db_version != feature_version) {
-
             QMessageBox::warning(
                     NULL,
                     tr("Error Loading Clementine database"),
                     tr("There was an error loading your Clementine database\n") +
-                    QString(tr("Version mismatch: Database version: %1 Feature version: %2\n")).arg(db_version != feature_version));
+                    QString(tr("Version mismatch: Clementine Database version: %1 Mixxx version: %2\n")).arg(
+                            QString::number(db_version), QString::number(feature_version)));
             return;
         }
 
-
-       //emit(switchToView(m_sAutoDJViewName));
-
         qDebug() << "Using Clementine Database Schema V" << db_version;
 
-        TaskManager task_manager;
 
-        m_pLibrary = new Library(m_pClementineDatabaseThread, &task_manager, this);
-
-        m_view->connectLibrary(m_pLibrary, m_pClementineDatabaseThread, &task_manager);
-
-
-
+        m_view->setApplication(m_pClementineApp);
 
 
         qDebug() << "ClementineFeature::importLibrary() ";

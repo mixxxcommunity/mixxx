@@ -275,6 +275,7 @@ class Clementine(Feature):
             build.env.Append(CPPPATH = "#lib/clementine-player/src")
             build.env.Append(CPPPATH = "#lib/clementine-player/include")
             build.env.Append(CPPPATH = "#lib/gtest-1.5.0/include")
+            build.env.Append(CPPPATH = "$QTDIR/include/QtDBus") 
             build.env.Append(LIBPATH = "#lib/clementine-player") 
             build.env.Append(LIBS = 'clementine_lib')
             build.env.Append(LIBS = 'liblibclementine-common')
@@ -305,6 +306,9 @@ class Clementine(Feature):
             build.env.Append(LIBS = 'gstafcsrc')
             build.env.Append(LIBS = 'liblibclementine-tagreader')
             build.env.Append(LIBS = 'gstbase-0.10')
+            build.env.Append(LIBS = 'gstbase-0.10')
+            build.env.Append(LIBS = 'QtDBus')
+            build.env.Append(LIBS = 'mygpo-qt')
             build.env.ParseConfig('pkg-config libimobiledevice-1.0 --silence-errors --cflags --libs') 
             return
         else:

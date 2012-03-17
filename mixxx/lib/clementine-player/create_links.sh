@@ -11,6 +11,7 @@ ln -s ../../../../daschuer-mixxx-clementine/bin/3rdparty/chromaprint/src/libchro
 ln -s ../../../../daschuer-mixxx-clementine/bin/3rdparty/qtiocompressor/libqtiocompressor.a libqtiocompressor.a
 ln -s ../../../../daschuer-mixxx-clementine/bin/gst/afcsrc/libgstafcsrc.a libgstafcsrc.a
 ln -s ../../../../daschuer-mixxx-clementine/bin/ext/libclementine-tagreader/liblibclementine-tagreader.a liblibclementine-tagreader.a
+ln -s ../../../../daschuer-mixxx-clementine/bin/3rdparty/libmygpo-qt/libmygpo-qt.a libmygpo-qt.a
 
 mkdir include 
 mkdir include/core

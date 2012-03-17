@@ -82,7 +82,7 @@ LibraryFeatures::LibraryFeatures(QObject* parent, ConfigObject<ConfigValue>* pCo
             addFeature(new BansheeFeature(this, m_pTrackCollection, pConfig));
     }
 #ifdef __CLEMENTINE__
-    if (pConfig->getValueString(ConfigKey("[Library]","ShowBansheeLibrary"),"1").toInt()) {
+    if (pConfig->getValueString(ConfigKey("[Library]","ShowClementineLibrary"),"1").toInt()) {
         ClementineFeature::prepareDbPath(pConfig);
         //if (ClementineFeature::isSupported())
             addFeature(new ClementineFeature(this, m_pTrackCollection, pConfig));

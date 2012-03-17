@@ -17,13 +17,13 @@
 #include "configobject.h"
 
 #include "core/database.h"
-#include "core/backgroundthread.h"
 #include "widgets/errordialog.h"
 
 class ErrorDialog;
 class ClementineView;
 class Library;
 class QMimeData;
+class Application;
 
 // class BansheePlaylistModel;
 
@@ -68,6 +68,8 @@ class ClementineFeature : public LibraryFeature {
 
     const static QString m_sClementineViewName;
 
+    Application* m_pClementineApp;
+
     QAction* m_pAddToAutoDJAction;
     QAction* m_pAddToAutoDJTopAction;
     QAction* m_pImportAsMixxxPlaylistAction;
@@ -81,9 +83,6 @@ class ClementineFeature : public LibraryFeature {
     //a new DB connection for the worker thread
 
 //    BansheeDbConnection m_connection;
-
-    BackgroundThread<Database>* m_pClementineDatabaseThread;
-    Library* m_pLibrary;
 
     ErrorDialog* m_error_dialog;
     ClementineView* m_view;

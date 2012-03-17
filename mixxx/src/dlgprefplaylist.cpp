@@ -55,6 +55,10 @@ DlgPrefPlaylist::DlgPrefPlaylist(QWidget * parent, ConfigObject<ConfigValue> * _
     checkBox_show_ipod->hide();
 #endif // __IPOD__
 
+#ifndef __CLEMENTINE__
+    checkBox_show_clementine->hide();
+#endif // __CLEMENTINE__
+
     if (!PromoTracksFeature::isSupported(config))
     {
         groupBoxBundledSongs->hide();
@@ -155,6 +159,9 @@ void DlgPrefPlaylist::slotUpdate()
     checkBox_show_ipod->setChecked((bool)config->getValueString(ConfigKey("[Library]","ShowIpod"),"1").toInt());
     #endif // __IPOD__
     checkBox_show_tracktor->setChecked((bool)config->getValueString(ConfigKey("[Library]","ShowTracktorLibrary"),"1").toInt());
+    #ifdef __CLEMENTINE__
+    checkBox_show_clementine->setChecked((bool)config->getValueString(ConfigKey("[Library]","ShowClementineLibrary"),"1").toInt());
+    #endif // __CLEMENTINE__
 }
 
 void DlgPrefPlaylist::slotBrowseDir()
@@ -194,10 +201,15 @@ void DlgPrefPlaylist::slotApply()
 #ifdef __IPOD__
     config->set(ConfigKey("[Library]","ShowIpod"),
                    ConfigValue((int)checkBox_show_ipod->isChecked()));
-#endif
+#endif // __IPOD__
 
     config->set(ConfigKey("[Library]","ShowTracktorLibrary"),
                    ConfigValue((int)checkBox_show_tracktor->isChecked()));
+
+#ifdef __CLEMENTINE__
+    config->set(ConfigKey("[Library]","ShowClementineLibrary"),
+                   ConfigValue((int)checkBox_show_clementine->isChecked()));
+#endif // __CLEMENTINE__
 
     config->Save();
 

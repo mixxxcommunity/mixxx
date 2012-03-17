@@ -21,7 +21,6 @@
 // From clementine-player
 #include "library/libraryviewcontainer.h"
 #include "playlist/playlistcontainer.h"
-#include "core/backgroundthread.h"
 
 class QSortFilterProxyModel;
 class LibraryViewContainer;
@@ -37,6 +36,7 @@ class QHBoxLayout;
 class PlaylistBackend;
 class PlaylistSequence;
 class Database;
+class Application;
 
 
 class ClementineView: public QWidget, public virtual AbstractLibraryView {
@@ -64,7 +64,7 @@ public:
     // 1, the view should move to the next selection in the list.
     void moveSelection(int delta) {};
 
-    void connectLibrary(Library* library, BackgroundThread<Database>* db_thread, TaskManager* task_manager);
+    void setApplication(Application* app);
 
   signals:
     void loadTrack(TrackPointer tio);
@@ -90,10 +90,11 @@ private:
     TrackPointer getTrack(const Song& song);
     TrackPointer getTrack(const QUrl& url);
 
+    Application* m_pClementineApp;
+
     LibraryViewContainer* m_libraryViewContainer;
     PlaylistContainer* m_playlistContainer;
     PlaylistManager* m_playlistsManager;
-    PlaylistBackend* m_playlistBackend;
     PlaylistSequence* m_playlistSequence;
 
     QSortFilterProxyModel* m_librarySortModel;
@@ -139,6 +140,8 @@ private:
     QList<QAction*> playlistitem_actions_;
     QModelIndex playlist_menu_index_;
     */
+
+    static const char* kSettingsGroup;
 
 };
 

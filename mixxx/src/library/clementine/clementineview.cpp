@@ -23,6 +23,7 @@
 #include "playlist/playlistbackend.h"
 #include "playlist/playlistsequence.h"
 #include "playlist/playlistview.h"
+#include "core/application.h"
 
 
 #include <QSortFilterProxyModel>
@@ -33,8 +34,11 @@
 #include <QHBoxLayout>
 #include <QSplitter>
 
+const char* ClementineView::kSettingsGroup = "ClementineView";
+
 ClementineView::ClementineView(QWidget* parent, ConfigObject<ConfigValue>* pConfig, TrackCollection* pTrackCollection)
     : QWidget(parent),
+      m_pClementineApp(NULL),
       m_libraryViewContainer(new LibraryViewContainer(this)),
       m_playlistContainer(new PlaylistContainer(this)),
       m_librarySortModel(new QSortFilterProxyModel(this)),
@@ -60,10 +64,10 @@ ClementineView::ClementineView(QWidget* parent, ConfigObject<ConfigValue>* pConf
 ClementineView::~ClementineView() {
 }
 
-void ClementineView::connectLibrary(Library* library, BackgroundThread<Database>* db_thread, TaskManager* task_manager) {
+void ClementineView::setApplication(Application* app) {
+    m_pClementineApp = app;
 
-
-
+    qDebug() << "Register Meta Types";
     //qRegisterMetaType<CoverSearchResult>("CoverSearchResult");
     //qRegisterMetaType<QList<CoverSearchResult> >("QList<CoverSearchResult>");
     //qRegisterMetaType<CoverSearchResults>("CoverSearchResults");
@@ -98,17 +102,13 @@ void ClementineView::connectLibrary(Library* library, BackgroundThread<Database>
 
 
     qDebug() << "Creating models";
-    m_librarySortModel->setSourceModel((QAbstractItemModel*)library->model());
+    m_librarySortModel->setSourceModel((QAbstractItemModel*)(m_pClementineApp->library()->model()));
     m_librarySortModel->setSortRole(LibraryModel::Role_SortText);
     m_librarySortModel->setDynamicSortFilter(true);
     m_librarySortModel->sort(0);
 
-
     m_libraryViewContainer->view()->setModel((QAbstractItemModel *)m_librarySortModel);
-    m_libraryViewContainer->view()->SetLibrary(library->model());
-    m_libraryViewContainer->view()->SetTaskManager(task_manager);
-    //m_libraryViewContainer->view()->SetDeviceManager(devices_);
-    //m_libraryViewContainer->view()->SetCoverProviders(cover_providers_);
+    m_libraryViewContainer->view()->SetApplication(m_pClementineApp);
 
     // Is emmited also for doubleClick
     connect(m_libraryViewContainer->view(), SIGNAL(AddToPlaylistSignal(QMimeData*)),
@@ -175,27 +175,35 @@ void ClementineView::connectLibrary(Library* library, BackgroundThread<Database>
 
     m_libraryViewContainer->view()->AddSongActionSeparator();
 
+    m_libraryViewContainer->filter()->SetSettingsGroup(kSettingsGroup);
+    m_libraryViewContainer->filter()->SetLibraryModel(m_pClementineApp->library()->model());
 
-    m_libraryViewContainer->filter()->SetLibraryModel(library->model());
-    //m_libraryViewContainer->filter()->SetSettingsGroup(kSettingsGroup);
+        /*
+    QAction* separator = new QAction(this);
+    separator->setSeparator(true);
 
+    library_view_->filter()->AddMenuAction(library_show_all_);
+    library_view_->filter()->AddMenuAction(library_show_duplicates_);
+    library_view_->filter()->AddMenuAction(library_show_untagged_);
+    library_view_->filter()->AddMenuAction(separator);
+    library_view_->filter()->AddMenuAction(library_config_action);
+    */
 
     /////////////////////////////////////////////
     // PlaylistContainer
-    m_playlistsManager = new PlaylistManager(task_manager, NULL);
-    m_playlistBackend = new PlaylistBackend;
-    m_playlistBackend->moveToThread(db_thread);
-    m_playlistBackend->SetDatabase(db_thread->Worker());
+
+    // connect(m_playlistContainer, SIGNAL(ViewSelectionModelChanged()), SLOT(PlaylistViewSelectionModelChanged()));
+
+    m_playlistsManager =  m_pClementineApp->playlist_manager();
     m_playlistSequence = new PlaylistSequence(this);
     m_playlistSequence->hide();
 
-    m_playlistContainer->SetManager(m_playlistsManager);
-    // Load playlists
-    m_playlistsManager->Init(library->backend(), m_playlistBackend,
-            m_playlistSequence, m_playlistContainer);
+    m_playlistContainer->SetManager(m_pClementineApp->playlist_manager());
+    m_playlistContainer->view()->SetApplication(m_pClementineApp);
 
-    // Reload playlist settings, for BG and glowing
-    m_playlistContainer->view()->ReloadSettings();
+    // Load playlists
+    m_playlistsManager->Init(m_pClementineApp->library_backend(), m_pClementineApp->playlist_backend(),
+            m_playlistSequence, m_playlistContainer);
 
     // Create actions for buttons on Top of playlist
     QAction* m_actionNewPlaylist;
@@ -301,7 +309,6 @@ void ClementineView::connectLibrary(Library* library, BackgroundThread<Database>
 
     //connect(ui_->action_jump, SIGNAL(triggered()), ui_->playlist->view(), SLOT(JumpToCurrentlyPlayingTrack()));
     //connect(m_playlistContainer, SIGNAL(ViewSelectionModelChanged()), SLOT(PlaylistViewSelectionModelChanged()));
-
 }
 
 
@@ -906,7 +913,7 @@ void ClementineView::slotPlaylistRightClick(const QPoint& global_pos, const QMod
     add_to_another_menu->setIcon((IconLoader::Load("add")));
 
     PlaylistBackend::Playlist playlist;
-    foreach (playlist, m_playlistBackend->GetAllPlaylists()) {
+    foreach (playlist, m_pClementineApp->playlist_backend()->GetAllPlaylists()) {
         //don't add the current playlist
         if (playlist.id != m_playlistsManager->current()->id()) {
             QAction* existing_playlist = new QAction(this);
