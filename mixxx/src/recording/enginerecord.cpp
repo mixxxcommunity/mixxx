@@ -154,7 +154,6 @@ bool EngineRecord::metaDataHasChanged()
 
 void EngineRecord::process(const CSAMPLE * pIn, const CSAMPLE * pOut, const int iBufferSize) {
     Q_UNUSED(pOut);
-
     // Calculate the latency of this buffer
     m_dLatency = (double)iBufferSize / m_samplerate->get();
 
@@ -179,7 +178,7 @@ void EngineRecord::process(const CSAMPLE * pIn, const CSAMPLE * pOut, const int 
                 m_cuesamplepos = 0;
                 m_cuetrack = 0;
             }
-        } else { //Maybe the encoder could not be initialized
+        } else { // Maybe the encoder could not be initialized
             qDebug("Setting record flag to: OFF");
             m_recReady->slotSet(RECORD_OFF);
             emit(isRecording(false));
@@ -187,13 +186,12 @@ void EngineRecord::process(const CSAMPLE * pIn, const CSAMPLE * pOut, const int 
     }
     //If recording is enabled process audio to compressed or uncompressed data.
     if (m_recReady->get() == RECORD_ON) {
-        if (m_Encoding == ENCODING_WAVE || m_Encoding == ENCODING_AIFF){
+        if (m_Encoding == ENCODING_WAVE || m_Encoding == ENCODING_AIFF) {
             if (m_sndfile != NULL) {
                 sf_write_float(m_sndfile, pIn, iBufferSize);
                 emit(bytesRecorded(iBufferSize));
             }
-        }
-        else{
+        } else {
             if (m_encoder) {
                 //Compress audio. Encoder will call method 'write()' below to write a file stream
                 m_encoder->encodeBuffer(pIn, iBufferSize);
@@ -341,20 +339,20 @@ bool EngineRecord::openCueFile() {
 
     if (m_baAuthor.length() > 0) {
         m_cuefile.write(QString("PERFORMER \"%1\"\n")
-                .arg(QString(m_baAuthor).replace(QString("\""), QString("\\\"")))
+                        .arg(QString(m_baAuthor).replace(QString("\""), QString("\\\"")))
                         .toLatin1());
     }
 
     if (m_baTitle.length() > 0) {
         m_cuefile.write(QString("TITLE \"%1\"\n")
-                .arg(QString(m_baTitle).replace(QString("\""), QString("\\\"")))
+                        .arg(QString(m_baTitle).replace(QString("\""), QString("\\\"")))
                         .toLatin1());
     }
 
     m_cuefile.write(QString("FILE \"%1\" %2%3\n").arg(
-            QString(m_filename).replace(QString("\""), QString("\\\"")),
-            QString(m_Encoding).toUpper(),
-            m_Encoding == ENCODING_WAVE ? "E" : " ").toLatin1());
+        QString(m_filename).replace(QString("\""), QString("\\\"")),
+        QString(m_Encoding).toUpper(),
+        m_Encoding == ENCODING_WAVE ? "E" : " ").toLatin1());
     return true;
 }
 
@@ -364,16 +362,14 @@ void EngineRecord::closeFile() {
             sf_close(m_sndfile);
             m_sndfile = NULL;
         }
-    } else {
-        //close QFile and encoder, if open
-        if (m_file.handle() != -1) {
-            if (m_encoder) {
-                m_encoder->flush();
-                delete m_encoder;
-                m_encoder = NULL;
-            }
-            m_file.close();
+    } else if (m_file.handle() != -1) {
+        // close QFile and encoder, if open
+        if (m_encoder) {
+            m_encoder->flush();
+            delete m_encoder;
+            m_encoder = NULL;
         }
+        m_file.close();
     }
 }
 

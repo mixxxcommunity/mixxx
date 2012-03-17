@@ -29,6 +29,7 @@ static QMutex s_Mutex;
 BrowseThread::BrowseThread(QObject *parent): QThread(parent)
 {
     m_bStopThread = false;
+    m_model_observer = NULL;
     //start Thread
     start(QThread::LowestPriority);
 
@@ -111,16 +112,14 @@ void BrowseThread::populateModel() {
     int row = 0;
     // Iterate over the files
     while (fileIt.hasNext()) {
-
         // If a user quickly jumps through the folders
         // the current task becomes "dirty"
-        m_path_mutex.lock();
+        QMutexLocker locker(&m_path_mutex);
         if(thisPath != m_path){
             qDebug() << "Abort populateModel()";
-            m_path_mutex.unlock();
             return populateModel();
         }
-        m_path_mutex.unlock();
+        locker.unlock();
 
         QString filepath = fileIt.next();
         TrackInfoObject tio(filepath);

@@ -28,7 +28,6 @@ class MixxxLibraryFeature : public LibraryFeature {
     bool dragMoveAccept(QUrl url);
     bool dragMoveAcceptChild(const QModelIndex& index, QUrl url);
     TreeItemModel* getChildModel();
-    void refreshLibraryModels();
 
   public slots:
     void activate();
@@ -36,6 +35,7 @@ class MixxxLibraryFeature : public LibraryFeature {
     void onRightClick(const QPoint& globalPos);
     void onRightClickChild(const QPoint& globalPos, QModelIndex index);
     void onLazyChildExpandation(const QModelIndex& index);
+    void refreshLibraryModels();
 
   private:
     QSharedPointer<BaseTrackCache> m_pBaseTrackCache;

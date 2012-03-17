@@ -79,7 +79,8 @@ bool FolderTreeModel::hasChildren( const QModelIndex & parent) const
 
     std::string dot("."), dotdot("..");
     bool found_subdir = false;
-    DIR *directory = opendir(folder.toLocal8Bit());
+    QByteArray ba = folder.toLocal8Bit();
+    DIR *directory = opendir(ba);
 
     if (directory == NULL){
         return false;

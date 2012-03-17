@@ -97,7 +97,7 @@ void LegacyLibraryImporter::import()
             TrackInfoObject trackInfo17(track);
             //Only add the track to the DB if the file exists on disk,
             //because Mixxx <= 1.7 had no logic to deal with detecting deleted
-            //files.<
+            //files.
 
             if (trackInfo17.exists()) {
                 //Create a TrackInfoObject by directly parsing

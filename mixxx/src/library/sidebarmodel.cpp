@@ -18,7 +18,7 @@ SidebarModel::~SidebarModel() {
 void SidebarModel::addLibraryFeature(LibraryFeature* feature) {
     m_sFeatures.push_back(feature);
     connect(feature, SIGNAL(featureUpdated()),
-    		this, SLOT(refreshData()));
+            this, SLOT(refreshData()));
     connect(feature, SIGNAL(featureIsLoading(LibraryFeature*)),
             this, SLOT(slotFeatureIsLoading(LibraryFeature*)));
     connect(feature, SIGNAL(featureLoadingFinished(LibraryFeature*)),
@@ -392,8 +392,7 @@ void SidebarModel::featureRenamed(LibraryFeature* pFeature){
     }
 }
 
-void SidebarModel::slotFeatureSelect(LibraryFeature* pFeature, const QModelIndex& featureIndex)
-{
+void SidebarModel::slotFeatureSelect(LibraryFeature* pFeature, const QModelIndex& featureIndex) {
     QModelIndex ind;
     if (featureIndex.isValid()) {
         TreeItem* item = (TreeItem*)featureIndex.internalPointer();

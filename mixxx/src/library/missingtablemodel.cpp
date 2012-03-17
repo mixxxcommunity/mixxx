@@ -110,7 +110,7 @@ void MissingTableModel::relocateTracks(const QModelIndexList& indices) {
             path);
         qDebug() << path;
 
-       // m_trackDAO.databaseTracksMoved()
+        //m_trackDAO.databaseTracksMoved();
     }
 }
 

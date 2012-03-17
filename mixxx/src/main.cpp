@@ -68,6 +68,10 @@ void InitDebugConsole() { // Open a Debug Console so we can printf
 
 QApplication *a;
 
+QStringList plugin_paths; //yes this is global. sometimes global is good.
+
+//void qInitImages_mixxx();
+
 QFile Logfile; // global logfile variable
 
 /* Debug message handler which outputs to both a logfile and a
@@ -150,7 +154,6 @@ int main(int argc, char * argv[])
     QCoreApplication::setOrganizationName("Mixxx");
 
 
-
     // Construct a list of strings based on the command line arguments
     CmdlineArgs& args = CmdlineArgs::Instance();
     if (!args.Parse(argc, argv)) {
@@ -199,7 +202,7 @@ int main(int argc, char * argv[])
         return(0);
     }
 
-    //it seems like this code should be inline in MessageHandler() but for some reason having it there corrupts the messages sometimes -kousu 2/2009
+//it seems like this code should be inline in MessageHandler() but for some reason having it there corrupts the messages sometimes -kousu 2/2009
 
 #ifdef __WINDOWS__
   #ifdef DEBUGCONSOLE
