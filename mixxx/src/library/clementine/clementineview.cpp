@@ -62,6 +62,41 @@ ClementineView::~ClementineView() {
 
 void ClementineView::connectLibrary(Library* library, BackgroundThread<Database>* db_thread, TaskManager* task_manager) {
 
+
+
+    //qRegisterMetaType<CoverSearchResult>("CoverSearchResult");
+    //qRegisterMetaType<QList<CoverSearchResult> >("QList<CoverSearchResult>");
+    //qRegisterMetaType<CoverSearchResults>("CoverSearchResults");
+    qRegisterMetaType<Directory>("Directory");
+    qRegisterMetaType<DirectoryList>("DirectoryList");
+    qRegisterMetaType<Subdirectory>("Subdirectory");
+    qRegisterMetaType<SubdirectoryList>("SubdirectoryList");
+    qRegisterMetaType<Song>("Song");
+    qRegisterMetaType<QList<Song> >("QList<Song>");
+    qRegisterMetaType<SongList>("SongList");
+    qRegisterMetaType<PlaylistItemPtr>("PlaylistItemPtr");
+    qRegisterMetaType<QList<PlaylistItemPtr> >("QList<PlaylistItemPtr>");
+    qRegisterMetaType<PlaylistItemList>("PlaylistItemList");
+    //qRegisterMetaType<Engine::State>("Engine::State");
+    //qRegisterMetaType<Engine::SimpleMetaBundle>("Engine::SimpleMetaBundle");
+    //qRegisterMetaType<Equalizer::Params>("Equalizer::Params");
+    //qRegisterMetaTypeStreamOperators<Equalizer::Params>("Equalizer::Params");
+    qRegisterMetaType<const char*>("const char*");
+    qRegisterMetaType<QNetworkReply*>("QNetworkReply*");
+    qRegisterMetaType<QNetworkReply**>("QNetworkReply**");
+    qRegisterMetaType<smart_playlists::GeneratorPtr>("smart_playlists::GeneratorPtr");
+    qRegisterMetaType<ColumnAlignmentMap>("ColumnAlignmentMap");
+    qRegisterMetaTypeStreamOperators<QMap<int, int> >("ColumnAlignmentMap");
+    //qRegisterMetaType<QNetworkCookie>("QNetworkCookie");
+    //qRegisterMetaType<QList<QNetworkCookie> >("QList<QNetworkCookie>");
+    //qRegisterMetaType<SearchProvider::Result>("SearchProvider::Result");
+    //qRegisterMetaType<SearchProvider::ResultList>("SearchProvider::ResultList");
+    //qRegisterMetaType<DigitallyImportedClient::Channel>("DigitallyImportedClient::Channel");
+    //qRegisterMetaType<SomaFMService::Stream>("SomaFMService::Stream");
+    //qRegisterMetaTypeStreamOperators<DigitallyImportedClient::Channel>("DigitallyImportedClient::Channel");
+    //qRegisterMetaTypeStreamOperators<SomaFMService::Stream>("SomaFMService::Stream");
+
+
     qDebug() << "Creating models";
     m_librarySortModel->setSourceModel((QAbstractItemModel*)library->model());
     m_librarySortModel->setSortRole(LibraryModel::Role_SortText);
@@ -82,16 +117,13 @@ void ClementineView::connectLibrary(Library* library, BackgroundThread<Database>
     connect(m_libraryViewContainer->view(), SIGNAL(RightClicked(QMimeData*)),
             SLOT(slotLibraryViewRightClicked(QMimeData*)));
 
-    m_libraryViewContainer->view()->AddSongActionSeparator();
-
     // Auto DJ Actions
-    m_libraryViewContainer->view()->AddSongAction(QIcon(),
+    m_pAddToAutoDJAction = m_libraryViewContainer->view()->AddSongAction(QIcon(),
             tr("Add to Auto DJ bottom"), this, SLOT(slotSendToAutoDJ()));
-    m_libraryViewContainer->view()->AddSongAction(QIcon(),
+    m_pAddToAutoDJTopAction = m_libraryViewContainer->view()->AddSongAction(QIcon(),
             tr("Add to Auto DJ top 2"), this, SLOT(slotSendToAutoDJTop()));
 
     m_libraryViewContainer->view()->AddSongActionSeparator();
-
 
     connect(&m_groupMapper, SIGNAL(mapped(QString)),
             SLOT(loadSelectionToGroup(QString)));
@@ -133,7 +165,7 @@ void ClementineView::connectLibrary(Library* library, BackgroundThread<Database>
             this, SLOT(slotAddToMixxxPlaylist(int)));
 
     m_pMenuPlaylist = m_libraryViewContainer->view()->AddSongActionMenu();
-    m_pMenuPlaylist->setTitle(tr("Add to Playlist"));
+    m_pMenuPlaylist->setTitle(tr("Add to Mixxx Playlist"));
 
     connect(&m_crateMapper, SIGNAL(mapped(int)),
             this, SLOT(addSelectionToCrate(int)));
@@ -141,6 +173,7 @@ void ClementineView::connectLibrary(Library* library, BackgroundThread<Database>
     m_pMenuCrate = m_libraryViewContainer->view()->AddSongActionMenu();
     m_pMenuCrate->setTitle(tr("Add to Crate"));
 
+    m_libraryViewContainer->view()->AddSongActionSeparator();
 
 
     m_libraryViewContainer->filter()->SetLibraryModel(library->model());
@@ -189,6 +222,25 @@ void ClementineView::connectLibrary(Library* library, BackgroundThread<Database>
 
     // Playlists Context menu Setup
     m_playlistMenu = new QMenu(this);
+
+    m_playlistMenu->addAction(m_pAddToAutoDJAction);
+    m_playlistMenu->addAction(m_pAddToAutoDJTopAction);
+    m_playlistMenu->addSeparator();
+
+    // Load to Deck Actions
+    for (int i = 1; i <= iNumDecks; ++i) {
+        QString deckGroup = QString("[Channel%1]").arg(i);
+        QAction* pAction = (QAction*)m_groupMapper.mapping(deckGroup);
+        if (pAction) {
+            m_playlistMenu->addAction(pAction);
+        }
+    }
+
+    m_playlistMenu->addAction(m_pMenuSampler->menuAction());
+    m_playlistMenu->addSeparator();
+
+    m_playlistMenu->addAction(m_pMenuCrate->menuAction());
+    m_playlistMenu->addAction(m_pMenuPlaylist->menuAction());
 
     // m_playlistMenu->addAction(ui_->action_remove_from_playlist);
 
@@ -298,14 +350,16 @@ void ClementineView::addToMixxPlaylist(int iPlaylistId, bool bTop) {
         foreach (Song song, songData->songs) {
             qDebug() << "-----" << song.title();
             TrackPointer pTrack = getTrack(song);
-            int iTrackId = pTrack->getId();
-            if (iTrackId != -1) {
-                if (bTop) {
-                    // Load track to position two because position one is already loaded to the player
-                    playlistDao.insertTrackIntoPlaylist(iTrackId, iPlaylistId, 2);
-                }
-                else {
-                    playlistDao.appendTrackToPlaylist(iTrackId, iPlaylistId);
+            if (pTrack) {
+                int iTrackId = pTrack->getId();
+                if (iTrackId != -1) {
+                    if (bTop) {
+                        // Load track to position two because position one is already loaded to the player
+                        playlistDao.insertTrackIntoPlaylist(iTrackId, iPlaylistId, 2);
+                    }
+                    else {
+                        playlistDao.appendTrackToPlaylist(iTrackId, iPlaylistId);
+                    }
                 }
             }
         }
@@ -609,9 +663,11 @@ void ClementineView::addSelectionToCrate(int iCrateId) {
         foreach (Song song, songData->songs) {
             qDebug() << "-----" << song.title();
             TrackPointer pTrack = getTrack(song);
-            int iTrackId = pTrack->getId();
-            if (iTrackId != -1) {
-                crateDao.addTrackToCrate(iTrackId, iCrateId);
+            if (pTrack) {
+                int iTrackId = pTrack->getId();
+                if (iTrackId != -1) {
+                    crateDao.addTrackToCrate(iTrackId, iCrateId);
+                }
             }
         }
     //} else if (const GeneratorMimeData* generator_data = qobject_cast<const GeneratorMimeData*>(data)) {
@@ -622,9 +678,11 @@ void ClementineView::addSelectionToCrate(int iCrateId) {
         foreach (QUrl url, m_pData->urls()) {
             qDebug() << "-----" << url;
             TrackPointer pTrack = getTrack(url);
-            int iTrackId = pTrack->getId();
-            if (iTrackId != -1) {
-                crateDao.addTrackToCrate(iTrackId, iCrateId);
+            if (pTrack) {
+                int iTrackId = pTrack->getId();
+                if (iTrackId != -1) {
+                    crateDao.addTrackToCrate(iTrackId, iCrateId);
+                }
             }
         }
     }
@@ -636,8 +694,10 @@ TrackPointer ClementineView::getTrack(const Song& song) {
 
     location = song.url().toLocalFile();
 
+    TrackPointer pTrack = TrackPointer();
+
     if (location.isEmpty()) {
-        return TrackPointer();
+        return pTrack;
     }
 
     TrackDAO& track_dao = m_pTrackCollection->getTrackDAO();
@@ -647,8 +707,6 @@ TrackPointer ClementineView::getTrack(const Song& song) {
         // Add Track to library
         track_id = track_dao.addTrack(location, true);
     }
-
-    TrackPointer pTrack;
 
     if (track_id < 0) {
         // Add Track to library failed, create a transient TrackInfoObject
@@ -725,7 +783,8 @@ void ClementineView::slotPlaylistRightClick(const QPoint& global_pos, const QMod
     QModelIndexList selection =
             m_playlistContainer->view()->selectionModel()->selection().indexes();
 
-    m_pData = m_playlistsManager->current()->proxy()->mimeData(selection);
+    QMimeData* data = m_playlistsManager->current()->proxy()->mimeData(selection);
+    slotLibraryViewRightClicked(data);
 
     bool cue_selected = false;
     int editable = 0;
@@ -867,7 +926,39 @@ void ClementineView::slotPlaylistRightClick(const QPoint& global_pos, const QMod
     m_playlistAddToAnother = m_playlistMenu->addMenu(add_to_another_menu);
 
     connect(add_to_another_menu, SIGNAL(triggered(QAction*)),
-            SLOT(AddToPlaylist(QAction*)));
+            SLOT(slotAddToClementinePlaylist(QAction*)));
 
     m_playlistMenu->popup(global_pos);
 }
+
+void ClementineView::slotAddToClementinePlaylist(QAction* action) {
+
+    int playlist_id = action->data().toInt();
+    PlaylistItemList items;
+
+    if (!m_pData) {
+        return;
+    }
+
+    const SongMimeData* songData = qobject_cast<const SongMimeData*>(m_pData);
+
+    if (songData) {
+        //we're creating a new playlist
+        if (playlist_id == -1) {
+            //save the current playlist to reactivate it
+            int current_id = m_playlistsManager->current_id();
+            //get the name from selection
+            m_playlistsManager->New(m_playlistsManager->GetNameForNewPlaylist(songData->songs));
+            if (m_playlistsManager->current()->id() != current_id) {
+                //I'm sure the new playlist was created and is selected, so I can just insert items
+                m_playlistsManager->current()->InsertSongs(songData->songs);
+                //set back the current playlist
+                m_playlistsManager->SetCurrentPlaylist(current_id);
+            }
+        } else {
+            //we're inserting in a existing playlist
+            m_playlistsManager->playlist(playlist_id)->InsertSongs(songData->songs);
+        }
+    }
+}
+

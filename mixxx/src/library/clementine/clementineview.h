@@ -81,6 +81,7 @@ public:
     void slotPlayIndex(const QModelIndex& index);
     void slotPlaylistUndoRedoChanged(QAction*,QAction*);
     void slotPlaylistRightClick(const QPoint& global_pos, const QModelIndex& index);
+    void slotAddToClementinePlaylist(QAction* action);
 
 
 private:
@@ -95,8 +96,6 @@ private:
     PlaylistBackend* m_playlistBackend;
     PlaylistSequence* m_playlistSequence;
 
-
-
     QSortFilterProxyModel* m_librarySortModel;
 
     ConfigObject<ConfigValue>* m_pConfig;
@@ -110,6 +109,8 @@ private:
     QSignalMapper m_groupMapper;
     QSignalMapper m_samplerMapper;
 
+    QAction* m_pAddToAutoDJAction;
+    QAction* m_pAddToAutoDJTopAction;
     QMenu* m_pMenuSampler;
     QMenu* m_pMenuCrate;
     QMenu* m_pMenuPlaylist;
