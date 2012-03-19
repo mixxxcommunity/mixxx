@@ -83,39 +83,24 @@ EncoderMp3::EncoderMp3(EngineAbstractRecord *engine) {
     /*
      * Load shared library
      */
-    QStringList libnames;
-    QString libname = "";
-#ifdef __LINUX__
-       libnames << "/usr/lib/libmp3lame.so.0";
-       libnames << "/usr/lib/libmp3lame.so";
-#elif __WINDOWS__
-    libnames << "lame_enc.dll";
-#elif __APPLE__
-    libnames << "/usr/local/lib/libmp3lame.dylib";
-    //Using MacPorts (former DarwinPorts) results in ...
-    libnames << "/opt/local/lib/libmp3lame.dylib";
+    QString libname;
+#if __WINDOWS__
+    libname = "lame_enc.dll";
+#else
+    libname = "mp3lame";
 #endif
 
-    foreach (QString libname, libnames) {
-        m_library = new QLibrary(libname);
-        if (m_library->load())
-            break;
-        delete m_library;
-        m_library = NULL;
-    }
+    m_library = new QLibrary(libname, 0);
 
-    if(!m_library || !m_library->isLoaded()) {
+    if(!m_library->load()) {
         ErrorDialogProperties* props = ErrorDialogHandler::instance()->newDialogProperties();
         props->setType(DLG_WARNING);
         props->setTitle(tr("Encoder"));
         QString key = "";
-#ifdef __LINUX__
-        key = tr("<html>Mixxx cannot record or stream in MP3 without the MP3 encoder &quot;lame&quot;. Due to licensing issues, we cannot include this with Mixxx. To record or stream in MP3, you must download <b>libmp3lame</b> and install it on your system. <p>See <a href='http://mixxx.org/wiki/doku.php/internet_broadcasting#linux'>Mixxx Wiki</a> for more information. </html>");
-        props->setText(key);
-#elif __WINDOWS__
+#if __WINDOWS__
         key = tr("<html>Mixxx cannot record or stream in MP3 without the MP3 encoder &quot;lame&quot;. Due to licensing issues, we cannot include this with Mixxx. To record or stream in MP3, you must download <b>lame_enc.dll</b> and install it on your system. <p>See <a href='http://mixxx.org/wiki/doku.php/internet_broadcasting#windows'>Mixxx Wiki</a> for more information. </html>");
         props->setText(key);
-#elif __APPLE__
+#else
         key = tr("<html>Mixxx cannot record or stream in MP3 without the MP3 encoder &quot;lame&quot;. Due to licensing issues, we cannot include this with Mixxx. To record or stream in MP3, you must download <b>libmp3lame</b> and install it on your system. <p>See <a href='http://mixxx.org/wiki/doku.php/internet_broadcasting#mac_osx'>Mixxx Wiki</a> for more information. </html>");
         props->setText(key);
 #endif
