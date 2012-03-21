@@ -65,15 +65,26 @@ bool TrackCollection::checkForTables() {
         return false;
     }
 
-    int requiredSchemaVersion = 14;
-    if (!SchemaManager::upgradeToSchemaVersion(m_pConfig, m_db,
-                                               requiredSchemaVersion)) {
-        QMessageBox::warning(0, tr("Cannot upgrade database schema"),
+    QString schemaFilename = m_pConfig->getResourcePath();
+    schemaFilename.append("schema.xml");
+
+    int requiredSchemaVersion = 15;
+    int result = SchemaManager::upgradeToSchemaVersion(schemaFilename, m_db, requiredSchemaVersion);
+    if ( result < 0) {
+        if (result == -1) {
+            QMessageBox::warning(0, tr("Cannot upgrade database schema"),
+                             tr("Unable to upgrade your database schema to version %1.\n"
+                                "Your %2 file may be outdated \n\n"
+                                "Click OK to exit.").arg(QString::number(requiredSchemaVersion), schemaFilename),
+                             QMessageBox::Ok);
+        } else {
+            QMessageBox::warning(0, tr("Cannot upgrade database schema"),
                              tr("Unable to upgrade your database schema to version %1.\n"
                                 "Your mixxx.db file may be corrupt.\n"
                                 "Try renaming it and restarting Mixxx.\n\n"
                                 "Click OK to exit.").arg(requiredSchemaVersion),
                              QMessageBox::Ok);
+        }
         return false;
     }
 

@@ -11,7 +11,7 @@ const QString SchemaManager::SETTINGS_VERSION_STRING = "mixxx.schema.version";
 const QString SchemaManager::SETTINGS_MINCOMPATIBLE_STRING = "mixxx.schema.min_compatible_version";
 
 // static
-bool SchemaManager::upgradeToSchemaVersion(ConfigObject<ConfigValue>* config,
+int SchemaManager::upgradeToSchemaVersion(const QString& schemaFilename,
                                            QSqlDatabase& db, int targetVersion) {
 
     SettingsDAO settings(db);
@@ -21,7 +21,7 @@ bool SchemaManager::upgradeToSchemaVersion(ConfigObject<ConfigValue>* config,
     if (currentVersion == targetVersion) {
         qDebug() << "SchemaManager::upgradeToSchemaVersion already at version"
                  << targetVersion;
-        return true;
+        return 0;
     } else if (currentVersion < targetVersion) {
         qDebug() << "SchemaManager::upgradeToSchemaVersion upgrading"
                  << targetVersion-currentVersion << "versions to version"
@@ -34,12 +34,10 @@ bool SchemaManager::upgradeToSchemaVersion(ConfigObject<ConfigValue>* config,
 
         if (isBackwardsCompatible(settings, currentVersion, targetVersion)) {
             qDebug() << "Current schema version is backwards-compatible with" << targetVersion;
-            return true;
+            return 0;
         }
     }
 
-    QString schemaFilename = config->getResourcePath();
-    schemaFilename.append("schema.xml");
     qDebug() << "Loading schema" << schemaFilename;
     QDomElement schemaRoot = WWidget::openXMLFile(schemaFilename, "schema");
 
@@ -55,7 +53,7 @@ bool SchemaManager::upgradeToSchemaVersion(ConfigObject<ConfigValue>* config,
         revisionMap[iVersion] = revision;
     }
 
-    bool success = true;
+    int success = 0;
 
     while (currentVersion != targetVersion) {
         int thisTarget;
@@ -72,7 +70,7 @@ bool SchemaManager::upgradeToSchemaVersion(ConfigObject<ConfigValue>* config,
             qDebug() << "SchemaManager::upgradeToSchemaVersion"
                      << "Don't know how to get to"
                      << thisTarget << "from" << currentVersion;
-            success = false;
+            success = -1;
             break;
         }
 
@@ -125,7 +123,7 @@ bool SchemaManager::upgradeToSchemaVersion(ConfigObject<ConfigValue>* config,
             settings.setValue(SETTINGS_MINCOMPATIBLE_STRING, minCompatibleVersion);
             db.commit();
         } else {
-            success = false;
+            success = -2;
             qDebug() << "Failed to move from version" << currentVersion
                      << "to version" << thisTarget;
             db.rollback();
