@@ -298,7 +298,7 @@ METADATA
       Add datetime_added to playlists tracks.
     </description>
     <sql>
-      ALTER TABLE PlaylistTracks ADD COLUMN pl_datetime_added DEFAULT CURRENT_TIMESTAMP;
+      ALTER TABLE PlaylistTracks ADD COLUMN pl_datetime_added;
     </sql>
   </revision>
 </schema>
