@@ -87,4 +87,4 @@ private:
     RecordingManager* m_pRecordingManager;
 };
 
-#endif /* LIBRARY_H */
+#endif /* LIBRARYFEATURES_H */

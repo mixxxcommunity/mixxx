@@ -6,7 +6,6 @@
 
 #include "configobject.h"
 #include "trackinfoobject.h"
-#include "library/abstractlibraryview.h"
 #include "library/searchthread.h"
 #include "library/trackmodel.h" // Can't forward declare enums
 #include "widget/wlibrarytableview.h"
@@ -41,6 +40,7 @@ class WTrackTableView : public WLibraryTableView {
 
   private slots:
     void slotRemove();
+    void slotHide();
     void slotRelocate();
     void slotShowTrackInfo();
     void slotNextTrackInfo();
@@ -95,6 +95,7 @@ class WTrackTableView : public WLibraryTableView {
 
     // Remove from table
     QAction *m_pRemoveAct;
+    QAction *m_pHideAct;
 
     QAction *m_pRelocate;
 

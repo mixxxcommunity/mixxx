@@ -84,6 +84,7 @@ WTrackTableView::~WTrackTableView()
     delete m_pAutoDJAct;
     delete m_pAutoDJTopAct;
     delete m_pRemoveAct;
+    delete m_pHideAct;
     delete m_pRelocate;
     delete m_pPropertiesAct;
     delete m_pMenu;
@@ -253,11 +254,14 @@ void WTrackTableView::createActions() {
     Q_ASSERT(m_pMenu);
     Q_ASSERT(m_pSamplerMenu);
 
+    m_pRelocate = new QAction(tr("Relocate"),this);
+    connect(m_pRelocate, SIGNAL(triggered()), this, SLOT(slotRelocate()));
+
     m_pRemoveAct = new QAction(tr("Remove"), this);
     connect(m_pRemoveAct, SIGNAL(triggered()), this, SLOT(slotRemove()));
 
-    m_pRelocate = new QAction(tr("Relocate"),this);
-    connect(m_pRelocate, SIGNAL(triggered()), this, SLOT(slotRelocate()));
+    m_pHideAct = new QAction(tr("Hide from Library"), this);
+    connect(m_pHideAct, SIGNAL(triggered()), this, SLOT(slotHide()));
 
     m_pPropertiesAct = new QAction(tr("Properties..."), this);
     connect(m_pPropertiesAct, SIGNAL(triggered()),
@@ -318,6 +322,18 @@ void WTrackTableView::slotRemove()
         TrackModel* trackModel = getTrackModel();
         if (trackModel) {
             trackModel->removeTracks(indices);
+        }
+    }
+}
+
+void WTrackTableView::slotHide()
+{
+    QModelIndexList indices = selectionModel()->selectedRows();
+    if (indices.size() > 0)
+    {
+        TrackModel* trackModel = getTrackModel();
+        if (trackModel) {
+            trackModel->hideTracks(indices);
         }
     }
 }
@@ -466,16 +482,21 @@ void WTrackTableView::contextMenuEvent(QContextMenuEvent* event) {
     }
 
     bool locked = modelHasCapabilities(TrackModel::TRACKMODELCAPS_LOCKED);
-    m_pRemoveAct->setEnabled(!locked);
     m_pMenu->addSeparator();
-    if (modelHasCapabilities(TrackModel::TRACKMODELCAPS_REMOVE)) {
-        m_pMenu->addAction(m_pRemoveAct);
-    }
     if (modelHasCapabilities(TrackModel::TRACKMODELCAPS_RELOCATE)) {
         m_pMenu->addAction(m_pRelocate);
     }
     if (modelHasCapabilities(TrackModel::TRACKMODELCAPS_RELOADMETADATA)) {
         m_pMenu->addAction(m_pReloadMetadataAct);
+    }
+    // REMOVE and HIDE should not be at the first menu position to avoid excitedly clicks
+    if (modelHasCapabilities(TrackModel::TRACKMODELCAPS_REMOVE)) {
+        m_pRemoveAct->setEnabled(!locked);
+        m_pMenu->addAction(m_pRemoveAct);
+    }
+    if (modelHasCapabilities(TrackModel::TRACKMODELCAPS_HIDE)) {
+        m_pHideAct->setEnabled(!locked);
+        m_pMenu->addAction(m_pHideAct);
     }
     m_pPropertiesAct->setEnabled(oneSongSelected);
     m_pMenu->addAction(m_pPropertiesAct);

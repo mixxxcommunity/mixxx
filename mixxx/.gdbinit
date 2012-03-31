@@ -17,6 +17,7 @@ import sys
 sys.path.insert(0, '/home/daniel/workspace')
 from qt4 import register_qt4_printers
 register_qt4_printers (None)
-
 end
 set print pretty 1
+set charset UTF-8
+

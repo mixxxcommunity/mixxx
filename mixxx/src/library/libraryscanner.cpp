@@ -410,12 +410,12 @@ bool LibraryScanner::recursiveScan(QString dirPath)
     if (cancel)
         return false;
 
-
     //Look at all the subdirectories and scan them recursively...
     QDirIterator dirIt(dirPath, QDir::Dirs | QDir::NoDotAndDotDot);
     while (dirIt.hasNext() && bScanFinishedCleanly)
     {
         QString nextPath = dirIt.next();
+        //qDebug() << "nextPath: " << nextPath;
 
         // Skip the iTunes Album Art Folder since it is probably a waste of
         // time.

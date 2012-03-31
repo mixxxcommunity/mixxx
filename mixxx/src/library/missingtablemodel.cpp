@@ -72,16 +72,6 @@ TrackPointer MissingTableModel::getTrack(const QModelIndex& index) const {
     return m_trackDao.getTrack(trackId);
 }
 
-void MissingTableModel::removeTrack(const QModelIndex& index) {
-    int trackId = getTrackId(index);
-
-    m_trackDao.removeTrack(trackId);
-
-    // TODO(rryan) : do not select, instead route event to BTC and notify from
-    // there.
-    select(); //Repopulate the data model.
-}
-
 void MissingTableModel::removeTracks(const QModelIndexList& indices) {
     QList<int> trackIds;
 
@@ -98,19 +88,17 @@ void MissingTableModel::removeTracks(const QModelIndexList& indices) {
 }
 
 void MissingTableModel::relocateTracks(const QModelIndexList& indices) {
-    QList<int> trackIds;
-
     foreach (QModelIndex index, indices) {
         int trackId = getTrackId(index);
 
-        QString path = m_trackDao.getTrackLocation(trackId);
-        qDebug() << path;
-        path = QFileDialog::getOpenFileName(NULL,
+        QString oldLocation = m_trackDao.getTrackLocation(trackId);
+        qDebug() << oldLocation;
+        QString newLocation = QFileDialog::getOpenFileName(NULL,
             tr("Select new location for ... "),
-            path);
-        qDebug() << path;
+            oldLocation);
+        qDebug() << newLocation;
 
-        //m_trackDAO.databaseTracksMoved();
+//      m_trackDAO.relocateTrack(oldLocation, newLocation);
     }
 }
 

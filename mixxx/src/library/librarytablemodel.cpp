@@ -69,7 +69,7 @@ TrackPointer LibraryTableModel::getTrack(const QModelIndex& index) const {
     return m_trackDao.getTrack(trackId);
 }
 
-void LibraryTableModel::removeTracks(const QModelIndexList& indices) {
+void LibraryTableModel::hideTracks(const QModelIndexList& indices) {
     QList<int> trackIds;
 
     foreach (QModelIndex index, indices) {
@@ -77,16 +77,16 @@ void LibraryTableModel::removeTracks(const QModelIndexList& indices) {
         trackIds.append(trackId);
     }
 
-    m_trackDao.removeTracks(trackIds);
+    m_trackDao.hideTracks(trackIds);
 
     // TODO(rryan) : do not select, instead route event to BTC and notify from
     // there.
     select(); //Repopulate the data model.
 }
 
-void LibraryTableModel::removeTrack(const QModelIndex& index) {
+void LibraryTableModel::hideTrack(const QModelIndex& index) {
     int trackId = getTrackId(index);
-    m_trackDao.removeTrack(trackId);
+    m_trackDao.hideTrack(trackId);
     // TODO(rryan) : do not select, instead route event to BTC and notify from
     // there.
     select(); //Repopulate the data model.
@@ -145,5 +145,5 @@ TrackModel::CapabilitiesFlags LibraryTableModel::getCapabilities() const {
             | TRACKMODELCAPS_RELOADMETADATA
             | TRACKMODELCAPS_LOADTODECK
             | TRACKMODELCAPS_LOADTOSAMPLER
-            | TRACKMODELCAPS_REMOVE;
+            | TRACKMODELCAPS_HIDE;
 }

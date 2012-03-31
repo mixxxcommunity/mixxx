@@ -77,8 +77,8 @@ class TrackDAO : public QObject, public virtual DAO {
     void addTracksPrepare();
     void addTracksFinish();
     bool addTracksAdd(TrackInfoObject* pTrack, bool unremove);
-    void removeTrack(int id);
-    void removeTracks(QList<int> ids);
+    void hideTrack(int id);
+    void hideTracks(QList<int> ids);
     void purgeTracks(QList<int> ids);
     void unremoveTrack(int trackId);
     TrackPointer getTrack(int id, bool cacheOnly=false) const;
@@ -94,6 +94,7 @@ class TrackDAO : public QObject, public virtual DAO {
     void databaseTrackAdded(TrackPointer pTrack);
     void databaseTracksMoved(QSet<int> tracksMovedSetOld, QSet<int> tracksMovedSetNew);
     void verifyTracksOutside(QString libraryPath);
+    bool relocateTrack(QString oldLocation, QString newLocation);
 
   signals:
     void trackDirty(int trackId);

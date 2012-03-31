@@ -187,7 +187,7 @@ bool ParserCsv::writeCSVFile(const QString &file_str, BaseSqlTableModel* pPlayli
     return true;
 }
 
-bool ParserCsv::writeReadableTextFile(const QString &file_str, BaseSqlTableModel* pPlaylistTableModel)
+bool ParserCsv::writeReadableTextFile(const QString &file_str, BaseSqlTableModel* pPlaylistTableModel, bool writeTimestamp)
 {
     /*
      * Important note:
@@ -204,7 +204,7 @@ bool ParserCsv::writeReadableTextFile(const QString &file_str, BaseSqlTableModel
 
     QTextStream out(&file);
 
-    // export each row as "01. 00:00 Artist - Title"
+    // export each row as "01. 0:00:00 Artist - Title"
 
     int msecsFromStartToMidnight = 0;
     int i; // fieldIndex
@@ -217,15 +217,17 @@ bool ParserCsv::writeReadableTextFile(const QString &file_str, BaseSqlTableModel
             out << QString("%1.").arg(nr,2,10,QLatin1Char('0'));
         }
 
-        i = pPlaylistTableModel->fieldIndex(PLAYLISTTRACKSTABLE_DATETIMEADDED);
-        if (i >= 0){
-            QTime time = pPlaylistTableModel->data(pPlaylistTableModel->index(j,i)).toTime();
-            if (j == 0) {
-                msecsFromStartToMidnight = time.msecsTo(QTime(0,0,0,0));
+        if (writeTimestamp) {
+            i = pPlaylistTableModel->fieldIndex(PLAYLISTTRACKSTABLE_DATETIMEADDED);
+            if (i >= 0){
+                QTime time = pPlaylistTableModel->data(pPlaylistTableModel->index(j,i)).toTime();
+                if (j == 0) {
+                    msecsFromStartToMidnight = time.msecsTo(QTime(0,0,0,0));
+                }
+                QTime time2 = time.addMSecs(msecsFromStartToMidnight);
+                out << " ";
+                out << time2.toString("H:mm:ss");
             }
-            QTime time2 = time.addMSecs(msecsFromStartToMidnight);
-            out << " ";
-            out << time2.toString("H:mm:ss");
         }
 
         i = pPlaylistTableModel->fieldIndex(PLAYLISTTRACKSTABLE_ARTIST);

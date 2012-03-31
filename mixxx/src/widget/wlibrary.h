@@ -10,9 +10,8 @@
 #include <QStackedWidget>
 #include <QString>
 
-#include "library/abstractlibraryview.h"
-
 class MixxxKeyboard;
+class AbstractLibraryView;
 
 class WLibrary : public QStackedWidget {
     Q_OBJECT
