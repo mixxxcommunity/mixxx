@@ -340,6 +340,8 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
     m_pConfig->set(ConfigKey("[Library]", "SupportedFileExtensions"),
         QStringList(SoundSourceProxy::supportedFileExtensions()).join(","));
 
+    // Call inits to invoke all other construction parts
+
     // Intialize default BPM system values
     if (m_pConfig->getValueString(ConfigKey("[BPM]", "BPMRangeStart"))
             .length() < 1)
@@ -723,8 +725,6 @@ void MixxxApp::initActions()
     m_pPlaylistsImport->setShortcut(QKeySequence(tr("Ctrl+I")));
     m_pPlaylistsImport->setShortcutContext(Qt::ApplicationShortcut);
 
-    m_pOptionsBeatMark = new QAction(tr("&Audio Beat Marks"), this);
-
     m_pOptionsKeyboard = new QAction(tr("Enable &keyboard mapping"), this);
     m_pOptionsFullScreen = new QAction(tr("&Full Screen"), this);
 
@@ -808,14 +808,6 @@ void MixxxApp::initActions()
     //connect(playlistsImport, SIGNAL(triggered()),
     //        m_pTrack, SLOT(slotImportPlaylist()));
     //FIXME: Disabled due to library rework
-
-    m_pOptionsBeatMark->setCheckable(false);
-    m_pOptionsBeatMark->setChecked(false);
-    m_pOptionsBeatMark->setStatusTip(tr("Audio Beat Marks"));
-    m_pOptionsBeatMark->setWhatsThis(
-        tr("Audio Beat Marks\nMark beats by audio clicks"));
-    connect(m_pOptionsBeatMark, SIGNAL(toggled(bool)),
-            this, SLOT(slotOptionsBeatMark(bool)));
 
 #ifdef __VINYLCONTROL__
     // Either check or uncheck the vinyl control menu item depending on what
@@ -930,7 +922,6 @@ void MixxxApp::initMenuBar()
 
     // menuBar entry optionsMenu
     //optionsMenu->setCheckable(true);
-    //  optionsBeatMark->addTo(optionsMenu);
 #ifdef __VINYLCONTROL__
     m_pVinylControlMenu = new QMenu(tr("&Vinyl Control"), menuBar());
     m_pVinylControlMenu->addAction(m_pOptionsVinylControl);
@@ -1061,11 +1052,6 @@ void MixxxApp::slotFileQuit()
     }
     hide();
     qApp->quit();
-}
-
-void MixxxApp::slotOptionsBeatMark(bool)
-{
-// BEAT MARK STUFF
 }
 
 void MixxxApp::slotOptionsKeyboard(bool toggle)
