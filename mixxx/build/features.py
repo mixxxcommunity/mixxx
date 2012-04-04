@@ -319,6 +319,36 @@ class Clementine(Feature):
                 'library/clementine/clementineview.cpp']
 
 
+class Tagreader(Feature):
+    def description(self):
+        return "Use external tagreader"
+
+    def enabled(self, build):
+        build.flags['tagreader'] = util.get_flags(build.env, 'tagreader', 0)
+        if int(build.flags['tagreader']):
+            return True
+        return False
+
+    def add_options(self, build, vars):
+        vars.Add('tagreader', 'Set to 1 to enable external tagreader', 0)
+
+    def configure(self, build, conf):
+        if not self.enabled(build):
+            return
+
+        if build.platform_is_linux:
+            build.env.Append(CPPDEFINES = '__TAGREADER__')
+            build.env.Append(CPPPATH = "#lib/tagreader/include")
+            build.env.Append(LIBS = 'libclementine-tagreaderclient')
+            return
+        else:
+            raise Exception('tagreader is not supported yet.')
+
+    def sources(self, build):
+        return []
+
+
+
 class MSVCDebug(Feature):
     def description(self):
         return "MSVC Debugging"

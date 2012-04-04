@@ -59,6 +59,7 @@ available_features = [features.HifiEq,
                       features.IPod,
                       features.FFMPEG,
                       features.Clementine,
+                      features.Tagreader,
                       ]
 
 build = mixxx.MixxxBuild(target, machine, build_type,

@@ -62,6 +62,9 @@ class SkinLoader;
 class VinylControlManager;
 class CmdlineArgs;
 
+#ifdef __TAGREADER__
+class TagReaderClient;
+#endif
 /**
   * This Class is the base class for Mixxx. It sets up the main
   * window and providing a menubar.
@@ -144,6 +147,9 @@ class MixxxApp : public QMainWindow
   private:
     void checkDirectRendering();
     bool confirmExit();
+
+    void MoveToNewThread(QObject* object, const QString& name);
+    void MoveToThread(QObject* object, QThread* thread);
 
     // Pointer to the root GUI widget
     QWidget* m_pView;
@@ -233,6 +239,9 @@ class MixxxApp : public QMainWindow
 
     ConfigObject<ConfigValueKbd>* m_pKbdConfig;
     ConfigObject<ConfigValueKbd>* m_pKbdConfig_empty;
+#ifdef __TAGREADER__
+    TagReaderClient* m_tag_reader_client;
+#endif
 };
 
 //A structure to store the parsed command-line arguments

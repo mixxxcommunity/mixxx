@@ -389,6 +389,8 @@ bool LibraryScanner::recursiveScan(QString dirPath)
         //rows about deleted directories around. :)
         //qDebug() << "prevHash == newHash";
 
+        m_database.transaction();
+
         // Mark the directory as verified and not deleted.
         // m_libraryHashDao.markAsExisting(dirPath);
         // m_libraryHashDao.markAsVerified(dirPath);
@@ -398,6 +400,8 @@ bool LibraryScanner::recursiveScan(QString dirPath)
         //Note that this doesn't mark the tracks as existing, just that they're in
         //the same state as the last time we scanned this directory.
         m_trackDao.markTracksInDirectoryAsVerified(dirPath);
+
+        m_database.commit();
 
         emit(progressHashing(dirPath));
     }

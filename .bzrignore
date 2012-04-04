@@ -6,3 +6,4 @@ mixxx/config.log
 ui_dlg*.h
 mixxx/cache
 mixxx/res/qrc_mixxx.cc
+tagreader/include

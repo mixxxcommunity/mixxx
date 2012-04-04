@@ -52,6 +52,10 @@
 #include "skin/skinloader.h"
 #include "skin/legacyskinparser.h"
 
+#ifdef __TAGREADER__
+#include "core/tagreaderclient.h"
+#endif
+
 #include "build.h" // #defines of details of the build set up (flags,
 // repo number, etc). This isn't a real file, SConscript generates it and it
 // probably gets placed in $PLATFORM_build/. By including this file here and
@@ -269,6 +273,14 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
      */
     m_pConfig->set(ConfigKey("[Library]","WriteAudioTags"), ConfigValue(0));
 
+#ifdef __TAGREADER__
+    m_tag_reader_client = TagReaderClient::Instance();
+    if (m_tag_reader_client) {
+        m_tag_reader_client = new TagReaderClient(this);
+        MoveToNewThread(m_tag_reader_client, "TagReaderClient");
+        m_tag_reader_client->Start();
+    }
+#endif
 
     // library dies in seemingly unrelated qtsql error about not having a
     // sqlite driver if this path doesn't exist. Normally config->Save()
@@ -1577,4 +1589,20 @@ bool MixxxApp::confirmExit() {
         }
     }
     return true;
+}
+
+void MixxxApp::MoveToNewThread(QObject* object, const QString& name) {
+  QThread* thread = new QThread(this);
+  thread->setObjectName(name);
+
+  MoveToThread(object, thread);
+
+  thread->start();
+  //threads_ << thread;
+}
+
+void MixxxApp::MoveToThread(QObject* object, QThread* thread) {
+  object->setParent(NULL);
+  object->moveToThread(thread);
+  // objects_in_threads_ << object;
 }
