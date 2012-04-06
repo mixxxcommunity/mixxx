@@ -267,8 +267,10 @@ public:
     const Segmentation<QString>* getChordData();
     void setChordData(Segmentation<QString> cd);
 
+#ifdef __TAGREADER__
     virtual void InitFromProtobuf(const pb::tagreader::SongMetadata& pb);
     virtual void ToProtobuf(pb::tagreader::SongMetadata* pb) const;
+#endif // __TAGREADER__
 
   public slots:
     void slotCueUpdated();

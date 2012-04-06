@@ -880,6 +880,7 @@ void TrackInfoObject::setKey(QString key){
         setDirty(true);
 }
 
+#ifdef __TAGREADER__
 void TrackInfoObject::InitFromProtobuf(const pb::tagreader::SongMetadata& pb) {
   /*
     d->init_from_file_ = true;
@@ -955,4 +956,4 @@ void TrackInfoObject::ToProtobuf(pb::tagreader::SongMetadata* pb) const {
   pb->set_type(static_cast< ::pb::tagreader::SongMetadata_Type>(d->filetype_));
   */
 }
-
+#endif // __TAGREADER__
