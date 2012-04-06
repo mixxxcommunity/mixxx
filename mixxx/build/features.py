@@ -339,7 +339,9 @@ class Tagreader(Feature):
         if build.platform_is_linux:
             build.env.Append(CPPDEFINES = '__TAGREADER__')
             build.env.Append(CPPPATH = "#lib/tagreader/include")
-            build.env.Append(LIBS = 'libclementine-tagreaderclient')
+            build.env.Append(LIBPATH = "#lib/tagreader") 
+            build.env.Append(LIBS = 'clementine-tagreaderclient')
+            build.env.Append(LIBS = 'protobuf-lite')
             return
         else:
             raise Exception('tagreader is not supported yet.')

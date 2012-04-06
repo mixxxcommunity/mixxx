@@ -33,31 +33,26 @@
 
 TrackInfoObject::TrackInfoObject(const QString sLocation, bool parseHeader)
         : m_qMutex(QMutex::Recursive) {
-    QFileInfo fileInfo(sLocation);
-    populateLocation(fileInfo);
+    m_fileInfo = QFileInfo(sLocation);
     initialize(parseHeader);
 }
 
 TrackInfoObject::TrackInfoObject(QFileInfo& fileInfo, bool parseHeader)
-        : m_qMutex(QMutex::Recursive) {
-    populateLocation(fileInfo);
+        : m_fileInfo(fileInfo),
+          m_qMutex(QMutex::Recursive) {    
     initialize(parseHeader);
 }
 
 TrackInfoObject::TrackInfoObject(const QDomNode &nodeHeader)
         : m_qMutex(QMutex::Recursive) {
-    m_sFilename = XmlParse::selectNodeQString(nodeHeader, "Filename");
-    m_sLocation = XmlParse::selectNodeQString(nodeHeader, "Filepath") + "/" +  m_sFilename;
-    QString create_date;
+    QString filename = XmlParse::selectNodeQString(nodeHeader, "Filename");
+    QString location = XmlParse::selectNodeQString(nodeHeader, "Filepath") + "/" +  filename;    
+	m_fileInfo = QFileInfo(location);
 
     // We don't call initialize() here because it would end up calling parse()
     // on the file. Plus those initializations weren't done before, so it might
     // cause subtle bugs. This constructor is only used for legacy importing so
     // I'm not going to do it. rryan 6/2010
-
-    // Check the status of the file on disk.
-    QFileInfo fileInfo(m_sLocation);
-    populateLocation(fileInfo);
 
     m_sTitle = XmlParse::selectNodeQString(nodeHeader, "Title");
     m_sArtist = XmlParse::selectNodeQString(nodeHeader, "Artist");
@@ -67,16 +62,16 @@ TrackInfoObject::TrackInfoObject(const QDomNode &nodeHeader)
     m_iSampleRate = XmlParse::selectNodeQString(nodeHeader, "SampleRate").toInt();
     m_iChannels = XmlParse::selectNodeQString(nodeHeader, "Channels").toInt();
     m_iBitrate = XmlParse::selectNodeQString(nodeHeader, "Bitrate").toInt();
-    m_iLength = XmlParse::selectNodeQString(nodeHeader, "Length").toInt();
+    //m_iLength = XmlParse::selectNodeQString(nodeHeader, "Length").toInt();
     m_iTimesPlayed = XmlParse::selectNodeQString(nodeHeader, "TimesPlayed").toInt();
     m_fReplayGain = XmlParse::selectNodeQString(nodeHeader, "replaygain").toFloat();
     m_fBpm = XmlParse::selectNodeQString(nodeHeader, "Bpm").toFloat();
     m_bBpmConfirm = XmlParse::selectNodeQString(nodeHeader, "BpmConfirm").toInt();
     m_fBeatFirst = XmlParse::selectNodeQString(nodeHeader, "BeatFirst").toFloat();
     m_bHeaderParsed = false;
-    create_date = XmlParse::selectNodeQString(nodeHeader, "CreateDate");
+    QString create_date = XmlParse::selectNodeQString(nodeHeader, "CreateDate");
     if (create_date == "")
-        m_dCreateDate = fileInfo.created();
+        m_dCreateDate = m_fileInfo.created();
     else
         m_dCreateDate = QDateTime::fromString(create_date);
 
@@ -97,14 +92,6 @@ TrackInfoObject::TrackInfoObject(const QDomNode &nodeHeader)
 
     m_bDirty = false;
     m_bLocationChanged = false;
-}
-
-void TrackInfoObject::populateLocation(QFileInfo& fileInfo) {
-    m_sFilename = fileInfo.fileName();
-    m_sLocation = fileInfo.absoluteFilePath();
-    m_sDirectory = fileInfo.absolutePath();
-    m_iLength = fileInfo.size();
-    m_bExists = fileInfo.exists();
 }
 
 void TrackInfoObject::initialize(bool parseHeader) {
@@ -165,7 +152,7 @@ void TrackInfoObject::writeToXML( QDomDocument &doc, QDomElement &header )
     QMutexLocker lock(&m_qMutex);
 
     QString create_date;
-    XmlParse::addElement( doc, header, "Filename", m_sFilename );
+    XmlParse::addElement( doc, header, "Filename", m_fileInfo.fileName() );
     //XmlParse::addElement( doc, header, "Filepath", m_sFilepath );
     XmlParse::addElement( doc, header, "Title", m_sTitle );
     XmlParse::addElement( doc, header, "Artist", m_sArtist );
@@ -175,7 +162,7 @@ void TrackInfoObject::writeToXML( QDomDocument &doc, QDomElement &header )
     XmlParse::addElement( doc, header, "SampleRate", QString("%1").arg(m_iSampleRate));
     XmlParse::addElement( doc, header, "Channels", QString("%1").arg(m_iChannels));
     XmlParse::addElement( doc, header, "Bitrate", QString("%1").arg(m_iBitrate));
-    XmlParse::addElement( doc, header, "Length", QString("%1").arg(m_iLength) );
+    XmlParse::addElement( doc, header, "Length", QString("%1").arg(m_fileInfo.size()) );
     XmlParse::addElement( doc, header, "TimesPlayed", QString("%1").arg(m_iTimesPlayed) );
     XmlParse::addElement( doc, header, "replaygain", QString("%1").arg(m_fReplayGain) );
     XmlParse::addElement( doc, header, "Bpm", QString("%1").arg(m_fBpm) );
@@ -206,27 +193,29 @@ void TrackInfoObject::parseFilename()
 {
     QMutexLocker lock(&m_qMutex);
 
-    if (m_sFilename.indexOf('-') != -1)
+	QString filename = m_fileInfo.fileName(); 
+
+    if (filename.indexOf('-') != -1)
     {
-        m_sArtist = m_sFilename.section('-',0,0).trimmed(); // Get the first part
-        m_sTitle = m_sFilename.section('-',1,1); // Get the second part
+        m_sArtist = filename.section('-',0,0).trimmed(); // Get the first part
+        m_sTitle = filename.section('-',1,1); // Get the second part
         m_sTitle = m_sTitle.section('.',0,-2).trimmed(); // Remove the ending
     }
     else
     {
-        m_sTitle = m_sFilename.section('.',0,-2).trimmed(); // Remove the ending;
-        m_sType = m_sFilename.section('.',-1).trimmed(); // Get the ending
+        m_sTitle = filename.section('.',0,-2).trimmed(); // Remove the ending;
+        m_sType = filename.section('.',-1).trimmed(); // Get the ending
     }
 
     if (m_sTitle.length() == 0) {
-        m_sTitle = m_sFilename.section('.',0,-2).trimmed();
+        m_sTitle = filename.section('.',0,-2).trimmed();
     }
 
     // Add no comment
     m_sComment = QString("");
 
     // Find the type
-    m_sType = m_sFilename.section(".",-1).toLower().trimmed();
+    m_sType = filename.section(".",-1).toLower().trimmed();
     setDirty(true);
 }
 
@@ -242,13 +231,9 @@ QString TrackInfoObject::getDurationStr() const
 void TrackInfoObject::setLocation(QString location)
 {
     QMutexLocker lock(&m_qMutex);
-    QFileInfo fileInfo(location);
-    // TODO(XXX) Can the file name change without m_sLocation changing?? The
-    // extra test seems pointless.
-    QString fileName = fileInfo.fileName();
-    bool dirty = m_sLocation != location || fileName != m_sFilename;
-    populateLocation(fileInfo);
-    if (dirty) {
+    QFileInfo newFileInfo = QFileInfo(location);
+    if (newFileInfo != m_fileInfo) {
+		m_fileInfo = newFileInfo; 
         m_bLocationChanged = true;
         setDirty(true);
     }
@@ -257,19 +242,19 @@ void TrackInfoObject::setLocation(QString location)
 QString TrackInfoObject::getLocation() const
 {
     QMutexLocker lock(&m_qMutex);
-    return m_sLocation;
+    return m_fileInfo.absoluteFilePath();
 }
 
 QString TrackInfoObject::getDirectory() const
 {
     QMutexLocker lock(&m_qMutex);
-    return m_sDirectory;
+    return m_fileInfo.absolutePath();;
 }
 
 QString TrackInfoObject::getFilename()  const
 {
     QMutexLocker lock(&m_qMutex);
-    return m_sFilename;
+    return m_fileInfo.fileName();
 }
 
 QDateTime TrackInfoObject::getCreateDate() const
@@ -282,7 +267,7 @@ QDateTime TrackInfoObject::getCreateDate() const
 bool TrackInfoObject::exists()  const
 {
     QMutexLocker lock(&m_qMutex);
-    return m_bExists;
+    return m_fileInfo.exists();
 }
 
 float TrackInfoObject::getReplayGain() const
@@ -651,7 +636,7 @@ int TrackInfoObject::getChannels() const
 int TrackInfoObject::getLength() const
 {
     QMutexLocker lock(&m_qMutex);
-    return m_iLength;
+    return m_fileInfo.size();
 }
 
 int TrackInfoObject::getBitrate() const
@@ -856,7 +841,7 @@ void TrackInfoObject::setDirty(bool bDirty) {
     	emit(changed(this));
     }
 
-    //qDebug() << QString("TrackInfoObject %1 %2 set to %3").arg(QString::number(m_iId), m_sLocation, m_bDirty ? "dirty" : "clean");
+    //qDebug() << QString("TrackInfoObject %1 %2 set to %3").arg(QString::number(m_iId), m_fileInfo.absoluteFilePath(), m_bDirty ? "dirty" : "clean");
 }
 
 bool TrackInfoObject::isDirty() {
@@ -893,5 +878,81 @@ void TrackInfoObject::setKey(QString key){
     m_key = key;
     if (dirty)
         setDirty(true);
+}
+
+void TrackInfoObject::InitFromProtobuf(const pb::tagreader::SongMetadata& pb) {
+  /*
+    d->init_from_file_ = true;
+  d->valid_ = pb.valid();
+  d->title_ = QStringFromStdString(pb.title());
+  d->album_ = QStringFromStdString(pb.album());
+  d->artist_ = QStringFromStdString(pb.artist());
+  d->albumartist_ = QStringFromStdString(pb.albumartist());
+  d->composer_ = QStringFromStdString(pb.composer());
+  d->track_ = pb.track();
+  d->disc_ = pb.disc();
+  d->bpm_ = pb.bpm();
+  d->year_ = pb.year();
+  d->genre_ = QStringFromStdString(pb.genre());
+  d->comment_ = QStringFromStdString(pb.comment());
+  d->compilation_ = pb.compilation();
+  d->playcount_ = pb.playcount();
+  d->skipcount_ = pb.skipcount();
+  d->lastplayed_ = pb.lastplayed();
+  d->score_ = pb.score();
+  set_length_nanosec(pb.length_nanosec());
+  d->bitrate_ = pb.bitrate();
+  d->samplerate_ = pb.samplerate();
+  d->url_ = QUrl::fromEncoded(QByteArray(pb.url().data(), pb.url().size()));
+  d->basefilename_ = QStringFromStdString(pb.basefilename());
+  d->mtime_ = pb.mtime();
+  d->ctime_ = pb.ctime();
+  d->filesize_ = pb.filesize();
+  d->suspicious_tags_ = pb.suspicious_tags();
+  d->art_automatic_ = QStringFromStdString(pb.art_automatic());
+  d->filetype_ = static_cast<FileType>(pb.type());
+
+  if (pb.has_rating()) {
+    d->rating_ = pb.rating();
+  }
+  */
+}
+
+void TrackInfoObject::ToProtobuf(pb::tagreader::SongMetadata* pb) const {
+  /*
+   const QByteArray url(d->url_.toEncoded());
+
+  pb->set_valid(d->valid_); // extension is valid
+  */
+  pb->set_title(DataCommaSizeFromQString(m_sTitle));
+  pb->set_album(DataCommaSizeFromQString(m_sAlbum));
+  pb->set_artist(DataCommaSizeFromQString(m_sArtist));
+  // pb->set_albumartist(DataCommaSizeFromQString(d->albumartist_));
+  pb->set_composer(DataCommaSizeFromQString(m_sComposer));
+  pb->set_track(m_sTrackNumber.toInt());
+  // pb->set_disc(d->disc_);
+  pb->set_bpm(m_fBpm);
+  pb->set_year(m_sYear.toInt());
+  pb->set_genre(DataCommaSizeFromQString(m_sGenre));
+  pb->set_comment(DataCommaSizeFromQString(m_sComment));
+  //pb->set_compilation(d->compilation_);
+  pb->set_rating((float)m_Rating);
+  //pb->set_playcount(d->playcount_);
+  //pb->set_skipcount(d->skipcount_);
+  //pb->set_lastplayed(d->lastplayed_);
+  //pb->set_score(d->score_);
+  /*
+  pb->set_length_nanosec(length_nanosec());
+  pb->set_bitrate(d->bitrate_);
+  pb->set_samplerate(d->samplerate_);
+  pb->set_url(url.constData(), url.size());
+  pb->set_basefilename(DataCommaSizeFromQString(d->basefilename_));
+  pb->set_mtime(d->mtime_);
+  pb->set_ctime(d->ctime_);
+  pb->set_filesize(d->filesize_);
+  pb->set_suspicious_tags(d->suspicious_tags_);
+  pb->set_art_automatic(DataCommaSizeFromQString(d->art_automatic_));
+  pb->set_type(static_cast< ::pb::tagreader::SongMetadata_Type>(d->filetype_));
+  */
 }
 
