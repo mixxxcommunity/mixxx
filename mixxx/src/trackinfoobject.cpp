@@ -31,14 +31,16 @@
 
 #include "mixxxutils.cpp"
 
-TrackInfoObject::TrackInfoObject(const QString sLocation, bool parseHeader)
-        : m_qMutex(QMutex::Recursive) {
-    m_fileInfo = QFileInfo(sLocation);
+TrackInfoObject::TrackInfoObject(const QString& file, bool parseHeader)
+        : m_fileInfo(file),
+          m_dateAdded(QDateTime::currentDateTime()),
+          m_qMutex(QMutex::Recursive) {
     initialize(parseHeader);
 }
 
-TrackInfoObject::TrackInfoObject(QFileInfo& fileInfo, bool parseHeader)
+TrackInfoObject::TrackInfoObject(const QFileInfo& fileInfo, bool parseHeader)
         : m_fileInfo(fileInfo),
+          m_dateAdded(QDateTime::currentDateTime()),
           m_qMutex(QMutex::Recursive) {    
     initialize(parseHeader);
 }
@@ -69,11 +71,13 @@ TrackInfoObject::TrackInfoObject(const QDomNode &nodeHeader)
     m_bBpmConfirm = XmlParse::selectNodeQString(nodeHeader, "BpmConfirm").toInt();
     m_fBeatFirst = XmlParse::selectNodeQString(nodeHeader, "BeatFirst").toFloat();
     m_bHeaderParsed = false;
+    /*
     QString create_date = XmlParse::selectNodeQString(nodeHeader, "CreateDate");
     if (create_date == "")
         m_dCreateDate = m_fileInfo.created();
     else
         m_dCreateDate = QDateTime::fromString(create_date);
+    */
 
     // Mixxx <1.8 recorded track IDs in mixxxtrack.xml, but we are going to
     // ignore those. Tracks will get a new ID from the database.
@@ -98,12 +102,12 @@ void TrackInfoObject::initialize(bool parseHeader) {
     m_bDirty = false;
     m_bLocationChanged = false;
 
-    m_sArtist = "";
-    m_sTitle = "";
-    m_sType= "";
-    m_sComment = "";
-    m_sYear = "";
-    m_sURL = "";
+    //m_sArtist = "";
+    //m_sTitle = "";
+    //m_sType= "";
+    //m_sComment = "";
+    //m_sYear = "";
+    //m_sURL = "";
     m_iDuration = 0;
     m_iBitrate = 0;
     m_iTimesPlayed = 0;
@@ -111,7 +115,7 @@ void TrackInfoObject::initialize(bool parseHeader) {
     m_fBpm = 0.;
     m_fReplayGain = 0.;
     m_bBpmConfirm = false;
-    m_bIsValid = false;
+    //m_bIsValid = false;
     m_bHeaderParsed = false;
     m_fBeatFirst = -1.;
     m_iId = -1;
@@ -120,9 +124,10 @@ void TrackInfoObject::initialize(bool parseHeader) {
     m_iChannels = 0;
     m_fCuePoint = 0.0f;
     m_dVisualResampleRate = 0;
-    m_dCreateDate = m_dateAdded = QDateTime::currentDateTime();
+    //m_dCreateDate =
+    //m_dateAdded = QDateTime::currentDateTime();
     m_Rating = 0;
-    m_key = "";
+    //m_key = "";
 
     // parse() parses the metadata from file. This is not a quick operation!
     if (parseHeader) {
@@ -139,14 +144,17 @@ void TrackInfoObject::doSave() {
     emit(save(this));
 }
 
+/*
 bool TrackInfoObject::isValid() const {
     QMutexLocker lock(&m_qMutex);
     return m_bIsValid;
 }
+*/
 
 /*
     Writes information about the track to the xml file:
  */
+/*
 void TrackInfoObject::writeToXML( QDomDocument &doc, QDomElement &header )
 {
     QMutexLocker lock(&m_qMutex);
@@ -176,43 +184,43 @@ void TrackInfoObject::writeToXML( QDomDocument &doc, QDomElement &header )
     //}
 
 }
+*/
+
 
 int TrackInfoObject::parse()
 {
-    // Add basic information derived from the filename:
-    parseFilename();
+    QMutexLocker lock(&m_qMutex);
 
     // Parse the using information stored in the sound file
-    bool result = SoundSourceProxy::ParseHeader(this);
-    m_bIsValid = result == OK;
-    return result;
+    int result = SoundSourceProxy::ParseHeader(this);
+
+    if (m_bHeaderParsed) {
+        // Add basic information derived from the filename:
+        parseFilename();
+    }
+
+    return result; // OK if Mixxx can handle this file
 }
 
 
 void TrackInfoObject::parseFilename()
 {
-    QMutexLocker lock(&m_qMutex);
-
 	QString filename = m_fileInfo.fileName(); 
 
-    if (filename.indexOf('-') != -1)
-    {
+    if (filename.indexOf('-') != -1) {
         m_sArtist = filename.section('-',0,0).trimmed(); // Get the first part
         m_sTitle = filename.section('-',1,1); // Get the second part
         m_sTitle = m_sTitle.section('.',0,-2).trimmed(); // Remove the ending
-    }
-    else
-    {
-        m_sTitle = filename.section('.',0,-2).trimmed(); // Remove the ending;
-        m_sType = filename.section('.',-1).trimmed(); // Get the ending
+    } else {
+        m_sTitle = filename.section('.',0,-2).trimmed(); // Remove the ending
     }
 
-    if (m_sTitle.length() == 0) {
+    if (m_sTitle.isEmpty()) {
         m_sTitle = filename.section('.',0,-2).trimmed();
     }
 
     // Add no comment
-    m_sComment = QString("");
+    m_sComment.clear();
 
     // Find the type
     m_sType = filename.section(".",-1).toLower().trimmed();
@@ -248,7 +256,7 @@ QString TrackInfoObject::getLocation() const
 QString TrackInfoObject::getDirectory() const
 {
     QMutexLocker lock(&m_qMutex);
-    return m_fileInfo.absolutePath();;
+    return m_fileInfo.absolutePath();
 }
 
 QString TrackInfoObject::getFilename()  const
@@ -257,12 +265,14 @@ QString TrackInfoObject::getFilename()  const
     return m_fileInfo.fileName();
 }
 
+/*
 QDateTime TrackInfoObject::getCreateDate() const
 {
     QMutexLocker lock(&m_qMutex);
     QDateTime create_date = QDateTime(m_dCreateDate);
     return create_date;
 }
+*/
 
 bool TrackInfoObject::exists()  const
 {
@@ -391,7 +401,7 @@ QDateTime TrackInfoObject::getDateAdded() const {
     return m_dateAdded;
 }
 
-void TrackInfoObject::setDateAdded(QDateTime dateAdded) {
+void TrackInfoObject::setDateAdded(const QDateTime& dateAdded) {
     QMutexLocker lock(&m_qMutex);
     m_dateAdded = dateAdded;
 }
@@ -417,14 +427,14 @@ QString TrackInfoObject::getTitle()  const
     return m_sTitle;
 }
 
-void TrackInfoObject::setTitle(QString s)
+void TrackInfoObject::setTitle(const QString& s)
 {
     QMutexLocker lock(&m_qMutex);
-    s = s.trimmed();
-    bool dirty = m_sTitle != s;
-    m_sTitle = s;
-    if (dirty)
+    QString title = s.trimmed();
+    if (m_sTitle != title) {
+        m_sTitle = s;
         setDirty(true);
+    }
 }
 
 QString TrackInfoObject::getArtist()  const
@@ -433,14 +443,14 @@ QString TrackInfoObject::getArtist()  const
     return m_sArtist;
 }
 
-void TrackInfoObject::setArtist(QString s)
+void TrackInfoObject::setArtist(const QString& s)
 {
     QMutexLocker lock(&m_qMutex);
-    s = s.trimmed();
-    bool dirty = m_sArtist != s;
-    m_sArtist = s;
-    if (dirty)
+    QString artist = s.trimmed();
+    if (m_sArtist != artist) {
+        m_sArtist != artist;
         setDirty(true);
+    }
 }
 
 QString TrackInfoObject::getAlbum()  const
@@ -465,14 +475,14 @@ QString TrackInfoObject::getYear()  const
     return m_sYear;
 }
 
-void TrackInfoObject::setYear(QString s)
+void TrackInfoObject::setYear(const QString& s)
 {
     QMutexLocker lock(&m_qMutex);
-    s = s.trimmed();
-    bool dirty = m_sYear != s;
-    m_sYear = s.trimmed();
-    if (dirty)
+    QString year = s.trimmed();
+    if (m_sYear != year) {
+        m_sYear = year;
         setDirty(true);
+    }
 }
 
 QString TrackInfoObject::getGenre()  const
@@ -481,14 +491,14 @@ QString TrackInfoObject::getGenre()  const
     return m_sGenre;
 }
 
-void TrackInfoObject::setGenre(QString s)
+void TrackInfoObject::setGenre(const QString& s)
 {
     QMutexLocker lock(&m_qMutex);
-    s = s.trimmed();
-    bool dirty = m_sGenre != s;
-    m_sGenre = s;
-    if (dirty)
+    QString genre = s.trimmed();
+    if (m_sGenre != genre) {
+        m_sGenre = genre;
         setDirty(true);
+    }
 }
 
 QString TrackInfoObject::getComposer()  const
@@ -513,14 +523,14 @@ QString TrackInfoObject::getTrackNumber()  const
     return m_sTrackNumber;
 }
 
-void TrackInfoObject::setTrackNumber(QString s)
+void TrackInfoObject::setTrackNumber(const QString& s)
 {
     QMutexLocker lock(&m_qMutex);
-    s = s.trimmed();
-    bool dirty = m_sTrackNumber != s;
-    m_sTrackNumber = s;
-    if (dirty)
+    QString tn = s.trimmed();
+    if (m_sTrackNumber != tn) {
+        m_sTrackNumber = tn;
         setDirty(true);
+    }
 }
 
 int TrackInfoObject::getTimesPlayed()  const
@@ -579,13 +589,13 @@ QString TrackInfoObject::getComment() const
     return m_sComment;
 }
 
-void TrackInfoObject::setComment(QString s)
+void TrackInfoObject::setComment(const QString& s)
 {
     QMutexLocker lock(&m_qMutex);
-    bool dirty = s != m_sComment;
-    m_sComment = s;
-    if (dirty)
+    if (s != m_sComment) {
+        m_sComment = s;
         setDirty(true);
+    }
 }
 
 QString TrackInfoObject::getType() const
@@ -594,7 +604,7 @@ QString TrackInfoObject::getType() const
     return m_sType;
 }
 
-void TrackInfoObject::setType(QString s)
+void TrackInfoObject::setType(const QString& s)
 {
     QMutexLocker lock(&m_qMutex);
     bool dirty = s != m_sType;
@@ -837,7 +847,6 @@ void TrackInfoObject::setDirty(bool bDirty) {
     }
     // Emit a changed signal regardless if this attempted to set us dirty.
     if (bDirty) {
-        // TODO(XXX) is this still required?
     	emit(changed(this));
     }
 
@@ -920,40 +929,39 @@ void TrackInfoObject::InitFromProtobuf(const pb::tagreader::SongMetadata& pb) {
 }
 
 void TrackInfoObject::ToProtobuf(pb::tagreader::SongMetadata* pb) const {
-  /*
-   const QByteArray url(d->url_.toEncoded());
 
-  pb->set_valid(d->valid_); // extension is valid
-  */
-  pb->set_title(DataCommaSizeFromQString(m_sTitle));
-  pb->set_album(DataCommaSizeFromQString(m_sAlbum));
-  pb->set_artist(DataCommaSizeFromQString(m_sArtist));
-  // pb->set_albumartist(DataCommaSizeFromQString(d->albumartist_));
-  pb->set_composer(DataCommaSizeFromQString(m_sComposer));
-  pb->set_track(m_sTrackNumber.toInt());
-  // pb->set_disc(d->disc_);
-  pb->set_bpm(m_fBpm);
-  pb->set_year(m_sYear.toInt());
-  pb->set_genre(DataCommaSizeFromQString(m_sGenre));
-  pb->set_comment(DataCommaSizeFromQString(m_sComment));
-  //pb->set_compilation(d->compilation_);
-  pb->set_rating((float)m_Rating);
-  //pb->set_playcount(d->playcount_);
-  //pb->set_skipcount(d->skipcount_);
-  //pb->set_lastplayed(d->lastplayed_);
-  //pb->set_score(d->score_);
-  /*
-  pb->set_length_nanosec(length_nanosec());
-  pb->set_bitrate(d->bitrate_);
-  pb->set_samplerate(d->samplerate_);
-  pb->set_url(url.constData(), url.size());
-  pb->set_basefilename(DataCommaSizeFromQString(d->basefilename_));
-  pb->set_mtime(d->mtime_);
-  pb->set_ctime(d->ctime_);
-  pb->set_filesize(d->filesize_);
-  pb->set_suspicious_tags(d->suspicious_tags_);
-  pb->set_art_automatic(DataCommaSizeFromQString(d->art_automatic_));
-  pb->set_type(static_cast< ::pb::tagreader::SongMetadata_Type>(d->filetype_));
-  */
+    QUrl temp_url(m_fileInfo.absoluteFilePath());
+    const QByteArray url(temp_url.toEncoded());
+
+    //pb->set_valid(d->valid_); // extension is valid
+    pb->set_title(DataCommaSizeFromQString(m_sTitle));
+    pb->set_album(DataCommaSizeFromQString(m_sAlbum));
+    pb->set_artist(DataCommaSizeFromQString(m_sArtist));
+    //pb->set_albumartist(DataCommaSizeFromQString(d->albumartist_));
+    pb->set_composer(DataCommaSizeFromQString(m_sComposer));
+    pb->set_track(m_sTrackNumber.toInt());
+    //pb->set_disc(d->disc_);
+    pb->set_bpm(m_fBpm);
+    pb->set_year(m_sYear.toInt());
+    pb->set_genre(DataCommaSizeFromQString(m_sGenre));
+    pb->set_comment(DataCommaSizeFromQString(m_sComment));
+    //pb->set_compilation(d->compilation_);
+    pb->set_rating((float) m_Rating);
+    //pb->set_playcount(d->playcount_);
+    //pb->set_skipcount(d->skipcount_);
+    //pb->set_lastplayed(d->lastplayed_);
+    //pb->set_score(d->score_);
+    m_iDuration
+    // pb->set_length_nanosec(length_nanosec());
+    pb->set_bitrate(m_iBitrate);
+    pb->set_samplerate(m_iSampleRate);
+    pb->set_url(url.constData(), url.size());
+    //pb->set_basefilename(DataCommaSizeFromQString(d->basefilename_));
+    //pb->set_mtime(d->mtime_);
+    //pb->set_ctime(d->ctime_);
+    pb->set_filesize(m_fileInfo.size());
+    //pb->set_suspicious_tags(d->suspicious_tags_);
+    //pb->set_art_automatic(DataCommaSizeFromQString(d->art_automatic_));
+    //pb->set_type(static_cast< ::pb::tagreader::SongMetadata_Type>(d->filetype_));
 }
 #endif // __TAGREADER__

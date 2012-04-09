@@ -58,9 +58,9 @@ class TrackInfoObject : public QObject
     Q_OBJECT
 public:
     // Initialize a new track with the filename. 
-    TrackInfoObject(const QString sLocation="", bool parseHeader=true);
+    TrackInfoObject(const QString& file, bool parseHeader=true);
     // Initialize track with a QFileInfo class
-    TrackInfoObject(QFileInfo& fileInfo, bool parseHeader=true);
+    TrackInfoObject(const QFileInfo& fileInfo, bool parseHeader=true);
     // Creates a new track given information from the xml file. 
     TrackInfoObject(const QDomNode &);
     virtual ~TrackInfoObject();
@@ -68,7 +68,7 @@ public:
     // Returns true if the object contains valid information 
     bool isValid() const;
     int parse();
-    void writeToXML( QDomDocument &, QDomElement & );
+    //void writeToXML( QDomDocument &, QDomElement & );
 
     // Returns the duration in seconds 
     int getDuration() const;
@@ -102,14 +102,12 @@ public:
     // Returns the filename of the file.
     QString getFilename() const;
     // Returns file creation date
-    QDateTime getCreateDate() const;
+    //QDateTime getCreateDate() const;
     // Returns the length of the file in bytes
     int getLength() const;
     // Returns whether the file exists on disk or not. Updated as of the time
     // the TrackInfoObject is created, or when setLocation() is called.
     bool exists() const;
-
-
 
     // Returns ReplayGain
     float getReplayGain() const;
@@ -130,11 +128,11 @@ public:
     // Returns the user comment 
     QString getComment() const;
     // Sets the user commnet 
-    void setComment(QString);
+    void setComment(const QString&);
     // Returns the file type 
     QString getType() const;
     // Sets the type of the string 
-    void setType(QString);
+    void setType(const QString&);
     // Returns the bitrate 
     int getBitrate() const;
     // Returns the bitrate as a string 
@@ -157,17 +155,17 @@ public:
     QString getInfo() const;
 
     QDateTime getDateAdded() const;
-    void setDateAdded(QDateTime dateAdded);
+    void setDateAdded(const QDateTime& dateAdded);
 
     // Getter/Setter methods for metadata 
     // Return title 
     QString getTitle() const;
     // Set title 
-    void setTitle(QString);
+    void setTitle(const QString&);
     // Return artist 
     QString getArtist() const;
     // Set artist 
-    void setArtist(QString);
+    void setArtist(const QString&);
     // Return album 
     QString getAlbum() const;
     // Set album 
@@ -175,11 +173,11 @@ public:
     // Return Year 
     QString getYear() const;
     // Set year 
-    void setYear(QString);
+    void setYear(const QString&);
     // Return genre 
     QString getGenre() const;
     // Set genre 
-    void setGenre(QString);
+    void setGenre(const QString&);
     // Return composer 
     QString getComposer() const;
     // Set composer 
@@ -187,7 +185,7 @@ public:
     // Return Track Number 
     QString getTrackNumber() const;
     // Set Track Number 
-    void setTrackNumber(QString);
+    void setTrackNumber(const QString&);
     // Return number of times the track has been played 
     int getTimesPlayed() const;
     // Set number of times the track has been played 
@@ -371,7 +369,7 @@ public:
     // Cue point in samples or something 
     float m_fCuePoint;
     // Date. creation date of file 
-    QDateTime m_dCreateDate;
+    // QDateTime m_dCreateDate;
     // Date the track was added to the library
     QDateTime m_dateAdded;
 

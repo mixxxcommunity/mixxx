@@ -316,7 +316,7 @@ int SoundSourceProxy::ParseHeader(TrackInfoObject* p)
         p->setBitrate(sndsrc->getBitrate());
         p->setSampleRate(sndsrc->getSampleRate());
         p->setChannels(sndsrc->getChannels());
-	p->setKey(sndsrc->getKey());
+	    p->setKey(sndsrc->getKey());
         p->setHeaderParsed(true);
     }
     else
@@ -325,7 +325,7 @@ int SoundSourceProxy::ParseHeader(TrackInfoObject* p)
     }
     delete sndsrc;
 
-    return 0;
+    return OK;
 }
 
 // static

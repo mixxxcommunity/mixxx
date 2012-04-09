@@ -426,7 +426,7 @@ bool TrackDAO::addTracksAdd(TrackInfoObject* pTrack, bool unremove) {
     return true;
 }
 
-int TrackDAO::addTrack(QFileInfo& fileInfo, bool unremove) {
+int TrackDAO::addTrack(const QFileInfo& fileInfo, bool unremove) {
     int trackId = -1;
     TrackInfoObject * pTrack = new TrackInfoObject(fileInfo);
     if (pTrack) {
@@ -438,8 +438,8 @@ int TrackDAO::addTrack(QFileInfo& fileInfo, bool unremove) {
     return trackId;
 }
 
-int TrackDAO::addTrack(QString absoluteFilePath, bool unremove) {
-    QFileInfo fileInfo(absoluteFilePath);
+int TrackDAO::addTrack(const QString& file, bool unremove) {
+    QFileInfo fileInfo(file);
     return addTrack(fileInfo, unremove);
 }
 

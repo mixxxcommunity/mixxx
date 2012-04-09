@@ -341,8 +341,9 @@ class Tagreader(Feature):
             build.env.Append(CPPPATH = "#lib/tagreader/include")
             build.env.Append(LIBPATH = "#lib/tagreader") 
             build.env.Append(LIBS = 'clementine-tagreaderclient')
-            build.env.Append(LIBS = 'protobuf-lite')
-            return
+            if not conf.CheckLib(['protobuf-lite', 'protobuf']):
+                raise Exception('Did not find protobuf development library, exiting!')
+                return
         else:
             raise Exception('tagreader is not supported yet.')
 
