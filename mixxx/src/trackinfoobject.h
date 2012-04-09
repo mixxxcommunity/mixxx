@@ -169,7 +169,7 @@ public:
     // Return album 
     QString getAlbum() const;
     // Set album 
-    void setAlbum(QString);
+    void setAlbum(const QString&);
     // Return Year 
     QString getYear() const;
     // Set year 

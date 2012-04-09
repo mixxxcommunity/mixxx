@@ -22,6 +22,7 @@
 #include <QMutexLocker>
 #include <QString>
 #include <QtDebug>
+#include <QUrl>
 
 #include "trackinfoobject.h"
 
@@ -432,7 +433,7 @@ void TrackInfoObject::setTitle(const QString& s)
     QMutexLocker lock(&m_qMutex);
     QString title = s.trimmed();
     if (m_sTitle != title) {
-        m_sTitle = s;
+        m_sTitle = title;
         setDirty(true);
     }
 }
@@ -448,7 +449,7 @@ void TrackInfoObject::setArtist(const QString& s)
     QMutexLocker lock(&m_qMutex);
     QString artist = s.trimmed();
     if (m_sArtist != artist) {
-        m_sArtist != artist;
+        m_sArtist = artist;
         setDirty(true);
     }
 }
@@ -459,14 +460,14 @@ QString TrackInfoObject::getAlbum()  const
     return m_sAlbum;
 }
 
-void TrackInfoObject::setAlbum(QString s)
+void TrackInfoObject::setAlbum(const QString& s)
 {
     QMutexLocker lock(&m_qMutex);
-    s = s.trimmed();
-    bool dirty = m_sAlbum != s;
-    m_sAlbum = s;
-    if (dirty)
+    QString album = s.trimmed();
+    if (m_sAlbum != album) {
+        m_sAlbum = album;
         setDirty(true);
+    }
 }
 
 QString TrackInfoObject::getYear()  const
@@ -930,8 +931,7 @@ void TrackInfoObject::InitFromProtobuf(const pb::tagreader::SongMetadata& pb) {
 
 void TrackInfoObject::ToProtobuf(pb::tagreader::SongMetadata* pb) const {
 
-    QUrl temp_url(m_fileInfo.absoluteFilePath());
-    const QByteArray url(temp_url.toEncoded());
+    const QByteArray url(QUrl::fromLocalFile(m_fileInfo.absoluteFilePath()).toEncoded());
 
     //pb->set_valid(d->valid_); // extension is valid
     pb->set_title(DataCommaSizeFromQString(m_sTitle));
@@ -951,7 +951,7 @@ void TrackInfoObject::ToProtobuf(pb::tagreader::SongMetadata* pb) const {
     //pb->set_skipcount(d->skipcount_);
     //pb->set_lastplayed(d->lastplayed_);
     //pb->set_score(d->score_);
-    m_iDuration
+    //m_iDuration
     // pb->set_length_nanosec(length_nanosec());
     pb->set_bitrate(m_iBitrate);
     pb->set_samplerate(m_iSampleRate);

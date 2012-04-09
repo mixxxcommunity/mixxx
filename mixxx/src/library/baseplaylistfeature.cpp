@@ -195,8 +195,8 @@ void BasePlaylistFeature::slotCreatePlaylist() {
     int playlistId = m_playlistDao.createPlaylist(name);
 
     if (playlistId != -1) {
+        emit(showTrackModel(m_pPlaylistTableModel));
         emit(featureUpdated());
-            emit(showTrackModel(m_pPlaylistTableModel));
     }
     else {
         QMessageBox::warning(NULL,

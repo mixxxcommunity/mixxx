@@ -264,23 +264,21 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
             hasChanged_MusicDir = true;
         }
     }
-    /*
-     * Do not write meta data back to ID3 when meta data has changed
-     * Because multiple TrackDao objects can exists for a particular track
-     * writing meta data may ruine your MP3 file if done simultaneously.
-     * see Bug #728197
-     * For safety reasons, we deactivate this feature.
-     */
-    m_pConfig->set(ConfigKey("[Library]","WriteAudioTags"), ConfigValue(0));
-
 #ifdef __TAGREADER__
     m_tag_reader_client = TagReaderClient::Instance();
-    if (m_tag_reader_client) {
+    if (!m_tag_reader_client) {
         m_tag_reader_client = new TagReaderClient(this);
         MoveToNewThread(m_tag_reader_client, "TagReaderClient");
         m_tag_reader_client->Start();
     }
-#endif
+#else
+    // Do not write meta data back to ID3 when meta data has changed
+    // Because multiple TrackDao objects can exists for a particular track
+    // writing meta data may ruine your MP3 file if done simultaneously.
+    // see Bug #728197
+    // For safety reasons, we deactivate this feature.
+    m_pConfig->set(ConfigKey("[Library]","WriteAudioTags"), ConfigValue(0));
+#endif // __TAGREADER__
 
     // library dies in seemingly unrelated qtsql error about not having a
     // sqlite driver if this path doesn't exist. Normally config->Save()

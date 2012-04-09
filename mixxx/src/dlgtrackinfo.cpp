@@ -241,6 +241,8 @@ void DlgTrackInfo::unloadTrack(bool save) {
             qDebug() << "Deleting cue" << pCue->getId() << pCue->getHotCue();
             m_pLoadedTrack->removeCue(pCue);
         }
+		// User expects emediatly persisting of his data
+        m_pLoadedTrack->doSave();
     }
 
     m_pLoadedTrack.clear();

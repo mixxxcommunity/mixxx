@@ -174,12 +174,11 @@ void PromoTracksFeature::activate() {
 
 void PromoTracksFeature::activateChild(const QModelIndex& index) {
     QString itemString = m_childModel.data(index, Qt::DisplayRole).toString();
-    if (itemString == tr(m_sMyDownloadsViewName.toUtf8().constData()))
-    {
+    if (itemString == tr(m_sMyDownloadsViewName.toUtf8().constData())) {
         emit(showTrackModel(&m_downloadsTableModel));
-    }
-    else
+    } else {
         emit(switchToView(itemString));
+    }
 }
 
 void PromoTracksFeature::onRightClick(const QPoint& globalPos) {

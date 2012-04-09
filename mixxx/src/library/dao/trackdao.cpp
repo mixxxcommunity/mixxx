@@ -148,6 +148,7 @@ void TrackDAO::saveTrack(TrackInfoObject* pTrack) {
             updateTrack(pTrack);
 
             // Write audio meta data, if enabled in the preferences
+            // TODO(DSC) Only wite tag if file Metatdate is dirty
             writeAudioMetaData(pTrack);
 
             //qDebug() << this << "Dirty tracks remaining after clean save:" << m_dirtyTracks.size();
@@ -1073,6 +1074,8 @@ void TrackDAO::clearCache() {
 
 void TrackDAO::writeAudioMetaData(TrackInfoObject* pTrack){
     if (m_pConfig && m_pConfig->getValueString(ConfigKey("[Library]","WriteAudioTags")).toInt() == 1) {
+
+#ifndef __TAGREADER__
         AudioTagger tagger(pTrack->getLocation());
 
         tagger.setArtist(pTrack->getArtist());
@@ -1085,6 +1088,27 @@ void TrackDAO::writeAudioMetaData(TrackInfoObject* pTrack){
         tagger.setBpm(pTrack->getBpmStr());
 
         tagger.save();
+#else
+        TagReaderClient* tagreader = TagReaderClient::Instance();
+        if (tagreader) {
+            bool result = tagreader->SaveFileBlocking(pTrack->getLocation(),*pTrack);
+            if (result) {
+                qDebug() << "writeAudioMetaData success";
+            } else {
+                qDebug() << "writeAudioMetaData failed";
+            }
+        }
+        /*
+        TagReaderReply* reply = tagreader->SaveFileBlocking(pTrack->getLocation(),*pTrack);
+        if (reply->is_successful()) {
+            qDebug() << "writeAudioMetaData success";
+        } else {
+            qDebug() << "writeAudioMetaData failed";
+        }
+        reply->deleteLater();
+        */
+
+#endif // __TAGREADER__
     }
 }
 
