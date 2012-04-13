@@ -228,7 +228,6 @@ void SetlogFeature::slotJoinWithPrevious() {
                 m_playlistDao.deletePlaylist(currentPlaylistId);
                 slotPlaylistTableChanged(previousPlaylistId); // For moving selection
                 emit(showTrackModel(m_pPlaylistTableModel));
-                emit(featureUpdated());
             }
         }
     }

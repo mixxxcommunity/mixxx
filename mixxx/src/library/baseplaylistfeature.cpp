@@ -143,7 +143,6 @@ void BasePlaylistFeature::slotRenamePlaylist() {
     } while (!validNameGiven);
 
     m_playlistDao.renamePlaylist(playlistId, newName);
-    emit(featureUpdated());
 }
 
 void BasePlaylistFeature::slotTogglePlaylistLock() {
@@ -196,7 +195,6 @@ void BasePlaylistFeature::slotCreatePlaylist() {
 
     if (playlistId != -1) {
         emit(showTrackModel(m_pPlaylistTableModel));
-        emit(featureUpdated());
     }
     else {
         QMessageBox::warning(NULL,
@@ -220,7 +218,6 @@ void BasePlaylistFeature::slotDeletePlaylist() {
         Q_ASSERT(playlistId >= 0);
 
         m_playlistDao.deletePlaylist(playlistId);
-        emit(featureUpdated());
         activate();
     }
 }
@@ -362,7 +359,6 @@ void BasePlaylistFeature::addToAutoDJ(bool bTop) {
             m_playlistDao.addToAutoDJQueue(playlistId, bTop);
         }
     }
-    emit(featureUpdated());
 }
 
 void BasePlaylistFeature::onLazyChildExpandation(const QModelIndex &index){

@@ -393,7 +393,6 @@ void ClementineFeature::slotImportAsMixxxPlaylist() {
             */
         }
     }
-    emit(featureUpdated());
 }
 
 void ClementineFeature::showErrorDialog(const QString& message) {

@@ -289,5 +289,4 @@ void BansheeFeature::slotImportAsMixxxPlaylist() {
             delete pPlaylistModelToAdd;
         }
     }
-    emit(featureUpdated());
 }

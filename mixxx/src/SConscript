@@ -37,35 +37,35 @@ else:
 	mixxx_bin = env.Program('mixxx', sources)
 
 def build_tests():
-        test_files = Glob('test/*.cpp', strings=True)
-        test_env = env.Clone()
-        test_env.Append(CPPPATH="#lib/gtest-1.5.0/include")
-        test_env.Append(CPPPATH="#lib/gmock-1.5.0/include")
-        test_files = [test_env.StaticObject(filename) \
-                              if filename !='main.cpp' else filename
-                      for filename in test_files]
-        mixxx_sources = [filename for filename in sources if filename != 'main.cpp']
-        test_sources = (test_files + mixxx_sources)
+    test_files = Glob('test/*.cpp', strings=True)
+    test_env = env.Clone()
+    test_env.Append(CPPPATH="#lib/gtest-1.5.0/include")
+    test_env.Append(CPPPATH="#lib/gmock-1.5.0/include")
+    test_files = [test_env.StaticObject(filename) \
+        if filename !='main.cpp' else filename
+        for filename in test_files]
+    mixxx_sources = [filename for filename in sources if filename != 'main.cpp']
+    test_sources = (test_files + mixxx_sources)
 
-        env.Append(LIBPATH="#lib/gtest-1.5.0/lib")
-	env.Append(LIBS = 'gtest')
+    env.Append(LIBPATH="#lib/gtest-1.5.0/lib")
+    env.Append(LIBS = 'gtest')
 
-        env.Append(LIBPATH="#lib/gmock-1.5.0/lib")
-        env.Append(LIBS = 'gmock')
+    env.Append(LIBPATH="#lib/gmock-1.5.0/lib")
+    env.Append(LIBS = 'gmock')
+  
+    env.Program(target='mixxx-test', source=test_sources)
 
-	env.Program(target='mixxx-test', source=test_sources)
-
-	Command("../mixxx-test", "./mixxx-test", Copy("$TARGET", "$SOURCE"))
+    Command("../mixxx-test", "./mixxx-test", Copy("$TARGET", "$SOURCE"))
 
 def run_tests():
-        ret = Execute("./mixxx-test")
-	if ret != 0:
-                print "WARNING: Not all tests pass. See mixxx-test output."
-                Exit(ret)
+    ret = Execute("./mixxx-test")
+    if ret != 0:
+        print "WARNING: Not all tests pass. See mixxx-test output."
+        Exit(ret)
 
 if int(build.flags['test']):
-        print "Building tests."
-        build_tests()
+    print "Building tests."
+    build_tests()
 
 if 'test' in BUILD_TARGETS:
 	print "Running tests."
@@ -80,15 +80,15 @@ def osx_construct_version(build, mixxx_version, branch_name, bazaar_revision):
 
 def ubuntu_construct_version(build, mixxx_version, branch_name, bazaar_revision,
                              ubuntu_version):
-        # In release mode, we only use the version and ubuntu_version
-	if build.build_is_release:
-		return "%s-%s" % (mixxx_version, ubuntu_version)
+    # In release mode, we only use the version and ubuntu_version
+    if build.build_is_release:
+        return "%s-%s" % (mixxx_version, ubuntu_version)
 	# In a debug build, include the branch name and revision number
 	return "%s-%s~%s~bzr%s" % (mixxx_version, ubuntu_version,
                                    branch_name, bazaar_revision)
 
 def windows_construct_version(build, mixxx_version, branch_name, bazaar_revision):
-        # In release mode, we only use the version
+    # In release mode, we only use the version
 	if build.build_is_release:
 		return mixxx_version
 	# In a debug build, include the branch name and revision number

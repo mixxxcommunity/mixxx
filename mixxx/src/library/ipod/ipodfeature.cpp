@@ -401,5 +401,4 @@ void IPodFeature::slotImportAsMixxxPlaylist() {
             delete pPlaylistModelToAdd;
         }
     }
-    emit(featureUpdated());
 }

@@ -575,5 +575,4 @@ void RhythmboxFeature::slotImportAsMixxxPlaylist() {
 
         delete pPlaylistModelToAdd;
     }
-    emit(featureUpdated());
 }

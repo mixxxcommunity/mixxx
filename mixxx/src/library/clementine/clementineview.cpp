@@ -461,7 +461,6 @@ void ClementineView::slotImportAsMixxxPlaylist() {
 /*
         }
     }
-    emit(featureUpdated());
 }
 */
 

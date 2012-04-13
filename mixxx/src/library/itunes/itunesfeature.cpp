@@ -758,5 +758,4 @@ void ITunesFeature::slotImportAsMixxxPlaylist() {
 
         delete pPlaylistModelToAdd;
     }
-    emit(featureUpdated());
 }
