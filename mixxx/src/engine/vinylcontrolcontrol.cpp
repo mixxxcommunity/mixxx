@@ -26,7 +26,7 @@ VinylControlControl::VinylControlControl(const char* pGroup, ConfigObject<Config
             
     m_pControlVinylScratching = new ControlPushButton(ConfigKey(pGroup, "vinylcontrol_scratching"));
     m_pControlVinylScratching->set(0);
-    m_pControlVinylScratching->setToggleButton(true);
+    m_pControlVinylScratching->setMidiButtonMode(ControlPushButton::TOGGLE);
     m_pControlVinylEnabled = new ControlPushButton(ConfigKey(pGroup, "vinylcontrol_enabled"));
     m_pControlVinylEnabled->set(0);
     m_pControlVinylEnabled->setMidiButtonMode(ControlPushButton::TOGGLE);
