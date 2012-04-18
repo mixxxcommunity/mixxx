@@ -460,29 +460,6 @@ void TrackDAO::addTrack(TrackInfoObject* pTrack, bool unremove) {
     addTracksFinish();
 }
 
-// hides a track from the library track collection. 
-void TrackDAO::hideTrack(int id) {
-    //qDebug() << "TrackDAO::hideTrack" << QThread::currentThread() << m_database.connectionName();
-    Q_ASSERT(id >= 0);
-    QSqlQuery query(m_database);
-
-    // Remove track from crates and playlists.
-    m_playlistDao.removeTrackFromPlaylists(id);
-    m_crateDao.removeTrackFromCrates(id);
-
-    //Mark the track as deleted!
-    query.prepare("UPDATE library "
-                  "SET mixxx_deleted=1 "
-                  "WHERE id = " + QString::number(id));
-    if (!query.exec()) {
-        LOG_FAILED_QUERY(query);
-    }
-
-    QSet<int> tracksRemovedSet;
-    tracksRemovedSet.insert(id);
-    emit(tracksRemoved(tracksRemovedSet));
-}
-
 void TrackDAO::hideTracks(QList<int> ids) {
     QString idList = "";
 
@@ -501,18 +478,18 @@ void TrackDAO::hideTracks(QList<int> ids) {
         LOG_FAILED_QUERY(query);
     }
 
+    // This is signal is received by beasetrackcache to remove the tracks from cache
     QSet<int> tracksRemovedSet = QSet<int>::fromList(ids);
     emit(tracksRemoved(tracksRemovedSet));
 }
 
-/*** If a track has been manually "removed" from Mixxx's library by the user via
-     Mixxx's interface, this lets you add it back. When a track is removed,
-     mixxx_deleted in the DB gets set to 1. This clears that, and makes it show
-     up in the library views again.
-     This function should get called if you drag-and-drop a file that's been
-     "removed" from Mixxx back into the library view.
-*/
-void TrackDAO::unremoveTrack(int trackId) {
+// If a track has been manually "hidden" from Mixxx's library by the user via
+// Mixxx's interface, this lets you add it back. When a track is hidden,
+// mixxx_deleted in the DB gets set to 1. This clears that, and makes it show
+// up in the library views again.
+// This function should get called if you drag-and-drop a file that's been
+// "hidden" from Mixxx back into the library view.
+void TrackDAO::unhideTrack(int trackId) {
     Q_ASSERT(trackId >= 0);
     QSqlQuery query(m_database);
     query.prepare("UPDATE library "
@@ -585,6 +562,9 @@ void TrackDAO::purgeTracks(QList<int> ids) {
     }
 
     m_database.commit();
+
+    QSet<int> tracksRemovedSet = QSet<int>::fromList(ids);
+    emit(tracksRemoved(tracksRemovedSet));
 }
 
 // deleter of the TrackInfoObject, for delete a Track from Library use hide or purge
@@ -1248,6 +1228,6 @@ bool TrackDAO::relocateTrack(QString oldLocation, QString newLocation) {
 
 
 */
-
+    return false;
 }
 

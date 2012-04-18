@@ -77,10 +77,9 @@ class TrackDAO : public QObject, public virtual DAO {
     void addTracksPrepare();
     void addTracksFinish();
     bool addTracksAdd(TrackInfoObject* pTrack, bool unremove);
-    void hideTrack(int id);
     void hideTracks(QList<int> ids);
     void purgeTracks(QList<int> ids);
-    void unremoveTrack(int trackId);
+    void unhideTrack(int trackId);
     TrackPointer getTrack(int id, bool cacheOnly=false) const;
     bool isDirty(int trackId);
 

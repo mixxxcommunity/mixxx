@@ -650,9 +650,10 @@ int MixxxApp::noSoundDlg(void)
             msgBox.show();
 
         } else if (msgBox.clickedButton() == exitButton) {
-            return 1;
+            break;
         }
     }
+    return 1;
 }
 
 int MixxxApp::noOutputDlg(bool *continueClicked)
@@ -701,9 +702,10 @@ int MixxxApp::noOutputDlg(bool *continueClicked)
             msgBox.show();
 
         } else if (msgBox.clickedButton() == exitButton) {
-            return 1;
+            break;
         }
     }
+    return 1;
 }
 
 /** initializes all QActions of the application */

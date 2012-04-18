@@ -84,14 +84,6 @@ void LibraryTableModel::hideTracks(const QModelIndexList& indices) {
     select(); //Repopulate the data model.
 }
 
-void LibraryTableModel::hideTrack(const QModelIndex& index) {
-    int trackId = getTrackId(index);
-    m_trackDao.hideTrack(trackId);
-    // TODO(rryan) : do not select, instead route event to BTC and notify from
-    // there.
-    select(); //Repopulate the data model.
-}
-
 void LibraryTableModel::moveTrack(const QModelIndex& sourceIndex,
                                   const QModelIndex& destIndex) {
     // Does nothing because we don't support reordering tracks in the library,

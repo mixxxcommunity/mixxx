@@ -38,7 +38,6 @@ class CrateDAO : public QObject, public virtual DAO {
     QString crateName(int crateId);
     unsigned int crateSize(int crateId);
     bool addTrackToCrate(int trackId, int crateId);
-    void removeTrackFromCrates(int trackId);
     bool removeTrackFromCrate(int trackId, int crateId);
 
   signals:
