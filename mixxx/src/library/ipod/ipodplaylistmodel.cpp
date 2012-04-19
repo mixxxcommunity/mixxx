@@ -754,13 +754,13 @@ TrackPointer IPodPlaylistModel::getTrack(const QModelIndex& index) const {
     pTrackP->setAlbum(QString::fromUtf8(pTrack->album));
     pTrackP->setYear(QString::number(pTrack->year));
     pTrackP->setGenre(QString::fromUtf8(pTrack->genre));
-    float bpm = (float)pTrack->BPM;
+    double bpm = (double)pTrack->BPM;
     pTrackP->setBpm(bpm);
     pTrackP->setComment(QString::fromUtf8(pTrack->comment));
 
     // If the track has a BPM, then give it a static beatgrid.
     if (bpm) {
-        BeatsPointer pBeats = BeatFactory::makeBeatGrid(pTrackP, bpm, 0);
+        BeatsPointer pBeats = BeatFactory::makeBeatGrid(pTrackP.data(), bpm, 0.0f);
         pTrackP->setBeats(pBeats);
     }
 

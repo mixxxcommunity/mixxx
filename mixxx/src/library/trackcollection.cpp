@@ -65,7 +65,7 @@ bool TrackCollection::checkForTables() {
         return false;
     }
 
-    int requiredSchemaVersion = 15;
+    int requiredSchemaVersion = 17;
     QString schemaFilename = m_pConfig->getResourcePath();
     schemaFilename.append("schema.xml");
     int result = SchemaManager::upgradeToSchemaVersion(schemaFilename, m_db, requiredSchemaVersion);

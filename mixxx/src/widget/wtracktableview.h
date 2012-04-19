@@ -52,6 +52,9 @@ class WTrackTableView : public WLibraryTableView {
     void addSelectionToCrate(int iCrateId);
     void loadSelectionToGroup(QString group);
     void doSortByColumn(int headerSection);
+    void slotLockBpm();
+    void slotUnlockBpm();
+    void slotClearBeats();
 
   private:
     void sendToAutoDJ(bool bTop);
@@ -60,6 +63,7 @@ class WTrackTableView : public WLibraryTableView {
     void dragMoveEvent(QDragMoveEvent * event);
     void dragEnterEvent(QDragEnterEvent * event);
     void dropEvent(QDropEvent * event);
+    void lockBpm(bool lock);
 
     // Mouse move event, implemented to hide the text and show an icon instead
     // when dragging
@@ -101,6 +105,13 @@ class WTrackTableView : public WLibraryTableView {
 
     // Show track-editor action
     QAction *m_pPropertiesAct;
+
+    // BPM Lock feature
+    QAction *m_pBpmLockAction;
+    QAction *m_pBpmUnlockAction;
+
+    // Clear track beats
+    QAction* m_pClearBeatsAction;
 };
 
 #endif

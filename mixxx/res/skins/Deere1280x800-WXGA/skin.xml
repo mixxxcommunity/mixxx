@@ -3149,9 +3149,10 @@
 					**********************************************
 					-->
 					<PushButton>
-						<Tooltip>High EQ kill&#10;Holds the gain of the high EQ to zero while active.&#10;</Tooltip>
+						<Tooltip>High EQ kill&#10;Holds the gain of the high EQ to zero while active.&#10;Hold or short click for latching.&#10;</Tooltip>
 						<Style>QToolTip { background-color: #191919; color: #CCCCCC; border: 1px solid #CCCCCC; }</Style>
-						<NumberStates>2</NumberStates>
+						<PowerWindowStyle>true</PowerWindowStyle>
+                        <NumberStates>2</NumberStates>
 						<State>
 							<Number>0</Number>
 							<Pressed>btn_kill_over.png</Pressed>
@@ -3170,9 +3171,10 @@
 						</Connection>
 					</PushButton>
 					<PushButton>
-						<Tooltip>Mid EQ kill&#10;Holds the gain of the mid EQ to zero while active.&#10;</Tooltip>
+						<Tooltip>Mid EQ kill&#10;Holds the gain of the mid EQ to zero while active.&#10;Hold or short click for latching.&#10;</Tooltip>
 						<Style>QToolTip { background-color: #191919; color: #CCCCCC; border: 1px solid #CCCCCC; }</Style>
-						<NumberStates>2</NumberStates>
+						<PowerWindowStyle>true</PowerWindowStyle>
+                        <NumberStates>2</NumberStates>
 						<State>
 							<Number>0</Number>
 							<Pressed>btn_kill_over.png</Pressed>
@@ -3191,9 +3193,10 @@
 						</Connection>
 					</PushButton>
 					<PushButton>
-						<Tooltip>Low EQ kill&#10;Holds the gain of the low EQ to zero while active.&#10;</Tooltip>
+						<Tooltip>Low EQ kill&#10;Holds the gain of the low EQ to zero while active.&#10;Hold or short click for latching.&#10;</Tooltip>
 						<Style>QToolTip { background-color: #191919; color: #CCCCCC; border: 1px solid #CCCCCC; }</Style>
-						<NumberStates>2</NumberStates>
+						<PowerWindowStyle>true</PowerWindowStyle>
+                        <NumberStates>2</NumberStates>
 						<State>
 							<Number>0</Number>
 							<Pressed>btn_kill_over.png</Pressed>
@@ -3213,9 +3216,10 @@
 					</PushButton>
 
 					<PushButton>
-						<Tooltip>High EQ kill&#10;Holds the gain of the high EQ to zero while active.&#10;</Tooltip>
+						<Tooltip>High EQ kill&#10;Holds the gain of the high EQ to zero while active.&#10;Hold or short click for latching.&#10;</Tooltip>
 						<Style>QToolTip { background-color: #191919; color: #CCCCCC; border: 1px solid #CCCCCC; }</Style>
-						<NumberStates>2</NumberStates>
+						<PowerWindowStyle>true</PowerWindowStyle>
+                        <NumberStates>2</NumberStates>
 						<State>
 							<Number>0</Number>
 							<Pressed>btn_kill_over.png</Pressed>
@@ -3234,9 +3238,10 @@
 						</Connection>
 					</PushButton>
 					<PushButton>
-						<Tooltip>Mid EQ kill&#10;Holds the gain of the mid EQ to zero while active.&#10;</Tooltip>
+						<Tooltip>Mid EQ kill&#10;Holds the gain of the mid EQ to zero while active.&#10;Hold or short click for latching.&#10;</Tooltip>
 						<Style>QToolTip { background-color: #191919; color: #CCCCCC; border: 1px solid #CCCCCC; }</Style>
-						<NumberStates>2</NumberStates>
+						<PowerWindowStyle>true</PowerWindowStyle>
+                        <NumberStates>2</NumberStates>
 						<State>
 							<Number>0</Number>
 							<Pressed>btn_kill_over.png</Pressed>
@@ -3255,9 +3260,10 @@
 						</Connection>
 					</PushButton>
 					<PushButton>
-						<Tooltip>Low EQ kill&#10;Holds the gain of the low EQ to zero while active.&#10;</Tooltip>
+						<Tooltip>Low EQ kill&#10;Holds the gain of the low EQ to zero while active.&#10;Hold or short click for latching.&#10;</Tooltip>
 						<Style>QToolTip { background-color: #191919; color: #CCCCCC; border: 1px solid #CCCCCC; }</Style>
-						<NumberStates>2</NumberStates>
+						<PowerWindowStyle>true</PowerWindowStyle>
+                        <NumberStates>2</NumberStates>
 						<State>
 							<Number>0</Number>
 							<Pressed>btn_kill_over.png</Pressed>

@@ -389,14 +389,14 @@ TrackPointer BansheePlaylistModel::getTrack(const QModelIndex& index) const {
         pTrack->setRating(m_sortedPlaylist.at(row).pTrack->rating);
         pTrack->setGenre(m_sortedPlaylist.at(row).pTrack->genre);
         pTrack->setTrackNumber(QString::number(m_sortedPlaylist.at(row).pTrack->tracknumber));
-        float bpm = ((float)m_sortedPlaylist.at(row).pTrack->bpm)/10.0;
+        double bpm = ((double)m_sortedPlaylist.at(row).pTrack->bpm)/10.0;
         pTrack->setBpm(bpm);
         pTrack->setBitrate(m_sortedPlaylist.at(row).pTrack->bitrate);
         pTrack->setComment(m_sortedPlaylist.at(row).pTrack->comment);
         pTrack->setComposer(m_sortedPlaylist.at(row).pTrack->composer);
         // If the track has a BPM, then give it a static beatgrid.
         if (bpm > 0) {
-            BeatsPointer pBeats = BeatFactory::makeBeatGrid(pTrack, bpm, 0);
+            BeatsPointer pBeats = BeatFactory::makeBeatGrid(pTrack.data(), bpm, 0.0f);
             pTrack->setBeats(pBeats);
         }
     }

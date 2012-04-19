@@ -733,14 +733,14 @@ TrackPointer ClementineView::getTrack(const Song& song) {
         pTrack->setRating((int)song.rating());
         pTrack->setGenre(song.genre());
         pTrack->setTrackNumber(QString::number(song.track()));
-        float bpm = song.bpm();
+        double bpm = (double)song.bpm();
         pTrack->setBpm(bpm);
         pTrack->setBitrate(song.bitrate());
         pTrack->setComment(song.comment());
         pTrack->setComposer(song.composer());
         // If the track has a BPM, then give it a static beatgrid.
         if (bpm) {
-            BeatsPointer pBeats = BeatFactory::makeBeatGrid(pTrack, bpm, 0);
+            BeatsPointer pBeats = BeatFactory::makeBeatGrid(pTrack.data(), bpm, 0.0f);
             pTrack->setBeats(pBeats);
         }
     }

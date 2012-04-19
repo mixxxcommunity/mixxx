@@ -59,16 +59,6 @@ void SidebarModel::activateDefaultSelection() {
     }
 }
 
-void SidebarModel::refreshData()
-{
-    //Reset all the model indices and refresh all the data.
-    //TODO: Could do something nicer when a feature's children change,
-    //      but the features know nothing about their model indices,
-    //      so they can't do stuff like beginInsertRow() to help the
-    //      model manage the indices.
-    //reset();
-}
-
 QModelIndex SidebarModel::index(int row, int column,
                                 const QModelIndex& parent) const {
     // qDebug() << "SidebarModel::index row=" << row

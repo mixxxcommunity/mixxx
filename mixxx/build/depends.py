@@ -257,6 +257,12 @@ class TagLib(Dependence):
         # it, though might cause issues. This is safe to remove once we
         # deprecate Karmic support. rryan 2/2011
         build.env.Append(CPPPATH='/usr/include/taglib/')
+
+class ProtoBuf(Dependence):
+    def configure(self, build, conf):
+        if not conf.CheckLib(['libprotobuf-lite', 'protobuf-lite', 'libprotobuf', 'protobuf']):
+            raise Exception("Could not find libprotobuf or its development headers.")
+
 class MixxxCore(Feature):
 
     def description(self):
@@ -339,7 +345,6 @@ class MixxxCore(Feature):
 
                    "analyserrg.cpp",
                    "analyserqueue.cpp",
-                   "analyserwavesummary.cpp",
                    "analyserbpm.cpp",
                    "analyserwaveform.cpp",
 
@@ -455,6 +460,7 @@ class MixxxCore(Feature):
                    "library/legacylibraryimporter.cpp",
                    "library/libraryfeatures.cpp",
                    "library/searchthread.cpp",
+
                    "library/dao/cratedao.cpp",
                    "library/cratetablemodel.cpp",
                    "library/dao/cuedao.cpp",
@@ -463,6 +469,8 @@ class MixxxCore(Feature):
                    "library/dao/playlistdao.cpp",
                    "library/dao/libraryhashdao.cpp",
                    "library/dao/settingsdao.cpp",
+                   "library/dao/analysisdao.cpp",
+
                    "library/librarycontrol.cpp",
                    "library/schemamanager.cpp",
                    "library/promotracksfeature.cpp",
@@ -487,19 +495,31 @@ class MixxxCore(Feature):
 
                    "soundsourceproxy.cpp",
 
-                   "widget/wvisualsimple.cpp",
                    "widget/wwaveformviewer.cpp",
-                   "widget/wglwaveformviewer.cpp",
-                   "waveformviewerfactory.cpp",
-                   "waveform/renderobject.cpp",
-                   "waveform/waveformrenderer.cpp",
-                   "waveform/waveformrenderbackground.cpp",
-                   "waveform/waveformrendersignal.cpp",
-                   "waveform/waveformrendersignaltiles.cpp",
-                   "waveform/waveformrendersignalpixmap.cpp",
-                   "waveform/waveformrendermark.cpp",
-                   "waveform/waveformrendermarkrange.cpp",
-                   "waveform/waveformrenderbeat.cpp",
+
+                   "waveform/waveform.cpp",
+                   "waveform/waveformfactory.cpp",
+                   "waveform/waveformwidgetfactory.cpp",
+                   "waveform/renderers/waveformwidgetrenderer.cpp",
+                   "waveform/renderers/waveformrendererabstract.cpp",
+                   "waveform/renderers/waveformrenderbackground.cpp",
+                   "waveform/renderers/waveformrendermark.cpp",
+                   "waveform/renderers/waveformrendermarkrange.cpp",
+                   "waveform/renderers/waveformrenderbeat.cpp",
+                   "waveform/renderers/waveformrendererendoftrack.cpp",
+                   "waveform/renderers/waveformrendererpreroll.cpp",
+                   "waveform/renderers/waveformrendererfilteredsignal.cpp",
+                   "waveform/renderers/glwaveformrendererfilteredsignal.cpp",
+                   "waveform/renderers/glslwaveformrenderersignal.cpp",
+                   "waveform/renderers/waveformsignalcolors.cpp",
+                   "waveform/renderers/glwaveformrenderersimplesignal.cpp",
+
+                   "waveform/widgets/waveformwidgetabstract.cpp",
+                   "waveform/widgets/glwaveformwidget.cpp",
+                   "waveform/widgets/emptywaveformwidget.cpp",
+                   "waveform/widgets/softwarewaveformwidget.cpp",
+                   "waveform/widgets/glslwaveformwidget.cpp",
+                   "waveform/widgets/glsimplewaveformwidget.cpp",
 
                    "skin/imginvert.cpp",
                    "skin/imgloader.cpp",
@@ -512,8 +532,9 @@ class MixxxCore(Feature):
                    "sampleutil.cpp",
                    "trackinfoobject.cpp",
                    "track/beatgrid.cpp",
-                   "track/beatmatrix.cpp",
+                   "track/beatmap.cpp",
                    "track/beatfactory.cpp",
+                   "track/beatutils.cpp",
 
                    "baseplayer.cpp",
                    "basetrackplayer.cpp",
@@ -541,6 +562,19 @@ class MixxxCore(Feature):
                    build.env.Qrc('#res/mixxx.qrc')
                    ]
 
+        proto_args = {
+            'PROTOCPROTOPATH': ['src'],
+            'PROTOCPYTHONOUTDIR': '', # set to None to not generate python
+            'PROTOCOUTDIR': build.build_dir,
+            'PROTOCCPPOUTFLAGS': '',
+            #'PROTOCCPPOUTFLAGS': "dllexport_decl=PROTOCONFIG_EXPORT:"
+        }
+        proto_sources = SCons.Glob('proto/*.proto')
+        proto_objects = [build.env.Protoc([], proto_source, **proto_args)[0]
+                        for proto_source in proto_sources]
+        sources.extend(proto_objects)
+
+
         # Uic these guys (they're moc'd automatically after this) - Generates
         # the code for the QT UI forms
         build.env.Uic4('dlgpreferencesdlg.ui')
@@ -553,6 +587,7 @@ class MixxxCore(Feature):
         build.env.Uic4('dlgprefcrossfaderdlg.ui')
         build.env.Uic4('dlgprefbpmdlg.ui')
         build.env.Uic4('dlgprefreplaygaindlg.ui')
+        build.env.Uic4('dlgprefbeatsdlg.ui')
         build.env.Uic4('dlgbpmschemedlg.ui')
         # build.env.Uic4('dlgbpmtapdlg.ui')
         build.env.Uic4('dlgprefvinyldlg.ui')
@@ -706,7 +741,7 @@ class MixxxCore(Feature):
 
     def depends(self, build):
         return [SoundTouch, ReplayGain, PortAudio, PortMIDI, Qt,
-                FidLib, SndFile, FLAC, OggVorbis, OpenGL, TagLib,]
+                FidLib, SndFile, FLAC, OggVorbis, OpenGL, TagLib, ProtoBuf]
 
     def post_dependency_check_configure(self, build, conf):
         """Sets up additional things in the Environment that must happen

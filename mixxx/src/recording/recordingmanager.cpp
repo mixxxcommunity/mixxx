@@ -5,6 +5,7 @@
 #include <QDir>
 #include "recordingmanager.h"
 #include "recording/defs_recording.h"
+#include "controlpushbutton.h"
 
 #define CD_650
 
@@ -18,6 +19,9 @@ RecordingManager::RecordingManager(ConfigObject<ConfigValue>* pConfig) :
         m_iNumberOfBytesRecored(0),
         m_split_size(0),
         m_iNumberSplits(0) {
+    m_pToggleRecording = new ControlPushButton(ConfigKey("[Master]", "toggle_recording"));
+    connect(m_pToggleRecording, SIGNAL(valueChanged(double)),
+            this, SLOT(slotToggleRecording(double)));
     m_recReadyCO = new ControlObject(ConfigKey("[Master]", "Record"));
     m_recReady = new ControlObjectThread(m_recReadyCO);
 
@@ -63,6 +67,16 @@ QString RecordingManager::formatDateTimeForFilename(QDateTime dateTime) const {
     formatted = formatted.replace(":", "");
 #endif
     return formatted;
+}
+
+void RecordingManager::slotToggleRecording(double v) {
+    if (v > 0) {
+        if (isRecordingActive()) {
+            stopRecording();
+        } else {
+            startRecording();
+        }
+    }
 }
 
 void RecordingManager::startRecording(bool generateFileName) {

@@ -26,6 +26,8 @@
 #include <QPaintEvent>
 #include <QApplication>
 
+const int PB_SHORTKLICKTIME = 200;
+
 WPushButton::WPushButton(QWidget * parent) : WWidget(parent)
 {
     m_pPixmaps = 0;
@@ -160,7 +162,7 @@ void WPushButton::mousePressEvent(QMouseEvent * e)
         if (klickButton == Qt::LeftButton) {
             if (m_fValue == 0.0f) {
                 m_clickTimer.setSingleShot(true);
-                m_clickTimer.start(300);
+                m_clickTimer.start(PB_SHORTKLICKTIME);
             }
             m_fValue = 1.0f;
             m_bPressed = true;
@@ -198,6 +200,11 @@ void WPushButton::mousePressEvent(QMouseEvent * e)
         emit(valueChangedLeftDown(emitValue));
         update();
     }
+}
+
+void WPushButton::focusOutEvent(QFocusEvent* e) {
+    m_bPressed = false;
+    update();
 }
 
 void WPushButton::mouseReleaseEvent(QMouseEvent * e)
