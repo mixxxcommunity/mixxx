@@ -76,6 +76,7 @@ class EngineMaster : public EngineObject, public AudioSource {
     // These are really only exposed for tests to use.
     const CSAMPLE* getMasterBuffer() const;
     const CSAMPLE* getHeadphoneBuffer() const;
+    const CSAMPLE* getXFaderBuffer(unsigned int i) const;
     const CSAMPLE* getDeckBuffer(unsigned int i) const;
     const CSAMPLE* getChannelBuffer(QString name) const;
 
@@ -131,6 +132,11 @@ class EngineMaster : public EngineObject, public AudioSource {
 
     QList<ChannelInfo*> m_channels;
 
+    struct XFaderChannel {
+        CSAMPLE *m_pBuffer;
+        OrientationVolumeGainCalculator m_OrientationGain;
+    } m_XFaderChannel[3];
+
     CSAMPLE *m_pMaster, *m_pHead;
 
     EngineWorkerScheduler *m_pWorkerScheduler;
@@ -153,7 +159,6 @@ class EngineMaster : public EngineObject, public AudioSource {
         *m_pBalance, *xFaderCurve, *xFaderCalibration;
 
     ConstantGainCalculator m_headphoneGain;
-    OrientationVolumeGainCalculator m_masterGain;
 };
 
 #endif

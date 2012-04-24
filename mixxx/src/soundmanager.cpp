@@ -413,7 +413,8 @@ int SoundManager::setupDevices()
             m_outputBuffers[out] = m_registeredSources[out]->buffer(out);
             if (out.getType() == AudioOutput::MASTER) {
                 m_pClkRefDevice = device;
-            } else if (out.getType() == AudioOutput::DECK
+            } else if ((out.getType() == AudioOutput::DECK ||
+                        out.getType() == AudioOutput::XFADERINPUT)
                     && !m_pClkRefDevice) {
                 m_pClkRefDevice = device;
             }

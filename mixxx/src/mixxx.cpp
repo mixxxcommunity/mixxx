@@ -315,6 +315,10 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
         m_pSoundManager->registerOutput(
             AudioOutput(AudioOutput::DECK, 0, deck), m_pEngine);
     }
+    for (int o = EngineChannel::LEFT ; o <= EngineChannel::RIGHT ; o++) {
+        m_pSoundManager->registerOutput(
+            AudioOutput(AudioOutput::XFADERINPUT, 0, o), m_pEngine);
+    }
 
 #ifdef __VINYLCONTROL__
     m_pVCManager = new VinylControlManager(this, m_pConfig);
