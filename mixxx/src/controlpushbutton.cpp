@@ -41,9 +41,7 @@ void ControlPushButton::setStates(int num_states) {
     m_iNoStates = num_states;
 }
 
-void ControlPushButton::setValueFromMidi(MidiCategory c, double v) {
-    // keyboard events are handled by this function as well
-
+void ControlPushButton::setValueFromMidi(MidiOpCode o, double v) {
     //if (m_bMidiSimulateLatching)
 
     //qDebug() << "bMidiSimulateLatching is true!";
@@ -51,13 +49,13 @@ void ControlPushButton::setValueFromMidi(MidiCategory c, double v) {
 
     //qDebug() << c << v;
     if (m_midiButtonMode == POWERWINDOW && m_iNoStates == 2) { //This block makes push-buttons act as toggle buttons.
-        if (c == NOTE_ON) {
+        if (o == MIDI_NOTE_ON) {
             if (v > 0.) {
                 m_dValue = !m_dValue;
                 m_pushTimer.setSingleShot(true);
                 m_pushTimer.start(300);
             }
-        } else if (c == NOTE_OFF) {
+        } else if (o == MIDI_NOTE_OFF) {
             if (!m_pushTimer.isActive()) {
                 m_dValue = 0.0;
             }
@@ -70,16 +68,16 @@ void ControlPushButton::setValueFromMidi(MidiCategory c, double v) {
                     m_dValue = 0;
             }
         } else {
-            if (c == NOTE_ON) {
+            if (o == MIDI_NOTE_ON) {
                 if (v > 0.) {
                     m_dValue = !m_dValue;
                 }
             }
         }
     } else { //Not a toggle button (trigger only when button pushed)
-        if (c == NOTE_ON) {
+        if (o == MIDI_NOTE_ON) {
             m_dValue = v;
-        } else if (c == NOTE_OFF) {
+        } else if (o == MIDI_NOTE_OFF) {
             m_dValue = 0.0;
         }
     }

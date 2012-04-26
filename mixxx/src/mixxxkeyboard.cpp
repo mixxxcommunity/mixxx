@@ -66,7 +66,7 @@ bool MixxxKeyboard::eventFilter(QObject *, QEvent * e) {
 
             if (pConfigKey)
             {
-                ControlObject::getControl(*pConfigKey)->queueFromMidi(NOTE_ON, 1);
+                ControlObject::getControl(*pConfigKey)->queueFromMidi(MIDI_NOTE_ON, 1);
                 // Add key to active key list
                 m_qActiveKeyList.append(QPair<int, ConfigKey *>(keyId,pConfigKey));
                 return true;
@@ -90,7 +90,7 @@ bool MixxxKeyboard::eventFilter(QObject *, QEvent * e) {
             if (m_qActiveKeyList[i].first == keyId)
             {
                 if(!autoRepeat) {
-                    ControlObject::getControl(*(m_qActiveKeyList[i].second))->queueFromMidi(NOTE_OFF, 0);
+                    ControlObject::getControl(*(m_qActiveKeyList[i].second))->queueFromMidi(MIDI_NOTE_OFF, 0);
                     m_qActiveKeyList.removeAt(i);
                 }
                 return true;
