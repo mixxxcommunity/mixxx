@@ -177,8 +177,7 @@ void LibraryScanner::run()
     QString upgrade_filename = QDir::homePath().append("/").append(SETTINGS_PATH).append("DBUPGRADED");
     qDebug() << "upgrade filename is " << upgrade_filename;
     QFile upgradefile(upgrade_filename);
-    if (!upgradefile.exists())
-    {
+    if (!upgradefile.exists()) {
         LegacyLibraryImporter libImport(m_trackDao, m_playlistDao);
         connect(&libImport, SIGNAL(progress(QString)),
                 m_pProgress, SLOT(slotUpdate(QString)),
@@ -187,7 +186,6 @@ void LibraryScanner::run()
         libImport.import();
         m_database.commit();
         qDebug("Legacy importer took %d ms", t2.elapsed());
-
     }
 
     //Refresh the name filters in case we loaded new
@@ -215,8 +213,9 @@ void LibraryScanner::run()
     //recursiveScan() handles it's own transactions.
 
     m_trackDao.addTracksPrepare();
+    QStringList verifiedDirectories;
 
-    bool bScanFinishedCleanly = recursiveScan(m_qLibraryPath);
+    bool bScanFinishedCleanly = recursiveScan(m_qLibraryPath, verifiedDirectories);
 
     if (!bScanFinishedCleanly) {
         qDebug() << "Recursive scan interrupted.";
@@ -242,8 +241,11 @@ void LibraryScanner::run()
     //want to mark those tracks/dirs as deleted in that case) :)
     QSet<int> tracksMovedSetOld;
     QSet<int> tracksMovedSetNew;
-    if (bScanFinishedCleanly)
-    {
+    if (bScanFinishedCleanly) {
+        qDebug() << "Marking unchanged directories and tracks as verified";
+        m_libraryHashDao.updateDirectoryStatuses(verifiedDirectories, false, true);
+        m_trackDao.markTracksInDirectoriesAsVerified(verifiedDirectories);
+
         qDebug() << "Marking unverified tracks as deleted.";
         m_trackDao.markUnverifiedTracksAsDeleted();
         qDebug() << "Marking unverified directories as deleted.";
@@ -262,8 +264,7 @@ void LibraryScanner::run()
 
         m_database.commit();
         qDebug() << "Scan finished cleanly";
-    }
-    else {
+    } else {
         m_database.rollback();
         qDebug() << "Scan cancelled";
     }
@@ -336,8 +337,7 @@ void LibraryScanner::scan()
     have already been scanned and have not changed. Changes are tracked by performing
     a hash of the directory's file list, and those hashes are stored in the database.
 */
-bool LibraryScanner::recursiveScan(QString dirPath)
-{
+bool LibraryScanner::recursiveScan(QString dirPath, QStringList& verifiedDirectories) {
     QDirIterator fileIt(dirPath, nameFilters, QDir::Files | QDir::NoDotAndDotDot);
     QString currentFile;
     bool bScanFinishedCleanly = true;
@@ -348,7 +348,7 @@ bool LibraryScanner::recursiveScan(QString dirPath)
     bool prevHashExists = false;
     int newHash = -1;
     int prevHash = -1;
-    //Note: A hash of "0" is a real hash if the directory contains no files!
+    // Note: A hash of "0" is a real hash if the directory contains no files!
 
     while (fileIt.hasNext())
     {
@@ -357,67 +357,46 @@ bool LibraryScanner::recursiveScan(QString dirPath)
 	    newHashStr += currentFile;
     }
 
-    //Calculate a hash of the directory's file list.
+    // Calculate a hash of the directory's file list.
     newHash = qHash(newHashStr);
 
-    //Try to retrieve a hash from the last time that directory was scanned.
+    // Try to retrieve a hash from the last time that directory was scanned.
     prevHash = m_libraryHashDao.getDirectoryHash(dirPath);
     prevHashExists = (prevHash == -1) ? false : true;
 
-    //Compare the hashes, and if they don't match, rescan the files in that directory!
-    if (prevHash != newHash)
-    {
+    // Compare the hashes, and if they don't match, rescan the files in that directory!
+    if (prevHash != newHash) {
         //If we didn't know about this directory before...
         if (!prevHashExists) {
             m_libraryHashDao.saveDirectoryHash(dirPath, newHash);
-        }
-        else //Contents of a known directory have changed.
-             //Just need to update the old hash in the database and then rescan it.
-        {
+        } else {
+            // Contents of a known directory have changed. Just need to update
+            // the old hash in the database and then rescan it.
             qDebug() << "old hash was" << prevHash << "and new hash is" << newHash;
             m_libraryHashDao.updateDirectoryHash(dirPath, newHash, 0);
         }
 
-        //Rescan that mofo!
+        // Rescan that mofo!
         bScanFinishedCleanly = m_pCollection->importDirectory(dirPath, m_trackDao, nameFilters);
-    }
-    else //prevHash == newHash
-    {
-        //The files in the directory haven't changed, so we don't need to do anything, right?
-        //Wrong! We need to mark the directory in the database as "existing", so that we can
-        //keep track of directories that have been deleted to stop the database from keeping
-        //rows about deleted directories around. :)
-        //qDebug() << "prevHash == newHash";
-
-        m_database.transaction();
-
-        // Mark the directory as verified and not deleted.
-        // m_libraryHashDao.markAsExisting(dirPath);
-        // m_libraryHashDao.markAsVerified(dirPath);
-        m_libraryHashDao.updateDirectoryStatus(dirPath, false, true);
-
-        //We also need to mark the tracks _inside_ this directory as verified.
-        //Note that this doesn't mark the tracks as existing, just that they're in
-        //the same state as the last time we scanned this directory.
-        m_trackDao.markTracksInDirectoryAsVerified(dirPath);
-
-        m_database.commit();
-
+    } else { //prevHash == newHash
+        // Add the directory to the verifiedDirectories list, so that later they
+        // (and the tracks inside them) will be marked as verified
         emit(progressHashing(dirPath));
-    }
+        verifiedDirectories.append(dirPath);
+    }    
 
-    //Let us break out of library directory hashing (the actual file scanning
-    //stuff is in TrackCollection::importDirectory)
+    // Let us break out of library directory hashing (the actual file scanning
+    // stuff is in TrackCollection::importDirectory)
     m_libraryScanMutex.lock();
     bool cancel = m_bCancelLibraryScan;
     m_libraryScanMutex.unlock();
-    if (cancel)
+    if (cancel) {
         return false;
+    }
 
-    //Look at all the subdirectories and scan them recursively...
+    // Look at all the subdirectories and scan them recursively...
     QDirIterator dirIt(dirPath, QDir::Dirs | QDir::NoDotAndDotDot);
-    while (dirIt.hasNext() && bScanFinishedCleanly)
-    {
+    while (dirIt.hasNext() && bScanFinishedCleanly) {
         QString nextPath = dirIt.next();
         //qDebug() << "nextPath: " << nextPath;
 
@@ -426,8 +405,9 @@ bool LibraryScanner::recursiveScan(QString dirPath)
         if (m_directoriesBlacklist.contains(nextPath))
             continue;
 
-        if (!recursiveScan(nextPath))
+        if (!recursiveScan(nextPath, verifiedDirectories)) {
             bScanFinishedCleanly = false;
+		}
     }
 
     return bScanFinishedCleanly;

@@ -9,6 +9,7 @@ class MixxxKeyboard;
 class PlayerManager;
 class LibraryFeatures;
 class MixxxView;
+class VinylControlManager;
 
 class SkinLoader {
   public:

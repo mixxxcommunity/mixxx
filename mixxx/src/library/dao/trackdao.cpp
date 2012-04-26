@@ -464,19 +464,14 @@ void TrackDAO::addTrack(TrackInfoObject* pTrack, bool unremove) {
 }
 
 void TrackDAO::hideTracks(QList<int> ids) {
-    QString idList = "";
-
+    QStringList idList;
     foreach (int id, ids) {
-        idList.append(QString("%1,").arg(id));
-    }
-
-    // Strip the last ,
-    if (idList.count() > 0) {
-        idList.truncate(idList.count() - 1);
+        idList.append(QString::number(id));
     }
 
     QSqlQuery query(m_database);
-    query.prepare(QString("UPDATE library SET mixxx_deleted=1 WHERE id in (%1)").arg(idList));
+    query.prepare(QString("UPDATE library SET mixxx_deleted=1 WHERE id in (%1)")
+                  .arg(idList.join(",")));
     if (!query.exec()) {
         LOG_FAILED_QUERY(query);
     }
@@ -497,7 +492,7 @@ void TrackDAO::unhideTrack(int trackId) {
     QSqlQuery query(m_database);
     query.prepare("UPDATE library "
                   "SET mixxx_deleted=0 "
-                  "WHERE id = " + QString("%1").arg(trackId));
+                  "WHERE id = " + QString::number(trackId));
     if (!query.exec()) {
         LOG_FAILED_QUERY(query)
                 << "Failed to set track" << trackId << "as undeleted";
@@ -795,7 +790,7 @@ void TrackDAO::updateTrack(TrackInfoObject* pTrack) {
                   "channels=:channels, header_parsed=:header_parsed, "
                   "beats_version=:beats_version, beats_sub_version=:beats_sub_version, beats=:beats, "
                   "bpm_lock=:bpm_lock "
-                  "WHERE id="+QString("%1").arg(trackId));
+                  "WHERE id=:track_id");
     query.bindValue(":artist", pTrack->getArtist());
     query.bindValue(":title", pTrack->getTitle());
     query.bindValue(":album", pTrack->getAlbum());
@@ -819,6 +814,7 @@ void TrackDAO::updateTrack(TrackInfoObject* pTrack) {
     query.bindValue(":channels", pTrack->getChannels());
     query.bindValue(":header_parsed", pTrack->getHeaderParsed() ? 1 : 0);
     //query.bindValue(":location", pTrack->getLocation());
+    query.bindValue(":track_id", trackId);
 
     query.bindValue(":bpm_lock", pTrack->hasBpmLock() ? 1 : 0);
 
@@ -899,18 +895,24 @@ void TrackDAO::markTrackLocationAsVerified(QString location)
     }
 }
 
-void TrackDAO::markTracksInDirectoryAsVerified(QString directory) {
+void TrackDAO::markTracksInDirectoriesAsVerified(QStringList directories) {
     //qDebug() << "TrackDAO::markTracksInDirectoryAsVerified" << QThread::currentThread() << m_database.connectionName();
     //qDebug() << "markTracksInDirectoryAsVerified()" << directory;
 
+    FieldEscaper escaper(m_database);
+    QMutableStringListIterator it(directories);
+    while (it.hasNext()) {
+        it.setValue(escaper.escapeString(it.next()));
+    }
+
     QSqlQuery query(m_database);
-    query.prepare("UPDATE track_locations "
-                  "SET needs_verification=0 "
-                  "WHERE directory=:directory");
-    query.bindValue(":directory", directory);
+    query.prepare(
+        QString("UPDATE track_locations "
+                "SET needs_verification=0 "
+                "WHERE directory IN (%1)").arg(directories.join(",")));
     if (!query.exec()) {
         LOG_FAILED_QUERY(query)
-                << "Couldn't mark tracks in" << directory << " as verified.";
+                << "Couldn't mark tracks in" << directories.size() << "directories as verified.";
     }
 }
 
