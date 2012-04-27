@@ -176,7 +176,7 @@ int ControllerManager::slotSetUpDevices() {
             }
             continue;
         }
-        pController->applyPreset();
+        pController->applyPreset(m_pConfig->getResourcePath());
     }
 
     maybeStartOrStopPolling();
@@ -264,7 +264,7 @@ void ControllerManager::openController(Controller* pController) {
     // If successfully opened the device, apply the preset and save the
     // preference setting.
     if (result == 0) {
-        pController->applyPreset();
+        pController->applyPreset(m_pConfig->getResourcePath());
 
         // Update configuration to reflect controller is enabled.
         m_pConfig->set(ConfigKey(
