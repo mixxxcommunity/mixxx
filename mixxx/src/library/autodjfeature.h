@@ -38,6 +38,8 @@ class AutoDJFeature : public LibraryFeature {
 
     TreeItemModel* getChildModel();
 
+    const static QString m_sAutoDJViewName;
+
   public slots:
     void activate();
     void activateChild(const QModelIndex& index);
@@ -49,7 +51,6 @@ class AutoDJFeature : public LibraryFeature {
     ConfigObject<ConfigValue>* m_pConfig;
     TrackCollection* m_pTrackCollection;
     PlaylistDAO& m_playlistDao;
-    const static QString m_sAutoDJViewName;
     TreeItemModel m_childModel;
     DlgAutoDJ* m_pAutoDJView;
 };

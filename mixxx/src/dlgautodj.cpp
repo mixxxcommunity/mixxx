@@ -165,7 +165,10 @@ void DlgAutoDJ::onSearchCleared() {
 }
 
 void DlgAutoDJ::onSearch(const QString& text) {
-    m_pAutoDJTableModel->search(text);
+    // Do not allow filtering the Auto DJ playlist, because
+    // Auto DJ will work from the filtered table
+    // Search in the Library instead
+    //m_pAutoDJTableModel->search(text);
 }
 
 void DlgAutoDJ::loadSelectedTrack() {
@@ -228,9 +231,9 @@ void DlgAutoDJ::toggleAutoDJ(bool toggle) {
         if (deck1Playing && deck2Playing) {
             QMessageBox::warning(
                 NULL, tr("Auto-DJ"),
-                tr("One player must be stopped to enable Auto-DJ mode."),
+                tr("One deck must be stopped to enable Auto-DJ mode."),
                 QMessageBox::Ok);
-            qDebug() << "One player must be stopped before enabling Auto DJ mode";
+            qDebug() << "One deck must be stopped before enabling Auto DJ mode";
             pushButtonAutoDJ->setChecked(false);
             return;
         }
@@ -496,6 +499,8 @@ bool DlgAutoDJ::loadNextTrackFromQueue() {
     if (!nextTrack) {
         // Disable auto DJ and return...
         pushButtonAutoDJ->setChecked(false);
+        // And eject track as "End of auto dj warning"
+        emit(loadTrack(nextTrack));
         return false;
     }
 

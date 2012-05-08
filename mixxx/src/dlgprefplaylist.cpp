@@ -24,8 +24,8 @@
 
 #define MIXXX_ADDONS_URL "http://www.mixxx.org/wiki/doku.php/add-ons"
 
-DlgPrefPlaylist::DlgPrefPlaylist(QWidget * parent, ConfigObject<ConfigValue> * _config) :  QWidget(parent), Ui::DlgPrefPlaylistDlg()
-{
+DlgPrefPlaylist::DlgPrefPlaylist(QWidget * parent, ConfigObject<ConfigValue> * _config)
+        :  QWidget(parent) {
     config = _config;
     setupUi(this);
     slotUpdate();
@@ -41,10 +41,10 @@ DlgPrefPlaylist::DlgPrefPlaylist(QWidget * parent, ConfigObject<ConfigValue> * _
 
     //Disable M4A Button after download completes successfully.
     connect(m_pPluginDownloader, SIGNAL(downloadFinished()),
-            this, SLOT(slotM4ADownloadFinished())); 
-    
+            this, SLOT(slotM4ADownloadFinished()));
+
     connect(m_pPluginDownloader, SIGNAL(downloadProgress(qint64, qint64)),
-            this, SLOT(slotM4ADownloadProgress(qint64, qint64))); 
+            this, SLOT(slotM4ADownloadProgress(qint64, qint64)));
     */
 
     // Connection
@@ -168,7 +168,7 @@ void DlgPrefPlaylist::slotUpdate()
 
 void DlgPrefPlaylist::slotBrowseDir()
 {
-    QString fd = QFileDialog::getExistingDirectory(this, tr("Choose music library directory"), 
+    QString fd = QFileDialog::getExistingDirectory(this, tr("Choose music library directory"),
                                                    config->getValueString(ConfigKey("[Playlist]","Directory")));
     if (fd != "")
     {
@@ -179,13 +179,13 @@ void DlgPrefPlaylist::slotBrowseDir()
 void DlgPrefPlaylist::slotApply()
 {
 
-    config->set(ConfigKey("[Promo]","StatTracking"), 
+    config->set(ConfigKey("[Promo]","StatTracking"),
                    ConfigValue((int)checkBoxPromoStats->isChecked()));
 
-    config->set(ConfigKey("[Library]","RescanOnStartup"), 
+    config->set(ConfigKey("[Library]","RescanOnStartup"),
                    ConfigValue((int)checkBox_library_scan->isChecked()));
-    
-    config->set(ConfigKey("[Library]","WriteAudioTags"), 
+
+    config->set(ConfigKey("[Library]","WriteAudioTags"),
                    ConfigValue((int)checkbox_ID3_sync->isChecked()));
 
     config->set(ConfigKey("[Library]","UseRelativePathOnExport"),

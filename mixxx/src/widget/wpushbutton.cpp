@@ -32,6 +32,8 @@ WPushButton::WPushButton(QWidget * parent) : WWidget(parent)
 {
     m_pPixmaps = 0;
     m_pPixmapBack = 0;
+    m_leftButtonMode = ControlPushButton::PUSH;
+    m_rightButtonMode = ControlPushButton::PUSH;
     setStates(0);
     //setBackgroundMode(Qt::NoBackground); //obsolete? removal doesn't seem to change anything on the GUI --kousu 2009/03
 }
@@ -53,8 +55,6 @@ void WPushButton::setup(QDomNode node)
     int iNumStates = selectNodeInt(node, "NumberStates");
     setStates(iNumStates);
 
-    m_powerWindowStyle = selectNodeQString(node, "PowerWindowStyle").contains("true", Qt::CaseInsensitive);
-
     // Set background pixmap if available
     if (!selectNode(node, "BackPath").isNull())
         setPixmapBackground(getPath(selectNodeQString(node, "BackPath")));
@@ -71,21 +71,55 @@ void WPushButton::setup(QDomNode node)
         state = state.nextSibling();
     }
 
-    if (selectNodeQString(node, "LeftClickIsPushButton").contains("true", Qt::CaseInsensitive)) {
-        m_bLeftClickForcePush = true;
-    } else {
-        m_bLeftClickForcePush = false;
-    }
+    m_bLeftClickForcePush = selectNodeQString(node, "LeftClickIsPushButton")
+            .contains("true", Qt::CaseInsensitive);
 
-    if (selectNodeQString(node, "RightClickIsPushButton").contains("true", Qt::CaseInsensitive)) {
-        m_bRightClickForcePush = true;
-    } else {
-        m_bRightClickForcePush = false;
-    }
+    m_bRightClickForcePush = selectNodeQString(node, "RightClickIsPushButton")
+            .contains("true", Qt::CaseInsensitive);
 
-    // BJW: Removed toggle button detection so that buttons that are hardcoded as toggle in the source
-    // don't isLeftButtonget overridden if a skin fails to set them to 2-state. Buttons still
-    // default to non-toggle otherwise.
+
+    QDomNode con = selectNode(node, "Connection");
+    while (!con.isNull())
+    {
+        // Get ConfigKey
+        QString key = selectNodeQString(con, "ConfigKey");
+
+        ConfigKey configKey;
+        configKey.group = key.left(key.indexOf(","));
+        configKey.item = key.mid(key.indexOf(",")+1);
+
+        ControlPushButton* p = dynamic_cast<ControlPushButton*>(
+            ControlObject::getControl(configKey));
+
+        if (p == NULL) {
+            // A NULL here either means that this control is not a
+            // ControlPushButton or it does not exist. This logic is
+            // specific to push-buttons, so skip it either way.
+            con = con.nextSibling();
+            continue;
+        }
+
+        bool isLeftButton = false;
+        bool isRightButton = false;
+        if (!selectNode(con, "ButtonState").isNull())
+        {
+            if (selectNodeQString(con, "ButtonState").contains("LeftButton", Qt::CaseInsensitive)) {
+                isLeftButton = true;
+            }
+            else if (selectNodeQString(con, "ButtonState").contains("RightButton", Qt::CaseInsensitive)) {
+                isRightButton = true;
+            }
+        }
+
+        // Based on whether the control is mapped to the left or right button,
+        // record the button mode.
+        if (isLeftButton) {
+            m_leftButtonMode = p->getButtonMode();
+        } else if (isRightButton) {
+            m_rightButtonMode = p->getButtonMode();
+        }
+        con = con.nextSibling();
+    }
 }
 
 void WPushButton::setStates(int iStates)
@@ -156,13 +190,15 @@ void WPushButton::paintEvent(QPaintEvent *)
 
 void WPushButton::mousePressEvent(QMouseEvent * e)
 {
-    Qt::MouseButton klickButton = e->button();
+    const bool leftClick = e->button() == Qt::LeftButton;
+    const bool rightClick = e->button() == Qt::RightButton;
 
-    if (m_powerWindowStyle && m_iNoStates == 2) {
-        if (klickButton == Qt::LeftButton) {
+    const bool leftPowerWindowStyle = m_leftButtonMode == ControlPushButton::POWERWINDOW;
+    if (leftPowerWindowStyle && m_iNoStates == 2) {
+        if (leftClick) {
             if (m_fValue == 0.0f) {
                 m_clickTimer.setSingleShot(true);
-                m_clickTimer.start(PB_SHORTKLICKTIME);
+                m_clickTimer.start(ControlPushButton::kPowerWindowTimeMillis);
             }
             m_fValue = 1.0f;
             m_bPressed = true;
@@ -172,7 +208,7 @@ void WPushButton::mousePressEvent(QMouseEvent * e)
         return;
     }
 
-    if (klickButton == Qt::RightButton) {
+    if (rightClick) {
         // This is the secondary button function, it does not change m_fValue
         // due the leak of visual feedback we do not allow a toggle function
         if (m_bRightClickForcePush) {
@@ -180,10 +216,18 @@ void WPushButton::mousePressEvent(QMouseEvent * e)
             emit(valueChangedRightDown(1.0f));
             update();
         }
+
+        // Do not allow right-clicks to change button state other than when
+        // forced to be a push button. This is how Mixxx <1.8.0 worked so
+        // keep it that way. For a multi-state button, really only one click
+        // type (left/right) should be able to change the state. One problem
+        // with this is that you can get the button out of sync with its
+        // underlying control. For example the PFL buttons on Jus's skins
+        // could get out of sync with the button state. rryan 9/2010
         return;
     }
 
-    if (klickButton == Qt::LeftButton) {
+    if (leftClick) {
         double emitValue;
         if (m_bLeftClickForcePush) {
             // This may a button with different functions on each mouse button
@@ -209,29 +253,30 @@ void WPushButton::focusOutEvent(QFocusEvent* e) {
 
 void WPushButton::mouseReleaseEvent(QMouseEvent * e)
 {
-    Qt::MouseButton klickButton = e->button();
+    const bool leftClick = e->button() == Qt::LeftButton;
+    const bool rightClick = e->button() == Qt::RightButton;
+    const bool leftPowerWindowStyle = m_leftButtonMode == ControlPushButton::POWERWINDOW;
 
-    if (m_powerWindowStyle && m_iNoStates == 2) {
-        if (klickButton == Qt::LeftButton) {
-            if (    !m_clickTimer.isActive()
-                 && !(QApplication::mouseButtons() & Qt::RightButton)
-                 && m_bPressed) {
+    if (leftPowerWindowStyle && m_iNoStates == 2) {
+        if (leftClick) {
+            const bool rightButtonDown = QApplication::mouseButtons() & Qt::RightButton;
+            if (m_bPressed && !m_clickTimer.isActive() && !rightButtonDown) {
                 // Release Button after Timer, but not if right button is clicked
                 m_fValue = 0.0f;
                 emit(valueChangedLeftUp(0.0f));
             }
             m_bPressed = false;
-        }
-        else if (klickButton == Qt::RightButton) {
+        } else if (rightClick) {
             m_bPressed = false;
         }
         update();
         return;
     }
 
-    if (klickButton == Qt::RightButton) {
-        // This is the secondary klickButton function, it does not change m_fValue
-        // due the leak of visual feedback we do not allow a toggle function
+    if (rightClick) {
+        // This is the secondary clickButton function, it does not change
+        // m_fValue due the leak of visual feedback we do not allow a toggle
+        // function
         if (m_bRightClickForcePush) {
             m_bPressed = false;
             emit(valueChangedRightDown(0.0f));
@@ -240,8 +285,8 @@ void WPushButton::mouseReleaseEvent(QMouseEvent * e)
         return;
     }
 
-    if (klickButton == Qt::LeftButton) {
-        double emitValue;
+    if (leftClick) {
+        double emitValue = m_fValue;
         if (m_bLeftClickForcePush) {
             // This may a klickButton with different functions on each mouse button
             // m_fValue is changed by a separate feedback connection
@@ -251,7 +296,6 @@ void WPushButton::mouseReleaseEvent(QMouseEvent * e)
             m_fValue = emitValue = 0.0f;
         } else {
             // Nothing special happens when releasing a toggle button
-            emitValue = m_fValue;
         }
         m_bPressed = false;
         emit(valueChangedLeftDown(emitValue));

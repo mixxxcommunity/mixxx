@@ -59,6 +59,7 @@ TreeItemModel* AutoDJFeature::getChildModel() {
 void AutoDJFeature::activate() {
     //qDebug() << "AutoDJFeature::activate()";
     //emit(showTrackModel(m_pAutoDJTableModelProxy));
+    emit(restoreSearch(""));
     emit(switchToView(m_sAutoDJViewName));
 }
 

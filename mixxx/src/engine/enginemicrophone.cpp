@@ -18,7 +18,7 @@ EngineMicrophone::EngineMicrophone(const char* pGroup)
           // Need a +1 here because the CircularBuffer only allows its size-1
           // items to be held at once (it keeps a blank spot open persistently)
           m_sampleBuffer(MAX_BUFFER_LEN+1) {
-    m_pControlTalkover->setMidiButtonMode(ControlPushButton::POWERWINDOW);
+    m_pControlTalkover->setButtonMode(ControlPushButton::POWERWINDOW);
 }
 
 EngineMicrophone::~EngineMicrophone() {

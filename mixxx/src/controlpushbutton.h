@@ -27,26 +27,31 @@
   *@author Tue and Ken Haste Andersen
   */
 
-class ControlPushButton : public ControlObject
-{
+class ControlPushButton : public ControlObject {
     Q_OBJECT
-public:
-    enum MidiButtonMode {
-        PUSH,
-        TOGGLE,
-        POWERWINDOW
+  public:
+    enum ButtonMode {
+         PUSH,
+         TOGGLE,
+         POWERWINDOW
     };
+    static const int kPowerWindowTimeMillis;
+
 
     ControlPushButton(ConfigKey key);
-    ~ControlPushButton();
-    void setMidiButtonMode(enum MidiButtonMode mode);
+    virtual ~ControlPushButton();
+
+    inline ButtonMode getButtonMode() const {
+        return m_buttonMode;
+    }
+    void setButtonMode(enum ButtonMode mode);
     void setStates(int num_states);
 
-protected:
+  protected:
     void setValueFromMidi(MidiOpCode o, double v);
 
-private:
-    enum MidiButtonMode m_midiButtonMode;
+  private:
+    enum ButtonMode m_buttonMode;
     int m_iNoStates;
     QTimer m_pushTimer;
 };

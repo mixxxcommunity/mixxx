@@ -18,13 +18,15 @@
 #ifndef WPUSHBUTTON_H
 #define WPUSHBUTTON_H
 
-#include "wwidget.h"
 #include <qpainter.h>
 #include <qpixmap.h>
 #include <qstring.h>
 #include <QPaintEvent>
 #include <QMouseEvent>
 #include <QFocusEvent>
+
+#include "widget/wwidget.h"
+#include "controlpushbutton.h"
 
 /**
   *@author Tue & Ken Haste Andersen
@@ -70,7 +72,7 @@ class WPushButton : public WWidget
     // Associated background pixmap
     QPixmap *m_pPixmapBack;
     /** short click toggle button long click push button **/
-    bool m_powerWindowStyle;
+    ControlPushButton::ButtonMode m_leftButtonMode, m_rightButtonMode;
     QTimer m_clickTimer;
 };
 
