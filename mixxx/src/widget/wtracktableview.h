@@ -42,12 +42,14 @@ class WTrackTableView : public WLibraryTableView {
     void slotRemove();
     void slotHide();
     void slotRelocate();
+    void slotOpenInFileBrowser();
     void slotShowTrackInfo();
     void slotNextTrackInfo();
     void slotPrevTrackInfo();
     void slotSendToAutoDJ();
     void slotSendToAutoDJTop();
     void slotReloadTrackMetadata();
+    void slotResetPlayed();
     void addSelectionToPlaylist(int iPlaylistId);
     void addSelectionToCrate(int iCrateId);
     void loadSelectionToGroup(QString group);
@@ -103,8 +105,12 @@ class WTrackTableView : public WLibraryTableView {
 
     QAction *m_pRelocate;
 
+    // Reset the played count of selected track or tracks
+    QAction* m_pResetPlayedAct;
+
     // Show track-editor action
     QAction *m_pPropertiesAct;
+    QAction *m_pFileBrowserAct;
 
     // BPM Lock feature
     QAction *m_pBpmLockAction;

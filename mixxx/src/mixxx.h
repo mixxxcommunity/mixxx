@@ -205,7 +205,7 @@ class MixxxApp : public QMainWindow {
     bool m_NativeMenuBarSupport;
 
     ConfigObject<ConfigValueKbd>* m_pKbdConfig;
-    ConfigObject<ConfigValueKbd>* m_pKbdConfig_empty;
+    ConfigObject<ConfigValueKbd>* m_pKbdConfigEmpty;
 #ifdef __TAGREADER__
     TagReaderClient* m_tag_reader_client;
 #endif

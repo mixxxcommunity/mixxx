@@ -61,11 +61,13 @@ class PlaylistDAO : public QObject, public virtual DAO {
     bool isHidden(int playlistId);
     // Returns the HiddenType of playlistId
     HiddenType getHiddenType(int playlistId);
-    // Remove a track from a playlist */
+    // Remove a track from a playlist
     void removeTrackFromPlaylist(int playlistId, int position);
     // Insert a track into a specific position in a playlist
-    void insertTrackIntoPlaylist(int trackId, int playlistId, int position);
-    // Add a playlist to the Auto-DJ Queue
+    bool insertTrackIntoPlaylist(int trackId, int playlistId, int position);
+	// Inserts a list of tracks into playlist
+    int insertTracksIntoPlaylist(QList<int> trackIds, int playlistId, int position);     
+	// Add a playlist to the Auto-DJ Queue
     void addToAutoDJQueue(int playlistId, bool bTop);
     // Get the preceding playlist of currentPlaylistId with the HiddenType
     // hidden. Returns -1 if no such playlist exists.

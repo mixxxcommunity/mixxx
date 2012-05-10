@@ -73,6 +73,21 @@ extern "C" void crashDlg()
         "Mixxx has encountered a serious error and needs to close.");
 }
 
+
+bool loadTranslations(const QLocale& systemLocale, QString userLocale,
+                      QString translation, QString prefix,
+                      QString translationPath, QTranslator* pTranslator) {
+
+    if (userLocale.size() == 0) {
+#if QT_VERSION >= 0x040800
+        return pTranslator->load(systemLocale, translation, prefix, translationPath);
+#else
+        userLocale = systemLocale.name();
+#endif  // QT_VERSION
+    }
+    return pTranslator->load(translation + prefix + userLocale, translationPath);
+}
+
 MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
 {
     QString buildBranch, buildRevision, buildFlags;
@@ -136,16 +151,15 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
     QString translationsFolder = resourcePath + "translations/";
 
     // Load Qt base translations
-    QString locale = args.getLocale();
-    if (locale == "") {
-        locale = QLocale::system().name();
-    }
+    QString userLocale = args.getLocale();
+    QLocale systemLocale = QLocale::system();
 
     // Load Qt translations for this locale from the system translation
     // path. This is the lowest precedence QTranslator.
     QTranslator* qtTranslator = new QTranslator(pApp);
-    if (qtTranslator->load("qt_" + locale,
-                          QLibraryInfo::location(QLibraryInfo::TranslationsPath))) {
+    if (loadTranslations(systemLocale, userLocale, "qt", "_",
+                         QLibraryInfo::location(QLibraryInfo::TranslationsPath),
+                         qtTranslator)) {
         pApp->installTranslator(qtTranslator);
     } else {
         delete qtTranslator;
@@ -154,7 +168,9 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
     // Load Qt translations for this locale from the Mixxx translations
     // folder.
     QTranslator* mixxxQtTranslator = new QTranslator(pApp);
-    if (mixxxQtTranslator->load("qt_" + locale, translationsFolder)) {
+    if (loadTranslations(systemLocale, userLocale, "qt", "_",
+                         translationsFolder,
+                         mixxxQtTranslator)) {
         pApp->installTranslator(mixxxQtTranslator);
     } else {
         delete mixxxQtTranslator;
@@ -163,9 +179,10 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
     // Load Mixxx specific translations for this locale from the Mixxx
     // translations folder.
     QTranslator* mixxxTranslator = new QTranslator(pApp);
-    bool mixxxLoaded = mixxxTranslator->load("mixxx_" + locale,
-                                             translationsFolder);
-    qDebug() << "Loading translations for locale" << locale
+    bool mixxxLoaded = loadTranslations(systemLocale, userLocale, "mixxx", "_",
+                                        translationsFolder, mixxxTranslator);
+    qDebug() << "Loading translations for locale"
+             << (userLocale.size() > 0 ? userLocale : systemLocale.name())
              << "from translations folder" << translationsFolder << ":"
              << (mixxxLoaded ? "success" : "fail");
     if (mixxxLoaded) {
@@ -177,12 +194,16 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
     // Store the path in the config database
     m_pConfig->set(ConfigKey("[Config]", "Path"), ConfigValue(resourcePath));
 
+    // Set the default value in settings file
+    if (m_pConfig->getValueString(ConfigKey("[Keyboard]","Enabled")).length() == 0)
+        m_pConfig->set(ConfigKey("[Keyboard]","Enabled"), ConfigValue(1));
+
     // Read keyboard configuration and set kdbConfig object in WWidget
     // Check first in user's Mixxx directory
     QString userKeyboard = args.getSettingsPath() + "Custom.kbd.cfg";
 
     //Empty keyboard configuration
-    m_pKbdConfig_empty = new ConfigObject<ConfigValueKbd>("");
+    m_pKbdConfigEmpty = new ConfigObject<ConfigValueKbd>("");
 
     QString shortcutSource = m_pConfig->getValueString(ConfigKey("[Controls]", "ShortcutsSource"),"1");
 
@@ -211,11 +232,12 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
         m_pKbdConfig = new ConfigObject<ConfigValueKbd>("");
     }; 
 
-
     // TODO(XXX) leak pKbdConfig, MixxxKeyboard owns it? Maybe roll all keyboard
     // initialization into MixxxKeyboard
     // Workaround for today: MixxxKeyboard calls delete
-    m_pKeyboard = new MixxxKeyboard(m_pKbdConfig);
+    bool keyboardShortcutsEnabled = m_pConfig->getValueString(
+        ConfigKey("[Keyboard]", "Enabled")) == "1";
+    m_pKeyboard = new MixxxKeyboard(keyboardShortcutsEnabled ? m_pKbdConfig : m_pKbdConfigEmpty);
 
     //create RecordingManager
     m_pRecordingManager = new RecordingManager(m_pConfig);
@@ -786,7 +808,7 @@ void MixxxApp::initActions()
     QString createCrateTitle = tr("Add new &crate");
     QString createCrateText = tr("Create a new crate");
     m_pCratesNew = new QAction(createCrateTitle, this);
-    m_pCratesNew->setShortcut(QKeySequence(tr("Ctrl+C")));
+    m_pCratesNew->setShortcut(QKeySequence(tr("Ctrl+Shift+N")));
     m_pCratesNew->setShortcutContext(Qt::ApplicationShortcut);
     m_pCratesNew->setStatusTip(createCrateText);
     m_pCratesNew->setWhatsThis(buildWhatsThis(createCrateTitle, createCrateText));
@@ -810,6 +832,20 @@ void MixxxApp::initActions()
     m_pOptionsFullScreen->setWhatsThis(buildWhatsThis(fullScreenTitle, fullScreenText));
     connect(m_pOptionsFullScreen, SIGNAL(toggled(bool)),
             this, SLOT(slotOptionsFullScreen(bool)));
+
+    QString keyboardShortcutTitle = tr("Enable &keyboard shortcuts");
+    QString keyboardShortcutText = tr("Toggles keyboard shortcuts on or off");
+    bool keyboardShortcutsEnabled = m_pConfig->getValueString(
+        ConfigKey("[Keyboard]", "Enabled")) == "1";
+    m_pOptionsKeyboard = new QAction(keyboardShortcutTitle, this);
+    m_pOptionsKeyboard->setShortcut(tr("Ctrl+`"));
+    m_pOptionsKeyboard->setShortcutContext(Qt::ApplicationShortcut);
+    m_pOptionsKeyboard->setCheckable(true);
+    m_pOptionsKeyboard->setChecked(keyboardShortcutsEnabled);
+    m_pOptionsKeyboard->setStatusTip(keyboardShortcutText);
+    m_pOptionsKeyboard->setWhatsThis(buildWhatsThis(keyboardShortcutTitle, keyboardShortcutText));
+    connect(m_pOptionsKeyboard, SIGNAL(toggled(bool)),
+            this, SLOT(slotOptionsKeyboard(bool)));
 
     QString preferencesTitle = tr("&Preferences");
     QString preferencesText = tr("Change Mixxx settings (e.g. playback, MIDI, controls)");
@@ -1043,14 +1079,15 @@ void MixxxApp::slotFileQuit()
     qApp->quit();
 }
 
-void MixxxApp::slotOptionsKeyboard(bool toggle)
-{
+void MixxxApp::slotOptionsKeyboard(bool toggle) {
     if (toggle) {
         //qDebug() << "Enable keyboard shortcuts/mappings";
         m_pKeyboard->setKeyboardConfig(m_pKbdConfig);
+        m_pConfig->set(ConfigKey("[Keyboard]","Enabled"), ConfigValue(1));
     } else {
         //qDebug() << "Disable keyboard shortcuts/mappings";
-        m_pKeyboard->setKeyboardConfig(m_pKbdConfig_empty);
+        m_pKeyboard->setKeyboardConfig(m_pKbdConfigEmpty);
+        m_pConfig->set(ConfigKey("[Keyboard]","Enabled"), ConfigValue(0));
     }
 }
 

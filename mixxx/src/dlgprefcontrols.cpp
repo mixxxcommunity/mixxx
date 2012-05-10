@@ -103,7 +103,7 @@ DlgPrefControls::DlgPrefControls(QWidget * parent, MixxxApp * mixxx,
 
     // Set default range as stored in config file
     if (m_pConfig->getValueString(ConfigKey("[Controls]","RateRange")).length() == 0)
-        m_pConfig->set(ConfigKey("[Controls]","RateRange"),ConfigValue(1));
+        m_pConfig->set(ConfigKey("[Controls]","RateRange"),ConfigValue(2));
 
     slotSetRateRange(m_pConfig->getValueString(ConfigKey("[Controls]","RateRange")).toInt());
     connect(ComboBoxRateRange, SIGNAL(activated(int)), this, SLOT(slotSetRateRange(int)));
@@ -148,7 +148,7 @@ DlgPrefControls::DlgPrefControls(QWidget * parent, MixxxApp * mixxx,
     // Override Playing Track on Track Load
     //
     ComboBoxAllowTrackLoadToPlayingDeck->addItem(tr("Don't load tracks into a playing deck"));
-    ComboBoxAllowTrackLoadToPlayingDeck->addItem(tr("Load tracks into playing decks"));
+    ComboBoxAllowTrackLoadToPlayingDeck->addItem(tr("Load tracks into a playing deck"));
     ComboBoxAllowTrackLoadToPlayingDeck->setCurrentIndex(m_pConfig->getValueString(ConfigKey("[Controls]", "AllowTrackLoadToPlayingDeck")).toInt());
     connect(ComboBoxAllowTrackLoadToPlayingDeck, SIGNAL(activated(int)), this, SLOT(slotSetAllowTrackLoadToPlayingDeck(int)));
 
@@ -303,7 +303,8 @@ void DlgPrefControls::slotUpdateSchemes()
 void DlgPrefControls::slotUpdate()
 {
     ComboBoxRateRange->clear();
-    ComboBoxRateRange->addItem(tr("8% (Technics SL1210)"));
+    ComboBoxRateRange->addItem(tr("6%"));
+    ComboBoxRateRange->addItem(tr("8% (Technics SL-1210)"));
     ComboBoxRateRange->addItem(tr("10%"));
     ComboBoxRateRange->addItem(tr("20%"));
     ComboBoxRateRange->addItem(tr("30%"));
@@ -317,15 +318,17 @@ void DlgPrefControls::slotUpdate()
     double deck1RateRange = m_rateRangeControls[0]->get();
     double deck1RateDir = m_rateDirControls[0]->get();
 
-    float idx = 10. * deck1RateRange;
-    if (deck1RateRange == 0.08)
+    float idx = (10. * deck1RateRange) + 1;
+    if (deck1RateRange == 0.06)
         idx = 0.;
+    if (deck1RateRange == 0.08)
+        idx = 1.;
 
     ComboBoxRateRange->setCurrentIndex((int)idx);
 
     ComboBoxRateDir->clear();
     ComboBoxRateDir->addItem(tr("Up increases speed"));
-    ComboBoxRateDir->addItem(tr("Down increases speed (Technics SL1210)"));
+    ComboBoxRateDir->addItem(tr("Down increases speed (Technics SL-1210)"));
 
     if (deck1RateDir == 1)
         ComboBoxRateDir->setCurrentIndex(0);
@@ -335,8 +338,10 @@ void DlgPrefControls::slotUpdate()
 
 void DlgPrefControls::slotSetRateRange(int pos)
 {
-    float range = (float)(pos)/10.;
+    float range = (float)(pos-1)/10.;
     if (pos==0)
+        range = 0.06f;
+    if (pos==1)
         range = 0.08f;
 
     // Set rate range for every group
@@ -569,9 +574,9 @@ void DlgPrefControls::initWaveformControl()
     WaveformWidgetFactory* factory = WaveformWidgetFactory::instance();
 
     if (factory->isOpenGLAvailable())
-        openGlSatatusIcon->setText(factory->getOpenGLVersion());
+        openGlStatusIcon->setText(factory->getOpenGLVersion());
     else
-        openGlSatatusIcon->setText("X");
+        openGlStatusIcon->setText(tr("OpenGL not available"));
 
     WaveformWidgetType::Type currentType = factory->getType();
     int currentIndex = -1;

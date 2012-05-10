@@ -1,11 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>images/autodj/media-playlist-shuffle.svg</file>
-        <file>images/autodj/stock_mail-send-receive.svg</file>
-        <file>images/autodj/bottom.svg</file>
-        <file>html/crates.html</file>
-        <file>html/playlists.html</file>
-        <file>html/setlogs.html</file>
         <file>images/mixxx-icon.png</file>
         <file>images/ic_mixxx_window.png</file>
         <file>images/templates/logo_mixxx.png</file>
@@ -28,17 +22,17 @@
         <file>images/library/ic_library_browse.png</file>
         <file>images/library/ic_library_crates.png</file>
         <file>images/library/ic_library_drag_and_drop.png</file>
+        <file>images/library/ic_library_history_current.png</file>
+        <file>images/library/ic_library_history.png</file>
         <file>images/library/ic_library_itunes.png</file>
         <file>images/library/ic_library_library.png</file>
         <file>images/library/ic_library_locked.png</file>
         <file>images/library/ic_library_playlist.png</file>
         <file>images/library/ic_library_prepare.png</file>
         <file>images/library/ic_library_promotracks.png</file>
+        <file>images/library/ic_library_recordings.png</file>
         <file>images/library/ic_library_rhythmbox.png</file>
         <file>images/library/ic_library_traktor.png</file>
-        <file>images/library/ic_library_recordings.png</file>
-        <file>images/library/ic_library_setlog.png</file>
-        <file>images/library/ic_library_setlog_current.png</file>
         <file>images/library/ic_library_ipod.png</file>
         <file>images/library/ic_library_banshee.png</file>
         <file>images/library/ic_library_clementine.png</file>

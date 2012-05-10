@@ -10,6 +10,7 @@
 #include "configobject.h"
 #include "skin/skinparser.h"
 #include "vinylcontrol/vinylcontrolmanager.h"
+#include "skin/tooltips.h"
 
 class LibraryFeatures;
 class MixxxKeyboard;
@@ -80,6 +81,7 @@ class LegacySkinParser : public QObject, public SkinParser {
     LibraryFeatures* m_pLibrary;
     VinylControlManager* m_pVCManager;
     QWidget *m_pParent;
+    Tooltips m_tooltips;
     static QList<const char*> s_channelStrs;
     static QMutex s_safeStringMutex;
 };
