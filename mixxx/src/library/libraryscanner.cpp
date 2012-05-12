@@ -23,6 +23,7 @@
 #include "library/legacylibraryimporter.h"
 #include "libraryscanner.h"
 #include "libraryscannerdlg.h"
+#include "library/queryutil.h"
 #include "trackinfoobject.h"
 
 LibraryScanner::LibraryScanner(TrackCollection* collection) :
@@ -33,8 +34,8 @@ LibraryScanner::LibraryScanner(TrackCollection* collection) :
     m_playlistDao(m_database),
     m_crateDao(m_database),
     m_trackDao(m_database, m_cueDao, m_playlistDao, m_crateDao),
-    //Don't initialize m_database here, we need to do it in run() so the DB conn is in
-    //the right thread.
+    // Don't initialize m_database here, we need to do it in run() so the DB
+    // conn is in the right thread.
     nameFilters(SoundSourceProxy::supportedFileExtensionsString().split(" "))
 {
 
@@ -86,7 +87,7 @@ LibraryScanner::~LibraryScanner()
     }
 
     //Do housekeeping on the LibraryHashes table.
-    m_pCollection->getDatabase().transaction();
+    ScopedTransaction transaction(m_pCollection->getDatabase());
 
     //Mark the corresponding file locations in the track_locations table as deleted
     //if we find one or more deleted directories.
@@ -117,16 +118,22 @@ LibraryScanner::~LibraryScanner()
     foreach(dir, deletedDirs) {
         m_pCollection->getTrackDAO().markTrackLocationsAsDeleted(dir);
     }
+    transaction.commit();
 
-    m_pCollection->getDatabase().commit();
-
-    //Close our database connection
-    Q_ASSERT(!m_database.rollback()); //Rollback any uncommitted transaction
     //The above is an ASSERT because there should never be an outstanding
     //transaction when this code is called. If there is, it means we probably
     //aren't committing a transaction somewhere that should be.
-    if (m_database.isOpen())
+    if (m_database.isOpen()) {
+        qDebug() << "Closing database" << m_database.connectionName();
+
+        // Rollback any uncommitted transaction
+        if (m_database.rollback()) {
+            qDebug() << "ERROR: There was a transaction in progress while closing the library scanner connection."
+                     << "There is a logic error somewhere.";
+        }
+        // Close our database connection
         m_database.close();
+    }
 
     qDebug() << "LibraryScanner destroyed";
 }
@@ -182,9 +189,9 @@ void LibraryScanner::run()
         connect(&libImport, SIGNAL(progress(QString)),
                 m_pProgress, SLOT(slotUpdate(QString)),
                 Qt::BlockingQueuedConnection);
-        m_database.transaction();
+        ScopedTransaction transaction(m_database);
         libImport.import();
-        m_database.commit();
+        transaction.commit();
         qDebug("Legacy importer took %d ms", t2.elapsed());
     }
 
@@ -229,9 +236,9 @@ void LibraryScanner::run()
     //Verify all Tracks inside Library but outside the libraray path
     m_trackDao.verifyTracksOutside(m_qLibraryPath);
 
-    //Start a transaction for all the library hashing (moved file detection)
-    //stuff.
-    m_database.transaction();
+    // Start a transaction for all the library hashing (moved file detection)
+    // stuff.
+    ScopedTransaction transaction(m_database);
 
     //At the end of a scan, mark all tracks and directories that
     //weren't "verified" as "deleted" (as long as the scan wasn't canceled
@@ -262,7 +269,7 @@ void LibraryScanner::run()
         //A to B, then back to A.
         m_libraryHashDao.removeDeletedDirectoryHashes();
 
-        m_database.commit();
+        transaction.commit();
         qDebug() << "Scan finished cleanly";
     } else {
         m_database.rollback();
@@ -272,11 +279,6 @@ void LibraryScanner::run()
     qDebug("Scan took: %d ms", t.elapsed());
 
     //m_pProgress->slotStopTiming();
-
-    Q_ASSERT(!m_database.rollback()); //Rollback any uncommitted transaction
-    //The above is an ASSERT because there should never be an outstanding
-    //transaction when this code is called. If there is, it means we probably
-    //aren't committing a transaction somewhere that should be.
     m_database.close();
 
     // Update BaseTrackCache via the main TrackDao

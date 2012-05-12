@@ -129,7 +129,7 @@ void BrowseTableModel::search(const QString& searchText) {
 }
 
 const QString BrowseTableModel::currentSearch() const {
-    return QString();
+    return QString(""); // search not supported
 }
 
 bool BrowseTableModel::isColumnInternal(int) {

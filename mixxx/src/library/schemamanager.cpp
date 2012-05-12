@@ -5,6 +5,7 @@
 #include <QtDebug>
 
 #include "library/schemamanager.h"
+#include "library/queryutil.h"
 #include "xmlparse.h"
 
 const QString SchemaManager::SETTINGS_VERSION_STRING = "mixxx.schema.version";
@@ -94,7 +95,7 @@ int SchemaManager::upgradeToSchemaVersion(const QString& schemaFilename,
         qDebug() << "Applying version" << thisTarget << ":"
                  << description.trimmed();
 
-        db.transaction();
+        ScopedTransaction transaction(db);
 
         // TODO(XXX) We can't have semicolons in schema.xml for anything other
         // than statement separators.
@@ -121,12 +122,12 @@ int SchemaManager::upgradeToSchemaVersion(const QString& schemaFilename,
             currentVersion = thisTarget;
             settings.setValue(SETTINGS_VERSION_STRING, thisTarget);
             settings.setValue(SETTINGS_MINCOMPATIBLE_STRING, minCompatibleVersion);
-            db.commit();
+            transaction.commit();
         } else {
             success = -2;
             qDebug() << "Failed to move from version" << currentVersion
                      << "to version" << thisTarget;
-            db.rollback();
+            transaction.rollback();
             break;
         }
     }

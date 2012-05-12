@@ -290,7 +290,7 @@ void TrackDAO::bindTrackToLibraryInsert(TrackInfoObject* pTrack, int trackLocati
 
 void TrackDAO::addTracksPrepare() {
     // Start the transaction
-    m_database.transaction();
+    ScopedTransaction transaction(m_database);
 
     m_pQueryTrackLocationInsert = new QSqlQuery(m_database);
     m_pQueryTrackLocationSelect = new QSqlQuery(m_database);
@@ -789,7 +789,7 @@ TrackPointer TrackDAO::getTrack(int id, bool cacheOnly) const {
 
 /** Saves a track's info back to the database */
 void TrackDAO::updateTrack(TrackInfoObject* pTrack) {
-    m_database.transaction();
+    ScopedTransaction transaction(m_database);
     QTime time;
     time.start();
     Q_ASSERT(pTrack);
@@ -862,20 +862,18 @@ void TrackDAO::updateTrack(TrackInfoObject* pTrack) {
 
     if (!query.exec()) {
         LOG_FAILED_QUERY(query);
-        m_database.rollback();
         return;
     }
 
     if (query.numRowsAffected() == 0) {
         qWarning() << "updateTrack had no effect: trackId" << trackId << "invalid";
-        m_database.rollback();
         return;
     }
 
     //qDebug() << "Update track took : " << time.elapsed() << "ms. Now updating cues";
     time.start();
     m_cueDao.saveTrackCues(trackId, pTrack);
-    m_database.commit();
+    transaction.commit();
 
     //qDebug() << "Update track in database took: " << time.elapsed() << "ms";
     time.start();

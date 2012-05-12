@@ -86,6 +86,7 @@ void PrepareFeature::refreshLibraryModels()
 void PrepareFeature::activate() {
     //qDebug() << "PrepareFeature::activate()";
     emit(switchToView(m_sPrepareViewName));
+    emit(restoreSearch("")); // Todo(XXX) restore search
 }
 
 void PrepareFeature::activateChild(const QModelIndex& index) {

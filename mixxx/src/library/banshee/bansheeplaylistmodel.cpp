@@ -19,6 +19,7 @@ BansheePlaylistModel::BansheePlaylistModel(QObject* pParent, TrackCollection* pT
            QAbstractTableModel(pParent),
            m_iSortColumn(0),
            m_eSortOrder(Qt::AscendingOrder),
+           m_currentSearch(""),
            m_pTrackCollection(pTrackCollection),
            m_trackDAO(m_pTrackCollection->getTrackDAO()),
            m_pConnection(pConnection),

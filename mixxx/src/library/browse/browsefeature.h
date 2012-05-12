@@ -35,6 +35,10 @@ class BrowseFeature : public LibraryFeature {
     bool dragMoveAccept(QUrl url);
     bool dragMoveAcceptChild(const QModelIndex& index, QUrl url);
 
+    void bindWidget(WLibrarySidebar* sidebarWidget,
+                    WLibrary* libraryWidget,
+                    MixxxKeyboard* keyboard);
+
     TreeItemModel* getChildModel();
 
   public slots:
@@ -49,12 +53,12 @@ class BrowseFeature : public LibraryFeature {
     void setRootIndex(const QModelIndex&);
 
   private:
+    QString getRootViewHtml() const;
     ConfigObject<ConfigValue>* m_pConfig;
     BrowseTableModel m_browseModel;
     ProxyTrackModel m_proxyModel;
     TrackCollection* m_pTrackCollection;
     FolderTreeModel m_childModel;
-    QString m_currentSearch;
-};
+ };
 
 #endif /* BROWSEFEATURE_H */

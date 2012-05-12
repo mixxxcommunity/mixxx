@@ -46,14 +46,13 @@ bool MixxxKeyboard::eventFilter(QObject *, QEvent * e) {
 #else
         int keyId = ke->nativeScanCode();
 #endif
-        qDebug() << "key event =" << ke->key() << "KeyId =" << keyId;
+        //qDebug() << "key event =" << ke->key() << "KeyId =" << keyId;
 
         // Run through list of active keys to see if the pressed key is already active
         // Just for returning true if we are consuming this key event
         QListIterator<QPair<int, ConfigKey *> > it(m_qActiveKeyList);
         while (it.hasNext()) {
-            if (it.next().first == keyId)
-            {
+            if (it.next().first == keyId) {
                 return true;
             }
         }
@@ -83,12 +82,11 @@ bool MixxxKeyboard::eventFilter(QObject *, QEvent * e) {
 #endif
         bool autoRepeat = ke->isAutoRepeat();
 
-        qDebug() << "key event =" << ke->key() << "AutoRepeat =" << autoRepeat << "KeyId =" << keyId;
+        //qDebug() << "key event =" << ke->key() << "AutoRepeat =" << autoRepeat << "KeyId =" << keyId;
 
         // Run through list of active keys to see if the released key is active
         for (int i = m_qActiveKeyList.size() - 1; i >= 0; i--) {
-            if (m_qActiveKeyList[i].first == keyId)
-            {
+            if (m_qActiveKeyList[i].first == keyId) {
                 if(!autoRepeat) {
                     ControlObject::getControl(*(m_qActiveKeyList[i].second))->queueFromMidi(MIDI_NOTE_OFF, 0);
                     m_qActiveKeyList.removeAt(i);
@@ -99,14 +97,14 @@ bool MixxxKeyboard::eventFilter(QObject *, QEvent * e) {
     } else {
         if (e->type() == QEvent::KeyboardLayoutChange) {
             // This event is not fired on ubunty natty, why?
+			// TODO(XXX): find a way to support KeyboardLayoutChange Bug #997811 
             qDebug() << "QEvent::KeyboardLayoutChange";
         }
     }
     return false;
 }
 
-QString MixxxKeyboard::getKeySeq(QKeyEvent * e)
-{
+QString MixxxKeyboard::getKeySeq(QKeyEvent * e) {
     QString modseq;
 	QString keyseq;
 
@@ -124,7 +122,7 @@ QString MixxxKeyboard::getKeySeq(QKeyEvent * e)
 
 	keyseq = e->text();
 
-	if(!keyseq.isEmpty()) { // avoid returning e.g. "Meta+"
+	if (!keyseq.isEmpty()) { // avoid returning e.g. "Meta+"
         keyseq = modseq + keyseq;
     }
 	qDebug() << "keyboard press: " << keyseq;

@@ -58,9 +58,8 @@ TreeItemModel* AutoDJFeature::getChildModel() {
 
 void AutoDJFeature::activate() {
     //qDebug() << "AutoDJFeature::activate()";
-    //emit(showTrackModel(m_pAutoDJTableModelProxy));
-    emit(restoreSearch(""));
     emit(switchToView(m_sAutoDJViewName));
+    emit(restoreSearch(QString())); //Null String disables search box
 }
 
 void AutoDJFeature::activateChild(const QModelIndex& /*index*/) {
