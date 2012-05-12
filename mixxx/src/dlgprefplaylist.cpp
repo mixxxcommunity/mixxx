@@ -155,22 +155,15 @@ void DlgPrefPlaylist::slotUpdate()
     checkbox_ID3_sync->setChecked((bool)config->getValueString(ConfigKey("[Library]","WriteAudioTags")).toInt());
     checkBox_use_relative_path->setChecked((bool)config->getValueString(ConfigKey("[Library]","UseRelativePathOnExport")).toInt());
     checkBox_show_rhythmbox->setChecked((bool)config->getValueString(ConfigKey("[Library]","ShowRhythmboxLibrary"),"1").toInt());
-<<<<<<< TREE
     checkBox_show_banshee->setChecked((bool)config->getValueString(ConfigKey("[Library]","ShowBansheeLibrary"),"1").toInt());
-    checkBox_show_itunes->setChecked((bool)config->getValueString(ConfigKey("[Library]","ShowItunesLibrary"),"1").toInt());
+    checkBox_show_itunes->setChecked((bool)config->getValueString(ConfigKey("[Library]","ShowITunesLibrary"),"1").toInt());
     #ifdef __IPOD__
     checkBox_show_ipod->setChecked((bool)config->getValueString(ConfigKey("[Library]","ShowIpod"),"1").toInt());
     #endif // __IPOD__
-    checkBox_show_tracktor->setChecked((bool)config->getValueString(ConfigKey("[Library]","ShowTracktorLibrary"),"1").toInt());
+    checkBox_show_traktor->setChecked((bool)config->getValueString(ConfigKey("[Library]","ShowTraktorLibrary"),"1").toInt());
     #ifdef __CLEMENTINE__
     checkBox_show_clementine->setChecked((bool)config->getValueString(ConfigKey("[Library]","ShowClementineLibrary"),"1").toInt());
     #endif // __CLEMENTINE__
-=======
-    checkBox_show_itunes->setChecked((bool)config->getValueString(ConfigKey("[Library]","ShowITunesLibrary"),"1").toInt());
-    checkBox_show_traktor->setChecked((bool)config->getValueString(ConfigKey("[Library]","ShowTraktorLibrary"),"1").toInt());
-
-
->>>>>>> MERGE-SOURCE
 }
 
 void DlgPrefPlaylist::slotBrowseDir()
@@ -196,43 +189,29 @@ void DlgPrefPlaylist::slotApply()
                 ConfigValue((int)checkbox_ID3_sync->isChecked()));
 
     config->set(ConfigKey("[Library]","UseRelativePathOnExport"),
-<<<<<<< TREE
-                   ConfigValue((int)checkBox_use_relative_path->isChecked()));
-=======
                 ConfigValue((int)checkBox_use_relative_path->isChecked()));
->>>>>>> MERGE-SOURCE
 
     config->set(ConfigKey("[Library]","ShowRhythmboxLibrary"),
-<<<<<<< TREE
-                   ConfigValue((int)checkBox_show_rhythmbox->isChecked()));
+                ConfigValue((int)checkBox_show_rhythmbox->isChecked()));
 
     config->set(ConfigKey("[Library]","ShowBansheeLibrary"),
-                   ConfigValue((int)checkBox_show_banshee->isChecked()));
-
-    config->set(ConfigKey("[Library]","ShowItunesLibrary"),
-                   ConfigValue((int)checkBox_show_itunes->isChecked()));
-
-#ifdef __IPOD__
-    config->set(ConfigKey("[Library]","ShowIpod"),
-                   ConfigValue((int)checkBox_show_ipod->isChecked()));
-#endif // __IPOD__
-
-    config->set(ConfigKey("[Library]","ShowTracktorLibrary"),
-                   ConfigValue((int)checkBox_show_tracktor->isChecked()));
-
-#ifdef __CLEMENTINE__
-    config->set(ConfigKey("[Library]","ShowClementineLibrary"),
-                   ConfigValue((int)checkBox_show_clementine->isChecked()));
-#endif // __CLEMENTINE__
-=======
-                ConfigValue((int)checkBox_show_rhythmbox->isChecked()));
+                ConfigValue((int)checkBox_show_banshee->isChecked()));
 
     config->set(ConfigKey("[Library]","ShowITunesLibrary"),
                 ConfigValue((int)checkBox_show_itunes->isChecked()));
 
+#ifdef __IPOD__
+    config->set(ConfigKey("[Library]","ShowIpod"),
+                ConfigValue((int)checkBox_show_ipod->isChecked()));
+#endif // __IPOD__
+
     config->set(ConfigKey("[Library]","ShowTraktorLibrary"),
                 ConfigValue((int)checkBox_show_traktor->isChecked()));
->>>>>>> MERGE-SOURCE
+
+#ifdef __CLEMENTINE__
+    config->set(ConfigKey("[Library]","ShowClementineLibrary"),
+                ConfigValue((int)checkBox_show_clementine->isChecked()));
+#endif // __CLEMENTINE__
 
     config->Save();
 

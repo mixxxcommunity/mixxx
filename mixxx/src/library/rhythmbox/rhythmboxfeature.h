@@ -42,6 +42,7 @@ class RhythmboxFeature : public BaseExternalLibraryFeature {
     void activate();
     void activateChild(const QModelIndex& index);
 
+    virtual void onRightClickChild(const QPoint& globalPos, QModelIndex index);
     void onLazyChildExpandation(const QModelIndex& index);
     void onTrackCollectionLoaded();
     void slotAddToAutoDJ();

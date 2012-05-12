@@ -42,6 +42,7 @@ class ITunesFeature : public BaseExternalLibraryFeature {
     void activate(bool forceReload);
     void activateChild(const QModelIndex& index);
     virtual void onRightClick(const QPoint& globalPos);
+    virtual void onRightClickChild(const QPoint& globalPos, QModelIndex index);
     void onLazyChildExpandation(const QModelIndex& index);
     void onTrackCollectionLoaded();
     void slotAddToAutoDJ();

@@ -171,7 +171,7 @@ DlgPrefControls::DlgPrefControls(QWidget * parent, MixxxApp * mixxx,
 
     // Iterate through the available locales and add them to the combobox
     // Borrowed following snippet from http://qt-project.org/wiki/How_to_create_a_multi_language_application
-    QString translationsFolder = m_pConfig->getConfigPath() + "translations/";
+    QString translationsFolder = m_pConfig->getResourcePath() + "translations/";
     QString currentLocale = pConfig->getValueString(ConfigKey("[Config]","Locale"));
 
     QDir translationsDir(translationsFolder);
