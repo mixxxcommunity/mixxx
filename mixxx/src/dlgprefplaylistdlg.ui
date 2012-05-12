@@ -191,6 +191,7 @@ playback and outbound link statistics</string>
         </property>
        </widget>
       </item>
+<<<<<<< TREE
       <item row="4" column="0">
        <widget class="QCheckBox" name="checkBox_show_banshee">
         <property name="text">
@@ -201,6 +202,8 @@ playback and outbound link statistics</string>
         </property>
        </widget>
       </item>
+=======
+>>>>>>> MERGE-SOURCE
       <item row="5" column="0">
        <widget class="QCheckBox" name="checkBox_show_itunes">
         <property name="text">
@@ -211,6 +214,7 @@ playback and outbound link statistics</string>
         </property>
        </widget>
       </item>
+<<<<<<< TREE
       <item row="6" column="0">
        <widget class="QCheckBox" name="checkBox_show_ipod">
         <property name="text">
@@ -221,7 +225,10 @@ playback and outbound link statistics</string>
         </property>
        </widget>
       </item>
+=======
+>>>>>>> MERGE-SOURCE
       <item row="7" column="0">
+<<<<<<< TREE
        <widget class="QCheckBox" name="checkBox_show_tracktor">
         <property name="text">
          <string>Show Tracktor Library</string>
@@ -235,6 +242,11 @@ playback and outbound link statistics</string>
        <widget class="QCheckBox" name="checkBox_show_clementine">
         <property name="text">
          <string>Show Clementine Library</string>
+=======
+       <widget class="QCheckBox" name="checkBox_show_traktor">
+        <property name="text">
+         <string>Show Traktor Library</string>
+>>>>>>> MERGE-SOURCE
         </property>
         <property name="checked">
          <bool>true</bool>

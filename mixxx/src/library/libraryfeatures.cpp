@@ -74,12 +74,15 @@ LibraryFeatures::LibraryFeatures(QObject* parent, ConfigObject<ConfigValue>* pCo
     //iTunes and Rhythmbox should be last until we no longer have an obnoxious
     //messagebox popup when you select them. (This forces you to reach for your
     //mouse or keyboard if you're using MIDI control and you scroll through them...)
-    if (RhythmboxFeature::isSupported() && pConfig->getValueString(ConfigKey("[Library]","ShowRhythmboxLibrary"),"1").toInt())
+    if (RhythmboxFeature::isSupported() &&
+        pConfig->getValueString(ConfigKey("[Library]","ShowRhythmboxLibrary"),"1").toInt()) {
         addFeature(new RhythmboxFeature(this, m_pTrackCollection));
+	}
     if (pConfig->getValueString(ConfigKey("[Library]","ShowBansheeLibrary"),"1").toInt()) {
         BansheeFeature::prepareDbPath(pConfig);
-        if (BansheeFeature::isSupported())
+        if (BansheeFeature::isSupported()) {
             addFeature(new BansheeFeature(this, m_pTrackCollection, pConfig));
+		}
     }
 #ifdef __CLEMENTINE__
     if (pConfig->getValueString(ConfigKey("[Library]","ShowClementineLibrary"),"1").toInt()) {
@@ -88,14 +91,20 @@ LibraryFeatures::LibraryFeatures(QObject* parent, ConfigObject<ConfigValue>* pCo
             addFeature(new ClementineFeature(this, m_pTrackCollection, pConfig));
     }
 #endif // __CLEMENTINE__
-    if (ITunesFeature::isSupported() && pConfig->getValueString(ConfigKey("[Library]","ShowItunesLibrary"),"1").toInt())
+    if (ITunesFeature::isSupported() &&
+        pConfig->getValueString(ConfigKey("[Library]","ShowITunesLibrary"),"1").toInt()) {
         addFeature(new ITunesFeature(this, m_pTrackCollection));
+	}
 #ifdef __IPOD__
-    if (IPodFeature::isSupported() && pConfig->getValueString(ConfigKey("[Library]","ShowIpod"),"1").toInt())
+    if (IPodFeature::isSupported() && 
+        pConfig->getValueString(ConfigKey("[Library]","ShowIpod"),"1").toInt()) {
         addFeature(new IPodFeature(this, m_pTrackCollection));
+    }
 #endif // __IPOD__
-    if (TraktorFeature::isSupported() && pConfig->getValueString(ConfigKey("[Library]","ShowTracktorLibrary"),"1").toInt())
+    if (TraktorFeature::isSupported() &&
+        pConfig->getValueString(ConfigKey("[Library]","ShowTraktorLibrary"),"1").toInt()) {
         addFeature(new TraktorFeature(this, m_pTrackCollection));
+    }
 
     //Show the promo tracks view on first run, otherwise show the library
     if (firstRun) {

@@ -18,7 +18,7 @@ const QString ITunesFeature::ITDB_PATH_KEY = "mixxx.itunesfeature.itdbpath";
 
 
 ITunesFeature::ITunesFeature(QObject* parent, TrackCollection* pTrackCollection)
-        : LibraryFeature(parent),
+        : BaseExternalLibraryFeature(parent, pTrackCollection),
           m_pTrackCollection(pTrackCollection),
           m_cancelImport(false) {
     QString tableName = "itunes_library";
@@ -76,6 +76,12 @@ ITunesFeature::~ITunesFeature() {
     delete m_pAddToAutoDJAction;
     delete m_pAddToAutoDJTopAction;
     delete m_pImportAsMixxxPlaylistAction;
+}
+
+BaseSqlTableModel* ITunesFeature::getPlaylistModelForPlaylist(QString playlist) {
+    ITunesPlaylistModel* pModel = new ITunesPlaylistModel(this, m_pTrackCollection);
+    pModel->setPlaylist(playlist);
+    return pModel;
 }
 
 // static
@@ -160,6 +166,7 @@ TreeItemModel* ITunesFeature::getChildModel() {
 }
 
 void ITunesFeature::onRightClick(const QPoint& globalPos) {
+    BaseExternalLibraryFeature::onRightClick(globalPos);
     QMenu menu;
     QAction useDefault(tr("Use Default Library"), &menu);
     QAction chooseNew(tr("Choose Library..."), &menu);
@@ -666,8 +673,8 @@ void ITunesFeature::onTrackCollectionLoaded(){
 }
 
 void ITunesFeature::onLazyChildExpandation(const QModelIndex &index){
-	Q_UNUSED(index);
-	//Nothing to do because the childmodel is not of lazy nature.
+    //Nothing to do because the childmodel is not of lazy nature.
+    Q_UNUSED(index);
 }
 
 void ITunesFeature::slotAddToAutoDJ() {
@@ -758,3 +765,4 @@ void ITunesFeature::slotImportAsMixxxPlaylist() {
         delete pPlaylistModelToAdd;
     }
 }
+

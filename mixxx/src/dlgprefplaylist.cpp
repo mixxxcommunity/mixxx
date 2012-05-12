@@ -155,6 +155,7 @@ void DlgPrefPlaylist::slotUpdate()
     checkbox_ID3_sync->setChecked((bool)config->getValueString(ConfigKey("[Library]","WriteAudioTags")).toInt());
     checkBox_use_relative_path->setChecked((bool)config->getValueString(ConfigKey("[Library]","UseRelativePathOnExport")).toInt());
     checkBox_show_rhythmbox->setChecked((bool)config->getValueString(ConfigKey("[Library]","ShowRhythmboxLibrary"),"1").toInt());
+<<<<<<< TREE
     checkBox_show_banshee->setChecked((bool)config->getValueString(ConfigKey("[Library]","ShowBansheeLibrary"),"1").toInt());
     checkBox_show_itunes->setChecked((bool)config->getValueString(ConfigKey("[Library]","ShowItunesLibrary"),"1").toInt());
     #ifdef __IPOD__
@@ -164,6 +165,12 @@ void DlgPrefPlaylist::slotUpdate()
     #ifdef __CLEMENTINE__
     checkBox_show_clementine->setChecked((bool)config->getValueString(ConfigKey("[Library]","ShowClementineLibrary"),"1").toInt());
     #endif // __CLEMENTINE__
+=======
+    checkBox_show_itunes->setChecked((bool)config->getValueString(ConfigKey("[Library]","ShowITunesLibrary"),"1").toInt());
+    checkBox_show_traktor->setChecked((bool)config->getValueString(ConfigKey("[Library]","ShowTraktorLibrary"),"1").toInt());
+
+
+>>>>>>> MERGE-SOURCE
 }
 
 void DlgPrefPlaylist::slotBrowseDir()
@@ -180,18 +187,23 @@ void DlgPrefPlaylist::slotApply()
 {
 
     config->set(ConfigKey("[Promo]","StatTracking"),
-                   ConfigValue((int)checkBoxPromoStats->isChecked()));
+                ConfigValue((int)checkBoxPromoStats->isChecked()));
 
     config->set(ConfigKey("[Library]","RescanOnStartup"),
-                   ConfigValue((int)checkBox_library_scan->isChecked()));
+                ConfigValue((int)checkBox_library_scan->isChecked()));
 
     config->set(ConfigKey("[Library]","WriteAudioTags"),
-                   ConfigValue((int)checkbox_ID3_sync->isChecked()));
+                ConfigValue((int)checkbox_ID3_sync->isChecked()));
 
     config->set(ConfigKey("[Library]","UseRelativePathOnExport"),
+<<<<<<< TREE
                    ConfigValue((int)checkBox_use_relative_path->isChecked()));
+=======
+                ConfigValue((int)checkBox_use_relative_path->isChecked()));
+>>>>>>> MERGE-SOURCE
 
     config->set(ConfigKey("[Library]","ShowRhythmboxLibrary"),
+<<<<<<< TREE
                    ConfigValue((int)checkBox_show_rhythmbox->isChecked()));
 
     config->set(ConfigKey("[Library]","ShowBansheeLibrary"),
@@ -212,6 +224,15 @@ void DlgPrefPlaylist::slotApply()
     config->set(ConfigKey("[Library]","ShowClementineLibrary"),
                    ConfigValue((int)checkBox_show_clementine->isChecked()));
 #endif // __CLEMENTINE__
+=======
+                ConfigValue((int)checkBox_show_rhythmbox->isChecked()));
+
+    config->set(ConfigKey("[Library]","ShowITunesLibrary"),
+                ConfigValue((int)checkBox_show_itunes->isChecked()));
+
+    config->set(ConfigKey("[Library]","ShowTraktorLibrary"),
+                ConfigValue((int)checkBox_show_traktor->isChecked()));
+>>>>>>> MERGE-SOURCE
 
     config->Save();
 

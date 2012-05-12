@@ -154,6 +154,11 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
     QString userLocale = args.getLocale();
     QLocale systemLocale = QLocale::system();
 
+    // Attempt to load user locale from config
+    if (userLocale == "") {
+        userLocale = m_pConfig->getValueString(ConfigKey("[Config]","Locale"));
+    }
+
     // Load Qt translations for this locale from the system translation
     // path. This is the lowest precedence QTranslator.
     QTranslator* qtTranslator = new QTranslator(pApp);
@@ -1300,6 +1305,7 @@ void MixxxApp::slotHelpAbout() {
 "Florian Mahlknecht<br>"
 "Ben Clark<br>"
 "Ilkka Tuohela<br>"
+"Tom Gascoigne<br>"
 
 "</p>"
 "<p align=\"center\"><b>%3</b></p>"

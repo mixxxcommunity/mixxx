@@ -9,9 +9,9 @@
 #include "library/queryutil.h"
 
 RhythmboxFeature::RhythmboxFeature(QObject* parent, TrackCollection* pTrackCollection)
-    : LibraryFeature(parent),
-      m_pTrackCollection(pTrackCollection),
-      m_cancelImport(false) {
+        : BaseExternalLibraryFeature(parent, pTrackCollection),
+          m_pTrackCollection(pTrackCollection),
+          m_cancelImport(false) {
     QString tableName = "rhythmbox_library";
     QString idColumn = "id";
     QStringList columns;
@@ -72,6 +72,12 @@ RhythmboxFeature::~RhythmboxFeature() {
     delete m_pImportAsMixxxPlaylistAction;
 }
 
+BaseSqlTableModel* RhythmboxFeature::getPlaylistModelForPlaylist(QString playlist) {
+    RhythmboxPlaylistModel* pModel = new RhythmboxPlaylistModel(this, m_pTrackCollection);
+    pModel->setPlaylist(playlist);
+    return pModel;
+}
+
 bool RhythmboxFeature::isSupported() {
     return (QFile::exists(QDir::homePath() + "/.gnome2/rhythmbox/rhythmdb.xml") ||
             QFile::exists(QDir::homePath() + "/.local/share/rhythmbox/rhythmdb.xml"));
@@ -123,11 +129,6 @@ void RhythmboxFeature::activateChild(const QModelIndex& index) {
     emit(showTrackModel(m_pRhythmboxPlaylistModel));
 }
 
-void RhythmboxFeature::onRightClick(const QPoint& globalPos) {
-	Q_UNUSED(globalPos);
-    m_lastRightClickedIndex = QModelIndex();
-}
-
 void RhythmboxFeature::onRightClickChild(const QPoint& globalPos, QModelIndex index) {
     //Save the model index so we can get it in the action slots...
     m_lastRightClickedIndex = index;
@@ -142,25 +143,25 @@ void RhythmboxFeature::onRightClickChild(const QPoint& globalPos, QModelIndex in
 }
 
 bool RhythmboxFeature::dropAccept(QUrl url) {
-    Q_UNUSED(url;)
-	return false;
+    Q_UNUSED(url);
+    return false;
 }
 
 bool RhythmboxFeature::dropAcceptChild(const QModelIndex& index, QUrl url) {
-    Q_UNUSED(url);
     Q_UNUSED(index);
-	return false;
+    Q_UNUSED(url);
+    return false;
 }
 
 bool RhythmboxFeature::dragMoveAccept(QUrl url) {
-	Q_UNUSED(url);
-	return false;
+    Q_UNUSED(url);
+    return false;
 }
 
 bool RhythmboxFeature::dragMoveAcceptChild(const QModelIndex& index, QUrl url) {
-    Q_UNUSED(url);
     Q_UNUSED(index);
-	return false;
+    Q_UNUSED(url);
+    return false;
 }
 
 TreeItem* RhythmboxFeature::importMusicCollection()
@@ -482,7 +483,7 @@ void RhythmboxFeature::onTrackCollectionLoaded() {
 
 void RhythmboxFeature::onLazyChildExpandation(const QModelIndex &index){
     //Nothing to do because the childmodel is not of lazy nature.
-	Q_UNUSED(index);
+    Q_UNUSED(index);
 }
 
 void RhythmboxFeature::slotAddToAutoDJ() {
