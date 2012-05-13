@@ -111,4 +111,3 @@ void RecordingFeature::onLazyChildExpandation(const QModelIndex &index){
 	Q_UNUSED(index);    
 	// Nothing to do here since we have no child models
 }
-

@@ -161,7 +161,7 @@ void DlgPrepare::analysisActive(bool bActive) {
     m_bAnalysisActive = bActive;
     if (bActive) {
         pushButtonAnalyze->setEnabled(true);
-        pushButtonAnalyze->setText(tr("SPrepareFeaturetop Analysis"));
+        pushButtonAnalyze->setText(tr("Stop Analysis"));
     } else {
         pushButtonAnalyze->setText(tr("Analyze"));
         labelProgress->setText("");

@@ -142,7 +142,7 @@ void DlgRecording::moveSelection(int delta) {
 void DlgRecording::toggleRecording(bool toggle)
 {
     Q_UNUSED(toggle);
-	if (!m_pRecordingManager->isRecordingActive()) //If recording is enabled
+    if (!m_pRecordingManager->isRecordingActive()) //If recording is enabled
     {
         //pushButtonRecording->setText(tr("Stop Recording"));
         m_pRecordingManager->startRecording();
