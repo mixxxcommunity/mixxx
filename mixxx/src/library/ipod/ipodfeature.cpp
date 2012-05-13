@@ -108,6 +108,7 @@ void IPodFeature::activate(bool forceReload) {
                 NULL,
                 tr("Select your iPod mount"));
             if (m_dbfile.isEmpty()) {
+                emit(showTrackModel(m_pIPodPlaylistModel));
                 return;
             }
         }
@@ -124,8 +125,8 @@ void IPodFeature::activate(bool forceReload) {
     }
     else{
         m_pIPodPlaylistModel->setPlaylist(itdb_playlist_mpl(m_itdb)); // Gets the master playlist
-        emit(showTrackModel(m_pIPodPlaylistModel));
     }
+    emit(showTrackModel(m_pIPodPlaylistModel));
 }
 
 QString IPodFeature::detectMountPoint( QString iPodMountPoint) {

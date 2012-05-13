@@ -6,6 +6,7 @@
 #include "configobject.h"
 #include "library/abstractlibraryview.h"
 #include "library/trackcollection.h"
+#include "library/preparelibrarytablemodel.h"
 
 class PrepareLibraryTableModel;
 class WPrepareCratesTableView;
@@ -27,6 +28,7 @@ class DlgPrepare : public QWidget, public Ui::DlgPrepare, public virtual Abstrac
     virtual void loadSelectedTrack();
     virtual void loadSelectedTrackToGroup(QString group);
     virtual void moveSelection(int delta);
+    inline const QString currentSearch() { return m_pPrepareLibraryTableModel->currentSearch(); };
 
   public slots:
     void tableSelectionChanged(const QItemSelection& selected,

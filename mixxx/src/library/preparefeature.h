@@ -38,6 +38,9 @@ class PrepareFeature : public LibraryFeature {
     TreeItemModel* getChildModel();
     void refreshLibraryModels();
 
+//    inline const QString currentSearch() { return m_proxyModel.currentSearch(); }
+
+
   signals:
     void trackAnalysisProgress(TrackPointer pTrack, int progress);
     void trackAnalysisFinished(TrackPointer pTrack);

@@ -65,6 +65,7 @@ void RecordingFeature::bindWidget(WLibrarySidebar *sidebarWidget,
 }
 
 bool RecordingFeature::dropAccept(QUrl url) {
+    Q_UNUSED(url);
     return false;
 }
 
@@ -73,17 +74,20 @@ bool RecordingFeature::dropAcceptChild(const QModelIndex& index, QUrl url) {
 }
 
 bool RecordingFeature::dragMoveAccept(QUrl url) {
+    Q_UNUSED(url);
     return false;
 }
 
 bool RecordingFeature::dragMoveAcceptChild(const QModelIndex& index, QUrl url) {
+    Q_UNUSED(index);
+    Q_UNUSED(url);
     return false;
 }
 
 void RecordingFeature::activate() {
     m_pRecordingView->refreshBrowseModel();
-    emit(switchToView("Recording"));
-    emit(restoreSearch(m_currentSearch));
+    emit(switchToView(m_sRecordingViewName));
+    emit(restoreSearch(m_pRecordingView->currentSearch()));
 }
 
 void RecordingFeature::activateChild(const QModelIndex& index) {

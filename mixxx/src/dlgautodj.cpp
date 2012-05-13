@@ -172,8 +172,6 @@ void DlgAutoDJ::onSearchCleared() {
 void DlgAutoDJ::onSearch(const QString& text) {
     // Do not allow filtering the Auto DJ playlist, because
     // Auto DJ will work from the filtered table
-    // Search in the Library instead
-    //m_pAutoDJTableModel->search(text);
 }
 
 void DlgAutoDJ::loadSelectedTrack() {
@@ -504,7 +502,7 @@ bool DlgAutoDJ::loadNextTrackFromQueue() {
     if (!nextTrack) {
         // Disable auto DJ and return...
         pushButtonAutoDJ->setChecked(false);
-        // And eject track as "End of auto dj warning"
+        // And eject track as "End of auto DJ warning"
         emit(loadTrack(nextTrack));
         return false;
     }
