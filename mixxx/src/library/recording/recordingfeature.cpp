@@ -49,6 +49,8 @@ void RecordingFeature::bindWidget(WLibrarySidebar *sidebarWidget,
                              WLibrary *libraryWidget,
                              MixxxKeyboard *keyboard)
 {
+    Q_UNUSED(sidebarWidget);
+
     //The view will be deleted by LibraryWidget
     m_pRecordingView = new DlgRecording(libraryWidget,
                                            m_pConfig,
@@ -70,6 +72,8 @@ bool RecordingFeature::dropAccept(QUrl url) {
 }
 
 bool RecordingFeature::dropAcceptChild(const QModelIndex& index, QUrl url) {
+    Q_UNUSED(index);
+    Q_UNUSED(url);
     return false;
 }
 

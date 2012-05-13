@@ -37,7 +37,6 @@ class ControlPushButton : public ControlObject {
     };
     static const int kPowerWindowTimeMillis;
 
-
     ControlPushButton(ConfigKey key);
     virtual ~ControlPushButton();
 
