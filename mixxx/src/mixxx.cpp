@@ -212,7 +212,7 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
 
     QString shortcutSource = m_pConfig->getValueString(ConfigKey("[Controls]", "ShortcutsSource"),"1");
 
-    if (   shortcutSource == "2" && QFile::exists(userKeyboard)) {
+    if (shortcutSource == "2" && QFile::exists(userKeyboard)) {
         qDebug() << "Found and will use custom keyboard preset" << userKeyboard;
         m_pKbdConfig = new ConfigObject<ConfigValueKbd>(userKeyboard);
     } else if (shortcutSource != "0") {

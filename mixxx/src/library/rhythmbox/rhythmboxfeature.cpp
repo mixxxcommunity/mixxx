@@ -220,7 +220,7 @@ TreeItem* RhythmboxFeature::importMusicCollection()
 
     db.close();
     if (m_cancelImport) {
-    	return NULL;
+        return NULL;
     }
     return importPlaylists();
 }
@@ -365,10 +365,29 @@ void RhythmboxFeature::importTrack(QXmlStreamReader &xml, QSqlQuery &query)
     location = locationUrl.toLocalFile();
 
     if (location.isEmpty()) {
-		// here in case of smb:// location
-		// TODO(XXX) QUrl does not support SMB:// locations does Mixxx?
-		// use ~/.gvfs location instead 
-		return;
+        // here in case of smb:// location
+        // TODO(XXX) QUrl does not support SMB:// locations does Mixxx?
+        // use ~/.gvfs location instead
+
+        // Try to convert a smb path location
+        QString temp_location = locationUrl.toString();
+
+        if (temp_location.startsWith("smb://")) {
+            // Hack for samba mounts works only on German GNOME Linux
+            // TODO(xxx): use gio instead
+
+            location = QDir::homePath() + "/.gvfs/";
+            location += temp_location.section('/', 3, 3);
+            location += " ";
+            //location += tr("on", "gvfs folder separator" );
+            location += "auf";
+            location += " ";
+            location += temp_location.section('/', 2, 2);
+            location += "/";
+            location += temp_location.section('/', 4);
+        } else {
+            return;
+        }
     }
 
     query.bindValue(":artist", artist);
@@ -487,13 +506,13 @@ void RhythmboxFeature::onLazyChildExpandation(const QModelIndex &index){
 
 void RhythmboxFeature::slotAddToAutoDJ() {
     //qDebug() << "slotAddToAutoDJ() row:" << m_lastRightClickedIndex.data();
-	addToAutoDJ(false); // Top = True
+    addToAutoDJ(false); // Top = True
 }
 
 
 void RhythmboxFeature::slotAddToAutoDJTop() {
     //qDebug() << "slotAddToAutoDJTop() row:" << m_lastRightClickedIndex.data();
-	addToAutoDJ(true); // bTop = True
+    addToAutoDJ(true); // bTop = True
 }
 
 void RhythmboxFeature::addToAutoDJ(bool bTop) {
@@ -501,25 +520,25 @@ void RhythmboxFeature::addToAutoDJ(bool bTop) {
 
     if (m_lastRightClickedIndex.isValid()) {
 
-    	QString playlist = m_lastRightClickedIndex.data().toString();
-    	RhythmboxPlaylistModel* pPlaylistModelToAdd = new RhythmboxPlaylistModel(this, m_pTrackCollection);
-    	pPlaylistModelToAdd->setPlaylist(playlist);
-    	pPlaylistModelToAdd->select();
-    	PlaylistDAO &playlistDao = m_pTrackCollection->getPlaylistDAO();
+        QString playlist = m_lastRightClickedIndex.data().toString();
+        RhythmboxPlaylistModel* pPlaylistModelToAdd = new RhythmboxPlaylistModel(this, m_pTrackCollection);
+        pPlaylistModelToAdd->setPlaylist(playlist);
+        pPlaylistModelToAdd->select();
+        PlaylistDAO &playlistDao = m_pTrackCollection->getPlaylistDAO();
         int autoDJId = playlistDao.getPlaylistIdFromName(AUTODJ_TABLE);
 
         int rows = pPlaylistModelToAdd->rowCount();
         for(int i = 0; i < rows; ++i){
             QModelIndex index = pPlaylistModelToAdd->index(i,0);
             if (index.isValid()) {
-            	qDebug() << pPlaylistModelToAdd->getTrackLocation(index);
-            	TrackPointer track = pPlaylistModelToAdd->getTrack(index);
-            	if (bTop) {
-            	    // Start at position 2 because position 1 was already loaded to the deck
-            		playlistDao.insertTrackIntoPlaylist(track->getId(), autoDJId, i+2);
-    	    	} else {
-    	    		playlistDao.appendTrackToPlaylist(track->getId(), autoDJId);
-    	    	}
+                qDebug() << pPlaylistModelToAdd->getTrackLocation(index);
+                TrackPointer track = pPlaylistModelToAdd->getTrack(index);
+                if (bTop) {
+                    // Start at position 2 because position 1 was already loaded to the deck
+                    playlistDao.insertTrackIntoPlaylist(track->getId(), autoDJId, i+2);
+                } else {
+                    playlistDao.appendTrackToPlaylist(track->getId(), autoDJId);
+                }
             }
         }
         delete pPlaylistModelToAdd;
@@ -531,35 +550,35 @@ void RhythmboxFeature::slotImportAsMixxxPlaylist() {
 
     if (m_lastRightClickedIndex.isValid()) {
 
-    	QString playlist = m_lastRightClickedIndex.data().toString();
-    	RhythmboxPlaylistModel* pPlaylistModelToAdd = new RhythmboxPlaylistModel(this, m_pTrackCollection);
-    	pPlaylistModelToAdd->setPlaylist(playlist);
-    	pPlaylistModelToAdd->select();
-    	PlaylistDAO &playlistDao = m_pTrackCollection->getPlaylistDAO();
+        QString playlist = m_lastRightClickedIndex.data().toString();
+        RhythmboxPlaylistModel* pPlaylistModelToAdd = new RhythmboxPlaylistModel(this, m_pTrackCollection);
+        pPlaylistModelToAdd->setPlaylist(playlist);
+        pPlaylistModelToAdd->select();
+        PlaylistDAO &playlistDao = m_pTrackCollection->getPlaylistDAO();
 
         int playlistId = playlistDao.getPlaylistIdFromName(playlist);
-    	int i = 1;
-
-    	if (playlistId != -1) {
-    		// Calculate a unique name
-			playlist += "(%1)";
-			while (playlistId != -1) {
-				i++;
-				playlistId = playlistDao.getPlaylistIdFromName(playlist.arg(i));
-			}
-			playlist = playlist.arg(i);
-    	}
-    	playlistId = playlistDao.createPlaylist(playlist);
+        int i = 1;
 
         if (playlistId != -1) {
-        	// Copy Tracks
+            // Calculate a unique name
+            playlist += "(%1)";
+            while (playlistId != -1) {
+                i++;
+                playlistId = playlistDao.getPlaylistIdFromName(playlist.arg(i));
+            }
+            playlist = playlist.arg(i);
+        }
+        playlistId = playlistDao.createPlaylist(playlist);
+
+        if (playlistId != -1) {
+            // Copy Tracks
             int rows = pPlaylistModelToAdd->rowCount();
             for (int i = 0; i < rows; ++i) {
                 QModelIndex index = pPlaylistModelToAdd->index(i,0);
                 if (index.isValid()) {
-                	qDebug() << pPlaylistModelToAdd->getTrackLocation(index);
-                	TrackPointer track = pPlaylistModelToAdd->getTrack(index);
-        	    	playlistDao.appendTrackToPlaylist(track->getId(), playlistId);
+                    qDebug() << pPlaylistModelToAdd->getTrackLocation(index);
+                    TrackPointer track = pPlaylistModelToAdd->getTrack(index);
+                    playlistDao.appendTrackToPlaylist(track->getId(), playlistId);
                 }
             }
         }

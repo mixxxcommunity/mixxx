@@ -510,7 +510,7 @@ Section "Uninstall"
   RMDir "$INSTDIR\translations"
 
   ; Remove keyboard mappings
-  ; TODO: Only delete files that were not changed since install
+  ; TODO(XXX): Only delete files that were not changed since install
   ; Custom Keyboard mappings should be placed in Custom.kbd.cfg in user folder
   Delete $INSTDIR\keyboard\*.kbd.cfg
   RMDir "$INSTDIR\keyboard" ; No /r flag means remove the directory only if it's empty
