@@ -1035,6 +1035,8 @@ void LegacySkinParser::setupConnections(QDomNode node, QWidget* pWidget) {
                 QString shortcut = m_pKeyboard->getKeyboardConfig()->getValueString(configKey);
                 addShortcutToToolTip(pWidget, shortcut, QString(""));
 
+                const WSliderComposed* pSlider;
+
                 if (qobject_cast<const  WPushButton*>(pWidget)) {
                     // check for "_activate", "_toggle"
                     ConfigKey subkey;
@@ -1049,33 +1051,52 @@ void LegacySkinParser::setupConnections(QDomNode node, QWidget* pWidget) {
                     subkey.item += "_toggle";
                     shortcut = m_pKeyboard->getKeyboardConfig()->getValueString(subkey);
                     addShortcutToToolTip(pWidget, shortcut, tr("toggle"));
-                }
-
-
-                if (qobject_cast<const WSliderComposed*>(pWidget)) {
+                } else if ((pSlider = qobject_cast<const WSliderComposed*>(pWidget))) {
                     // check for "_up", "_down", "_up_small", "_down_small"
                     ConfigKey subkey;
                     QString shortcut;
 
-                    subkey = configKey;
-                    subkey.item += "_up";
-                    shortcut = m_pKeyboard->getKeyboardConfig()->getValueString(subkey);
-                    addShortcutToToolTip(pWidget, shortcut, tr("up"));
+                    if (pSlider->isHorizontal()) {
+                        subkey = configKey;
+                        subkey.item += "_up";
+                        shortcut = m_pKeyboard->getKeyboardConfig()->getValueString(subkey);
+                        addShortcutToToolTip(pWidget, shortcut, tr("right"));
 
-                    subkey = configKey;
-                    subkey.item += "_down";
-                    shortcut = m_pKeyboard->getKeyboardConfig()->getValueString(subkey);
-                    addShortcutToToolTip(pWidget, shortcut, tr("down"));
+                        subkey = configKey;
+                        subkey.item += "_down";
+                        shortcut = m_pKeyboard->getKeyboardConfig()->getValueString(subkey);
+                        addShortcutToToolTip(pWidget, shortcut, tr("left"));
 
-                    subkey = configKey;
-                    subkey.item += "_up_small";
-                    shortcut = m_pKeyboard->getKeyboardConfig()->getValueString(subkey);
-                    addShortcutToToolTip(pWidget, shortcut, tr("up small"));
+                        subkey = configKey;
+                        subkey.item += "_up_small";
+                        shortcut = m_pKeyboard->getKeyboardConfig()->getValueString(subkey);
+                        addShortcutToToolTip(pWidget, shortcut, tr("right small"));
 
-                    subkey = configKey;
-                    subkey.item += "_down_small";
-                    shortcut = m_pKeyboard->getKeyboardConfig()->getValueString(subkey);
-                    addShortcutToToolTip(pWidget, shortcut, tr("down small"));
+                        subkey = configKey;
+                        subkey.item += "_down_small";
+                        shortcut = m_pKeyboard->getKeyboardConfig()->getValueString(subkey);
+                        addShortcutToToolTip(pWidget, shortcut, tr("left small"));
+                    } else {
+                        subkey = configKey;
+                        subkey.item += "_up";
+                        shortcut = m_pKeyboard->getKeyboardConfig()->getValueString(subkey);
+                        addShortcutToToolTip(pWidget, shortcut, tr("up"));
+
+                        subkey = configKey;
+                        subkey.item += "_down";
+                        shortcut = m_pKeyboard->getKeyboardConfig()->getValueString(subkey);
+                        addShortcutToToolTip(pWidget, shortcut, tr("down"));
+
+                        subkey = configKey;
+                        subkey.item += "_up_small";
+                        shortcut = m_pKeyboard->getKeyboardConfig()->getValueString(subkey);
+                        addShortcutToToolTip(pWidget, shortcut, tr("up small"));
+
+                        subkey = configKey;
+                        subkey.item += "_down_small";
+                        shortcut = m_pKeyboard->getKeyboardConfig()->getValueString(subkey);
+                        addShortcutToToolTip(pWidget, shortcut, tr("down small"));
+                    }
                 }
             }
         }
