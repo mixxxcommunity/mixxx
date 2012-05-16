@@ -46,7 +46,7 @@ bool MixxxKeyboard::eventFilter(QObject *, QEvent * e) {
 #else
         int keyId = ke->nativeScanCode();
 #endif
-        qDebug() << "KeyPress event =" << ke->key() << "KeyId =" << keyId;
+        //qDebug() << "KeyPress event =" << ke->key() << "KeyId =" << keyId;
 
         // Run through list of active keys to see if the pressed key is already active
         // Just for returning true if we are consuming this key event
@@ -82,7 +82,7 @@ bool MixxxKeyboard::eventFilter(QObject *, QEvent * e) {
 #endif
         bool autoRepeat = ke->isAutoRepeat();
 
-        qDebug() << "KeyRelease event =" << ke->key() << "AutoRepeat =" << autoRepeat << "KeyId =" << keyId;
+        //qDebug() << "KeyRelease event =" << ke->key() << "AutoRepeat =" << autoRepeat << "KeyId =" << keyId;
 
         // Run through list of active keys to see if the released key is active
         for (int i = m_qActiveKeyList.size() - 1; i >= 0; i--) {
@@ -108,6 +108,8 @@ QKeySequence MixxxKeyboard::getKeySeq(QKeyEvent * e) {
     QString modseq;
 	QString keyseq;
 	QKeySequence k;
+
+	// TODO(XXX) check if we may simply return QKeySequence(e->modifiers()+e->key())
 
 	if (e->modifiers() & Qt::ShiftModifier)
         modseq += "Shift+";

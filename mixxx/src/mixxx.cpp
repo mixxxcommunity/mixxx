@@ -80,6 +80,15 @@ bool loadTranslations(const QLocale& systemLocale, QString userLocale,
 
     if (userLocale.size() == 0) {
 #if QT_VERSION >= 0x040800
+        QStringList uiLanguages = systemLocale.uiLanguages();
+        if (uiLanguages.size() > 0 && uiLanguages.first() == "en") {
+            // Don't bother loading a translation if the first ui-langauge is 
+            // English because the interface is already in English. This fixes 
+            // the case where the user's install of Qt doesn't have an explicit 
+            // English translation file and the fact that we don't ship a
+            // mixxx_en.qm.
+            return false;
+        }
         return pTranslator->load(systemLocale, translation, prefix, translationPath);
 #else
         userLocale = systemLocale.name();
@@ -235,7 +244,7 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
         m_pKbdConfig = new ConfigObject<ConfigValueKbd>(defaultKeyboard);
     } else {
         m_pKbdConfig = new ConfigObject<ConfigValueKbd>("");
-    }; 
+    }
 
     // TODO(XXX) leak pKbdConfig, MixxxKeyboard owns it? Maybe roll all keyboard
     // initialization into MixxxKeyboard
