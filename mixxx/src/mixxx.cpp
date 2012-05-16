@@ -1118,7 +1118,12 @@ void MixxxApp::slotOptionsFullScreen(bool toggle)
          //m_winpos.setX(m_winpos.x() + (geometry().x() - x()));
          //m_winpos.setY(m_winpos.y() + (geometry().y() - y()));
 #endif
+#ifdef __LINUX__
+        // Fix for "No menu bar with ubuntu unity in full screen mode" Bug #885890
+        // Not for Mac OS because the native menu bar will unhide when moving
+        // the mouse to the top of screen
         menuBar()->setNativeMenuBar(false);
+#endif
         showFullScreen();
     } else {
         showNormal();
@@ -1501,7 +1506,7 @@ void MixxxApp::rebootMixxxView() {
 
     // Set native menu bar. Fixes issue on OSX where menu bar went away after a
     // skin change.
-#if __OSX__
+#if __APPLE__
     menuBar()->setNativeMenuBar(m_NativeMenuBarSupport);
 #endif
     qDebug() << "rebootMixxxView DONE";

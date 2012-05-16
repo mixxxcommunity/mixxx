@@ -138,7 +138,7 @@ QString IPodFeature::detectMountPoint( QString iPodMountPoint) {
       // Linux
       mountpoints = QDir("/media").entryInfoList();
       mountpoints += QDir("/mnt").entryInfoList();
-    #elif __OSX__
+    #elif __APPLE__
       // Mac OSX
       mountpoints = QDir("/Volumes").entryInfoList();
     #endif
