@@ -63,6 +63,8 @@ WTrackTableView::WTrackTableView(QWidget * parent,
     createActions();
 
     //Connect slots and signals to make the world go 'round.
+    connect(this, SIGNAL(clicked(const QModelIndex &)),
+            this, SLOT(slotFindCover(const QModelIndex &)));
     connect(this, SIGNAL(doubleClicked(const QModelIndex &)),
             this, SLOT(slotMouseDoubleClicked(const QModelIndex &)));
 
@@ -234,6 +236,8 @@ void WTrackTableView::loadTrackModel(QAbstractItemModel *model) {
         //viewport()->setAcceptDrops(true);
     }
 
+    installEventFilter(this);
+
     // Possible giant fuckup alert - It looks like Qt has something like these
     // caps built-in, see http://doc.trolltech.com/4.5/qt.html#ItemFlag-enum and
     // the flags(...) function that we're already using in LibraryTableModel. I
@@ -241,6 +245,17 @@ void WTrackTableView::loadTrackModel(QAbstractItemModel *model) {
     // target though, so my hax above may not be completely unjustified.
 
     setVisible(true);
+}
+
+bool WTrackTableView::eventFilter(QObject *obj, QEvent *event) {
+    if (event->type() == QEvent::KeyRelease) {
+        QModelIndex index = selectionModel()->currentIndex();
+        slotFindCover(index);
+        return QObject::eventFilter(obj, event);
+    } else {
+        // standard event processing
+        return QObject::eventFilter(obj, event);
+    }
 }
 
 void WTrackTableView::disableSorting() {
@@ -298,6 +313,25 @@ void WTrackTableView::createActions() {
     m_pClearBeatsAction = new QAction(tr("Clear BPM and Beatgrid"), this);
     connect(m_pClearBeatsAction, SIGNAL(triggered()),
             this, SLOT(slotClearBeats()));
+}
+
+void WTrackTableView::slotFindCover(const QModelIndex &index) {
+    TrackModel* trackModel = getTrackModel();
+    QFileInfo file = trackModel->getTrackLocation(index);
+    if (trackModel && file.exists()) {
+        QString cover;
+        QDir dir(file.dir().absolutePath());
+        QStringList filters;
+        filters << "*.png" << "*.jpg" << "*.jpeg";
+        dir.setNameFilters(filters);
+        if (dir.count()>0) {
+            QStringList imgFiles = dir.entryList();
+            cover = dir.path();
+            cover.append("/");
+            cover.append(imgFiles[0]);
+        }
+        emit(coverChanged(cover));
+    }
 }
 
 void WTrackTableView::slotMouseDoubleClicked(const QModelIndex &index) {

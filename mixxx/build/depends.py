@@ -409,6 +409,7 @@ class MixxxCore(Feature):
                    "widget/wskincolor.cpp",
                    "widget/wabstractcontrol.cpp",
                    "widget/wsearchlineedit.cpp",
+                   "widget/wcoverart.cpp",
                    "widget/wpixmapstore.cpp",
                    "widget/hexspinbox.cpp",
                    "widget/wtrackproperty.cpp",

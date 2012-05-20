@@ -36,6 +36,10 @@
         <file>images/library/ic_library_ipod.png</file>
         <file>images/library/ic_library_banshee.png</file>
         <file>images/library/ic_library_clementine.png</file>
+        <file>images/library/ic_library_cover_show.png</file>
+        <file>images/library/ic_library_cover_hide.png</file>
+        <file>images/library/ic_library_zoom_in.png</file>
+        <file>images/library/vinyl-record.png</file>
         <file>translations/mixxx_ar.qm</file>
         <file>translations/mixxx_ast.qm</file>
         <file>translations/mixxx_bg.qm</file>
