@@ -1136,8 +1136,8 @@ void MixxxApp::slotOptionsFullScreen(bool toggle)
         showFullScreen();
     } else {
         showNormal();
-        menuBar()->setNativeMenuBar(m_NativeMenuBarSupport);
 #ifdef __LINUX__
+        menuBar()->setNativeMenuBar(m_NativeMenuBarSupport);
         //move(m_winpos);
 #endif
     }
