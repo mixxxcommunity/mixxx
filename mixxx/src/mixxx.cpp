@@ -1513,11 +1513,13 @@ void MixxxApp::rebootMixxxView() {
 
     WaveformWidgetFactory::instance()->start();
 
-    // Set native menu bar. Fixes issue on OSX where menu bar went away after a
-    // skin change.
-#if __APPLE__
-    menuBar()->setNativeMenuBar(m_NativeMenuBarSupport);
+#ifdef __APPLE__
+    // Original the following line fixes issue on OSX where menu bar went away
+    // after a skin change. It was original surrounded by #if __OSX__
+    // Now it seems it causes the opposite see Bug #1000187
+    //menuBar()->setNativeMenuBar(m_NativeMenuBarSupport);
 #endif
+
     qDebug() << "rebootMixxxView DONE";
 }
 
