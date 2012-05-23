@@ -225,7 +225,9 @@ QString TrackInfoObject::getFilename()  const
 bool TrackInfoObject::exists()  const
 {
     QMutexLocker lock(&m_qMutex);
-
+    // return here a fresh calculated value to be sure 
+    // the file is not deleted or gone with an USB-Stick 
+    // because it will probably stop the Auto-DJ
     return QFile::exists(m_fileInfo.absoluteFilePath());
 }
 

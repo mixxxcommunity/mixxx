@@ -102,8 +102,6 @@ public:
     QString getDirectory() const;
     // Returns the filename of the file.
     QString getFilename() const;
-    // Returns file creation date
-    //QDateTime getCreateDate() const;
     // Returns the length of the file in bytes
     int getLength() const;
     // Returns whether the file exists on disk or not. Updated as of the time
