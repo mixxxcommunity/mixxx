@@ -192,8 +192,13 @@ void DlgAutoDJ::moveSelection(int delta) {
 void DlgAutoDJ::shufflePlaylist(bool buttonChecked) {
     Q_UNUSED(buttonChecked);
     qDebug() << "Shuffling AutoDJ playlist";
-    // Todo(XXX) calculate top track for shuffle
-    m_pAutoDJTableModel->shuffleTracks(m_pAutoDJTableModel->index(0, 0));
+    int row;
+    if(m_eState == ADJ_DISABLED) {
+        row = 0;
+    } else {
+        row = 1;
+    }
+    m_pAutoDJTableModel->shuffleTracks(m_pAutoDJTableModel->index(row, 0));
     qDebug() << "Shuffling done";
 }
 

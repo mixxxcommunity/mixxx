@@ -5,7 +5,6 @@
 #include "library/trackcollection.h"
 #include "library/librarytablemodel.h"
 #include "library/queryutil.h"
-#include "library/stardelegate.h"
 
 #include "mixxxutils.cpp"
 
@@ -135,12 +134,7 @@ bool LibraryTableModel::isColumnHiddenByDefault(int column) {
     return false;
 }
 
-QAbstractItemDelegate* LibraryTableModel::delegateForColumn(const int i, QObject* pParent) {
-    if (i == fieldIndex(LIBRARYTABLE_RATING)) {
-        return new StarDelegate(pParent);
-    }
-    return NULL;
-}
+
 
 TrackModel::CapabilitiesFlags LibraryTableModel::getCapabilities() const {
     return TRACKMODELCAPS_NONE

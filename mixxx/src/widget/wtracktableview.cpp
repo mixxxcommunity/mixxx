@@ -280,11 +280,12 @@ void WTrackTableView::createActions() {
     m_pHideAct = new QAction(tr("Hide from Library"), this);
     connect(m_pHideAct, SIGNAL(triggered()), this, SLOT(slotHide()));
 
-    m_pPropertiesAct = new QAction(tr("Properties..."), this);
+    m_pPropertiesAct = new QAction(tr("Properties"), this);
+
     connect(m_pPropertiesAct, SIGNAL(triggered()),
             this, SLOT(slotShowTrackInfo()));
 
-    m_pFileBrowserAct = new QAction(tr("Open in file browser"), this);
+    m_pFileBrowserAct = new QAction(tr("Open in File Browser"), this);
     connect(m_pFileBrowserAct, SIGNAL(triggered()),
             this, SLOT(slotOpenInFileBrowser()));
 
