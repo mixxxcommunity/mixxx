@@ -1,9 +1,9 @@
 #include "wcoverart.h"
 #include <QDebug>
 #include <QPainter>
-#include <QStyle>
-//#include <QDialog>
+#include <QLabel>
 #include <QBitmap>
+#include <QApplication>
 
 WCoverArt::WCoverArt(ConfigObject<ConfigValue>* pConfig, QWidget *parent)
                     : QWidget(parent), m_pConfig(pConfig) {
@@ -37,6 +37,14 @@ void WCoverArt::loadCover(QString img) {
     update();
 }
 
+void WCoverArt::clearCover(const QString& img) {
+    Q_UNUSED(img);
+    m_currentCover = ":/images/library/vinyl-record.png";
+    m_coverIsEmpty = 1;
+
+    update();
+}
+
 void WCoverArt::paintEvent(QPaintEvent *) {
     QPainter painter(this);
 
@@ -66,9 +74,9 @@ void WCoverArt::paintEvent(QPaintEvent *) {
 
 void WCoverArt::resizeEvent(QResizeEvent *) {
     if (m_coverIsVisible)
-        setMinimumSize(0, qMax(minimumSizeHint().height(), 90));
+        setMinimumSize(0, parentWidget()->height()/3);
     else
-        setMinimumSize(0, qMax(minimumSizeHint().height(), 20));
+        setMinimumSize(0, 20);
 }
 
 void WCoverArt::mousePressEvent(QMouseEvent *event) {
@@ -80,8 +88,25 @@ void WCoverArt::mousePressEvent(QMouseEvent *event) {
             resize(sizeHint());
         }
         else {
-            //QDialog *cp = new QDialog(this, Qt::Popup | Qt::Window );
-            //cp->show();
+            if (!m_coverIsEmpty) {
+                QLabel *lb = new QLabel(this, Qt::Popup | Qt::Tool | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint);
+                lb->setWindowModality(Qt::ApplicationModal);
+                int index = m_currentCover.lastIndexOf("/");
+                QString title = m_currentCover.mid(index+1);
+                lb->setWindowTitle(title);
+
+                QPixmap px = QPixmap(m_currentCover);
+                QSize sz = QApplication::activeWindow()->size();
+
+                if (px.height() > sz.height()/1.2) {
+                    px = px.scaledToHeight(sz.height()/1.2, Qt::SmoothTransformation);
+                }
+
+                lb->setPixmap(px);
+                lb->setGeometry(sz.width()/2-px.width()/2, sz.height()/2-px.height()/2.2,
+                                px.width(), px.height());
+                lb->show();
+            }
         }
     }
     else {
@@ -100,11 +125,14 @@ void WCoverArt::mouseMoveEvent(QMouseEvent *event) {
             if (lastPoint.x() > width()-(height()/5) && lastPoint.y() < (height()/5)+5)
                 setCursor(Qt::ArrowCursor);
             else {
-                //if (!m_coverIsEmpty) {
-                    //QPixmap pix(":/images/library/ic_library_zoom_in.png");
-                    //pix = pix.scaled(24, 24);
-                    //setCursor(QCursor(pix));
-                //}}
+                if (m_coverIsEmpty) {
+                    setCursor(Qt::ArrowCursor);
+                }
+                else {
+                    QPixmap pix(":/images/library/ic_library_zoom_in.png");
+                    pix = pix.scaled(24, 24);
+                    setCursor(QCursor(pix));
+                }
             }
 
         }
@@ -119,3 +147,4 @@ void WCoverArt::leaveEvent(QEvent *) {
     m_coverIsHovered = 0;
     update();
 }
+

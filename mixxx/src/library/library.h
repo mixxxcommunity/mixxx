@@ -64,14 +64,16 @@ public slots:
     void slotRefreshLibraryModels();
     void slotCreatePlaylist();
     void slotCreateCrate();
-    void slotLoadCover(QString img);
+    void slotLoadCover(const QString& img);
+    void slotClearCover(const QString& img);
 signals:
     void showTrackModel(QAbstractItemModel* model);
     void switchToView(const QString& view);
     void loadTrack(TrackPointer tio);
     void loadTrackToPlayer(TrackPointer tio, QString group);
     void restoreSearch(const QString&);
-    void coverChanged(QString);
+    void coverChanged(const QString&);
+    void coverCleared(const QString&);
 
 private:
     ConfigObject<ConfigValue>* m_pConfig;

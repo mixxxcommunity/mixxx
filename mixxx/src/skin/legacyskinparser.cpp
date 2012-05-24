@@ -708,9 +708,11 @@ QWidget* LegacySkinParser::parseTableView(QDomElement node) {
     connect(m_pLibrary, SIGNAL(restoreSearch(const QString&)),
             pLineEditSearch, SLOT(restoreSearch(const QString&)));
 
-    //connect track table to cover art
-    connect(m_pLibrary, SIGNAL(coverChanged(QString)),
-            pCoverArt, SLOT(loadCover(QString)));
+    //connect cover art
+    connect(m_pLibrary, SIGNAL(coverChanged(const QString&)),
+            pCoverArt, SLOT(loadCover(const QString&)));
+    connect(m_pLibrary, SIGNAL(coverCleared(const QString&)),
+            pCoverArt, SLOT(clearCover(const QString&)));
 
     m_pLibrary->bindWidget(pLibrarySidebar,
                            pLibraryWidget,

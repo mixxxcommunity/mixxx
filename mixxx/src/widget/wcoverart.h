@@ -32,6 +32,7 @@ private:
 
 public slots:
     void loadCover(QString img);
+    void clearCover(const QString& img);
 
 };
 
