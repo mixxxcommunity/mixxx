@@ -23,6 +23,7 @@ class LibraryTableModel;
 class WLibrarySidebar;
 class WLibrary;
 class WSearchLineEdit;
+class WCoverArt;
 class MixxxLibraryFeature;
 class PromoTracksFeature;
 class PlaylistFeature;
@@ -63,12 +64,14 @@ public slots:
     void slotRefreshLibraryModels();
     void slotCreatePlaylist();
     void slotCreateCrate();
+    void slotLoadCover(QString img);
 signals:
     void showTrackModel(QAbstractItemModel* model);
     void switchToView(const QString& view);
     void loadTrack(TrackPointer tio);
     void loadTrackToPlayer(TrackPointer tio, QString group);
     void restoreSearch(const QString&);
+    void coverChanged(QString);
 
 private:
     ConfigObject<ConfigValue>* m_pConfig;

@@ -123,6 +123,9 @@ void Library::bindWidget(WLibrarySidebar* pSidebarWidget,
     connect(this, SIGNAL(switchToView(const QString&)),
             pLibraryWidget, SLOT(switchToView(const QString&)));
 
+    connect(pTrackTableView, SIGNAL(coverChanged(QString)),
+            this, SLOT(slotLoadCover(QString)));
+
     m_pLibraryControl->bindWidget(pSidebarWidget, pLibraryWidget, pKeyboard);
 
     // Setup the sources view
@@ -208,6 +211,9 @@ void Library::slotCreateCrate()
     m_pCrateFeature->slotCreateCrate();
 }
 
+void Library::slotLoadCover(QString img) {
+    emit(coverChanged(img));
+}
 
 QList<TrackPointer> Library::getTracksToAutoLoad()
 {

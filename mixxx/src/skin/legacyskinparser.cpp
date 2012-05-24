@@ -45,6 +45,7 @@
 #include "widget/wwaveformviewer.h"
 #include "waveform/waveformwidgetfactory.h"
 #include "widget/wsearchlineedit.h"
+#include "widget/wcoverart.h"
 #include "widget/wlibrary.h"
 #include "widget/wlibrarysidebar.h"
 #include "widget/wskincolor.h"
@@ -687,10 +688,14 @@ QWidget* LegacySkinParser::parseTableView(QDomElement node) {
                                                            pLibrarySidebarPage);
     pLineEditSearch->setup(node);
 
+    WCoverArt* pCoverArt = new WCoverArt(m_pConfig, pLibrarySidebarPage);
+    pCoverArt->setup(node);
+
     QVBoxLayout* vl = new QVBoxLayout(pLibrarySidebarPage);
     vl->setContentsMargins(0,0,0,0); //Fill entire space
     vl->addWidget(pLineEditSearch);
     vl->addWidget(pLibrarySidebar);
+    vl->addWidget(pCoverArt);
     pLibrarySidebarPage->setLayout(vl);
 
     // Connect search box signals to the library
@@ -702,6 +707,10 @@ QWidget* LegacySkinParser::parseTableView(QDomElement node) {
             pLibraryWidget, SLOT(searchStarting()));
     connect(m_pLibrary, SIGNAL(restoreSearch(const QString&)),
             pLineEditSearch, SLOT(restoreSearch(const QString&)));
+
+    //connect track table to cover art
+    connect(m_pLibrary, SIGNAL(coverChanged(QString)),
+            pCoverArt, SLOT(loadCover(QString)));
 
     m_pLibrary->bindWidget(pLibrarySidebar,
                            pLibraryWidget,

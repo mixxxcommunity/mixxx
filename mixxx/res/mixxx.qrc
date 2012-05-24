@@ -33,6 +33,10 @@
         <file>images/library/ic_library_recordings.png</file>
         <file>images/library/ic_library_rhythmbox.png</file>
         <file>images/library/ic_library_traktor.png</file>
+        <file>images/library/ic_library_cover_show.png</file>
+        <file>images/library/ic_library_cover_hide.png</file>
+        <file>images/library/ic_library_zoom_in.png</file>
+        <file>images/library/vinyl-record.png</file>
         <file>translations/mixxx_ar.qm</file>
         <file>translations/mixxx_ast.qm</file>
         <file>translations/mixxx_bg.qm</file>

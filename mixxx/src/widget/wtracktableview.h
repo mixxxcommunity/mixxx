@@ -35,6 +35,9 @@ class WTrackTableView : public WLibraryTableView {
     virtual void loadSelectedTrackToGroup(QString group);
     void disableSorting();
 
+  protected:
+    bool eventFilter(QObject *obj, QEvent *event);
+
   public slots:
     void loadTrackModel(QAbstractItemModel* model);
     void slotMouseDoubleClicked(const QModelIndex &);
@@ -56,6 +59,7 @@ class WTrackTableView : public WLibraryTableView {
     void slotLockBpm();
     void slotUnlockBpm();
     void slotClearBeats();
+    void slotFindCover(const QModelIndex &index);
 
   private:
     void sendToAutoDJ(bool bTop);
