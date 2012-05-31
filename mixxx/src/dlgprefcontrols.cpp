@@ -600,6 +600,10 @@ void DlgPrefControls::slotSetVisualGainHigh(double gain) {
     WaveformWidgetFactory::instance()->setVisualGain(WaveformWidgetFactory::High,gain);
 }
 
+void DlgPrefControls::slotSetNormalizeOverview( bool normalize) {
+    WaveformWidgetFactory::instance()->setOverviewNormalized(normalize);
+}
+
 void DlgPrefControls::onShow() {
     m_timer = startTimer(100); //refresh actual frame rate every 100 ms
 }
@@ -646,6 +650,7 @@ void DlgPrefControls::initWaveformControl()
     lowVisualGain->setValue(factory->getVisualGain(WaveformWidgetFactory::Low));
     midVisualGain->setValue(factory->getVisualGain(WaveformWidgetFactory::Mid));
     highVisualGain->setValue(factory->getVisualGain(WaveformWidgetFactory::High));
+    normalizeOverviewCheckBox->setChecked(factory->isOverviewNormalized());
 
     for( int i = WaveformWidgetRenderer::s_waveformMinZoom;
          i <= WaveformWidgetRenderer::s_waveformMaxZoom;
@@ -670,5 +675,7 @@ void DlgPrefControls::initWaveformControl()
             this,SLOT(slotSetVisualGainMid(double)));
     connect(highVisualGain,SIGNAL(valueChanged(double)),
             this,SLOT(slotSetVisualGainHigh(double)));
+    connect(normalizeOverviewCheckBox,SIGNAL(toggled(bool)),
+            this,SLOT(slotSetNormalizeOverview(bool)));
 
 }
