@@ -105,7 +105,7 @@ DlgPrefControls::DlgPrefControls(QWidget * parent, MixxxApp * mixxx,
     // Set default range as stored in config file
     if (m_pConfig->getValueString(ConfigKey("[Controls]","RateRange")).length() == 0)
         m_pConfig->set(ConfigKey("[Controls]","RateRange"),ConfigValue(2));
-
+        
     slotSetRateRange(m_pConfig->getValueString(ConfigKey("[Controls]","RateRange")).toInt());
     connect(ComboBoxRateRange, SIGNAL(activated(int)), this, SLOT(slotSetRateRange(int)));
 
@@ -341,10 +341,10 @@ void DlgPrefControls::slotUpdate()
     double deck1RateRange = m_rateRangeControls[0]->get();
     double deck1RateDir = m_rateDirControls[0]->get();
 
-    float idx = (10. * deck1RateRange) + 1;
-    if (deck1RateRange == 0.06)
+    double idx = (10. * deck1RateRange) + 1;
+    if (deck1RateRange <= 0.07)
         idx = 0.;
-    if (deck1RateRange == 0.08)
+    else if (deck1RateRange <= 0.09)
         idx = 1.;
 
     ComboBoxRateRange->setCurrentIndex((int)idx);
@@ -372,7 +372,7 @@ void DlgPrefControls::slotSetRateRange(int pos)
         range = 0.06f;
     if (pos==1)
         range = 0.08f;
-
+    
     // Set rate range for every group
     foreach (ControlObjectThreadMain* pControl, m_rateRangeControls) {
         pControl->slotSet(range);
@@ -529,11 +529,14 @@ void DlgPrefControls::slotApply()
 {
     double deck1RateRange = m_rateRangeControls[0]->get();
     double deck1RateDir = m_rateDirControls[0]->get();
+    
     // Write rate range to config file
-    float idx = 10. * deck1RateRange;
-    if (idx==0.8)
+    double idx = (10. * deck1RateRange) + 1;
+    if (deck1RateRange <= 0.07)
         idx = 0.;
-
+    else if (deck1RateRange <= 0.09)
+        idx = 1.;
+       
     m_pConfig->set(ConfigKey("[Controls]","RateRange"), ConfigValue((int)idx));
 
     // Write rate direction to config file
@@ -578,6 +581,10 @@ void DlgPrefControls::slotSetVisualGainMid(double gain) {
 
 void DlgPrefControls::slotSetVisualGainHigh(double gain) {
     WaveformWidgetFactory::instance()->setVisualGain(WaveformWidgetFactory::High,gain);
+}
+
+void DlgPrefControls::slotSetNormalizeOverview( bool normalize) {
+    WaveformWidgetFactory::instance()->setOverviewNormalized(normalize);
 }
 
 void DlgPrefControls::onShow() {
@@ -626,6 +633,7 @@ void DlgPrefControls::initWaveformControl()
     lowVisualGain->setValue(factory->getVisualGain(WaveformWidgetFactory::Low));
     midVisualGain->setValue(factory->getVisualGain(WaveformWidgetFactory::Mid));
     highVisualGain->setValue(factory->getVisualGain(WaveformWidgetFactory::High));
+    normalizeOverviewCheckBox->setChecked(factory->isOverviewNormalized());
 
     for( int i = WaveformWidgetRenderer::s_waveformMinZoom;
          i <= WaveformWidgetRenderer::s_waveformMaxZoom;
@@ -650,5 +658,7 @@ void DlgPrefControls::initWaveformControl()
             this,SLOT(slotSetVisualGainMid(double)));
     connect(highVisualGain,SIGNAL(valueChanged(double)),
             this,SLOT(slotSetVisualGainHigh(double)));
+    connect(normalizeOverviewCheckBox,SIGNAL(toggled(bool)),
+            this,SLOT(slotSetNormalizeOverview(bool)));
 
 }

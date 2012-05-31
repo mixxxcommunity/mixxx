@@ -374,6 +374,7 @@ class MixxxCore(Feature):
                    "controllers/controllerlearningeventfilter.cpp",
                    "controllers/controllermanager.cpp",
                    "controllers/controllerpresetfilehandler.cpp",
+                   "controllers/controllerpresetinfo.cpp",
                    "controllers/midi/midicontroller.cpp",
                    "controllers/midi/midicontrollerpresetfilehandler.cpp",
                    "controllers/midi/midienumerator.cpp",
@@ -534,6 +535,7 @@ class MixxxCore(Feature):
 
                    "waveform/renderers/waveformrenderersignalbase.cpp",
                    "waveform/renderers/waveformmark.cpp",
+                   "waveform/renderers/waveformmarkset.cpp",
                    "waveform/renderers/waveformmarkrange.cpp",
 
                    "waveform/widgets/waveformwidgetabstract.cpp",

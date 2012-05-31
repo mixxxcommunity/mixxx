@@ -272,11 +272,11 @@ void WTrackTableView::createActions() {
     m_pRemoveAct = new QAction(tr("Remove"), this);
     connect(m_pRemoveAct, SIGNAL(triggered()), this, SLOT(slotRemove()));
 
-    m_pPropertiesAct = new QAction(tr("Properties..."), this);
+    m_pPropertiesAct = new QAction(tr("Properties"), this);
     connect(m_pPropertiesAct, SIGNAL(triggered()),
             this, SLOT(slotShowTrackInfo()));
 
-    m_pFileBrowserAct = new QAction(tr("Open in file browser"), this);
+    m_pFileBrowserAct = new QAction(tr("Open in File Browser"), this);
     connect(m_pFileBrowserAct, SIGNAL(triggered()),
             this, SLOT(slotOpenInFileBrowser()));
 
@@ -602,12 +602,21 @@ void WTrackTableView::onShow() {
 }
 
 void WTrackTableView::mouseMoveEvent(QMouseEvent* pEvent) {
-   Q_UNUSED(pEvent);
-   TrackModel* trackModel = getTrackModel();
+    // Needed for mouse-tracking to fire entered() events.
+    WLibraryTableView::mouseMoveEvent(pEvent);
+
+    // Only use this for drag and drop if the LeftButton is pressed we need to
+    // check for this because PreviewButtonDelegate activates mousetracking and
+    // this function is called everytime the mouse is moved -- kain88 May 2012
+    if (pEvent->buttons() != Qt::LeftButton) {
+        return;
+    }
+
+    TrackModel* trackModel = getTrackModel();
     if (!trackModel)
         return;
-
-    // Iterate over selected rows and append each item's location url to a list
+    // qDebug() << "MouseMoveEvent";
+    // Iterate over selected rows and append each item's location url to a list.
     QList<QUrl> locationUrls;
     QModelIndexList indices = selectionModel()->selectedRows();
     foreach (QModelIndex index, indices) {
