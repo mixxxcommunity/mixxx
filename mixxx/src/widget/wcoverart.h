@@ -29,11 +29,11 @@ private:
     bool m_coverIsHovered;
     bool m_coverIsEmpty;
     QString m_currentCover;
+    QColor m_fgc; //Foreground colour
 
 public slots:
     void loadCover(QString img);
     void clearCover(const QString& img);
-
 };
 
 #endif // WCOVERART_H

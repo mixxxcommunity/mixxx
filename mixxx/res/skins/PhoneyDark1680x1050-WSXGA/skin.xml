@@ -1,4 +1,4 @@
-	<!--
+        <!--
 	PhoneyDark , Skin for Mixxx 1.11.x
 	www.mixxx.org
 	Copyright (C) 2010-2012 jus ; jus@justmail.de
@@ -84,6 +84,9 @@
 		<!--library search bar-->
 		WSearchLineEdit { padding: 2px; border: 1px solid #525252; font: 13px/15px Lucida Grande, Lucida Sans Unicode, Arial, Verdana, sans-serif; background: #333333; color: #F6F6F6; }
 		WSearchLineEdit:focus {padding: 2px; border: 2px solid #FF6600; font: 13px/15px Lucida Grande, Lucida Sans Unicode, Arial, Verdana, sans-serif; background: #333333; color: #F6F6F6; }
+
+                <!--cover art-->
+                WCoverArt { font: 13px/15px Lucida Grande, Lucida Sans Unicode, Arial, Verdana, sans-serif; background: #333333; color: #F6F6F6; }
 
 		<!--splitter between treeview and library-->
 		QSplitter::handle { image: url(skin:/style_handle_unchecked.png); background: none; }

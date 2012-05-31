@@ -1,4 +1,6 @@
 #include "wcoverart.h"
+#include "wwidget.h"
+#include "wskincolor.h"
 #include <QDebug>
 #include <QPainter>
 #include <QLabel>
@@ -22,6 +24,25 @@ WCoverArt::~WCoverArt() {
 void WCoverArt::setup(QDomNode node) {
     Q_UNUSED(node);
     setMouseTracking(TRUE);
+
+    // Background color
+    QColor bgc(255,255,255);
+    if (!WWidget::selectNode(node, "BgColor").isNull()) {
+        bgc.setNamedColor(WWidget::selectNodeQString(node, "BgColor"));
+        setAutoFillBackground(true);
+    }
+    QPalette pal = palette();
+    pal.setBrush(backgroundRole(), WSkinColor::getCorrectColor(bgc));
+
+    // Foreground color
+    m_fgc = QColor(0,0,0);
+    if (!WWidget::selectNode(node, "FgColor").isNull()) {
+        m_fgc.setNamedColor(WWidget::selectNodeQString(node, "FgColor"));
+    }
+    bgc = WSkinColor::getCorrectColor(bgc);
+    m_fgc = QColor(255 - bgc.red(), 255 - bgc.green(), 255 - bgc.blue());
+    pal.setBrush(foregroundRole(), m_fgc);
+    setPalette(pal);
 }
 
 void WCoverArt::loadCover(QString img) {
@@ -60,15 +81,19 @@ void WCoverArt::paintEvent(QPaintEvent *) {
     }
     else {
         QImage sc = QImage(":/images/library/ic_library_cover_show.png");
-        sc = sc.scaled(height()-1, height()-1);
+        sc = sc.scaled(height()-1, height()-1,
+                       Qt::KeepAspectRatioByExpanding,
+                       Qt::SmoothTransformation);
         painter.drawImage(0, 1 ,sc);
-        painter.drawText(25, 15, tr("Show album cover"));
+        painter.drawText(25, 15, tr("Show cover"));
     }
 
     if (m_coverIsVisible && m_coverIsHovered) {
         QImage hc = QImage(":/images/library/ic_library_cover_hide.png");
-        hc = hc.scaled(height()/5, height()/5);
-        painter.drawImage(width()-(height()/5), 5, hc);
+        hc = hc.scaled(20, 20,
+                       Qt::KeepAspectRatioByExpanding,
+                       Qt::SmoothTransformation);
+        painter.drawImage(width()-21, 6, hc);
     }
 }
 
