@@ -27,6 +27,7 @@
 
 class MixxxApp;
 class SoundManager;
+class DlgPrefAutoDJ;
 class DlgPrefSound;
 class DlgPrefController;
 class DlgPrefNoControllers;
@@ -80,6 +81,7 @@ private:
     int addPageWidget(QWidget* w);
     QList<DlgPrefController*> m_controllerWindows;
     
+    DlgPrefAutoDJ* m_wautodj;
     DlgPrefSound* m_wsound;
     DlgPrefPlaylist* m_wplaylist;
     DlgPrefNoControllers *m_wNoControllers;
@@ -109,6 +111,7 @@ private:
     QScrollArea* m_sareplaygain;
 	*/
 
+    QTreeWidgetItem* m_pAutoDJButton;
     QTreeWidgetItem* m_pSoundButton;
     QTreeWidgetItem* m_pPlaylistButton;
     QTreeWidgetItem* m_pControlsButton;

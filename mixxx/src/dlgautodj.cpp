@@ -43,21 +43,24 @@ DlgAutoDJ::DlgAutoDJ(QWidget* parent, ConfigObject<ConfigValue>* pConfig,
     box->removeWidget(m_pTrackTablePlaceholder);
     m_pTrackTablePlaceholder->hide();
     box->insertWidget(1, m_pTrackTableView);
-
+    
     m_pAutoDJTableModel = new PlaylistTableModel(this, pTrackCollection,
                                                  "mixxx.db.model.autodj");
     int playlistId = m_playlistDao.getPlaylistIdFromName(AUTODJ_TABLE);
     if (playlistId < 0) {
-        playlistId = m_playlistDao.createPlaylist(AUTODJ_TABLE,
-                                                  PlaylistDAO::PLHT_AUTO_DJ);
+        playlistId = m_playlistDao.createPlaylist(AUTODJ_TABLE, PlaylistDAO::PLHT_AUTO_DJ);
     }
-    m_pAutoDJTableModel->setPlaylist(playlistId);
+	m_pAutoDJTableModel->setPlaylist(playlistId);
     m_pTrackTableView->loadTrackModel(m_pAutoDJTableModel);
 
     // Override some playlist-view properties:
 
     // Do not set this because it disables auto-scrolling
     //m_pTrackTableView->setDragDropMode(QAbstractItemView::InternalMove);
+
+    //Sort by the position column and lock it
+    m_pTrackTableView->sortByColumn(0, Qt::AscendingOrder);
+    m_pTrackTableView->setSortingEnabled(false);
 
     // Disallow sorting.
     m_pTrackTableView->disableSorting();
@@ -104,6 +107,7 @@ DlgAutoDJ::DlgAutoDJ(QWidget* parent, ConfigObject<ConfigValue>* pConfig,
     } else {
         spinBoxTransition->setValue(str_autoDjTransition.toInt());
     }
+    
 }
 
 DlgAutoDJ::~DlgAutoDJ() {
@@ -226,6 +230,19 @@ void DlgAutoDJ::fadeNow(bool buttonChecked) {
 }
 
 void DlgAutoDJ::toggleAutoDJ(bool toggle) {
+    // Emit signal for AutoDJ
+    emit setAutoDJEnabled(toggle);
+
+    if (toggle) { // Enable Auto DJ
+        pushButtonAutoDJ->setText(tr("Disable Auto DJ"));
+        m_bAutoDJEnabled = true;
+    }
+    else { // Disable Auto DJ
+    }
+}
+
+/* REFACTORED TO MODEL
+void DlgAutoDJ::toggleAutoDJ(bool toggle) {
     bool deck1Playing = m_pCOPlay1Fb->get() == 1.0f;
     bool deck2Playing = m_pCOPlay2Fb->get() == 1.0f;
 
@@ -299,6 +316,7 @@ void DlgAutoDJ::toggleAutoDJ(bool toggle) {
         m_pCOPlay2->disconnect(this);
     }
 }
+*/
 
 void DlgAutoDJ::player1PositionChanged(double value) {
     // 95% playback is when we crossfade and do stuff
@@ -510,6 +528,30 @@ bool DlgAutoDJ::loadNextTrackFromQueue() {
     return true;
 }
 
+void DlgAutoDJ::slotRemovePlayingTrackFromQueue(QString group) {
+    int nextId = 0;
+    int loadedId = 0;
+    // Get the track at the top of the playlist
+    TrackPointer nextTrack = m_pAutoDJTableModel->getTrack(m_pAutoDJTableModel->index(0, 0));
+    if (nextTrack) {
+        nextId = nextTrack->getId();
+    }
+    // Get the loaded track
+    TrackPointer loadedTrack = PlayerInfo::Instance().getTrackInfo(group);
+    if (loadedTrack) {
+        loadedId = loadedTrack->getId();
+    }
+    if (loadedId != nextId) {
+        // Do not remove when the user has loaded a track manually
+        return;
+    }
+    if (nextTrack) {
+        qDebug() << "REMOVING " << nextTrack->getTitle();
+        // Remove the top track
+        m_pAutoDJTableModel->removeTrack(m_pAutoDJTableModel->index(0, 0));
+    }
+}
+
 bool DlgAutoDJ::removePlayingTrackFromQueue(QString group) {
     TrackPointer nextTrack, loadedTrack;
     int nextId = 0, loadedId = 0;
@@ -622,4 +664,22 @@ void DlgAutoDJ::transitionValueChanged(int value) {
 
 bool DlgAutoDJ::appendTrack(int trackId) {
     return m_pAutoDJTableModel->appendTrack(trackId);
+}
+
+void DlgAutoDJ::slotNextTrackNeeded() {
+    // Get the track at the top of the playlist
+    TrackPointer nextTrack = m_pAutoDJTableModel->getTrack(m_pAutoDJTableModel->index(0, 0));
+    if (!nextTrack) {
+        // Playlist empty, disable AutoDJ and emit that end of playlist has been reached
+        pushButtonAutoDJ->setChecked(false);
+        emit endOfPlaylist(true);
+        return;
+    }
+    emit sendNextTrack(nextTrack);
+}
+
+void DlgAutoDJ::slotDisableAutoDJ() {
+    m_bAutoDJEnabled = false;
+    pushButtonAutoDJ->setChecked(false);
+    pushButtonAutoDJ->setText(tr("Enable Auto DJ"));
 }

@@ -214,6 +214,7 @@ private:
     ControlObject *m_pMasterRate;
     ControlPotmeter *playposSlider;
     ControlPotmeter *visualPlaypos;
+    ControlObject *m_pPlayPosSamples;
     ControlObject *m_pSampleRate;
     ControlPushButton *m_pKeylock;
 

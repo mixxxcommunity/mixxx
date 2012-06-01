@@ -248,13 +248,16 @@ void TrackDAO::prepareLibraryInsert(QSqlQuery& query) {
 				  "tracknumber, filetype, location, comment, url, duration, rating, key, "
                   "bitrate, samplerate, cuepoint, bpm, replaygain, wavesummaryhex, "
                   "timesplayed, "
-                  "channels, mixxx_deleted, header_parsed, beats_version, beats_sub_version, beats, bpm_lock) "
+                  "channels, mixxx_deleted, header_parsed, beats_version, beats_sub_version, beats, bpm_lock, "
+                  "fade_in, fade_out) "
+
                   "VALUES (:artist, "
                   ":title, :album, :year, :genre, :composer, :tracknumber, "
                   ":filetype, :location, :comment, :url, :duration, :rating, :key, "
                   ":bitrate, :samplerate, :cuepoint, :bpm, :replaygain, :wavesummaryhex, "
                   ":timesplayed, "
-                  ":channels, :mixxx_deleted, :header_parsed, :beats_version, :beats_sub_version, :beats, :bpm_lock)");
+                  ":channels, :mixxx_deleted, :header_parsed, :beats_version, :beats_sub_version, :beats, :bpm_lock, "
+                  ":fade_in, :fade_out)");
 }
 
 void TrackDAO::bindTrackToLibraryInsert(
@@ -305,6 +308,9 @@ void TrackDAO::bindTrackToLibraryInsert(
     query.bindValue(":beats_version", blobVersion);
     query.bindValue(":beats", pBeatsBlob ? *pBeatsBlob : QVariant(QVariant::ByteArray));
     delete pBeatsBlob;
+
+    query.bindValue(":fade_in", pTrack->getFadeIn());
+    query.bindValue(":fade_out", pTrack->getFadeOut());
 }
 
 void TrackDAO::addTracks(QList<TrackInfoObject*> tracksToAdd, bool unremove) {
@@ -607,6 +613,8 @@ TrackPointer TrackDAO::getTrackFromDB(QSqlQuery &query) const {
         bool header_parsed = query.value(query.record().indexOf("header_parsed")).toBool();
         QDateTime date_created = query.value(query.record().indexOf("datetime_added")).toDateTime();
         bool has_bpm_lock = query.value(query.record().indexOf("bpm_lock")).toBool();
+        int fadeIn = query.value(query.record().indexOf("fade_in")).toInt();
+        int fadeOut = query.value(query.record().indexOf("fade_out")).toInt();
 
        TrackPointer pTrack = TrackPointer(new TrackInfoObject(location, false), &TrackDAO::deleteTrack);
 
@@ -643,7 +651,6 @@ TrackPointer TrackDAO::getTrackFromDB(QSqlQuery &query) const {
             pTrack->setBpm(bpm.toFloat());
         }
         pTrack->setBpmLock(has_bpm_lock);
-
         pTrack->setTimesPlayed(timesplayed);
         pTrack->setPlayed(played);
         pTrack->setChannels(channels);
@@ -652,6 +659,8 @@ TrackPointer TrackDAO::getTrackFromDB(QSqlQuery &query) const {
         pTrack->setHeaderParsed(header_parsed);
         pTrack->setDateAdded(date_created);
         pTrack->setCuePoints(m_cueDao.getCuesForTrack(trackId));
+        pTrack->setFadeIn(fadeIn);
+        pTrack->setFadeOut(fadeOut);
 
         pTrack->setDirty(false);
 
@@ -729,8 +738,8 @@ TrackPointer TrackDAO::getTrack(int id, bool cacheOnly) const {
         "SELECT library.id, artist, title, album, year, genre, composer, tracknumber, "
         "filetype, rating, key, track_locations.location as location, "
         "track_locations.filesize as filesize, comment, url, duration, bitrate, "
-        "samplerate, cuepoint, bpm, replaygain, channels, "
-        "header_parsed, timesplayed, played, beats_version, beats_sub_version, beats, datetime_added, bpm_lock "
+        "samplerate, cuepoint, bpm, replaygain, wavesummaryhex, channels, "
+        "header_parsed, timesplayed, played, beats_version, beats_sub_version, beats, datetime_added, bpm_lock, fade_in, fade_out "
         "FROM Library "
         "INNER JOIN track_locations "
             "ON library.location = track_locations.id "
@@ -776,6 +785,7 @@ void TrackDAO::updateTrack(TrackInfoObject* pTrack) {
                   "timesplayed=:timesplayed, played=:played, "
                   "channels=:channels, header_parsed=:header_parsed, "
                   "beats_version=:beats_version, beats_sub_version=:beats_sub_version, beats=:beats, "
+                  "fade_in=:fade_in, fade_out=:fade_out, "
                   "bpm_lock=:bpm_lock "
                   "WHERE id=:track_id");
     query.bindValue(":artist", pTrack->getArtist());
@@ -822,6 +832,9 @@ void TrackDAO::updateTrack(TrackInfoObject* pTrack) {
     query.bindValue(":beats_sub_version", beatsSubVersion);
     query.bindValue(":bpm", dBpm);
     delete pBeatsBlob;
+
+    query.bindValue(":fade_in", pTrack->getFadeIn());
+    query.bindValue(":fade_out", pTrack->getFadeOut());
 
     if (!query.exec()) {
         LOG_FAILED_QUERY(query);

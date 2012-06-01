@@ -307,6 +307,7 @@ class MixxxCore(Feature):
                    "controlbeat.cpp",
 
                    "dlgpreferences.cpp",
+				   "dlgprefautodj.cpp",
                    "dlgprefsound.cpp",
                    "dlgprefsounditem.cpp",
                    "controllers/dlgprefcontroller.cpp",
@@ -361,6 +362,7 @@ class MixxxCore(Feature):
                    "engine/quantizecontrol.cpp",
                    "engine/clockcontrol.cpp",
                    "engine/readaheadmanager.cpp",
+				   "engine/fadecontrol.cpp",
                    "cachingreader.cpp",
 
                    "analyserrg.cpp",
@@ -493,7 +495,9 @@ class MixxxCore(Feature):
                    "library/starrating.cpp",
                    "library/stardelegate.cpp",
                    "library/stareditor.cpp",
-                   "audiotagger.cpp",
+         		   "library/autodj.cpp",
+                   "library/tracktransition.cpp",
+					"audiotagger.cpp",
 
                    "library/treeitemmodel.cpp",
                    "library/treeitem.cpp",
@@ -604,6 +608,7 @@ class MixxxCore(Feature):
         # Uic these guys (they're moc'd automatically after this) - Generates
         # the code for the QT UI forms
         build.env.Uic4('dlgpreferencesdlg.ui')
+        build.env.Uic4('dlgprefautodjdlg.ui')
         build.env.Uic4('dlgprefsounddlg.ui')
 
         build.env.Uic4('controllers/dlgprefcontrollerdlg.ui')

@@ -67,11 +67,15 @@ protected:
 private slots:
     void onTotalGainChange(double v);
     void onEndOfTrackChange(double v);
-
     void onMarkChanged(double v);
     void onMarkRangeChange(double v);
-
     void slotWaveformSummaryUpdated();
+    void cueChanged(double v);
+    void loopStartChanged(double v);
+    void loopEndChanged(double v);
+    void loopEnabledChanged(double v);
+    void fadeInChanged(double v);
+    void fadeOutChanged(double v);
 
 private:
     /** append the waveform overview pixmap according to available data in waveform */
@@ -82,8 +86,6 @@ private:
     inline double positionToValue( int position) const {
         return (float(position) - m_b) / m_a;
     }
-
-private:
     const char* m_pGroup;
     ConfigObject<ConfigValue>* m_pConfig;
     ControlObjectThreadMain* m_totalGainControl;
@@ -104,6 +106,30 @@ private:
 
     // Current active track
     TrackPointer m_pCurrentTrack;
+
+    bool waveformChanged;
+
+    // Loop controls and values
+    ControlObject* m_pLoopStart;
+    ControlObject* m_pLoopEnd;
+    ControlObject* m_pLoopEnabled;
+    double m_dLoopStart, m_dLoopEnd;
+    bool m_bLoopEnabled;
+
+    // Hotcue controls and values
+    QList<ControlObject*> m_hotcueControls;
+    QMap<QObject*, int> m_hotcueMap;
+    QList<int> m_hotcues;
+
+    // AutoDJ Fadepoints controls and values
+    ControlObject* m_pCOFadeInPosition;
+    ControlObject* m_pCOFadeOutPosition;
+    double m_dFadeIn, m_dFadeOut;
+
+    /** Array containing waveform summary */
+    QByteArray m_waveformSummary;
+    /** Duration of current track in samples */
+    int m_liSampleDuration;
 
     /** True if slider is dragged. Only used when m_bEventWhileDrag is false */
     bool m_bDrag;

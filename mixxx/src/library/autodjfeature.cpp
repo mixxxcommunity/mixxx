@@ -6,7 +6,6 @@
 
 #include "library/autodjfeature.h"
 #include "library/playlisttablemodel.h"
-
 #include "library/trackcollection.h"
 #include "dlgautodj.h"
 #include "widget/wlibrary.h"
@@ -40,16 +39,37 @@ QIcon AutoDJFeature::getIcon() {
 void AutoDJFeature::bindWidget(WLibrarySidebar* /*sidebarWidget*/,
                                WLibrary* libraryWidget,
                                MixxxKeyboard* keyboard) {
+
     m_pAutoDJView = new DlgAutoDJ(libraryWidget,
                                   m_pConfig,
                                   m_pTrackCollection,
                                   keyboard);
     m_pAutoDJView->installEventFilter(keyboard);
     libraryWidget->registerView(m_sAutoDJViewName, m_pAutoDJView);
-    connect(m_pAutoDJView, SIGNAL(loadTrack(TrackPointer)),
+
+    // TODO(tom__m) This is wrong to create this here, fix the COs returning NULL when creating in constructor
+    m_pAutoDJ = new AutoDJ(this, m_pConfig);
+
+    connect(m_pAutoDJ, SIGNAL(loadTrack(TrackPointer)),
             this, SIGNAL(loadTrack(TrackPointer)));
+    connect(m_pAutoDJ, SIGNAL(loadTrackToPlayer(TrackPointer,QString)),
+            this, SIGNAL(loadTrackToPlayer(TrackPointer,QString)));
     connect(m_pAutoDJView, SIGNAL(loadTrackToPlayer(TrackPointer, QString)),
             this, SIGNAL(loadTrackToPlayer(TrackPointer, QString)));
+
+    // Connect the signals to and from the AutoDJ object
+    connect(m_pAutoDJView, SIGNAL(setAutoDJEnabled(bool)),
+            m_pAutoDJ, SLOT(setEnabled(bool)));
+    connect(m_pAutoDJView, SIGNAL(sendNextTrack(TrackPointer)),
+            m_pAutoDJ, SLOT(receiveNextTrack(TrackPointer)));
+    connect(m_pAutoDJView, SIGNAL(endOfPlaylist(bool)),
+            m_pAutoDJ, SLOT(setEndOfPlaylist(bool)));
+    connect(m_pAutoDJ, SIGNAL(needNextTrack()),
+            m_pAutoDJView, SLOT(slotNextTrackNeeded()));
+    connect(m_pAutoDJ, SIGNAL(disableAutoDJ()),
+            m_pAutoDJView, SLOT(slotDisableAutoDJ()));
+    connect(m_pAutoDJ, SIGNAL(removePlayingTrackFromQueue(QString)),
+            m_pAutoDJView, SLOT(slotRemovePlayingTrackFromQueue(QString)));
 }
 
 TreeItemModel* AutoDJFeature::getChildModel() {

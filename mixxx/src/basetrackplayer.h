@@ -49,6 +49,8 @@ class BaseTrackPlayer : public BasePlayer {
     ControlObjectThreadMain* m_pCuePoint;
     ControlObjectThreadMain* m_pLoopInPoint;
     ControlObjectThreadMain* m_pLoopOutPoint;
+    ControlObjectThreadMain* m_pFadeInPoint;
+    ControlObjectThreadMain* m_pFadeOutPoint;
     ControlObjectThreadMain* m_pPlayPosition;
     ControlObject* m_pDuration;
     ControlObjectThreadMain* m_pBPM;

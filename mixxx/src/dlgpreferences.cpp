@@ -38,6 +38,7 @@
 #endif
 
 #include "dlgpreferences.h"
+#include "dlgprefautodj.h"
 #include "dlgprefsound.h"
 #include "controllers/dlgprefmappablecontroller.h"
 #include "controllers/dlgprefnocontrollers.h"
@@ -76,6 +77,8 @@ DlgPreferences::DlgPreferences(MixxxApp * mixxx, SkinLoader* pSkinLoader,
     m_pageSizeHint = QSize(0,0);
 
     // Construct widgets for use in tabs
+    m_wautodj = new DlgPrefAutoDJ(this, config);
+    addPageWidget(m_wautodj);
     m_wsound = new DlgPrefSound(this, soundman, pPlayerManager, config);
     addPageWidget(m_wsound);
     m_wplaylist = new DlgPrefPlaylist(this, config);
@@ -130,6 +133,7 @@ DlgPreferences::DlgPreferences(MixxxApp * mixxx, SkinLoader* pSkinLoader,
     connect(this, SIGNAL(showDlg()), m_wcontrols,  SLOT(slotUpdate()));
     connect(this, SIGNAL(showDlg()), m_weq,        SLOT(slotUpdate()));
     connect(this, SIGNAL(showDlg()), m_wcrossfader, SLOT(slotUpdate()));
+    connect(this, SIGNAL(showDlg()), m_wautodj,    SLOT(slotUpdate()));
 
 #ifdef __VAMP__
     connect(this, SIGNAL(showDlg()),
@@ -162,6 +166,7 @@ DlgPreferences::DlgPreferences(MixxxApp * mixxx, SkinLoader* pSkinLoader,
     connect(buttonBox, SIGNAL(accepted()), m_weq,       SLOT(slotApply()));
     connect(buttonBox, SIGNAL(accepted()), m_wcrossfader,SLOT(slotApply()));
     connect(buttonBox, SIGNAL(accepted()), this,      SLOT(slotApply()));
+    connect(buttonBox, SIGNAL(accepted()), m_wautodj,   SLOT(slotApply()));
 
 #ifdef __VAMP__
     connect(buttonBox, SIGNAL(accepted()), m_wbeats,      SLOT(slotApply()));
@@ -182,13 +187,11 @@ DlgPreferences::DlgPreferences(MixxxApp * mixxx, SkinLoader* pSkinLoader,
     //FIXME: Disabled due to library reworking
 }
 
-DlgPreferences::~DlgPreferences()
-{
+DlgPreferences::~DlgPreferences() {
     destroyControllerWidgets();
 }
 
-void DlgPreferences::createIcons()
-{
+void DlgPreferences::createIcons() {
     m_pSoundButton = new QTreeWidgetItem(contentsTreeWidget, QTreeWidgetItem::Type);
     m_pSoundButton->setIcon(0, QIcon(":/images/preferences/ic_preferences_soundhardware.png"));
     m_pSoundButton->setText(0, tr("Sound Hardware"));
@@ -231,6 +234,11 @@ void DlgPreferences::createIcons()
     m_pRecordingButton->setTextAlignment(0, Qt::AlignLeft | Qt::AlignVCenter);
     m_pRecordingButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 
+    m_pAutoDJButton = new QTreeWidgetItem(contentsTreeWidget, QTreeWidgetItem::Type);
+    m_pAutoDJButton->setIcon(0, QIcon(":/images/preferences/ic_preferences_autodj.png"));
+    m_pAutoDJButton->setText(0, tr("Auto DJ"));
+    m_pAutoDJButton->setTextAlignment(0, Qt::AlignLeft | Qt::AlignVCenter);
+    m_pAutoDJButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 
 #ifdef __VAMP__
     m_pAnalysersButton = new QTreeWidgetItem(contentsTreeWidget, QTreeWidgetItem::Type);
@@ -299,6 +307,8 @@ void DlgPreferences::changePage(QTreeWidgetItem * current, QTreeWidgetItem * pre
     	pagesWidget->setCurrentWidget(m_wcrossfader->parentWidget()->parentWidget());
     } else if (current == m_pRecordingButton) {
     	pagesWidget->setCurrentWidget(m_wrecord->parentWidget()->parentWidget());
+    } else if (current == m_pAutoDJButton) {
+        pagesWidget->setCurrentWidget(m_wautodj->parentWidget()->parentWidget());
 
 #ifdef __VAMP__
     } else if (current == m_pAnalysersButton ) {
@@ -344,14 +354,12 @@ void DlgPreferences::changePage(QTreeWidgetItem * current, QTreeWidgetItem * pre
     }
 }
 
-void DlgPreferences::showSoundHardwarePage()
-{
+void DlgPreferences::showSoundHardwarePage() {
     pagesWidget->setCurrentWidget(m_wsound->parentWidget()->parentWidget());
     contentsTreeWidget->setCurrentItem(m_pSoundButton);
 }
 
-bool DlgPreferences::eventFilter(QObject * o, QEvent * e)
-{
+bool DlgPreferences::eventFilter(QObject * o, QEvent * e) {
     // Send a close signal if dialog is closing
     if (e->type() == QEvent::Hide)
         emit(closeDlg());
@@ -478,8 +486,7 @@ void DlgPreferences::slotApply()
     m_pControllerManager->savePresets();
 }
 
-void DlgPreferences::slotHighlightDevice(DlgPrefController* dialog, bool enabled)
-{
+void DlgPreferences::slotHighlightDevice(DlgPrefController* dialog, bool enabled) {
     QTreeWidgetItem * controllerWindowLink = m_controllerWindowLinks.at(m_controllerWindows.indexOf(dialog));
     QFont temp = controllerWindowLink->font(0);
     if (enabled) temp.setBold(true);

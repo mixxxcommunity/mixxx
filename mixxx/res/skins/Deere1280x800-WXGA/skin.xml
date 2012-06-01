@@ -3578,6 +3578,27 @@
 							<Color>#00FF00</Color>
 							<TextColor>#FFFFFF</TextColor>
 						</Mark>
+
+						<!--
+						Fade In and Fade Out point markers for AutoDJ
+						-->
+						<Mark>
+							<Control>fade_in_position</Control>
+							<Pixmap>marker_fade_in.png</Pixmap>
+							<Text>FADE IN</Text>
+							<Align>bottom</Align>
+							<Color>#FF00FF</Color>
+							<TextColor>#FFFFFF</TextColor>
+						</Mark>
+						<Mark>
+							<Control>fade_out_position</Control>
+							<Pixmap>marker_fade_out.png</Pixmap>
+							<Text>FADE OUT</Text>
+							<Align>bottom</Align>
+							<Color>#FF00FF</Color>
+							<TextColor>#FFFFFF</TextColor>
+						</Mark>
+
 						<!--
 						The hotcues not represented by a button in the current skin show only in the waveform under two circumstances:
 							- if a MIDI device which supports more hotcues than buttons are in the current skin has them activated
@@ -3948,12 +3969,12 @@
 
 			<!-- Playback control sub-widget -->
 			<WidgetGroup>
-				<Pos>55,222</Pos>
+				<Pos>10,222</Pos>
 				<Size>357,54</Size>
 				<Style>QGroupBox { border: 0px solid yellow; } QWidget { margin: 0; padding: 0; }</Style>
 				<Children>
 
-					<!--
+                                     	<!--
 					**********************************************
 					Button- Fast forward and rewind
 					**********************************************
@@ -4489,6 +4510,49 @@
 							<ConnectValueFromWidget>false</ConnectValueFromWidget>
 						</Connection>
 					</PushButton>
+					
+					<!--
+					**********************************************
+					Button- FadeIn and FadeOut points
+					**********************************************
+					-->
+					<PushButton>
+						<Tooltip>Set Fade In&#10;Sets the Fade In point for AutoDJ. This is the point where the crossfade will end.</Tooltip>
+						<Style>QToolTip { font: 11px Lucida Grande, Lucida Sans Unicode, Arial, Verdana, sans-serif;
+						background-color: #191919; color: #CCCCCC; border: 1px solid #CCCCCC; padding: 4px; }
+						</Style>
+						<NumberStates>1</NumberStates>
+						<State>
+							<Number>0</Number>
+							<Pressed>btn_fade_in_over.png</Pressed>
+							<Unpressed>btn_fade_in.png</Unpressed>
+						</State>
+						<Pos>365,0</Pos>
+						<Connection>
+							<ConfigKey>[Channel1],fade_in_set</ConfigKey>
+							<EmitOnPressAndRelease>true</EmitOnPressAndRelease>
+							<ButtonState>LeftButton</ButtonState>
+						</Connection>
+					</PushButton>
+					<PushButton>
+						<Tooltip>Set Fade Out&#10;Sets the Fade Out point for AutoDJ. This is the point where the crossfade will begin.</Tooltip>
+						<Style>QToolTip { font: 11px Lucida Grande, Lucida Sans Unicode, Arial, Verdana, sans-serif;
+						background-color: #191919; color: #CCCCCC; border: 1px solid #CCCCCC; padding: 4px; }
+						</Style>
+						<NumberStates>1</NumberStates>
+						<State>
+							<Number>0</Number>
+							<Pressed>btn_fade_out_over.png</Pressed>
+							<Unpressed>btn_fade_out.png</Unpressed>
+						</State>
+						<Pos>365,26</Pos>
+						<Connection>
+							<ConfigKey>[Channel1],fade_out_set</ConfigKey>
+							<EmitOnPressAndRelease>true</EmitOnPressAndRelease>
+							<ButtonState>LeftButton</ButtonState>
+						</Connection>
+					</PushButton>
+
 
 				</Children>
 			</WidgetGroup>
@@ -4629,6 +4693,27 @@
 							<Color>#00FF00</Color>
 							<TextColor>#FFFFFF</TextColor>
 						</Mark>
+
+						<!--
+						Fade In and Fade Out point markers for AutoDJ
+						-->
+						<Mark>
+							<Control>fade_in_position</Control>
+							<Pixmap>marker_fade_in.png</Pixmap>
+							<Text>FADE IN</Text>
+							<Align>bottom</Align>
+							<Color>#FF00FF</Color>
+							<TextColor>#FFFFFF</TextColor>
+						</Mark>
+						<Mark>
+							<Control>fade_out_position</Control>
+							<Pixmap>marker_fade_out.png</Pixmap>
+							<Text>FADE OUT</Text>
+							<Align>bottom</Align>
+							<Color>#FF00FF</Color>
+							<TextColor>#FFFFFF</TextColor>
+						</Mark>
+
 						<!--
 						The hotcues not represented by a button in the current skin show only in the waveform under two circumstances:
 							- if a MIDI device which supports more hotcues than buttons are in the current skin has them activated
@@ -5541,7 +5626,47 @@
 						</Connection>
 					</PushButton>
 
-				</Children>
+					<!--
+					**********************************************
+					Button- FadeIn and FadeOut points
+					**********************************************
+					-->
+					<PushButton>
+						<Tooltip>Set Fade In&#10;Sets the Fade In point for AutoDJ. This is the point where the crossfade will end.</Tooltip>
+						<Style>QToolTip { font: 11px Lucida Grande, Lucida Sans Unicode, Arial, Verdana, sans-serif;
+						background-color: #191919; color: #CCCCCC; border: 1px solid #CCCCCC; padding: 4px; }
+						</Style>
+						<NumberStates>1</NumberStates>
+						<State>
+							<Number>0</Number>
+							<Pressed>btn_fade_in_over.png</Pressed>
+							<Unpressed>btn_fade_in.png</Unpressed>
+						</State>
+						<Pos>365,0</Pos>
+						<Connection>
+							<ConfigKey>[Channel2],fade_in_set</ConfigKey>
+							<EmitOnPressAndRelease>true</EmitOnPressAndRelease>
+							<ButtonState>LeftButton</ButtonState>
+						</Connection>
+					</PushButton>
+					<PushButton>
+						<Tooltip>Set Fade Out&#10;Sets the Fade Out point for AutoDJ. This is the point where the crossfade will begin.</Tooltip>
+						<Style>QToolTip { font: 11px Lucida Grande, Lucida Sans Unicode, Arial, Verdana, sans-serif;
+						background-color: #191919; color: #CCCCCC; border: 1px solid #CCCCCC; padding: 4px; }
+						</Style>
+						<NumberStates>1</NumberStates>
+						<State>
+							<Number>0</Number>
+							<Pressed>btn_fade_out_over.png</Pressed>
+							<Unpressed>btn_fade_out.png</Unpressed>
+						</State>
+						<Pos>365,26</Pos>
+						<Connection>
+							<ConfigKey>[Channel2],fade_out_set</ConfigKey>
+							<EmitOnPressAndRelease>true</EmitOnPressAndRelease>
+							<ButtonState>LeftButton</ButtonState>
+						</Connection>
+					</PushButton>				</Children>
 			</WidgetGroup>
 
 		</Children>

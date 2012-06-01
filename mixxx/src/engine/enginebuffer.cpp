@@ -162,6 +162,9 @@ EngineBuffer::EngineBuffer(const char * _group, ConfigObject<ConfigValue> * _con
     visualPlaypos = new ControlPotmeter(
         ConfigKey(group, "visual_playposition"), kMinPlayposRange, kMaxPlayposRange);
 
+    // Control used to communicate playpos in samples
+    m_pPlayPosSamples = new ControlObject(ConfigKey(group, "playposition_samples"));
+
     // m_pTrackEnd is used to signal when at end of file during
     // playback. TODO(XXX) This should not even be a control object because it
     // is an internal flag used only by the EngineBuffer.
@@ -767,6 +770,7 @@ void EngineBuffer::updateIndicators(double rate, int iBufferSize) {
     // rateEngine)
     if (m_iSamplesCalculated > (m_pSampleRate->get()/kiUpdateRate)) {
         playposSlider->set(fFractionalPlaypos);
+        m_pPlayPosSamples->set(filepos_play);
 
         if(rate != rateEngine->get())
             rateEngine->set(rate);

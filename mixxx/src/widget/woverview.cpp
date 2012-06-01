@@ -102,6 +102,24 @@ void WOverview::setup(QDomNode node) {
     //setup hotcues and cue and loop(s)
     m_marks.setup(m_pGroup,node);
 
+    // Create and connect the COs associated with the AutoDJ fadepoints
+    m_pCOFadeInPosition = ControlObject::getControl(
+        ConfigKey(m_pGroup, "fade_in_position"));
+    connect(m_pCOFadeInPosition, SIGNAL(valueChanged(double)),
+            this, SLOT(fadeInChanged(double)));
+    connect(m_pCOFadeInPosition, SIGNAL(valueChangedFromEngine(double)),
+            this, SLOT(fadeInChanged(double)));
+    fadeInChanged(m_pCOFadeInPosition->get());
+
+    m_pCOFadeOutPosition = ControlObject::getControl(
+        ConfigKey(m_pGroup, "fade_out_position"));
+    connect(m_pCOFadeOutPosition, SIGNAL(valueChanged(double)),
+            this, SLOT(fadeOutChanged(double)));
+    connect(m_pCOFadeOutPosition, SIGNAL(valueChangedFromEngine(double)),
+            this, SLOT(fadeOutChanged(double)));
+    fadeOutChanged(m_pCOFadeOutPosition->get());
+
+
     QDomNode child = node.firstChild();
     while (!child.isNull()) {
         if (child.nodeName() == "MarkRange") {
@@ -211,6 +229,21 @@ void WOverview::slotUnloadTrack(TrackPointer /*pTrack*/) {
     update();
 }
 
+void WOverview::cueChanged(double v) {
+    //qDebug() << "WOverview::cueChanged()";
+    QObject* pSender = sender();
+    if (!pSender)
+        return;
+
+    if (!m_hotcueMap.contains(pSender))
+        return;
+
+    int hotcue = m_hotcueMap[pSender];
+    m_hotcues[hotcue] = v;
+    //qDebug() << "hotcue" << hotcue << "position" << v;
+    update();
+}
+
 void WOverview::onTotalGainChange(double v) {
     //qDebug() << "WOverview::onTotalGainChange()" << v;
     m_totalGain = v;
@@ -222,6 +255,33 @@ void WOverview::onEndOfTrackChange(double v) {
     m_endOfTrack = v > 0.5;
     update();
 }
+
+void WOverview::loopStartChanged(double v) {
+    m_dLoopStart = v;
+    update();
+}
+
+void WOverview::loopEndChanged(double v) {
+    m_dLoopEnd = v;
+    update();
+}
+
+void WOverview::loopEnabledChanged(double v) {
+    m_bLoopEnabled = !(v == 0.0f);
+    update();
+}
+
+void WOverview::fadeInChanged(double v) {
+    m_dFadeIn = v;
+    update();
+}
+
+void WOverview::fadeOutChanged(double v) {
+    m_dFadeOut = v;
+    update();
+}
+
+
 
 void WOverview::onMarkChanged(double /*v*/) {
     //qDebug() << "WOverview::onMarkChanged()" << v;
@@ -441,7 +501,7 @@ void WOverview::paintEvent(QPaintEvent *)
 
         painter.setOpacity(0.9);
 
-        for( unsigned int i = 0; i < m_marks.size(); i++) {
+        for(int i = 0; i<(int)m_marks.size(); i++) {
             WaveformMark& currentMark = m_marks[i];
             if( currentMark.m_pointControl->get() > 0.0) {
                 const float markPosition = 1.0 +
@@ -553,6 +613,20 @@ void WOverview::paintEvent(QPaintEvent *)
             // paint.drawText(rect, Qt::AlignCenter, QString("%1").arg(i+1));
         }
         */
+        // Draw AutoDJ fade points
+        // QColor fadecolor = m_qColorMarker;
+        // painter.setPen(fadecolor);
+        float fPos;
+        if (m_dFadeIn != -1.0) {
+            fPos = m_dFadeIn * (width() - 2) / m_liSampleDuration;
+            painter.drawLine(fPos, height()/2, fPos, height());
+            painter.drawLine(fPos-10, height()*0.75, fPos, height()*0.75);
+        }
+        if (m_dFadeOut != -1.0) {
+            fPos = m_dFadeOut * (width() - 2) / m_liSampleDuration;
+            painter.drawLine(fPos, height()/2, fPos, height());
+            painter.drawLine(fPos, height()*0.75, fPos+10, height()*0.75);
+        }
     }
     painter.end();
 }

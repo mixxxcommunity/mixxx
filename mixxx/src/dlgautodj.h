@@ -43,10 +43,16 @@ class DlgAutoDJ : public QWidget, public Ui::DlgAutoDJ, public virtual LibraryVi
     void player1PlayChanged(double value);
     void player2PlayChanged(double value);
     void transitionValueChanged(int value);
+    void slotNextTrackNeeded();
+    void slotDisableAutoDJ();
+    void slotRemovePlayingTrackFromQueue(QString group);
 
   signals:
     void loadTrack(TrackPointer tio);
     void loadTrackToPlayer(TrackPointer tio, QString group);
+    void setAutoDJEnabled(bool);
+    void sendNextTrack(TrackPointer nextTrack);
+    void endOfPlaylist(bool);
 
   private:
     enum ADJstates {
