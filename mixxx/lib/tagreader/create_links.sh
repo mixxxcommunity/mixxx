@@ -14,12 +14,10 @@ ln -s ../../../../../../daschuer-mixxx-clementine/src/core/song.h include/core/s
 ln -s ../../../../../daschuer-mixxx-clementine/bin/src/config.h include/config.h
 ln -s ../../../../../../daschuer-mixxx-clementine/ext/libclementine-common/core/messagehandler.h include/core/messagehandler.h
 ln -s ../../../../../../daschuer-mixxx-clementine/ext/libclementine-common/core/workerpool.h include/core/workerpool.h
+ln -s ../../../../../../daschuer-mixxx-clementine/ext/libclementine-common/core/closure.h include/core/closure.h
 ln -s ../../../../../daschuer-mixxx-clementine/bin/ext/libclementine-tagreader/tagreadermessages.pb.h include/tagreadermessages.pb.h
 ln -s ../../../../../../daschuer-mixxx-clementine/src/engines/engine_fwd.h include/engines/engine_fwd.h
 ln -s ../../../../../../daschuer-mixxx-clementine/ext/libclementine-common/core/logging.h include/core/logging.h
 ln -s ../../../../../../daschuer-mixxx-clementine/ext/libclementine-common/core/messagereply.h include/core/messagereply.h
 
-
-#include "core/messagehandler.h"
-#include "core/workerpool.h"
 

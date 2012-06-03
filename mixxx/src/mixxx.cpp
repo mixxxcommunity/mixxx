@@ -1468,9 +1468,6 @@ void MixxxApp::rebootMixxxView() {
     bool wasFullScreen = m_pOptionsFullScreen->isChecked();
     slotOptionsFullScreen(false);
 
-    // TODO(XXX) Make getSkinPath not public
-    QString qSkinPath = m_pSkinLoader->getConfiguredSkinPath();
-
     //delete the view cause swaping central widget do not remove the old one !
     if( m_pView)
         delete m_pView;
