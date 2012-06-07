@@ -26,7 +26,7 @@
 #include <neaacdec.h>
 #include <QString>
 #include "soundsource.h"
-#include "defs_version.h"
+#include "buildversion.h"
 #include "m4a/ip.h"
 
 //As per QLibrary docs: http://doc.trolltech.com/4.6/qlibrary.html#resolve
@@ -58,7 +58,7 @@ class SoundSourceM4A : public SoundSource {
 
 extern "C" MY_EXPORT const char* getMixxxVersion()
 {
-    return VERSION;
+    return BuildVersion::versionName();
 }
 
 extern "C" MY_EXPORT int getSoundSourceAPIVersion()

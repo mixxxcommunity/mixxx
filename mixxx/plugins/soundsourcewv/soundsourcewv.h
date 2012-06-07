@@ -8,7 +8,7 @@
 
 #include <QString>
 #include "soundsource.h"
-#include "defs_version.h"
+#include "buildversion.h"
 
 #include "wavpack/wavpack.h"
 
@@ -43,7 +43,7 @@ class SoundSourceWV : public SoundSource {
 
 extern "C" MY_EXPORT const char* getMixxxVersion()
 {
-    return VERSION;
+    return BuildVersion::versionName();
 }
 
 extern "C" MY_EXPORT int getSoundSourceAPIVersion()

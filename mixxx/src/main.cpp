@@ -34,7 +34,7 @@
 #include "qpixmap.h"
 #include "qsplashscreen.h"
 #include "errordialoghandler.h"
-#include "defs_version.h"
+#include "buildversion.h"
 
 #ifdef __LADSPA__
 #include <ladspa/ladspaloader.h>
@@ -160,14 +160,14 @@ int main(int argc, char * argv[])
     // Construct a list of strings based on the command line arguments
     CmdlineArgs& args = CmdlineArgs::Instance();
     if (!args.Parse(argc, argv)) {
-        fputs("Mixxx digital DJ software v",stdout);
-        fputs(VERSION,stdout);
-        fputs(" - Command line options",stdout);
+        fputs("Mixxx digital DJ software v", stdout);
+        fputs(BuildVersion::versionName(), stdout);
+        fputs(" - Command line options", stdout);
         fputs(
                    "\n(These are case-sensitive.)\n\n\
     [FILE]                  Load the specified music file(s) at start-up.\n\
                             Each must be one of the following file types:\n\
-                            ",stdout);
+                            ", stdout);
 
         QString fileExtensions = SoundSourceProxy::supportedFileExtensionsString();
         QByteArray fileExtensionsBA = QString(fileExtensions).toUtf8();
