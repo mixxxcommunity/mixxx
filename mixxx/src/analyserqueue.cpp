@@ -299,8 +299,8 @@ AnalyserQueue* AnalyserQueue::createDefaultAnalyserQueue(ConfigObject<ConfigValu
     ret->addAnalyser(new TonalAnalyser());
 #endif
 
-    ret->addAnalyser(new AnalyserGain(_config));
     ret->addAnalyser(new AnalyserWaveform(_config));
+    ret->addAnalyser(new AnalyserGain(_config));
 #ifdef __VAMP__
     VampAnalyser::initializePluginPaths();
     ret->addAnalyser(new AnalyserBeats(_config));
@@ -316,8 +316,8 @@ AnalyserQueue* AnalyserQueue::createDefaultAnalyserQueue(ConfigObject<ConfigValu
 AnalyserQueue* AnalyserQueue::createPrepareViewAnalyserQueue(ConfigObject<ConfigValue> *_config) {
     AnalyserQueue* ret = new AnalyserQueue();
 
-    ret->addAnalyser(new AnalyserGain(_config));
     ret->addAnalyser(new AnalyserWaveform(_config));
+    ret->addAnalyser(new AnalyserGain(_config));
 #ifdef __VAMP__
     VampAnalyser::initializePluginPaths();
     ret->addAnalyser(new AnalyserBeats(_config));

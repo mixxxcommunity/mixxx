@@ -91,6 +91,7 @@ bool loadTranslations(const QLocale& systemLocale, QString userLocale,
 
 MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
 {
+
     // This is the first line in mixxx.log
     qDebug() << "Mixxx" << BuildVersion::buildInfoFormatted() << "is starting...";
     qDebug() << "Qt version is:" << qVersion();

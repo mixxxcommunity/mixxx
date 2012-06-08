@@ -42,12 +42,8 @@ class ITunesFeature : public BaseExternalLibraryFeature {
     void activate(bool forceReload);
     void activateChild(const QModelIndex& index);
     virtual void onRightClick(const QPoint& globalPos);
-    virtual void onRightClickChild(const QPoint& globalPos, QModelIndex index);
     void onLazyChildExpandation(const QModelIndex& index);
     void onTrackCollectionLoaded();
-    void slotAddToAutoDJ();
-    void slotAddToAutoDJTop();
-    void slotImportAsMixxxPlaylist();
 
   private:
     virtual BaseSqlTableModel* getPlaylistModelForPlaylist(QString playlist);
@@ -60,13 +56,6 @@ class ITunesFeature : public BaseExternalLibraryFeature {
     void parsePlaylist(QXmlStreamReader &xml, QSqlQuery &query1, QSqlQuery &query2, TreeItem*);
     void clearTable(QString table_name);
     bool readNextStartElement(QXmlStreamReader& xml);
-    void addToAutoDJ(bool bTop);
-
-    QAction* m_pAddToAutoDJAction;
-    QAction* m_pAddToAutoDJTopAction;
-    QAction* m_pImportAsMixxxPlaylistAction;
-
-	QModelIndex m_lastRightClickedIndex;
 
     ITunesTrackModel* m_pITunesTrackModel;
     ITunesPlaylistModel* m_pITunesPlaylistModel;

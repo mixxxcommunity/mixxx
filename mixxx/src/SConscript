@@ -65,8 +65,8 @@ def run_tests():
                 Exit(ret)
 
 if int(build.flags['test']):
-    print "Building tests."
-    build_tests()
+        print "Building tests."
+        build_tests()
 
 if 'test' in BUILD_TARGETS:
         print "Running tests."

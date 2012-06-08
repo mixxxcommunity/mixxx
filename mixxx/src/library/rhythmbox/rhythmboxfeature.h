@@ -42,12 +42,8 @@ class RhythmboxFeature : public BaseExternalLibraryFeature {
     void activate();
     void activateChild(const QModelIndex& index);
 
-    virtual void onRightClickChild(const QPoint& globalPos, QModelIndex index);
     void onLazyChildExpandation(const QModelIndex& index);
     void onTrackCollectionLoaded();
-    void slotAddToAutoDJ();
-    void slotAddToAutoDJTop();
-    void slotImportAsMixxxPlaylist();
 
   private:
     virtual BaseSqlTableModel* getPlaylistModelForPlaylist(QString playlist);
@@ -65,20 +61,12 @@ class RhythmboxFeature : public BaseExternalLibraryFeature {
     TreeItemModel m_childModel;
     bool m_cancelImport;
 
-    QAction* m_pAddToAutoDJAction;
-    QAction* m_pAddToAutoDJTopAction;
-    QAction* m_pImportAsMixxxPlaylistAction;
-
-    QModelIndex m_lastRightClickedIndex;
-
     /**Removes all rows from a given table **/
     void clearTable(QString table_name);
     /** reads the properties of a track and executes a SQL statement **/
     void importTrack(QXmlStreamReader &xml, QSqlQuery &query);
     /** reads all playlist entries and executes a SQL statement **/
     void importPlaylist(QXmlStreamReader &xml, QSqlQuery &query, int playlist_id);
-
-    void addToAutoDJ(bool bTop);
 };
 
 #endif /* RHYTHMBOXFEATURE_H */

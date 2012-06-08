@@ -22,10 +22,10 @@
 
 #ifndef BUILD_REV
  #ifdef LAST_BZR_BUILD_REV
-  #define   LAST_BZR_BUILD_REV
+  #define BUILD_REV LAST_BZR_BUILD_REV
   #define BUILD_BZR "last bzr"
  #else
-  #error BUILD_BZR undefined
+  #error BUILD_REV undefined
  #endif
 #else
  #define BUILD_BZR "bzr"
