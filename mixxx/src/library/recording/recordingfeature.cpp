@@ -104,10 +104,10 @@ void RecordingFeature::onRightClick(const QPoint& globalPos) {
 
 void RecordingFeature::onRightClickChild(const QPoint& globalPos, QModelIndex index) {
     Q_UNUSED(globalPos);
-	Q_UNUSED(index);
+    Q_UNUSED(index);
 }
 
 void RecordingFeature::onLazyChildExpandation(const QModelIndex &index){
-	Q_UNUSED(index);    
-	// Nothing to do here since we have no child models
+    Q_UNUSED(index);    
+    // Nothing to do here since we have no child models
 }
