@@ -189,7 +189,7 @@ playback and outbound link statistics</string>
      <property name="title">
       <string>Other Librarys</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout_4">
+     <layout class="QGridLayout" name="gridLayout_5">
       <item row="0" column="0">
        <widget class="QCheckBox" name="checkBox_show_rhythmbox">
         <property name="text">
@@ -200,7 +200,7 @@ playback and outbound link statistics</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="0">
+      <item row="1" column="0">
        <widget class="QCheckBox" name="checkBox_show_banshee">
         <property name="text">
          <string>Show Banshee Library</string>
@@ -220,7 +220,7 @@ playback and outbound link statistics</string>
         </property>
        </widget>
       </item>
-      <item row="6" column="0">
+      <item row="3" column="0">
        <widget class="QCheckBox" name="checkBox_show_ipod">
         <property name="text">
          <string>Show iPod</string>
@@ -240,7 +240,7 @@ playback and outbound link statistics</string>
         </property>
        </widget>
       </item>
-      <item row="8" column="0">
+      <item row="5" column="0">
        <widget class="QCheckBox" name="checkBox_show_clementine">
         <property name="text">
          <string>Show Clementine Library</string>
