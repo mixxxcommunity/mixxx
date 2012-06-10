@@ -98,9 +98,13 @@ WTrackTableView::~WTrackTableView()
 
 void WTrackTableView::selectionChanged (const QItemSelection &selected,
                                         const QItemSelection &deselected) {
+    Q_UNUSED(selected);
+    Q_UNUSED(deselected);
     const QModelIndex index = selectionModel()->currentIndex();
-    if (index.isValid())
+    if (index.isValid()) {
         slotFindCover(index);
+        update();
+    }
 }
 
 void WTrackTableView::loadTrackModel(QAbstractItemModel *model) {
