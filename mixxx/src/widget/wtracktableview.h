@@ -35,9 +35,6 @@ class WTrackTableView : public WLibraryTableView {
     virtual void loadSelectedTrackToGroup(QString group);
     void disableSorting();
 
-  protected:
-    bool eventFilter(QObject *obj, QEvent *event);
-
   public slots:
     void loadTrackModel(QAbstractItemModel* model);
     void slotMouseDoubleClicked(const QModelIndex &);
@@ -70,6 +67,8 @@ class WTrackTableView : public WLibraryTableView {
     void dropEvent(QDropEvent * event);
     void lockBpm(bool lock);
 
+    void selectionChanged(const QItemSelection & selected,
+                          const QItemSelection & deselected);
     // Mouse move event, implemented to hide the text and show an icon instead
     // when dragging.
     void mouseMoveEvent(QMouseEvent *pEvent);

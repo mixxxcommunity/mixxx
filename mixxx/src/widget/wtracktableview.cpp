@@ -63,8 +63,6 @@ WTrackTableView::WTrackTableView(QWidget * parent,
     createActions();
 
     //Connect slots and signals to make the world go 'round.
-    connect(this, SIGNAL(clicked(const QModelIndex &)),
-            this, SLOT(slotFindCover(const QModelIndex &)));
     connect(this, SIGNAL(doubleClicked(const QModelIndex &)),
             this, SLOT(slotMouseDoubleClicked(const QModelIndex &)));
 
@@ -96,6 +94,13 @@ WTrackTableView::~WTrackTableView()
     delete m_pNumDecks;
     delete m_pBpmLockAction;
     delete m_pBpmUnlockAction;
+}
+
+void WTrackTableView::selectionChanged (const QItemSelection &selected,
+                                        const QItemSelection &deselected) {
+    const QModelIndex index = selectionModel()->currentIndex();
+    if (index.isValid())
+        slotFindCover(index);
 }
 
 void WTrackTableView::loadTrackModel(QAbstractItemModel *model) {
@@ -234,8 +239,6 @@ void WTrackTableView::loadTrackModel(QAbstractItemModel *model) {
         //viewport()->setAcceptDrops(true);
     }
 
-    installEventFilter(this);
-
     // Possible giant fuckup alert - It looks like Qt has something like these
     // caps built-in, see http://doc.trolltech.com/4.5/qt.html#ItemFlag-enum and
     // the flags(...) function that we're already using in LibraryTableModel. I
@@ -243,17 +246,6 @@ void WTrackTableView::loadTrackModel(QAbstractItemModel *model) {
     // target though, so my hax above may not be completely unjustified.
 
     setVisible(true);
-}
-
-bool WTrackTableView::eventFilter(QObject *obj, QEvent *event) {
-    if (event->type() == QEvent::KeyRelease) {
-        QModelIndex index = selectionModel()->currentIndex();
-        slotFindCover(index);
-        return QObject::eventFilter(obj, event);
-    } else {
-        // standard event processing
-        return QObject::eventFilter(obj, event);
-    }
 }
 
 void WTrackTableView::disableSorting() {
