@@ -83,13 +83,19 @@ bool TrackCollection::checkForTables() {
                                 "Your %2 file may be outdated.\n\n"
                                 "Click OK to exit.").arg(QString::number(requiredSchemaVersion), schemaFilename),
                              QMessageBox::Ok);
-        } else {
+        } else if (result == -2) {
             QMessageBox::warning(0, tr("Cannot upgrade database schema"),
                              tr("Unable to upgrade your database schema to version %1.\n"
                                 "Your mixxx.db file may be corrupt.\n"
                                 "Try renaming it and restarting Mixxx.\n\n"
                                 "Click OK to exit.").arg(requiredSchemaVersion),
                              QMessageBox::Ok);
+        } else { // -3
+            QMessageBox::warning(0, tr("Cannot upgrade database schema"),
+                             tr("Unable to upgrade your database schema to version %1.\n"
+                                "Your %2 file may be missing or invalid.\n\n"
+                                "Click OK to exit.").arg(QString::number(requiredSchemaVersion), schemaFilename),
+                                         QMessageBox::Ok);
         }
         return false;
     }

@@ -42,6 +42,11 @@ int SchemaManager::upgradeToSchemaVersion(const QString& schemaFilename,
     qDebug() << "Loading schema" << schemaFilename;
     QDomElement schemaRoot = XmlParse::openXMLFile(schemaFilename, "schema");
 
+    if (schemaRoot.isNull()) {
+        // Error parsing xml file
+        return -3;
+    }
+
     QDomNodeList revisions = schemaRoot.childNodes();
 
     QMap<int, QDomElement> revisionMap;
@@ -61,7 +66,7 @@ int SchemaManager::upgradeToSchemaVersion(const QString& schemaFilename,
         if (currentVersion > targetVersion) {
             thisTarget = currentVersion - 1;
             qDebug() << "Downgrade not yet supported.";
-            success = false;
+            success = -1;
             break;
         } else {
             thisTarget = currentVersion + 1;

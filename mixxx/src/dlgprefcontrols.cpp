@@ -136,14 +136,6 @@ DlgPrefControls::DlgPrefControls(QWidget * parent, MixxxApp * mixxx,
     SliderRateRampSensitivity->setEnabled(true);
     SpinBoxRateRampSensitivity->setEnabled(true);
 
-    //
-    // Skin configurations
-    //
-    ComboBoxSkinconf->clear();
-
-    QString qSkinPath(pConfig->getValueString(ConfigKey("[Config]","Path")));
-    QDir dir(qSkinPath.append("skins/"));
-    dir.setFilter(QDir::Dirs);
 
     //
     // Override Playing Track on Track Load
@@ -162,7 +154,6 @@ DlgPrefControls::DlgPrefControls(QWidget * parent, MixxxApp * mixxx,
     ComboBoxShortcutsSource->addItem(tr("Custom"));
     ComboBoxShortcutsSource->setCurrentIndex(m_pConfig->getValueString(ConfigKey("[Controls]", "ShortcutsSource"),"1").toInt());
     connect(ComboBoxShortcutsSource, SIGNAL(activated(int)), this, SLOT(slotSetShortcutsSource(int)));
-
 
 
     //
@@ -226,6 +217,16 @@ DlgPrefControls::DlgPrefControls(QWidget * parent, MixxxApp * mixxx,
     //NOTE: for CueRecall, 0 means ON....
     connect(ComboBoxCueRecall, SIGNAL(activated(int)), this, SLOT(slotSetCueRecall(int)));
 
+    //
+    // Skin configurations
+    //
+    ComboBoxSkinconf->clear();
+
+    QDir dir(m_pConfig->getResourcePath() + "skins/");
+    dir.setFilter(QDir::Dirs);
+
+    QString configuredSkinPath = m_pSkinLoader->getConfiguredSkinPath();
+
     QList<QFileInfo> list = dir.entryInfoList();
     int j=0;
     for (int i=0; i<list.size(); ++i)
@@ -233,8 +234,9 @@ DlgPrefControls::DlgPrefControls(QWidget * parent, MixxxApp * mixxx,
         if (list.at(i).fileName()!="." && list.at(i).fileName()!="..")
         {
             ComboBoxSkinconf->addItem(list.at(i).fileName());
-            if (list.at(i).fileName() == pConfig->getValueString(ConfigKey("[Config]","Skin")))
+            if (list.at(i).filePath() == configuredSkinPath) {
                 ComboBoxSkinconf->setCurrentIndex(j);
+            }
             ++j;
         }
     }
