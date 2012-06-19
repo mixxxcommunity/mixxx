@@ -34,6 +34,10 @@
 
 #include "mixxxutils.cpp"
 
+#ifdef __TAGREADER__
+#include "core/messagehandler.h"
+#endif
+
 TrackInfoObject::TrackInfoObject(const QString& file, bool parseHeader)
         : m_fileInfo(file),
           m_dateAdded(QDateTime::currentDateTime()),

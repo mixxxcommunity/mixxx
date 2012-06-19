@@ -7,7 +7,7 @@
 #include <qmetatype.h>
 
 #include "trackinfoobject.h"
-#include "soundsourceproxy.h"
+#include "soundsourcemp3.h"
 #include "core/tagreaderclient.h"
 
 #define BIGBUF_SIZE (1024 * 1024)  //Megabyte
@@ -29,12 +29,21 @@ class TagreaderTest: public testing::Test {
 
         m_tag_reader_client = TagReaderClient::Instance();
         if (!m_tag_reader_client) {
+            qDebug() << "Starting TagreaderClient";
             m_tag_reader_client = new TagReaderClient();
             m_thread = new QThread();
             m_tag_reader_client->setParent(NULL);
             m_tag_reader_client->moveToThread(m_thread);
             m_thread->start();
             m_tag_reader_client->Start();
+            qDebug() << TagReaderClient::Instance() << "test";
+            while (!TagReaderClient::Instance()){
+                qDebug() << ".";
+            }
+        }
+        else
+        {
+            qDebug() << "Already started";
         }
     }
 
@@ -43,7 +52,7 @@ class TagreaderTest: public testing::Test {
         delete m_file;
         delete m_tag_reader_client;
         delete m_thread;
-       // delete m_app;
+        //delete m_app;
     }
 
     QFile* m_file;
@@ -51,27 +60,50 @@ class TagreaderTest: public testing::Test {
     QThread* m_thread;
 };
 
-TEST_F(TagreaderTest, readWriteRead) {
+TEST_F(TagreaderTest, corruptionByExternalWrite) {
     EXPECT_TRUE(m_file->exists());
 
+    // Load reference Track
     TrackPointer pTrack(new TrackInfoObject(m_file->fileName()), &QObject::deleteLater);
     qDebug() << pTrack->getArtist();
     EXPECT_TRUE(pTrack->getArtist().isEmpty());
 
-    SoundSourceProxy* soundSource = new SoundSourceProxy(pTrack);
-    EXPECT_TRUE(soundSource->open() == OK);
+    EXPECT_TRUE(m_file->open(QIODevice::ReadOnly));
 
+    // Get a pointer to the file using memory mapped IO
+    unsigned inputbuf_len = m_file->size();
+    qDebug() << inputbuf_len;
+
+    // Open Track mmaped
+    uchar* inputbuf = m_file->map(0, inputbuf_len);
+
+    // Loads First 4k Page
+    EXPECT_TRUE(inputbuf[0x00000] == 0xff);
+    qDebug() << QString("0x%1").arg(inputbuf[0x00000], 0, 16);
+
+    // Save Artist via external process Tagreader
+    // Byte at 0x00000 from 0xFF -> 0x49 (Page currently loaded)
+    // byte at 0x10374 from 0xAA -> 0xFF (Page not loaded yet)
     pTrack->setArtist(QString("tagreader"));
+    EXPECT_TRUE(m_tag_reader_client->SaveFileBlocking(pTrack->getLocation(),*pTrack));
+    qDebug() << pTrack->getArtist();
 
+    // Check First 4k Page again
+    EXPECT_TRUE(inputbuf[0x00000] == 0x49);
+    qDebug() << QString("0x%1").arg(inputbuf[0x00000], 0, 16);
 
-    EXPECT_TRUE(m_tag_reader_client->SaveFile(pTrack->getLocation(),*pTrack));
-
+    // Read Artist from real File, to check if it has changed
     TrackPointer pTrack2(new TrackInfoObject(m_file->fileName()), &QObject::deleteLater);
+    EXPECT_TRUE(pTrack2->getArtist() == "tagreader");
     qDebug() << pTrack2->getArtist();
 
-    delete soundSource;
+    // File Size has changed
+    EXPECT_TRUE(inputbuf_len < m_file->size());
 
-    TrackPointer pTrack3(new TrackInfoObject(m_file->fileName()), &QObject::deleteLater);
-    qDebug() << pTrack3->getArtist();
+    // Check First 4k Page again
+    qDebug() << QString("0x%1").arg(inputbuf[0x00000], 0, 16);
+
+    // Check Byte in a new page
+    qDebug() << QString("0x%1").arg(inputbuf[0x10374], 0, 16);
 }
 }

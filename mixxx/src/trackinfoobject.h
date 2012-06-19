@@ -31,8 +31,9 @@
 #include "track/beats.h"
 #include "library/dao/cue.h"
 #ifdef __TAGREADER__
-#include "core/tagreaderclient.h"
-#define ITAGREADER , public ITagReaderMetaData
+// #include "core/tagreaderclient.h"
+#include "core/itagreadermetadata.h"
+// #define ITAGREADER , public ITagReaderMetaData
 #endif // __TAGREADER__
 
 class QString;
@@ -45,6 +46,11 @@ class Cue;
 class Waveform;
 
 class TrackInfoObject;
+
+#ifdef __TAGREADER__
+//class pb::tagreader::SongMetadata;
+//class ITagReaderMetaData;
+#endif // __TAGREADER__
 
 typedef QSharedPointer<TrackInfoObject> TrackPointer;
 typedef QWeakPointer<TrackInfoObject> TrackWeakPointer;

@@ -10,6 +10,7 @@ ln -s ../../../../daschuer-mixxx-clementine/ext/libclementine-tagreaderclient/bu
 ln -s ../../daschuer-mixxx-clementine/ext/libclementine-tagreaderclient/build/libclementine-tagreaderclient.so ../../libclementine-tagreaderclient.so
 
 ln -s ../../../../../../daschuer-mixxx-clementine/src/core/tagreaderclient.h include/core/tagreaderclient.h
+ln -s ../../../../../../daschuer-mixxx-clementine/src/core/itagreadermetadata.h include/core/itagreadermetadata.h
 ln -s ../../../../../../daschuer-mixxx-clementine/src/core/song.h include/core/song.h
 ln -s ../../../../../daschuer-mixxx-clementine/bin/src/config.h include/config.h
 ln -s ../../../../../../daschuer-mixxx-clementine/ext/libclementine-common/core/messagehandler.h include/core/messagehandler.h

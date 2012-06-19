@@ -10,6 +10,9 @@
 #include "track/beatfactory.h"
 #include "track/beats.h"
 #include "trackinfoobject.h"
+#ifdef __TAGREADER__
+#include "core/tagreaderclient.h"
+#endif // __TAGREADER__
 
 QHash<int, TrackWeakPointer> TrackDAO::m_sTracks;
 QMutex TrackDAO::m_sTracksMutex;
