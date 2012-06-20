@@ -8,8 +8,10 @@ dir ~/workspace/qt/src/sql
 dir ~/workspace/qt/src/sql/drivers/sqlite
 dir ~/workspace/sqlite/sqlite3-3.7.4
 dir ~/workspace/daschuer-mixxx-clementine/src
+dir ~/workspace/daschuer-mixxx-clementine/src/core
 dir ~/workspace/daschuer-mixxx-clementine/ext
 dir ~/workspace/daschuer-mixxx-clementine/3rdparty
+
 
 python
 import sys
