@@ -1,3 +1,5 @@
+// Created by Thanasis Liappis, 2012
+
 #ifndef WCOVERART_H
 #define WCOVERART_H
 
@@ -29,10 +31,11 @@ private:
     bool m_coverIsHovered;
     bool m_coverIsEmpty;
     QString m_currentCover;
+    QString m_lastView;
     QColor m_fgc; //Foreground colour
 
 public slots:
-    void loadCover(QString img);
+    void loadCover(const QString& img);
     void clearCover(const QString& img);
 };
 

@@ -1,3 +1,5 @@
+// Created by Thanasis Liappis, 2012
+
 #include "wcoverart.h"
 #include "wwidget.h"
 #include "wskincolor.h"
@@ -13,6 +15,7 @@ WCoverArt::WCoverArt(ConfigObject<ConfigValue>* pConfig, QWidget *parent)
     m_coverIsHovered = 0;
     m_coverIsEmpty = 1;
     m_currentCover = "";
+    m_lastView = "WTrackTableView";
     loadCover(m_currentCover);
 }
 
@@ -45,7 +48,7 @@ void WCoverArt::setup(QDomNode node) {
     setPalette(pal);
 }
 
-void WCoverArt::loadCover(QString img) {
+void WCoverArt::loadCover(const QString& img) {
     // set default cover
     if (img.isEmpty()) {
         m_currentCover = ":/images/library/vinyl-record.png";
@@ -59,9 +62,34 @@ void WCoverArt::loadCover(QString img) {
 }
 
 void WCoverArt::clearCover(const QString& img) {
-    Q_UNUSED(img);
-    m_currentCover = ":/images/library/vinyl-record.png";
-    m_coverIsEmpty = 1;
+    if (img == "WTrackTableView") {
+        if (m_lastView == "WTrackTableView" || m_coverIsEmpty) {
+            m_currentCover = ":/images/library/vinyl-record.png";
+            m_coverIsEmpty = 1;
+        }
+    }
+    else if (img == "Auto DJ")
+       m_currentCover = ":/images/library/ic_library_autodj.png";
+    else if (img == "PLAYLISTHOME")
+       m_currentCover = ":/images/library/ic_library_playlist.png";
+    else if (img == "CRATEHOME")
+        m_currentCover = ":/images/library/ic_library_crates.png";
+    else if (img == "BROWSEHOME")
+        m_currentCover = ":/images/library/ic_library_browse.png";
+    else if (img == "Recording")
+       m_currentCover = ":/images/library/ic_library_recordings.png";
+    else if (img == "SETLOGHOME")
+       m_currentCover = ":/images/library/ic_library_history.png";
+    else if (img == "Prepare")
+       m_currentCover = ":/images/library/ic_library_prepare.png";
+
+    if (img == "Auto DJ" || img == "PLAYLISTHOME" || img == "CRATEHOME" ||
+            img == "BROWSEHOME" || img == "Recording" || img == "SETLOGHOME" ||
+            img == "Prepare") {
+        m_coverIsEmpty = 1;
+    }
+
+    m_lastView = img;
 
     update();
 }
@@ -77,7 +105,7 @@ void WCoverArt::paintEvent(QPaintEvent *) {
         m_coverArt = m_coverArt.scaled(QSize(height()-10, height()-10),
                                        Qt::KeepAspectRatioByExpanding,
                                        Qt::SmoothTransformation);
-        painter.drawImage(width()/2-height()/2, 6, m_coverArt);
+        painter.drawImage(width()/2-height()/2+4, 6, m_coverArt);
     }
     else {
         QImage sc = QImage(":/images/library/ic_library_cover_show.png");

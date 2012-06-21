@@ -710,9 +710,9 @@ QWidget* LegacySkinParser::parseTableView(QDomElement node) {
 
     //connect cover art
     connect(m_pLibrary, SIGNAL(coverChanged(const QString&)),
-            pCoverArt, SLOT(loadCover(const QString&)));
+            pCoverArt, SLOT(loadCover(const QString&)), Qt::UniqueConnection);
     connect(m_pLibrary, SIGNAL(coverCleared(const QString&)),
-            pCoverArt, SLOT(clearCover(const QString&)));
+            pCoverArt, SLOT(clearCover(const QString&)), Qt::UniqueConnection);
 
     m_pLibrary->bindWidget(pLibrarySidebar,
                            pLibraryWidget,

@@ -124,10 +124,10 @@ void Library::bindWidget(WLibrarySidebar* pSidebarWidget,
             pLibraryWidget, SLOT(switchToView(const QString&)));
 
     connect(this, SIGNAL(switchToView(const QString&)),
-            this, SLOT(slotClearCover(const QString&)));
+            this, SLOT(slotClearCover(const QString&)), Qt::UniqueConnection);
 
     connect(pTrackTableView, SIGNAL(coverChanged(const QString&)),
-            this, SLOT(slotLoadCover(const QString&)));
+            this, SLOT(slotLoadCover(const QString&)), Qt::UniqueConnection);
 
     m_pLibraryControl->bindWidget(pSidebarWidget, pLibraryWidget, pKeyboard);
 

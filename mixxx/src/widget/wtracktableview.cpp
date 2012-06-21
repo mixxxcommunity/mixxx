@@ -595,6 +595,11 @@ void WTrackTableView::onSearchCleared() {
 }
 
 void WTrackTableView::onShow() {
+    QModelIndexList sl = selectionModel()->selectedRows();
+    if (sl.size() > 0) {
+        slotFindCover(sl[sl.size()-1]);
+    }
+
 }
 
 void WTrackTableView::mouseMoveEvent(QMouseEvent* pEvent) {
