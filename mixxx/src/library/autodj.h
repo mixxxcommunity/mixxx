@@ -16,19 +16,30 @@ public:
     ~AutoDJ();
 
 public slots:
-    void setEnabled(bool);
-    void setEndOfPlaylist(bool);
+    //void setEnabled(bool);
+    //void setEndOfPlaylist(bool);
+    void transitionIndex(int index);
     void receiveNextTrack(TrackPointer nextTrack);
     void player1PositionChanged(double samplePos1);
     void player2PositionChanged(double samplePos2);
+    void player1PlayChanged(double value);
+    void player2PlayChanged(double value);
+    void transitionValueChanged(double value);
+    void shufflePlaylist(double value);
+    void skipNext(double value);
+    void fadeNowRight(double value);
+    void fadeNowLeft(double value);
+    void toggleAutoDJ(double value);
 
 signals:
     // Emitted whenever AutoDJ is ready for the next track from the queue.
     // This is connected to DlgAutoDJ::slotNextTrackNeeded() by AutoDJFeature.
-    void needNextTrack();
+    // AutoDJ is going to control this now, not send a signal (smstewart)
+    //void needNextTrack();
     // Emitted to signal that the AutoDJ automation is stopping.
     // This is connected to DlgAutoDJ::toggleAutoDJ(bool) by AutoDJFeature.
-    void disableAutoDJ();
+    //This will now be controlled by COtoggleAutoDJ (smstewart)
+    //void disableAutoDJ();
     // Emitted so the currently playing track in the specified group will be removed from
     // the AutoDJ queue. This is connected to DlgAutoDJ::slotRemovePlayingTrackFromQueue(QString).
     void removePlayingTrackFromQueue(QString group);
@@ -39,6 +50,8 @@ private:
     bool m_bEnabled;
     bool m_bEndOfPlaylist;
 
+    // This variables (PlayerN) may be changed due to implementation,
+    // but I am leaving them for now until I need to change them (smstewart)
     bool m_bPlayer1Primed, m_bPlayer2Primed;
     // TODO(tom__m) This is hacky
     bool m_bPlayer1Cued, m_bPlayer2Cued;
@@ -52,6 +65,15 @@ private:
     ControlObjectThreadMain* m_pCOPlay2;
     ControlObjectThreadMain* m_pCORepeat1;
     ControlObjectThreadMain* m_pCORepeat2;
+    ControlObjectThreadMain* m_pCOCrossfader;
+    ControlObjectThreadMain* m_pCOSync;
+    ControlObjectThreadMain* m_pPitchControl;
+    ControlObjectThreadMain* m_pKeyLock;
+    ControlObjectThreadMain* m_pCOSkipNext;
+    ControlObjectThreadMain* m_pCOFadeNowRight;
+    ControlObjectThreadMain* m_pCOFadeNowLeft;
+    ControlObjectThreadMain* m_pCOShufflePlaylist;
+    ControlObjectThreadMain* m_pCOToggleAutoDJ;
 
     // This is effectively our "on deck" track for AutoDJ.
     TrackPointer m_pNextTrack;
@@ -67,7 +89,9 @@ private:
 
     // Cues the track in the specified player to the X seconds before the FadeIn point
     // where X is the user defined crossfade length
-    void cueTrackToFadeIn(QString group);
+    // Tracks are loaded at the default cue point, so AutoDJ doesn't need to
+    // do anyting extra (smstewart)
+    //void cueTrackToFadeIn(QString group);
 
 };
 
