@@ -105,7 +105,7 @@ DlgPrefControls::DlgPrefControls(QWidget * parent, MixxxApp * mixxx,
     // Set default range as stored in config file
     if (m_pConfig->getValueString(ConfigKey("[Controls]","RateRange")).length() == 0)
         m_pConfig->set(ConfigKey("[Controls]","RateRange"),ConfigValue(2));
-        
+
     slotSetRateRange(m_pConfig->getValueString(ConfigKey("[Controls]","RateRange")).toInt());
     connect(ComboBoxRateRange, SIGNAL(activated(int)), this, SLOT(slotSetRateRange(int)));
 
@@ -220,6 +220,10 @@ DlgPrefControls::DlgPrefControls(QWidget * parent, MixxxApp * mixxx,
     //
     // Skin configurations
     //
+    QString warningString = "<img src=\":/images/preferences/ic_preferences_warning.png\") width=16 height=16 />"
+        + tr("The selected skin is bigger than your screen resolution.");
+    warningLabel->setText(warningString);
+
     ComboBoxSkinconf->clear();
 
     QDir dir(m_pConfig->getResourcePath() + "skins/");
@@ -233,35 +237,23 @@ DlgPrefControls::DlgPrefControls(QWidget * parent, MixxxApp * mixxx,
     {
         if (list.at(i).fileName()!="." && list.at(i).fileName()!="..")
         {
-            ComboBoxSkinconf->addItem(list.at(i).fileName());
+            checkSkinResolution(list.at(i).fileName())
+                    ? ComboBoxSkinconf->insertItem(i, QIcon(":/trolltech/styles/commonstyle/images/standardbutton-apply-32.png"), list.at(i).fileName())
+                    : ComboBoxSkinconf->insertItem(i, QIcon(":/images/preferences/ic_preferences_warning.png"), list.at(i).fileName());
+
             if (list.at(i).filePath() == configuredSkinPath) {
                 ComboBoxSkinconf->setCurrentIndex(j);
             }
             ++j;
         }
     }
-    // #endif
-
-    // Detect small display and prompt user to use small skin.
-    if (QApplication::desktop()->width() >= 800 && QApplication::desktop()->height() == 480 && pConfig->getValueString(ConfigKey("[Config]","Skin"))!= "Outline800x480-WVGA") {
-        int ret = QMessageBox::warning(this, tr("Mixxx Detected a WVGA Screen"), tr("Mixxx has detected that your screen has a resolution of ") +
-                                       QString::number(QApplication::desktop()->width()) + " x " + QString::number(QApplication::desktop()->height()) + ".  " +
-                                       tr("The only skin compatiable with this size display is Outline800x480-WVGA.  Would you like to use that skin?"),
-                                       QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
-        if (ret == QMessageBox::Yes) {
-            pConfig->set(ConfigKey("[Config]","Skin"), ConfigValue("Outline800x480-WVGA"));
-            pConfig->Save();
-            ComboBoxSkinconf->setCurrentIndex(ComboBoxSkinconf->findText(pConfig->getValueString(ConfigKey("[Config]","Skin"))));
-            qDebug() << "Retrieved skin:" << pConfig->getValueString(ConfigKey("[Config]","Skin")) << "ComboBoxSkinconf:" << ComboBoxSkinconf->currentText();
-            slotSetSkin(1);
-        }
-    }
 
     connect(ComboBoxSkinconf, SIGNAL(activated(int)), this, SLOT(slotSetSkin(int)));
-
-    slotUpdateSchemes();
-
     connect(ComboBoxSchemeconf, SIGNAL(activated(int)), this, SLOT(slotSetScheme(int)));
+
+    checkSkinResolution(ComboBoxSkinconf->currentText())
+             ? warningLabel->hide() : warningLabel->show();
+    slotUpdateSchemes();
 
     //
     // Tooltip configuration
@@ -291,7 +283,6 @@ DlgPrefControls::DlgPrefControls(QWidget * parent, MixxxApp * mixxx,
 
     connect(ComboBoxTooltips,   SIGNAL(activated(int)), this, SLOT(slotSetTooltips(int)));
 
-    slotUpdateSchemes();
     slotUpdate();
 
     initWaveformControl();
@@ -386,7 +377,7 @@ void DlgPrefControls::slotSetRateRange(int pos)
         range = 0.06f;
     if (pos==1)
         range = 0.08f;
-    
+
     // Set rate range for every group
     foreach (ControlObjectThreadMain* pControl, m_rateRangeControls) {
         pControl->slotSet(range);
@@ -464,6 +455,8 @@ void DlgPrefControls::slotSetSkin(int)
 {
     m_pConfig->set(ConfigKey("[Config]","Skin"), ComboBoxSkinconf->currentText());
     m_mixxx->rebootMixxxView();
+    checkSkinResolution(ComboBoxSkinconf->currentText())
+            ? warningLabel->hide() : warningLabel->show();
     slotUpdateSchemes();
 }
 
@@ -548,14 +541,14 @@ void DlgPrefControls::slotApply()
 {
     double deck1RateRange = m_rateRangeControls[0]->get();
     double deck1RateDir = m_rateDirControls[0]->get();
-    
+
     // Write rate range to config file
     double idx = (10. * deck1RateRange) + 1;
     if (deck1RateRange <= 0.07)
         idx = 0.;
     else if (deck1RateRange <= 0.09)
         idx = 1.;
-       
+
     m_pConfig->set(ConfigKey("[Controls]","RateRange"), ConfigValue((int)idx));
 
     // Write rate direction to config file
@@ -680,4 +673,19 @@ void DlgPrefControls::initWaveformControl()
     connect(normalizeOverviewCheckBox,SIGNAL(toggled(bool)),
             this,SLOT(slotSetNormalizeOverview(bool)));
 
+}
+
+//Returns TRUE if skin fits to screen resolution, FALSE otherwise
+bool DlgPrefControls::checkSkinResolution(QString skin)
+{
+    int screenWidth = QApplication::desktop()->width();
+    int screenHeight = QApplication::desktop()->height();
+
+    QString skinName = skin.left(skin.indexOf(QRegExp("\\d")));
+    QString resName = skin.right(skin.count()-skinName.count());
+    QString res = resName.left(resName.lastIndexOf(QRegExp("\\d"))+1);
+    QString skinWidth = res.left(res.indexOf("x"));
+    QString skinHeight = res.right(res.count()-skinWidth.count()-1);
+
+    return !(skinWidth.toInt() > screenWidth || skinHeight.toInt() > screenHeight);
 }

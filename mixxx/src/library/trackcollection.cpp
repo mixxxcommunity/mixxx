@@ -75,27 +75,31 @@ bool TrackCollection::checkForTables() {
     int requiredSchemaVersion = 17;
     QString schemaFilename = m_pConfig->getResourcePath();
     schemaFilename.append("schema.xml");
+    QString okToExit = tr("Click OK to exit.");
+    QString upgradeFailed = tr("Cannot upgrade database schema");
+    QString upgradeToVersionFailed = tr("Unable to upgrade your database schema to version %1")
+            .arg(QString::number(requiredSchemaVersion));
     int result = SchemaManager::upgradeToSchemaVersion(schemaFilename, m_db, requiredSchemaVersion);
-    if ( result < 0) {
+    if (result < 0) {
         if (result == -1) {
-            QMessageBox::warning(0, tr("Cannot upgrade database schema"),
-                             tr("Unable to upgrade your database schema to version %1.\n"
-                                "Your %2 file may be outdated.\n\n"
-                                "Click OK to exit.").arg(QString::number(requiredSchemaVersion), schemaFilename),
-                             QMessageBox::Ok);
+            QMessageBox::warning(0, upgradeFailed,
+                                 upgradeToVersionFailed + "\n" +
+                                 tr("Your %1 file may be outdated.").arg(schemaFilename) +
+                                 "\n\n" + okToExit,
+                                 QMessageBox::Ok);
         } else if (result == -2) {
-            QMessageBox::warning(0, tr("Cannot upgrade database schema"),
-                             tr("Unable to upgrade your database schema to version %1.\n"
-                                "Your mixxx.db file may be corrupt.\n"
-                                "Try renaming it and restarting Mixxx.\n\n"
-                                "Click OK to exit.").arg(requiredSchemaVersion),
-                             QMessageBox::Ok);
+            QMessageBox::warning(0, upgradeFailed,
+                                 upgradeToVersionFailed + "\n" +
+                                 tr("Your mixxxdb.sqlite file may be corrupt.") + "\n" +
+                                 tr("Try renaming it and restarting Mixxx.") +
+                                 "\n\n" + okToExit,
+                                 QMessageBox::Ok);
         } else { // -3
-            QMessageBox::warning(0, tr("Cannot upgrade database schema"),
-                             tr("Unable to upgrade your database schema to version %1.\n"
-                                "Your %2 file may be missing or invalid.\n\n"
-                                "Click OK to exit.").arg(QString::number(requiredSchemaVersion), schemaFilename),
-                                         QMessageBox::Ok);
+            QMessageBox::warning(0, upgradeFailed,
+                                 upgradeToVersionFailed + "\n" +
+                                 tr("Your %1 file may be missing or invalid.").arg(schemaFilename) +
+                                 "\n\n" + okToExit,
+                                 QMessageBox::Ok);
         }
         return false;
     }

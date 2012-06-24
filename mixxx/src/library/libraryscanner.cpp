@@ -1,6 +1,6 @@
 /***************************************************************************
-                          libraryscanner.cpp  -  scans library in a thread
-                             -------------------
+                        libraryscanner.cpp  -  scans library in a thread
+                            -------------------
     begin                : 11/27/2007
     copyright            : (C) 2007 Albert Santoni
     email                : gamegod \a\t users.sf.net
@@ -37,7 +37,7 @@ LibraryScanner::LibraryScanner(TrackCollection* collection) :
     m_trackDao(m_database, m_cueDao, m_playlistDao, m_crateDao, m_analysisDao),
     // Don't initialize m_database here, we need to do it in run() so the DB
     // conn is in the right thread.
-    nameFilters(SoundSourceProxy::supportedFileExtensionsString().split(" "))
+    m_nameFilters(SoundSourceProxy::supportedFileExtensionsString().split(" "))
 {
 
     qDebug() << "Constructed LibraryScanner";
@@ -50,12 +50,11 @@ LibraryScanner::LibraryScanner(TrackCollection* collection) :
     connect(this, SIGNAL(scanFinished()),
             &(collection->getTrackDAO()), SLOT(clearCache()));
 
-    /* The "Album Artwork" folder within iTunes stores Album Arts.
-     * It has numerous hundreds of sub folders but no audio files
-     * We put this folder on a "black list"
-     * On Windows, the iTunes folder is contained within the standard music folder
-     * Hence, Mixxx will scan the "Album Arts folder" for standard users which is wasting time
-     */
+    // The "Album Artwork" folder within iTunes stores Album Arts.
+    // It has numerous hundreds of sub folders but no audio files
+    // We put this folder on a "black list"
+    // On Windows, the iTunes folder is contained within the standard music folder
+    // Hence, Mixxx will scan the "Album Arts folder" for standard users which is wasting time
     QString iTunesArtFolder = "";
 #if defined(__WINDOWS__)
     iTunesArtFolder = QDesktopServices::storageLocation(QDesktopServices::MusicLocation) + "\\iTunes\\Album Artwork";
@@ -151,7 +150,7 @@ void LibraryScanner::run()
     qRegisterMetaType<QSet<int> >("QSet<int>");
 
     if (!m_database.isValid()) {
-    	m_database = QSqlDatabase::cloneDatabase(m_pCollection->getDatabase(), "LIBRARY_SCANNER");
+        m_database = QSqlDatabase::cloneDatabase(m_pCollection->getDatabase(), "LIBRARY_SCANNER");
     }
 
     if (!m_database.isOpen()) {
@@ -200,7 +199,7 @@ void LibraryScanner::run()
 
     //Refresh the name filters in case we loaded new
     //SoundSource plugins.
-    nameFilters = SoundSourceProxy::supportedFileExtensionsString().split(" ");
+    m_nameFilters = SoundSourceProxy::supportedFileExtensionsString().split(" ");
 
     // Time the library scanner.
     QTime t;
@@ -243,12 +242,12 @@ void LibraryScanner::run()
     // stuff.
     ScopedTransaction transaction(m_database);
 
-    //At the end of a scan, mark all tracks and directories that
-    //weren't "verified" as "deleted" (as long as the scan wasn't canceled
-    //half way through. This condition is important because our rescanning
-    //algorithm starts by marking all tracks and dirs as unverified, so a
-    //canceled scan might leave half of your library as unverified. Don't
-    //want to mark those tracks/dirs as deleted in that case) :)
+    // At the end of a scan, mark all tracks and directories that
+    // weren't "verified" as "deleted" (as long as the scan wasn't canceled
+    // half way through. This condition is important because our rescanning
+    // algorithm starts by marking all tracks and dirs as unverified, so a
+    // canceled scan might leave half of your library as unverified. Don't
+    // want to mark those tracks/dirs as deleted in that case) :)
     QSet<int> tracksMovedSetOld;
     QSet<int> tracksMovedSetNew;
     if (bScanFinishedCleanly) {
@@ -338,12 +337,11 @@ void LibraryScanner::scan()
     start(); //Starts the thread by calling run()
 }
 
-/** Recursively scan a music library. Doesn't import tracks for any directories that
-    have already been scanned and have not changed. Changes are tracked by performing
-    a hash of the directory's file list, and those hashes are stored in the database.
-*/
+// Recursively scan a music library. Doesn't import tracks for any directories that
+// have already been scanned and have not changed. Changes are tracked by performing
+// a hash of the directory's file list, and those hashes are stored in the database.
 bool LibraryScanner::recursiveScan(QString dirPath, QStringList& verifiedDirectories) {
-    QDirIterator fileIt(dirPath, nameFilters, QDir::Files | QDir::NoDotAndDotDot);
+    QDirIterator fileIt(dirPath, m_nameFilters, QDir::Files | QDir::NoDotAndDotDot);
     QString currentFile;
     bool bScanFinishedCleanly = true;
 
@@ -357,9 +355,9 @@ bool LibraryScanner::recursiveScan(QString dirPath, QStringList& verifiedDirecto
 
     while (fileIt.hasNext())
     {
-	    currentFile = fileIt.next();
-	    //qDebug() << currentFile;
-	    newHashStr += currentFile;
+        currentFile = fileIt.next();
+        //qDebug() << currentFile;
+        newHashStr += currentFile;
     }
 
     // Calculate a hash of the directory's file list.
@@ -382,13 +380,13 @@ bool LibraryScanner::recursiveScan(QString dirPath, QStringList& verifiedDirecto
         }
 
         // Rescan that mofo!
-        bScanFinishedCleanly = m_pCollection->importDirectory(dirPath, m_trackDao, nameFilters);
+        bScanFinishedCleanly = m_pCollection->importDirectory(dirPath, m_trackDao, m_nameFilters);
     } else { //prevHash == newHash
         // Add the directory to the verifiedDirectories list, so that later they
         // (and the tracks inside them) will be marked as verified
         emit(progressHashing(dirPath));
         verifiedDirectories.append(dirPath);
-    }    
+    }
 
     // Let us break out of library directory hashing (the actual file scanning
     // stuff is in TrackCollection::importDirectory)
@@ -418,18 +416,13 @@ bool LibraryScanner::recursiveScan(QString dirPath, QStringList& verifiedDirecto
     return bScanFinishedCleanly;
 }
 
-/**
-   Table: LibraryHashes
-   PRIMARY KEY string directory
-   string hash
+// Table: LibraryHashes
+// PRIMARY KEY string directory
+// string hash
 
-
-   Recursive Algorithm:
-   1) QDirIterator, iterate over all _files_ in a directory to construct a giant string.
-   2) newHash = Hash that string.
-   3) prevHash = SELECT from LibraryHashes * WHERE directory == strDirectory
-   4) if (prevHash != newHash) scanDirectory(strDirectory); //Do a NON-RECURSIVE scan of the files in that dir.
-   5) For each directory in strDirectory, execute this algorithm.
-
-  */
-
+// Recursive Algorithm:
+// 1) QDirIterator, iterate over all _files_ in a directory to construct a giant string.
+// 2) newHash = Hash that string.
+// 3) prevHash = SELECT from LibraryHashes * WHERE directory == strDirectory
+// 4) if (prevHash != newHash) scanDirectory(strDirectory); //Do a NON-RECURSIVE scan of the files in that dir.
+// 5) For each directory in strDirectory, execute this algorithm.

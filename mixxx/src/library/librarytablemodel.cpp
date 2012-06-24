@@ -51,6 +51,7 @@ LibraryTableModel::~LibraryTableModel() {
 }
 
 bool LibraryTableModel::addTrack(const QModelIndex& index, QString location) {
+    Q_UNUSED(index);
     QFileInfo fileInfo(location);
 
     // Adds track, does not insert duplicates, handles unremoving logic.
@@ -65,6 +66,7 @@ bool LibraryTableModel::addTrack(const QModelIndex& index, QString location) {
 }
 
 int LibraryTableModel::addTracks(const QModelIndex& index, QList<QString> locations) {
+    Q_UNUSED(index);
     QList<QFileInfo> fileInfoList;
     foreach (QString fileLocation, locations) {
         fileInfoList.append(QFileInfo(fileLocation));
@@ -78,23 +80,10 @@ TrackPointer LibraryTableModel::getTrack(const QModelIndex& index) const {
     return m_trackDao.getTrack(trackId);
 }
 
-void LibraryTableModel::hideTracks(const QModelIndexList& indices) {
-    QList<int> trackIds;
-
-    foreach (QModelIndex index, indices) {
-        int trackId = getTrackId(index);
-        trackIds.append(trackId);
-    }
-
-    m_trackDao.hideTracks(trackIds);
-
-    // TODO(rryan) : do not select, instead route event to BTC and notify from
-    // there.
-    select(); //Repopulate the data model.
-}
-
 void LibraryTableModel::moveTrack(const QModelIndex& sourceIndex,
                                   const QModelIndex& destIndex) {
+    Q_UNUSED(sourceIndex);
+    Q_UNUSED(destIndex);
     // Does nothing because we don't support reordering tracks in the library,
     // and getCapabilities() reports that.
 }

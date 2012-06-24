@@ -41,7 +41,7 @@ QString SkinLoader::getConfiguredSkinPath() {
             defaultSkin = "Deere1280x800-WXGA";
         }
         else if (screenGeo.width() >= 1024 && screenGeo.height() >= 600) {
-            defaultSkin = "Outline1024x600-Netbook";
+            defaultSkin = "ShadeDark1024x600-Netbook";
         }
         else {
             defaultSkin = "Outline800x480-WVGA"; // Mixxx's smallest Skin
