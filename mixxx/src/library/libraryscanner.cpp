@@ -274,7 +274,7 @@ void LibraryScanner::run()
         transaction.commit();
         qDebug() << "Scan finished cleanly";
     } else {
-        m_database.rollback();
+        transaction.rollback();
         qDebug() << "Scan cancelled";
     }
 

@@ -480,8 +480,8 @@ QList<int> TrackDAO::addTracks(QList<QFileInfo> fileInfoList, bool unremove) {
     while (it.hasNext()) {
         QFileInfo& info = it.next();
         pTrack = new TrackInfoObject(info);
-    	addTracksAdd(pTrack, unremove);
-		int trackID = pTrack->getId();
+        addTracksAdd(pTrack, unremove);
+        int trackID = pTrack->getId();
         if (trackID >= 0) {
             trackIDs.append(trackID);
         }
@@ -639,7 +639,6 @@ void TrackDAO::deleteTrack(TrackInfoObject* pTrack) {
 TrackPointer TrackDAO::getTrackFromDB(int id) const {
     QTime time;
     time.start();
-
     QSqlQuery query(m_database);
 
     query.prepare(
@@ -1148,17 +1147,17 @@ bool TrackDAO::isTrackFormatSupported(TrackInfoObject* pTrack) const {
     return false;
 }
 
-void TrackDAO::verifyTracksOutside(QString libraryPath) {
+void TrackDAO::verifyTracksOutside(const QString& libraryPath) {
     QSqlQuery query(m_database);
     QSqlQuery query2(m_database);
     QString trackLocation;
 
-    libraryPath += "%"; //Add wildcard to SQL query to match subdirectories!
     query.setForwardOnly(true);
     query.prepare("SELECT location "
                   "FROM track_locations "
-                  "WHERE directory NOT LIKE :directory");
-    query.bindValue(":directory", libraryPath);
+                  "WHERE directory NOT LIKE '" +
+                  libraryPath +
+                  "/%'"); //Add wildcard to SQL query to match subdirectories!
 
     if (!query.exec()) {
         LOG_FAILED_QUERY(query);
@@ -1171,11 +1170,11 @@ void TrackDAO::verifyTracksOutside(QString libraryPath) {
 
     while (query.next()) {
         trackLocation = query.value(query.record().indexOf("location")).toString();
-        query2.bindValue(":location", trackLocation);
-        query2.bindValue(":fs_deleted", (int)!QFile::exists(trackLocation));
+        query2.bindValue(":fs_deleted", (int)!QFile::exists(trackLocation));        
+        query2.bindValue(":location", trackLocation);  
         if (!query2.exec()) {
             LOG_FAILED_QUERY(query2);
-       }
+        }
     }
 }
 
