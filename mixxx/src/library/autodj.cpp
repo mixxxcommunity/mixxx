@@ -37,6 +37,36 @@ AutoDJ::AutoDJ(QObject* parent, ConfigObject<ConfigValue>* pConfig) :
                             ControlObject::getControl(ConfigKey("[Channel1]", "track_samplerate")));
     m_pCOSampleRate2 = new ControlObjectThreadMain(
                             ControlObject::getControl(ConfigKey("[Channel2]", "track_samplerate")));
+
+    m_pCOSkipNext = new ControlPushButton(
+                    ConfigKey("[AutoDJ]", "skip_next"));
+    m_pCOSkipNext->setButtonMode(ControlPushButton::PUSH);
+    connect(m_pCOSkipNext, SIGNAL(valueChanged(double)),
+        this, SLOT(skipNext(double)));
+
+    m_pCOFadeNowRight = new ControlPushButton(
+                        ConfigKey("[AutoDJ]", "fade_now_right"));
+    m_pCOFadeNowRight->setButtonMode(ControlPushButton::PUSH);
+    connect(m_pCOFadeNowRight, SIGNAL(valueChanged(double)),
+        this, SLOT(fadeNowRight(double)));
+
+    m_pCOFadeNowLeft = new ControlPushButton(
+                       ConfigKey("[AutoDJ]", "fade_now_left"));
+    m_pCOFadeNowLeft->setButtonMode(ControlPushButton::PUSH);
+    connect(m_pCoFadeNowLeft, SIGNAL(valueChanged(double)),
+        this, SLOT(fadeNow(double)));
+
+    m_pCOShufflePlaylist = new ControlPushButton(
+                           ConfigKey("[AutoDJ]", "shuffle_playlist"));
+    m_pCOShufflePlaylist->setButtonMode(ControlPushButton::PUSH);
+    connect(m_pCOShufflePlaylist, SIGNAL(valueChanged(double)),
+        this, SLOT(shufflePlaylist(double)));
+
+    m_pCOToggleAutoDJ = newControlPushButton(
+                        ConfigKey("[AutoDJ]", "toggle_autodj"));
+    m_pCOToggleAutoDJ->setButtonMode(ControlPushButton::TOGGLE);
+    connect(m_pCOToggleAutoDJ, SIGNAL(valueChanged(double)),
+        this, SLOT(toggleAutoDJ(double)));
 }
 
 AutoDJ::~AutoDJ() {
@@ -310,5 +340,165 @@ void AutoDJ::cueTrackToFadeIn(QString group) {
 
         // Cue up the fadeIn point
         m_pTrackTransition->m_pCOPlayPos2->slotSet(fadeIn);
+    }
+
+    void AutoDJ::transitionValueChanged(int value) {
+        if (m_eState == ADJ_IDLE) {
+            if (m_pCOPlay1Fb->get() == 1.0f) {
+                player1PlayChanged(1.0f);
+            }
+            if (m_pCOPlay2Fb->get() == 1.0f) {
+                player2PlayChanged(1.0f);
+            }
+        }
+        m_pConfig->set(ConfigKey(CONFIG_KEY, kTransitionPreferenceName),
+                       ConfigValue(value));
+    }
+
+    void AutoDJ::shufflePlaylist(double value) {
+    	Q_UNUSED(buttonChecked);
+    	qDebug() << "Shuffling AutoDJ playlist";
+    	int row;
+    	if(m_eState == ADJ_DISABLED) {
+    	    row = 0;
+    	} else {
+    	    row = 1;
+    	}
+    	m_pAutoDJTableModel->shuffleTracks(m_pAutoDJTableModel->index(row, 0));
+    	qDebug() << "Shuffling done";
+    }
+
+    void AutoDJ::skipNext(double value) {
+        Q_UNUSED(buttonChecked);
+        qDebug() << "Skip Next";
+        // Load the next song from the queue.
+        if (m_pCOPlay1Fb->get() == 0.0f) {
+            removePlayingTrackFromQueue("[Channel1]");
+            loadNextTrackFromQueue();
+        } else if (m_pCOPlay2Fb->get() == 0.0f) {
+            removePlayingTrackFromQueue("[Channel2]");
+            loadNextTrackFromQueue();
+        }
+    }
+
+    void AutoDJ::fadeNowRight(double value) {
+        Q_UNUSED(buttonChecked);
+        qDebug() << "Fade Now";
+        if (m_eState == ADJ_IDLE) {
+            m_bFadeNow = true;
+            double crossfader = m_pCOCrossfader->get();
+            if (crossfader <= 0.3f && m_pCOPlay1Fb->get() == 1.0f) {
+                m_posThreshold1 = m_pCOPlayPos1->get() -
+                        ((crossfader + 1.0f) / 2 * (m_fadeDuration1));
+                // Repeat is disabled by FadeNow but disables auto Fade
+                m_pCORepeat1->slotSet(0.0f);
+            } else if (crossfader >= -0.3f && m_pCOPlay2Fb->get() == 1.0f) {
+                m_posThreshold2 = m_pCOPlayPos2->get() -
+                        ((1.0f - crossfader) / 2 * (m_fadeDuration2));
+                // Repeat is disabled by FadeNow but disables auto Fade
+                m_pCORepeat2->slotSet(0.0f);
+            }
+        }
+    }
+
+    void AutoDJ::fadeNowLeft(double value) {
+        Q_UNUSED(buttonChecked);
+        qDebug() << "Fade Now";
+        if (m_eState == ADJ_IDLE) {
+            m_bFadeNow = true;
+            double crossfader = m_pCOCrossfader->get();
+            if (crossfader <= 0.3f && m_pCOPlay1Fb->get() == 1.0f) {
+                m_posThreshold1 = m_pCOPlayPos1->get() -
+                        ((crossfader + 1.0f) / 2 * (m_fadeDuration1));
+                // Repeat is disabled by FadeNow but disables auto Fade
+                m_pCORepeat1->slotSet(0.0f);
+            } else if (crossfader >= -0.3f && m_pCOPlay2Fb->get() == 1.0f) {
+                m_posThreshold2 = m_pCOPlayPos2->get() -
+                        ((1.0f - crossfader) / 2 * (m_fadeDuration2));
+                // Repeat is disabled by FadeNow but disables auto Fade
+                m_pCORepeat2->slotSet(0.0f);
+            }
+        }
+    }
+
+    void AutoDJ::toggleAutoDJ(double value) {
+        bool deck1Playing = m_pCOPlay1Fb->get() == 1.0f;
+        bool deck2Playing = m_pCOPlay2Fb->get() == 1.0f;
+
+        if (toggle) {  // Enable Auto DJ
+            if (deck1Playing && deck2Playing) {
+                QMessageBox::warning(
+                    NULL, tr("Auto-DJ"),
+                    tr("One deck must be stopped to enable Auto-DJ mode."),
+                    QMessageBox::Ok);
+                qDebug() << "One deck must be stopped before enabling Auto DJ mode";
+                pushButtonAutoDJ->setChecked(false);
+                return;
+            }
+
+            // Never load the same track if it is already playing
+            if (deck1Playing) {
+                removePlayingTrackFromQueue("[Channel1]");
+            }
+            if (deck2Playing) {
+                removePlayingTrackFromQueue("[Channel2]");
+            }
+
+            TrackPointer nextTrack = getNextTrackFromQueue();
+            if (!nextTrack) {
+                qDebug() << "Queue is empty now";
+                pushButtonAutoDJ->setChecked(false);
+                return;
+            }
+
+            // Track is available so GO
+            pushButtonAutoDJ->setToolTip(tr("Disable Auto DJ"));
+            pushButtonAutoDJ->setText(tr("Disable Auto DJ"));
+            qDebug() << "Auto DJ enabled";
+
+            pushButtonSkipNext->setEnabled(true);
+
+            connect(m_pCOPlayPos1, SIGNAL(valueChanged(double)),
+                    this, SLOT(player1PositionChanged(double)));
+            connect(m_pCOPlayPos2, SIGNAL(valueChanged(double)),
+                    this, SLOT(player2PositionChanged(double)));
+
+            connect(m_pCOPlay1Fb, SIGNAL(valueChanged(double)),
+                    this, SLOT(player1PlayChanged(double)));
+            connect(m_pCOPlay2Fb, SIGNAL(valueChanged(double)),
+                    this, SLOT(player2PlayChanged(double)));
+
+            if (!deck1Playing && !deck2Playing) {
+                // both decks are stopped
+                m_eState = ADJ_ENABLE_P1LOADED;
+                pushButtonFadeNow->setEnabled(false);
+                // Force Update on load Track
+                m_pCOPlayPos1->slotSet(-0.001f);
+            } else {
+                m_eState = ADJ_IDLE;
+                pushButtonFadeNow->setEnabled(true);
+                if (deck1Playing) {
+                    // deck 1 is already playing
+                    player1PlayChanged(1.0f);
+                } else {
+                    // deck 2 is already playing
+                    player2PlayChanged(1.0f);
+                }
+            }
+            // Loads into first deck If stopped else into second else not
+            emit(loadTrack(nextTrack));
+        } else {  // Disable Auto DJ
+            pushButtonAutoDJ->setToolTip(tr("Enable Auto DJ"));
+            pushButtonAutoDJ->setText(tr("Enable Auto DJ"));
+            qDebug() << "Auto DJ disabled";
+            m_eState = ADJ_DISABLED;
+            pushButtonFadeNow->setEnabled(false);
+            pushButtonSkipNext->setEnabled(false);
+            m_bFadeNow = false;
+            m_pCOPlayPos1->disconnect(this);
+            m_pCOPlayPos2->disconnect(this);
+            m_pCOPlay1->disconnect(this);
+            m_pCOPlay2->disconnect(this);
+        }
     }
 }

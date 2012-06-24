@@ -24,7 +24,7 @@ public slots:
     void player2PositionChanged(double samplePos2);
     void player1PlayChanged(double value);
     void player2PlayChanged(double value);
-    void transitionValueChanged(double value);
+    void transitionValueChanged(int value);
     void shufflePlaylist(double value);
     void skipNext(double value);
     void fadeNowRight(double value);
@@ -57,14 +57,14 @@ private:
     bool m_bPlayer1Cued, m_bPlayer2Cued;
 
     ConfigObject<ConfigValue>* m_pConfig;
-    ControlObjectThreadMain* m_pCOPlayPosSamples1;
-    ControlObjectThreadMain* m_pCOPlayPosSamples2;
-    ControlObjectThreadMain* m_pCOSampleRate1;
-    ControlObjectThreadMain* m_pCOSampleRate2;
     ControlObjectThreadMain* m_pCOPlay1;
     ControlObjectThreadMain* m_pCOPlay2;
     ControlObjectThreadMain* m_pCORepeat1;
     ControlObjectThreadMain* m_pCORepeat2;
+    ControlObjectThreadMain* m_pCOPlayPosSamples1;
+    ControlObjectThreadMain* m_pCOPlayPosSamples2;
+    ControlObjectThreadMain* m_pCOSampleRate1;
+    ControlObjectThreadMain* m_pCOSampleRate2;
     ControlObjectThreadMain* m_pCOCrossfader;
     ControlObjectThreadMain* m_pCOSync;
     ControlObjectThreadMain* m_pPitchControl;

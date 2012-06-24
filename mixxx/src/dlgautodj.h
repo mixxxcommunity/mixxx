@@ -84,6 +84,11 @@ class DlgAutoDJ : public QWidget, public Ui::DlgAutoDJ, public virtual LibraryVi
     //float m_posThreshold2;
     //float m_fadeDuration1;
     //float m_fadeDuration2;
+    ControlObjectThreadMain* m_pCOSkipNext;
+    ControlObjectThreadMain* m_pCOFadeNowRight;
+    ControlObjectThreadMain* m_pCOFadeNowLeft;
+    ControlObjectThreadMain* m_pCOShufflePlaylist;
+    ControlObjectThreadMain* m_pCOToggleAutoDJ;
     //ControlObjectThreadMain* m_pCOPlayPos1;
     //ControlObjectThreadMain* m_pCOPlayPos2;
     //ControlObjectThreadMain* m_pCOPlay1;
