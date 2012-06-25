@@ -51,7 +51,7 @@ DlgAutoDJ::DlgAutoDJ(QWidget* parent, ConfigObject<ConfigValue>* pConfig,
         playlistId = m_playlistDao.createPlaylist(AUTODJ_TABLE,
                                                   PlaylistDAO::PLHT_AUTO_DJ);
     }
-    //m_pAutoDJTableModel->setPlaylist(playlistId);
+    m_pAutoDJTableModel->setPlaylist(playlistId);
     m_pTrackTableView->loadTrackModel(m_pAutoDJTableModel);
 
     // Override some playlist-view properties:
@@ -146,8 +146,9 @@ DlgAutoDJ::~DlgAutoDJ() {
     delete m_pCORepeat2;
     delete m_pCOCrossfader;*/
     delete m_pCOSkipNext;
-    delete m_pCOFadeNowRight;
-    delete m_pCOFadeNowLeft;
+    //Shouldn't be deleted here because they are not initialized here
+    //delete m_pCOFadeNowRight;
+    //delete m_pCOFadeNowLeft;
     delete m_pCOShufflePlaylist;
     delete m_pCOToggleAutoDJ;
     // Delete m_pTrackTableView before the table model. This is because the

@@ -12,6 +12,7 @@
 #include "configobject.h"
 #include "treeitemmodel.h"
 #include "dlgautodj.h"
+#include "library/autodj.h"
 
 class PlaylistTableModel;
 class TrackCollection;
@@ -52,6 +53,7 @@ class AutoDJFeature : public LibraryFeature {
     const static QString m_sAutoDJViewName;
     TreeItemModel m_childModel;
     DlgAutoDJ* m_pAutoDJView;
+    AutoDJ* m_pAutoDJ;
 };
 
 
