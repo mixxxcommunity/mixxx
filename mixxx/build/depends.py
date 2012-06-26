@@ -374,6 +374,7 @@ class MixxxCore(Feature):
                    "controllers/controllerlearningeventfilter.cpp",
                    "controllers/controllermanager.cpp",
                    "controllers/controllerpresetfilehandler.cpp",
+                   "controllers/controllerpresetinfo.cpp",
                    "controllers/midi/midicontroller.cpp",
                    "controllers/midi/midicontrollerpresetfilehandler.cpp",
                    "controllers/midi/midienumerator.cpp",
@@ -433,11 +434,13 @@ class MixxxCore(Feature):
                    "library/searchqueryparser.cpp",
                    "library/preparelibrarytablemodel.cpp",
                    "library/missingtablemodel.cpp",
+                   "library/hiddentablemodel.cpp",
                    "library/proxytrackmodel.cpp",
 
                    "library/playlisttablemodel.cpp",
                    "library/libraryfeature.cpp",
                    "library/preparefeature.cpp",
+									 "library/autodj.cpp",
                    "library/autodjfeature.cpp",
                    "library/mixxxlibraryfeature.cpp",
                    "library/baseplaylistfeature.cpp",
@@ -533,6 +536,7 @@ class MixxxCore(Feature):
 
                    "waveform/renderers/waveformrenderersignalbase.cpp",
                    "waveform/renderers/waveformmark.cpp",
+                   "waveform/renderers/waveformmarkset.cpp",
                    "waveform/renderers/waveformmarkrange.cpp",
 
                    "waveform/widgets/waveformwidgetabstract.cpp",
@@ -581,6 +585,7 @@ class MixxxCore(Feature):
                    "tapfilter.cpp",
 
                    "util/pa_ringbuffer.c",
+                   "util/sleepableqthread.cpp",
 
                    # Add the QRC file which compiles in some extra resources
                    # (prefs icons, etc.)
