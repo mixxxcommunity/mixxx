@@ -141,8 +141,8 @@ bool TrackCollection::importDirectory(QString directory, TrackDAO &trackDao,
 
       	QString absoluteFilePath = it.next();
 
-		//If the track is in the database, mark it as existing. This code gets exectuted
-		//when other files in the same directory have changed (the directory hash has changed).
+		// If the track is in the database, mark it as existing. This code gets exectuted
+		// when other files in the same directory have changed (the directory hash has changed).
 		trackDao.markTrackLocationAsVerified(absoluteFilePath);
 
 		// If the file already exists in the database, continue and go on to
@@ -158,14 +158,14 @@ bool TrackCollection::importDirectory(QString directory, TrackDAO &trackDao,
 			//qDebug() << "Loading" << it.fileName();
         	emit(progressLoading(it.fileName()));
 
-        	TrackPointer pTrack =  TrackPointer(new TrackInfoObject(absoluteFilePath), &QObject::deleteLater);
+            TrackPointer pTrack =  TrackPointer(new TrackInfoObject(absoluteFilePath), &QObject::deleteLater);
 
-        	if (trackDao.addTracksAdd(pTrack.data(), false)) {
-        		// Successful added
-				// singal the main instance of TrackDao, that there is a new Track in the database 
-            	m_trackDao.databaseTrackAdded(pTrack);
-        	}
-		}
+            if (trackDao.addTracksAdd(pTrack.data(), false)) {
+                // Successful added
+                // singal the main instance of TrackDao, that there is a new Track in the database 
+                m_trackDao.databaseTrackAdded(pTrack);
+            }
+        }
     }
     emit(finishedLoading());
     return true;

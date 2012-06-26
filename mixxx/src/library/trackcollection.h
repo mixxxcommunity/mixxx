@@ -51,7 +51,7 @@ class TrackCollection : public QObject
 
     /** Import the files in a given diretory, without recursing into subdirectories */
     bool importDirectory(QString directory, TrackDAO &trackDao,
-    		               const QStringList & nameFilters);
+                         const QStringList & nameFilters);
 
     void resetLibaryCancellation();
     QSqlDatabase& getDatabase();
