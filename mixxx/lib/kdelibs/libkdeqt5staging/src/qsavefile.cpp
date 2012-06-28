@@ -40,14 +40,17 @@
 ****************************************************************************/
 
 #include "qsavefile.h"
-//#include "qplatformdefs.h"
 #include "qdebug.h"
-#include "qtemporaryfile.h"
+#include "qfile.h"
 #include "qfsfileengine.h"
-#include "qtemporaryfile.h"
 #include "qsavefile_p.h"
 
+#if defined(QT_BUILD_CORE_LIB)
+#include "qcoreapplication.h"
+#endif
+
 QT_BEGIN_NAMESPACE
+
 
 QSaveFilePrivate::QSaveFilePrivate()
     : tempFile(0), error(QFile::NoError)
@@ -56,6 +59,36 @@ QSaveFilePrivate::QSaveFilePrivate()
 
 QSaveFilePrivate::~QSaveFilePrivate()
 {
+}
+
+/*!
+    \internal
+*/
+QString QSaveFilePrivate::makeTemp()
+{
+	QString tempName(fileName);  
+	if (!tempName.isEmpty()) {
+		tempName.append(QChar('.')); 
+		int i = 6; 
+#if defined(QT_BUILD_CORE_LIB)
+		quint64 pid = quint64(QCoreApplication::applicationPid());
+		do {
+			tempName.append(QChar(((pid % 10) + '0');
+			pid /= 10;
+			i--; 
+		} while (pid && i);
+#endif	
+		while (i) {
+			char ch = char((qrand() & 0xffff) % (26 + 26));
+			if (ch < 26) {
+				tempName.append(QChar(ch + 'A'));
+			} else {
+				tempName.append(QChar(ch - 26 + 'a'));
+			}
+			i--;
+		}
+	} 
+	return tempName; 
 }
 
 /*!
@@ -131,7 +164,9 @@ QSaveFile::~QSaveFile()
 {
     Q_D(QSaveFile);
     if (d->tempFile) {
-        d->tempFile->setAutoRemove(true);
+		if (!d->tempFile->fileName().isEmpty()) {
+			d->tempFile->remove(); 
+		}
         delete d->tempFile;
     }
     QIODevice::close();
@@ -216,21 +251,16 @@ void QSaveFile::setFileName(const QString &name)
 bool QSaveFile::open(OpenMode mode)
 {
     Q_D(QSaveFile);
+	if (d->fileName.isEmpty()) {
+        qWarning("QSaveFile::open: Empty or null file name");
+        return false;
+    }
     if (isOpen()) {
         qWarning("QSaveFile::open: File (%s) already open", qPrintable(fileName()));
         return false;
     }
     unsetError();
-    if ((mode & (ReadOnly | WriteOnly)) == 0) {
-        qWarning("QSaveFile::open: Open mode not specified");
-        return false;
-    }
-    // In the future we could implement Append and ReadWrite by copying from the existing file to the temp file...
-    if ((mode & ReadOnly) || (mode & Append)) {
-        qWarning("QSaveFile::open: Unsupported open mode %d", int(mode));
-        return false;
-    }
-
+	
     // check if existing file is writable
     QFileInfo existingFile(d->fileName);
     if (existingFile.exists() && !existingFile.isWritable()) {
@@ -238,19 +268,48 @@ bool QSaveFile::open(OpenMode mode)
         setErrorString(QSaveFile::tr("Existing file %1 is not writable").arg(d->fileName));
         return false;
     }
-    d->tempFile = new QTemporaryFile;
-    d->tempFile->setAutoRemove(false);
-    d->tempFile->setFileTemplate(d->fileName);
-    if (!d->tempFile->open()) {
+
+    // genereate unique filname
+	d->tempFile = new QFile();
+    d->tempFile->setFileName(d->makeTemp()); 
+	if (d->tempFile->exists()) {
+		// Try again
+		d->tempFile->setFileName(d->makeTemp());
+	} 
+	
+	qDebug() << d->tempFile->fileName(); 
+
+	// copying from the existing file to the temp file
+    if ((mode & ReadOnly) || (mode & Append)) {
+	    QFile originalFile(d->fileName);
+		if (originalFile.exists()) {
+    		if (!originalFile.copy(d->tempFile->fileName())) {
+				d->error = originalFile.error();
+				qDebug() << d->error; 
+				setErrorString(originalFile.errorString());
+				qDebug() << originalFile.errorString();
+				delete d->tempFile;
+				d->tempFile = 0;
+				return false;
+			}
+		}
+	}
+	
+	if (!d->tempFile->open(mode)) {
         d->error = d->tempFile->error();
         setErrorString(d->tempFile->errorString());
         delete d->tempFile;
         d->tempFile = 0;
         return false;
     }
-    QIODevice::open(mode);
-    if (existingFile.exists())
+
+	qDebug() << d->tempFile->openMode();
+		
+    QIODevice::open(d->tempFile->openMode());
+	if (existingFile.exists()) {
         d->tempFile->setPermissions(existingFile.permissions());
+	}
+
     return true;
 }
 
@@ -277,8 +336,8 @@ void QSaveFile::close()
   \sa cancelWriting()
 */
 bool QSaveFile::commit()
-{
-    Q_D(QSaveFile);
+{ 
+	Q_D(QSaveFile);
     if (!d->tempFile)
         return false;
     Q_ASSERT(isOpen());
@@ -290,20 +349,72 @@ bool QSaveFile::commit()
         QIODevice::close();
         return false;
     }
-    // atomically replace old file with new file
+    
+	// atomically replace old file with new file
     // Can't use QFile::rename for that, must use the file engine directly
     d->tempFile->close();
     QAbstractFileEngine* fileEngine = d->tempFile->fileEngine();
     Q_ASSERT(fileEngine);
     if (!fileEngine->rename(d->fileName)) {
-        d->error = fileEngine->error();
-        setErrorString(fileEngine->errorString());
-        d->tempFile->remove();
-        delete d->tempFile;
-        d->tempFile = 0;
-        QIODevice::close();
-        return false;
+		if (fileEngine->error() == QFile::RenameError) { 
+			// Rename to an existent File does not Work with WinXP
+			QFile originalFile(d->fileName);
+			if (!originalFile.rename(d->fileName + ".bak")) {	
+				if (originalFile.error() == QFile::RenameError) { 
+					// Backup exits, delete file
+					if (!originalFile.remove()) {	
+						if (originalFile.error() == QFile::RemoveError) { 
+							// Datei ist gelockt WIN32 
+						}
+						d->error = originalFile.error();
+						qDebug() << d->error; 
+						setErrorString(originalFile.errorString());
+						qDebug() << originalFile.errorString();
+						delete d->tempFile;
+						d->tempFile = 0;
+						return false;
+				
+					}
+				
+				} else {
+					d->error = originalFile.error();
+					qDebug() << d->error; 
+					setErrorString(originalFile.errorString());
+					qDebug() << originalFile.errorString();
+					delete d->tempFile;
+					d->tempFile = 0;
+					return false;
+				}
+			}
+		} else { 	
+			qDebug() << fileEngine->error(); 
+			qDebug() << fileEngine->errorString(); 
+			
+			d->error = fileEngine->error();
+			setErrorString(fileEngine->errorString());
+			qDebug() << fileEngine->errorString(); 
+			d->tempFile->remove();
+			delete d->tempFile;
+			d->tempFile = 0;
+			QIODevice::close();
+			return false;
+		}
+		// Try again 
+		if (!fileEngine->rename(d->fileName)) {
+			qDebug() << fileEngine->error(); 
+			qDebug() << fileEngine->errorString(); 
+
+			d->error = fileEngine->error();
+			setErrorString(fileEngine->errorString());
+			qDebug() << fileEngine->errorString(); 
+			d->tempFile->remove();
+			delete d->tempFile;
+			d->tempFile = 0;
+			QIODevice::close();
+			return false;
+		}
     }
+
     delete d->tempFile;
     d->tempFile = 0;
     QIODevice::close();

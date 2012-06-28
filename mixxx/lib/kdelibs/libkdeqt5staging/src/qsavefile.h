@@ -53,8 +53,6 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-
-class QAbstractFileEngine;
 class QSaveFilePrivate;
 
 class QSaveFile : public QIODevice

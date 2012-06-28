@@ -60,11 +60,14 @@ QT_BEGIN_NAMESPACE
 class QSaveFilePrivate
 {
 public:
+	
+	QString makeTemp(); 
+
     QSaveFilePrivate();
     ~QSaveFilePrivate();
 
     QString fileName;
-    QTemporaryFile *tempFile;
+    QFile *tempFile;
 
     QFile::FileError error;
 };

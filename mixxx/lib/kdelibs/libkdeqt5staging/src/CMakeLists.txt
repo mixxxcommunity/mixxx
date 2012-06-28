@@ -3,7 +3,7 @@ set(libkdeqt5staging_SRCS
     qsavefile.cpp
 )
 
-add_library(kdeqt5staging ${LIBRARY_TYPE} ${libkdeqt5staging_SRCS})
+add_library(kdeqt5staging STATIC ${libkdeqt5staging_SRCS})
 
 #generate_export_header(kdeqt5staging)
 
