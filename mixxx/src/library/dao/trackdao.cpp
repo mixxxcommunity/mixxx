@@ -10,6 +10,10 @@
 #include "track/beatfactory.h"
 #include "track/beats.h"
 #include "trackinfoobject.h"
+#include "library/dao/cratedao.h"
+#include "library/dao/cuedao.h"
+#include "library/dao/playlistdao.h"
+#include "library/dao/analysisdao.h"
 #ifdef __TAGREADER__
 #include "core/tagreaderclient.h"
 #endif // __TAGREADER__
@@ -46,11 +50,13 @@ TrackDAO::TrackDAO(QSqlDatabase& database,
 
 TrackDAO::~TrackDAO() {
     qDebug() << "~TrackDAO()";
+    //clear all leftover Transactions
+    addTracksFinish();
 }
 
 void TrackDAO::finish() {
     // Save all tracks that haven't been saved yet.
-    m_sTracksMutex.lock();
+    QMutexLocker locker(&m_sTracksMutex);
     QHashIterator<int, TrackWeakPointer> it(m_sTracks);
     while (it.hasNext()) {
         it.next();
@@ -61,7 +67,6 @@ void TrackDAO::finish() {
             // now pTrack->isDirty will return false
         }
     }
-    m_sTracksMutex.unlock();
 
     // Clear cache, so all cached tracks without other references where deleted
     clearCache();
@@ -234,7 +239,10 @@ void TrackDAO::slotTrackSave(TrackInfoObject* pTrack) {
     }
 }
 
+// No need to check here if the querys exist, this is already done in
+// addTracksAdd, which is the only function that calls this
 void TrackDAO::bindTrackToTrackLocationsInsert(TrackInfoObject* pTrack) {
+    // gets called only in addTracksAdd
     m_pQueryTrackLocationInsert->bindValue(":location", pTrack->getLocation());
     m_pQueryTrackLocationInsert->bindValue(":directory", pTrack->getDirectory());
     m_pQueryTrackLocationInsert->bindValue(":filename", pTrack->getFilename());
@@ -244,7 +252,10 @@ void TrackDAO::bindTrackToTrackLocationsInsert(TrackInfoObject* pTrack) {
     m_pQueryTrackLocationInsert->bindValue(":needs_verification", 0);
 }
 
+// No need to check here if the querys exist, this is already done in
+// addTracksAdd, which is the only function that calls this
 void TrackDAO::bindTrackToLibraryInsert(TrackInfoObject* pTrack, int trackLocationId) {
+    // gets called only in addTracksAdd
     m_pQueryLibraryInsert->bindValue(":artist", pTrack->getArtist());
     m_pQueryLibraryInsert->bindValue(":title", pTrack->getTitle());
     m_pQueryLibraryInsert->bindValue(":album", pTrack->getAlbum());
@@ -294,8 +305,16 @@ void TrackDAO::bindTrackToLibraryInsert(TrackInfoObject* pTrack, int trackLocati
 }
 
 void TrackDAO::addTracksPrepare() {
+
+    if (m_pQueryLibraryInsert || m_pQueryTrackLocationInsert ||
+        m_pQueryLibrarySelect || m_pQueryTrackLocationSelect ||
+        m_pTransaction) {
+        qDebug() << "TrackDAO::addTracksPrepare: old Querys have been "
+                    "left open, closing them now";
+        addTracksFinish();
+    }
     // Start the transaction
-    ScopedTransaction transaction(m_database);
+    m_pTransaction = new ScopedTransaction(m_database);
 
     m_pQueryTrackLocationInsert = new QSqlQuery(m_database);
     m_pQueryTrackLocationSelect = new QSqlQuery(m_database);
@@ -331,16 +350,19 @@ void TrackDAO::addTracksPrepare() {
 }
 
 void TrackDAO::addTracksFinish() {
+    if (m_pTransaction) {
+        m_pTransaction->commit();
+    }
     delete m_pQueryTrackLocationInsert;
     delete m_pQueryTrackLocationSelect;
     delete m_pQueryLibraryInsert;
     delete m_pQueryLibrarySelect;
+    delete m_pTransaction;
     m_pQueryTrackLocationInsert = NULL;
     m_pQueryTrackLocationSelect = NULL;
     m_pQueryLibraryInsert = NULL;
     m_pQueryLibrarySelect = NULL;
-
-    m_database.commit();
+    m_pTransaction = NULL;
 
     emit(tracksAdded(m_tracksAddedSet));
     m_tracksAddedSet.clear();
@@ -348,7 +370,12 @@ void TrackDAO::addTracksFinish() {
 
 bool TrackDAO::addTracksAdd(TrackInfoObject* pTrack, bool unremove) {
 
-    qDebug() << "TrackDAO::addTracksTrack" << pTrack->getFilename();
+    if (!m_pQueryLibraryInsert || !m_pQueryTrackLocationInsert ||
+        !m_pQueryLibrarySelect || !m_pQueryTrackLocationSelect) {
+        qDebug() << "TrackDAO::addTracksAdd: needed SqlQuerys have not "
+                    "been prepared. Adding no tracks";
+        return false;
+    }
 
     int trackLocationId = -1;
     int trackId = -1;
@@ -662,7 +689,7 @@ TrackPointer TrackDAO::getTrackFromDB(int id) const {
             QString album = query.value(query.record().indexOf("album")).toString();
             QString year = query.value(query.record().indexOf("year")).toString();
             QString genre = query.value(query.record().indexOf("genre")).toString();
-			QString composer = query.value(query.record().indexOf("composer")).toString();
+            QString composer = query.value(query.record().indexOf("composer")).toString();
             QString tracknumber = query.value(query.record().indexOf("tracknumber")).toString();
             QString comment = query.value(query.record().indexOf("comment")).toString();
             QString url = query.value(query.record().indexOf("url")).toString();
@@ -695,7 +722,7 @@ TrackPointer TrackDAO::getTrackFromDB(int id) const {
             pTrack->setAlbum(album);
             pTrack->setYear(year);
             pTrack->setGenre(genre);
-			pTrack->setComposer(composer);
+            pTrack->setComposer(composer);
             pTrack->setTrackNumber(tracknumber);
             pTrack->setRating(rating);
             pTrack->setKey(key);
@@ -784,26 +811,27 @@ TrackPointer TrackDAO::getTrack(int id, bool cacheOnly) const {
             return pTrack;
     }
 
-    // Next, check the weak-reference cache to see if the track was ever loaded
-    // into memory. It's possible that something is currently using this track,
-    // so its reference count is non-zero despite it not being present in the
-    // track cache. m_tracks is a map of weak pointers to the tracks.
-    m_sTracksMutex.lock();
-    if (m_sTracks.contains(id)) {
-        //qDebug() << "Returning cached TIO for track" << id;
-        TrackPointer pTrack = m_sTracks[id];
+    // scope this critical code so that is gets automatically unlocked
+    // if this is not scoped mixxx will freeze
+    {
+        // Next, check the weak-reference cache to see if the track was ever loaded
+        // into memory. It's possible that something is currently using this track,
+        // so its reference count is non-zero despite it not being present in the
+        // track cache. m_tracks is a map of weak pointers to the tracks.
+        QMutexLocker locker(&m_sTracksMutex);
+        if (m_sTracks.contains(id)) {
+            //qDebug() << "Returning cached TIO for track" << id;
+            TrackPointer pTrack = m_sTracks[id];
 
-        // If the pointer to the cached copy is still valid, return
-        // it. Otherwise, re-query the DB for the track.
-        if (pTrack) {
-            m_sTracksMutex.unlock();
-            // Add pinter to Cache again
-            m_trackCache.insert(id, new TrackPointer(pTrack));
-            return pTrack;
+            // If the pointer to the cached copy is still valid, return
+            // it. Otherwise, re-query the DB for the track.
+            if (pTrack) {
+                // Add pinter to Cache again
+                m_trackCache.insert(id, new TrackPointer(pTrack));
+                return pTrack;
+            }
         }
     }
-    m_sTracksMutex.unlock();
-
     // The person only wanted the track if it was cached.
     if (cacheOnly) {
         //qDebug() << "TrackDAO::getTrack()" << id << "Caller wanted track but only if it was cached. Returning null.";
@@ -813,7 +841,7 @@ TrackPointer TrackDAO::getTrack(int id, bool cacheOnly) const {
     return getTrackFromDB(id);
 }
 
-/** Saves a track's info back to the database */
+// Saves a track's info back to the database
 void TrackDAO::updateTrack(TrackInfoObject* pTrack) {
     ScopedTransaction transaction(m_database);
     QTime time;
@@ -908,9 +936,9 @@ void TrackDAO::updateTrack(TrackInfoObject* pTrack) {
     //qDebug() << "Dirtying track took: " << time.elapsed() << "ms";
 }
 
-/** Mark all the tracks whose paths begin with libraryPath as invalid.
-    That means we'll need to later check that those tracks actually
-    (still) exist as part of the library scanning procedure. */
+// Mark all the tracks whose paths begin with libraryPath as invalid.
+// That means we'll need to later check that those tracks actually
+// (still) exist as part of the library scanning procedure.
 void TrackDAO::invalidateTrackLocationsInLibrary(QString libraryPath) {
     //qDebug() << "TrackDAO::invalidateTrackLocations" << QThread::currentThread() << m_database.connectionName();
     //qDebug() << "invalidateTrackLocations(" << libraryPath << ")";
@@ -993,10 +1021,10 @@ void TrackDAO::markTrackLocationsAsDeleted(QString directory) {
     }
 }
 
-/** Look for moved files. Look for files that have been marked as "deleted on disk"
-    and see if another "file" with the same name and filesize exists in the track_locations
-    table. That means the file has moved instead of being deleted outright, and so
-    we can salvage your existing metadata that you have in your DB (like cue points, etc.). */
+// Look for moved files. Look for files that have been marked as "deleted on disk"
+// and see if another "file" with the same name and filesize exists in the track_locations
+// table. That means the file has moved instead of being deleted outright, and so
+// we can salvage your existing metadata that you have in your DB (like cue points, etc.).
 void TrackDAO::detectMovedFiles(QSet<int>* pTracksMovedSetOld, QSet<int>* pTracksMovedSetNew) {
     //This function should not start a transaction on it's own!
     //When it's called from libraryscanner.cpp, there already is a transaction

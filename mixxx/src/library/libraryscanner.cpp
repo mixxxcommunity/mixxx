@@ -74,23 +74,23 @@ LibraryScanner::LibraryScanner(TrackCollection* collection) :
 
 LibraryScanner::~LibraryScanner()
 {
-    //IMPORTANT NOTE: This code runs in the GUI thread, so it should _NOT_ use
+    // IMPORTANT NOTE: This code runs in the GUI thread, so it should _NOT_ use
     //                the m_trackDao that lives inside this class. It should use
     //                the DAOs that live in m_pTrackCollection.
 
     if (isRunning()) {
-        //Cancel any running library scan...
+        // Cancel any running library scan...
         m_pCollection->slotCancelLibraryScan();
         this->cancel();
 
-        wait(); //Wait for thread to finish
+        wait(); // Wait for thread to finish
     }
 
-    //Do housekeeping on the LibraryHashes table.
+    // Do housekeeping on the LibraryHashes table.
     ScopedTransaction transaction(m_pCollection->getDatabase());
 
-    //Mark the corresponding file locations in the track_locations table as deleted
-    //if we find one or more deleted directories.
+    // Mark the corresponding file locations in the track_locations table as deleted
+    // if we find one or more deleted directories.
     QStringList deletedDirs;
     QSqlQuery query(m_pCollection->getDatabase());
     query.prepare("SELECT directory_path FROM LibraryHashes "
@@ -104,12 +104,12 @@ LibraryScanner::~LibraryScanner()
         qDebug() << "Couldn't SELECT deleted directories" << query.lastError();
     }
 
-    //Delete any directories that have been marked as deleted...
+    // Delete any directories that have been marked as deleted...
     query.finish();
     query.exec("DELETE FROM LibraryHashes "
                "WHERE directory_deleted=1");
 
-    //Print out any SQL error, if there was one.
+    // Print out any SQL error, if there was one.
     if (query.lastError().isValid()) {
         qDebug() << query.lastError();
     }
@@ -120,9 +120,9 @@ LibraryScanner::~LibraryScanner()
     }
     transaction.commit();
 
-    //The above is an ASSERT because there should never be an outstanding
-    //transaction when this code is called. If there is, it means we probably
-    //aren't committing a transaction somewhere that should be.
+    // The above is an ASSERT because there should never be an outstanding
+    // transaction when this code is called. If there is, it means we probably
+    // aren't committing a transaction somewhere that should be.
     if (m_database.isOpen()) {
         qDebug() << "Closing database" << m_database.connectionName();
 
@@ -140,11 +140,12 @@ LibraryScanner::~LibraryScanner()
 
 void LibraryScanner::run()
 {
-    unsigned static id = 0; //the id of this thread, for debugging purposes //XXX copypasta (should factor this out somehow), -kousu 2/2009
+    unsigned static id = 0; // the id of this thread, for debugging purposes
+            //XXX copypasta (should factor this out somehow), -kousu 2/2009
     QThread::currentThread()->setObjectName(QString("LibraryScanner %1").arg(++id));
     //m_pProgress->slotStartTiming();
 
-    //Lower our priority to help not grind crappy computers.
+    // Lower our priority to help not grind crappy computers.
     setPriority(QThread::LowPriority);
 
     qRegisterMetaType<QSet<int> >("QSet<int>");
@@ -154,7 +155,7 @@ void LibraryScanner::run()
     }
 
     if (!m_database.isOpen()) {
-        //Open the database connection in this thread.
+        // Open the database connection in this thread.
         if (!m_database.open()) {
             qDebug() << "Failed to open database from library scanner thread." << m_database.lastError();
             return;
@@ -178,9 +179,9 @@ void LibraryScanner::run()
     QTime t2;
     t2.start();
 
-    //Try to upgrade the library from 1.7 (XML) to 1.8+ (DB) if needed. If the
-    //upgrade_filename already exists, then do not try to upgrade since we have
-    //already done it.
+    // Try to upgrade the library from 1.7 (XML) to 1.8+ (DB) if needed. If the
+    // upgrade_filename already exists, then do not try to upgrade since we have
+    // already done it.
     // TODO(XXX) SETTINGS_PATH may change in new Mixxx Versions. Here we need
     // the SETTINGS_PATH from Mixxx V <= 1.7
     QString upgrade_filename = QDir::homePath().append("/").append(SETTINGS_PATH).append("DBUPGRADED");
@@ -197,30 +198,30 @@ void LibraryScanner::run()
         qDebug("Legacy importer took %d ms", t2.elapsed());
     }
 
-    //Refresh the name filters in case we loaded new
-    //SoundSource plugins.
+    // Refresh the name filters in case we loaded new
+    // SoundSource plugins.
     m_nameFilters = SoundSourceProxy::supportedFileExtensionsString().split(" ");
 
     // Time the library scanner.
     QTime t;
     t.start();
 
-    //First, we're going to mark all the directories that we've
-    //previously hashed as needing verification. As we search through the directory tree
-    //when we rescan, we'll mark any directory that does still exist as verified.
+    // First, we're going to mark all the directories that we've
+    // previously hashed as needing verification. As we search through the directory tree
+    // when we rescan, we'll mark any directory that does still exist as verified.
     m_libraryHashDao.invalidateAllDirectories();
 
-    //Mark all the tracks in the library as needing
-    //verification of their existance...
-    //(ie. we want to check they're still on your hard drive where
-    //we think they are)
+    // Mark all the tracks in the library as needing
+    // verification of their existance...
+    // (ie. we want to check they're still on your hard drive where
+    // we think they are)
     m_trackDao.invalidateTrackLocationsInLibrary(m_qLibraryPath);
 
     qDebug() << "Recursively scanning library.";
-    //Start scanning the library.
-    //THIS SHOULD NOT BE IN A TRANSACTION! Each addTrack() call from inside
-    //recursiveScan() handles it's own transactions.
-
+    // Start scanning the library.
+    // this will prepare some querys in TrackDAO, this needs be done because
+    // TrackCollection will call TrackDAO::addTracksAdd and this 
+    // function needs the querys
     m_trackDao.addTracksPrepare();
     QStringList verifiedDirectories;
 
@@ -235,7 +236,7 @@ void LibraryScanner::run()
     // Runs inside a transaction
     m_trackDao.addTracksFinish();
 
-    //Verify all Tracks inside Library but outside the libraray path
+    //Verify all Tracks inside Library but outside the library path
     m_trackDao.verifyTracksOutside(m_qLibraryPath);
 
     // Start a transaction for all the library hashing (moved file detection)
@@ -260,15 +261,15 @@ void LibraryScanner::run()
         qDebug() << "Marking unverified directories as deleted.";
         m_libraryHashDao.markUnverifiedDirectoriesAsDeleted();
 
-        //Check to see if the "deleted" tracks showed up in another location,
-        //and if so, do some magic to update all our tables.
+        // Check to see if the "deleted" tracks showed up in another location,
+        // and if so, do some magic to update all our tables.
         qDebug() << "Detecting moved files.";
         m_trackDao.detectMovedFiles(&tracksMovedSetOld, &tracksMovedSetNew);
 
-        //Remove the hashes for any directories that have been
-        //marked as deleted to clean up. We need to do this otherwise
-        //we can skip over songs if you move a set of songs from directory
-        //A to B, then back to A.
+        // Remove the hashes for any directories that have been
+        // marked as deleted to clean up. We need to do this otherwise
+        // we can skip over songs if you move a set of songs from directory
+        // A to B, then back to A.
         m_libraryHashDao.removeDeletedDirectoryHashes();
 
         transaction.commit();
@@ -296,13 +297,13 @@ void LibraryScanner::scan(QString libraryPath)
     m_pProgress = new LibraryScannerDlg();
     m_pProgress->setAttribute(Qt::WA_DeleteOnClose);
 
-    //The important part here is that we need to use
-    //Qt::BlockingQueuedConnection, because we're sending these signals across
-    //threads. Normally you'd use regular QueuedConnections for this, but since
-    //we don't have an event loop running and we need the signals to get
-    //processed immediately, we have to use
-    //BlockingQueuedConnection. (DirectConnection isn't an option for sending
-    //signals across threads.)
+    // The important part here is that we need to use
+    // Qt::BlockingQueuedConnection, because we're sending these signals across
+    // threads. Normally you'd use regular QueuedConnections for this, but since
+    // we don't have an event loop running and we need the signals to get
+    // processed immediately, we have to use
+    // BlockingQueuedConnection. (DirectConnection isn't an option for sending
+    // signals across threads.)
     connect(m_pCollection, SIGNAL(progressLoading(QString)),
             m_pProgress, SLOT(slotUpdate(QString)));
             //Qt::BlockingQueuedConnection);
@@ -334,7 +335,7 @@ void LibraryScanner::resetCancel()
 
 void LibraryScanner::scan()
 {
-    start(); //Starts the thread by calling run()
+    start(); // Starts the thread by calling run()
 }
 
 // Recursively scan a music library. Doesn't import tracks for any directories that
@@ -410,7 +411,7 @@ bool LibraryScanner::recursiveScan(QString dirPath, QStringList& verifiedDirecto
 
         if (!recursiveScan(nextPath, verifiedDirectories)) {
             bScanFinishedCleanly = false;
-		}
+        }
     }
 
     return bScanFinishedCleanly;

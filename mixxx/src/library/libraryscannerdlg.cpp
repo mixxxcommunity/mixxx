@@ -28,6 +28,8 @@ LibraryScannerDlg::LibraryScannerDlg(QWidget * parent, Qt::WindowFlags f) :
 
 	setWindowIcon(QIcon(":/images/ic_mixxx_window.png"));
 
+	setWindowIcon(QIcon(":/images/ic_mixxx_window.png"));
+
     QVBoxLayout* pLayout = new QVBoxLayout(this);
 
     setWindowTitle(tr("Library Scanner"));

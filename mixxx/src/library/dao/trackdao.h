@@ -12,11 +12,7 @@
 #include <QCache>
 
 #include "configobject.h"
-#include "library/dao/cratedao.h"
-#include "library/dao/cuedao.h"
 #include "library/dao/dao.h"
-#include "library/dao/playlistdao.h"
-#include "library/dao/analysisdao.h"
 #include "trackinfoobject.h"
 #include "util.h"
 
@@ -57,11 +53,17 @@ const QString TRACKLOCATIONSTABLE_FILESIZE = "filesize";
 const QString TRACKLOCATIONSTABLE_FSDELETED = "fs_deleted";
 const QString TRACKLOCATIONSTABLE_NEEDSVERIFICATION = "needs_verification";
 
+class ScopedTransaction;
+class PlaylistDAO;
+class AnalysisDao;
+class CueDAO;
+class CrateDAO;
+
 class TrackDAO : public QObject, public virtual DAO {
     Q_OBJECT
   public:
-    /** The 'config object' is necessary because users decide ID3 tags get
-     * synchronized on track metadata change **/
+    // The 'config object' is necessary because users decide ID3 tags get
+    // synchronized on track metadata change
     TrackDAO(QSqlDatabase& database, CueDAO& cueDao,
              PlaylistDAO& playlistDao, CrateDAO& crateDao,
              AnalysisDao& analysisDao,
@@ -156,6 +158,7 @@ class TrackDAO : public QObject, public virtual DAO {
     QSqlQuery* m_pQueryLibraryInsert;
     QSqlQuery* m_pQueryLibraryUpdate;
     QSqlQuery* m_pQueryLibrarySelect;
+    ScopedTransaction* m_pTransaction;
 
     QSet<int> m_tracksAddedSet;
 

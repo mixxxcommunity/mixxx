@@ -73,7 +73,8 @@ class BaseTrackCache : public QObject {
     bool updateIndexWithTrackpointer(TrackPointer pTrack);
     void updateTrackInIndex(int trackId);
     void updateTracksInIndex(QSet<int> trackIds);
-    QVariant getTrackValueForColumn(TrackPointer pTrack, int column) const;
+    void getTrackValueForColumn(TrackPointer pTrack, int column,
+                                    QVariant& trackValue) const;
 
     QString filterClause(QString query, QString extraFilter,
                          QStringList idStrings) const;
