@@ -25,9 +25,6 @@ AnalyserWaveform::AnalyserWaveform(ConfigObject<ConfigValue>* pConfig) {
     m_filter[1] = 0;
     m_filter[2] = 0;
 
-    m_currentStride = 0;
-    m_currentSummaryStride = 0;
-
     static int i = 0;
     m_database = QSqlDatabase::addDatabase("QSQLITE", "WAVEFORM_ANALYSIS" + QString::number(i++));
     if (!m_database.isOpen()) {
@@ -167,6 +164,8 @@ bool AnalyserWaveform::initialise(TrackPointer tio, int sampleRate, int totalSam
 }
 
 void AnalyserWaveform::resetFilters(TrackPointer tio, int sampleRate) {
+    Q_UNUSED(tio);
+    Q_UNUSED(sampleRate);
     //TODO: (vRince) bind this with *actual* filter values ...
     // m_filter[Low] = new EngineFilterButterworth8(FILTER_LOWPASS, sampleRate, 200);
     // m_filter[Mid] = new EngineFilterButterworth8(FILTER_BANDPASS, sampleRate, 200, 2000);
@@ -174,7 +173,6 @@ void AnalyserWaveform::resetFilters(TrackPointer tio, int sampleRate) {
     m_filter[Low] = new EngineFilterIIR(bessel_lowpass4, 4);
     m_filter[Mid] = new EngineFilterIIR(bessel_bandpass, 8);
     m_filter[High] = new EngineFilterIIR(bessel_highpass4, 4);
-
 }
 
 void AnalyserWaveform::destroyFilters() {
@@ -344,7 +342,9 @@ void AnalyserWaveform::process(const CSAMPLE *buffer, const int bufferLength) {
     }
 
     m_waveform->setCompletion(m_currentStride);
-    m_waveformSummary->setCompletion(m_currentSummaryStride);
+    // move the summary completion 10% slower
+    // the last 10% are reported after finalise()
+    m_waveformSummary->setCompletion(m_currentSummaryStride * 9/10);
 
     //qDebug() << "AnalyserWaveform::process - m_waveform->getCompletion()" << m_waveform->getCompletion();
     //qDebug() << "AnalyserWaveform::process - m_waveformSummary->getCompletion()" << m_waveformSummary->getCompletion();

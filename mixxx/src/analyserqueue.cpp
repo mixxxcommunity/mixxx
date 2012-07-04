@@ -21,12 +21,13 @@
 
 #include <typeinfo>
 
-AnalyserQueue::AnalyserQueue() : m_aq(),
+AnalyserQueue::AnalyserQueue() :
+    m_aq(),
+    m_exit(false),
+    m_aiCheckPriorities(false),
     m_tioq(),
     m_qm(),
-    m_qwait(),
-    m_exit(false),
-    m_aiCheckPriorities(false) {
+    m_qwait() {
 }
 
 int AnalyserQueue::numQueuedTracks()
@@ -224,29 +225,24 @@ void AnalyserQueue::run() {
         }
 
         if (processTrack) {
-            if (! PlayerInfo::Instance().isTrackLoaded(next) && isLoadedTrackWaiting()) {
+            if (!PlayerInfo::Instance().isTrackLoaded(next) && isLoadedTrackWaiting()) {
                 qDebug() << "Delaying track analysis because track is not loaded -- requeuing";
                 QListIterator<Analyser*> itf(m_aq);
                 while (itf.hasNext()) {
                     itf.next()->cleanup(next);
                 }
                 queueAnalyseTrack(next);
-            }
-            else
-            {
+            } else {
                 bool completed = doAnalysis(next, pSoundSource);
 
-                if (!completed)
-                {
+                if (!completed) {
                     //This track was cancelled
                     QListIterator<Analyser*> itf(m_aq);
                     while (itf.hasNext()) {
                         itf.next()->cleanup(next);
                     }
                     queueAnalyseTrack(next);
-                }
-                else
-                {
+                } else {
                     QListIterator<Analyser*> itf(m_aq);
                     while (itf.hasNext()) {
                         itf.next()->finalise(next);
@@ -256,7 +252,6 @@ void AnalyserQueue::run() {
         } else {
             qDebug() << "Skipping track analysis because no analyser initialized.";
         }
-
 
         delete pSoundSource;
         emit(trackFinished(next));
@@ -299,7 +294,6 @@ AnalyserQueue* AnalyserQueue::createDefaultAnalyserQueue(ConfigObject<ConfigValu
     ret->addAnalyser(new TonalAnalyser());
 #endif
 
-    ret->addAnalyser(new AnalyserWaveform(_config));
     ret->addAnalyser(new AnalyserGain(_config));
 #ifdef __VAMP__
     VampAnalyser::initializePluginPaths();
@@ -308,6 +302,10 @@ AnalyserQueue* AnalyserQueue::createDefaultAnalyserQueue(ConfigObject<ConfigValu
 #else
     ret->addAnalyser(new AnalyserBPM(_config));
 #endif
+
+    // AnalyserWaveform must be added at last because
+    // it is used as a progress bar for analysis
+    ret->addAnalyser(new AnalyserWaveform(_config));
 
     ret->start(QThread::IdlePriority);
     return ret;
@@ -316,7 +314,6 @@ AnalyserQueue* AnalyserQueue::createDefaultAnalyserQueue(ConfigObject<ConfigValu
 AnalyserQueue* AnalyserQueue::createPrepareViewAnalyserQueue(ConfigObject<ConfigValue> *_config) {
     AnalyserQueue* ret = new AnalyserQueue();
 
-    ret->addAnalyser(new AnalyserWaveform(_config));
     ret->addAnalyser(new AnalyserGain(_config));
 #ifdef __VAMP__
     VampAnalyser::initializePluginPaths();
@@ -325,6 +322,10 @@ AnalyserQueue* AnalyserQueue::createPrepareViewAnalyserQueue(ConfigObject<Config
 #else
     ret->addAnalyser(new AnalyserBPM(_config));
 #endif
+
+    // AnalyserWaveform must be added at last because
+    // it is used as a progress bar for analysis
+    ret->addAnalyser(new AnalyserWaveform(_config));
 
     ret->start(QThread::IdlePriority);
     return ret;

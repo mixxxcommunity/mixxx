@@ -45,7 +45,8 @@ TrackDAO::TrackDAO(QSqlDatabase& database,
           m_pQueryTrackLocationSelect(NULL),
           m_pQueryLibraryInsert(NULL),
           m_pQueryLibraryUpdate(NULL),
-          m_pQueryLibrarySelect(NULL) {
+          m_pQueryLibrarySelect(NULL),
+          m_pTransaction(NULL) {
 }
 
 TrackDAO::~TrackDAO() {
@@ -55,16 +56,20 @@ TrackDAO::~TrackDAO() {
 }
 
 void TrackDAO::finish() {
-    // Save all tracks that haven't been saved yet.
-    QMutexLocker locker(&m_sTracksMutex);
-    QHashIterator<int, TrackWeakPointer> it(m_sTracks);
-    while (it.hasNext()) {
-        it.next();
-        // Auto-cast from TrackWeakPointer to TrackPointer
-        TrackPointer pTrack = it.value();
-        if (pTrack && pTrack->isDirty()) {
-            saveTrack(pTrack);
-            // now pTrack->isDirty will return false
+    // scope this critical code, if this is not scoped there is a chance
+    // to run in a lock of mixxx during shutdown - kain88 (July 2012)
+    {
+        // Save all tracks that haven't been saved yet.
+        QMutexLocker locker(&m_sTracksMutex);
+        QHashIterator<int, TrackWeakPointer> it(m_sTracks);
+        while (it.hasNext()) {
+            it.next();
+            // Auto-cast from TrackWeakPointer to TrackPointer
+            TrackPointer pTrack = it.value();
+            if (pTrack && pTrack->isDirty()) {
+                saveTrack(pTrack);
+                // now pTrack->isDirty will return false
+            }
         }
     }
 
