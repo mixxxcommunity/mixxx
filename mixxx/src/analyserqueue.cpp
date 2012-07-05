@@ -30,8 +30,7 @@ AnalyserQueue::AnalyserQueue() :
     m_qwait() {
 }
 
-int AnalyserQueue::numQueuedTracks()
-{
+int AnalyserQueue::numQueuedTracks() {
     m_qm.lock();
     int numQueuedTracks = m_tioq.count();
     m_qm.unlock();
@@ -42,8 +41,7 @@ void AnalyserQueue::addAnalyser(Analyser* an) {
     m_aq.push_back(an);
 }
 
-bool AnalyserQueue::isLoadedTrackWaiting()
-{
+bool AnalyserQueue::isLoadedTrackWaiting() {
     QMutexLocker queueLocker(&m_qm);
 
     const PlayerInfo& info = PlayerInfo::Instance();

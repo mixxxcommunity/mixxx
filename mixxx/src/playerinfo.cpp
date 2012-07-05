@@ -20,14 +20,26 @@
 #include "controlobject.h"
 #include "controlobjectthread.h"
 #include "engine/enginexfader.h"
+#include "playermanager.h"
 
 PlayerInfo::PlayerInfo()
         : m_currentlyPlayingDeck(0) {
     int i;
     m_iNumDecks = ControlObject::getControl(ConfigKey("[Master]","num_decks"))->get();
 
-    for (i = 1; i <= m_iNumDecks; i++) {
-        QString chan = QString("[Channel%1]").arg(i);
+    for (i = 0; i < m_iNumDecks; i++) {
+        QString chan = PlayerManager::groupForDeck(i);
+
+        m_listCOPlay[chan] = new ControlObjectThread(ControlObject::getControl(ConfigKey(chan, "play")));
+        m_listCOVolume[chan] = new ControlObjectThread(ControlObject::getControl(ConfigKey(chan, "volume")));
+        m_listCOOrientation[chan] = new ControlObjectThread(ControlObject::getControl(ConfigKey(chan, "orientation")));
+        m_listCOpregain[chan] = new ControlObjectThread(ControlObject::getControl(ConfigKey(chan, "pregain")));
+    }
+
+    m_iNumSamplers = ControlObject::getControl(ConfigKey("[Master]", "num_samplers"))->get();
+
+    for (i = 0; i < m_iNumSamplers; i++) {
+        QString chan = PlayerManager::groupForSampler(i);
 
         m_listCOPlay[chan] = new ControlObjectThread(ControlObject::getControl(ConfigKey(chan, "play")));
         m_listCOVolume[chan] = new ControlObjectThread(ControlObject::getControl(ConfigKey(chan, "volume")));
@@ -153,5 +165,22 @@ TrackPointer PlayerInfo::getCurrentPlayingTrack() {
         return getTrackInfo(chan);
     }
     return TrackPointer();
+}
+
+bool PlayerInfo::isTrackPlaying(TrackInfoObject* pTrack) const {
+    QMutexLocker locker(&m_mutex);
+    QMapIterator<QString, TrackPointer> it(m_loadedTrackMap);
+    while (it.hasNext()) {
+        it.next();
+        if (it.value() == pTrack) {
+            ControlObjectThread* coPlay = m_listCOPlay[it.key()];
+            if (coPlay) {
+                if (coPlay->get() != 0.0) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
 }
 

@@ -31,6 +31,7 @@
 #include "controlobject.h"
 #include "waveform/waveform.h"
 #include "track/beatfactory.h"
+#include "playerinfo.h"
 
 #include "mixxxutils.cpp"
 
@@ -250,7 +251,13 @@ void TrackInfoObject::setReplayGain(float f)
     if (dirty)
         setDirty(true);
     lock.unlock();
-    emit(ReplayGainUpdated(f));
+
+    const PlayerInfo& info = PlayerInfo::Instance();
+    if (!info.isTrackPlaying(this)) {
+        // Do not emmit when track is playing because
+        // this may lead to an unexpected volume change
+        emit(ReplayGainUpdated(f));
+    }
 }
 
 float TrackInfoObject::getBpm() const {

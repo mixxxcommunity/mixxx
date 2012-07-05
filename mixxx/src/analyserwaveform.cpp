@@ -351,6 +351,7 @@ void AnalyserWaveform::process(const CSAMPLE *buffer, const int bufferLength) {
 }
 
 void AnalyserWaveform::cleanup(TrackPointer tio) {
+    Q_UNUSED(tio);
     if (m_skipProcessing) {
         return;
     }

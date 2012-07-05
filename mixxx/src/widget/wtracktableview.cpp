@@ -1073,13 +1073,14 @@ void WTrackTableView::slotReloadTrackMetadata() {
         return;
     }
 
-    if (QMessageBox::warning(
-        NULL, tr("Reload Track Metadata"),
-        tr("Reloading track metadata on a loaded track may cause abrupt volume changes. Are you sure?"),
-        QMessageBox::Yes | QMessageBox::No,
-        QMessageBox::No) == QMessageBox::No) {
-        return;
-    }
+    // This is not require since replay gain is not adopted on playing tracks
+    //if (QMessageBox::warning(
+    //    NULL, tr("Reload Track Metadata"),
+    //    tr("Reloading track metadata on a loaded track may cause abrupt volume changes. Are you sure?"),
+    //    QMessageBox::Yes | QMessageBox::No,
+    //    QMessageBox::No) == QMessageBox::No) {
+    //    return;
+    //}
 
     QModelIndexList indices = selectionModel()->selectedRows();
 
