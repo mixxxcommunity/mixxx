@@ -156,7 +156,6 @@ int main(int argc, char * argv[])
     QCoreApplication::setOrganizationDomain("mixxx.org");
     QCoreApplication::setOrganizationName("Mixxx");
 
-
     // Construct a list of strings based on the command line arguments
     CmdlineArgs& args = CmdlineArgs::Instance();
     if (!args.Parse(argc, argv)) {

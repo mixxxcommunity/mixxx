@@ -226,6 +226,7 @@ template <class ValueType> bool ConfigObject<ValueType>::Parse()
     }
     else
     {
+        //qDebug() << "ConfigObject: Parse" << m_filename;
         // Parse the file
         int group = 0;
         QString groupStr, line;
