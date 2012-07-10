@@ -1186,11 +1186,11 @@ void MixxxApp::slotHelpAbout() {
     DlgAbout *about = new DlgAbout(this);
     about->version_label->setText(BuildVersion::versionLable());
 
-    QString s_devTeam=QString(tr("Mixxx %1 Development Team")).arg(BuildVersion::versionName());
-    QString s_contributions=tr("With contributions from:");
-    QString s_specialThanks=tr("And special thanks to:");
-    QString s_pastDevs=tr("Past Developers");
-    QString s_pastContribs=tr("Past Contributors");
+    QString s_devTeam = QString(tr("Mixxx %1 Development Team")).arg(BuildVersion::versionName());
+    QString s_contributions = tr("With contributions from:");
+    QString s_specialThanks = tr("And special thanks to:");
+    QString s_pastDevs = tr("Past Developers");
+    QString s_pastContribs = tr("Past Contributors");
 
     QString credits = QString("<p align=\"center\"><b>%1</b></p>"
 "<p align=\"center\">"
@@ -1374,14 +1374,14 @@ void MixxxApp::slotHelpManual() {
     // On Windows, the manual PDF sits in the same folder as the 'skins' folder.
     if (resourceDir.exists(MIXXX_MANUAL_FILENAME)) {
         qManualUrl = QUrl::fromLocalFile(
-            resourceDir.absoluteFilePath(MIXXX_MANUAL_FILENAME));
+                resourceDir.absoluteFilePath(MIXXX_MANUAL_FILENAME));
     }
 #elif defined(__LINUX__)
     // On GNU/Linux, the manual is installed to e.g. /usr/share/mixxx/doc/
     resourceDir.cd("doc");
     if (resourceDir.exists(MIXXX_MANUAL_FILENAME)) {
         qManualUrl = QUrl::fromLocalFile(
-            resourceDir.absoluteFilePath(MIXXX_MANUAL_FILENAME));
+                resourceDir.absoluteFilePath(MIXXX_MANUAL_FILENAME));
     }
 #else
     // No idea, default to the mixxx.org hosted version.

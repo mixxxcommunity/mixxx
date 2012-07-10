@@ -204,7 +204,7 @@ int main(int argc, char * argv[])
         return(0);
     }
 
-//it seems like this code should be inline in MessageHandler() but for some reason having it there corrupts the messages sometimes -kousu 2/2009
+    //it seems like this code should be inline in MessageHandler() but for some reason having it there corrupts the messages sometimes -kousu 2/2009
 
 #ifdef __WINDOWS__
   #ifdef DEBUGCONSOLE
@@ -230,7 +230,6 @@ int main(int argc, char * argv[])
 //    for (int i=0; i<argc; ++i)
 //        if(QString("--no-visuals")==argv[i])
 //            bVisuals = false;
-
 
 
     // set up the plugin paths...

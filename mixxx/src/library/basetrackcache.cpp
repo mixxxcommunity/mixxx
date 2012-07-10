@@ -308,7 +308,6 @@ void BaseTrackCache::getTrackValueForColumn(TrackPointer pTrack,
     }
 }
 
-
 QVariant BaseTrackCache::data(int trackId, int column) const {
     QVariant result;
 
