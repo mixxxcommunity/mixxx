@@ -61,7 +61,6 @@ class MixxxApp : public QMainWindow {
     /** Construtor. files is a list of command line arguments */
     MixxxApp(QApplication *app, const CmdlineArgs& args);
     virtual ~MixxxApp();
-
     /** initializes all QActions of the application */
     void initActions();
     /** initMenuBar creates the menu_bar and inserts the menuitems */

@@ -127,7 +127,7 @@ void FeaturedArtistsWebView::handleClickedLink(const QUrl& url)
 //TODO: Implement this for MIDI control
 void FeaturedArtistsWebView::keyPressEvent(QKeyEvent* event)
 {
-	Q_UNUSED(event);
-	//Look at WTrackTableView::keyPressEvent(...) for some
+    Q_UNUSED(event);
+    //Look at WTrackTableView::keyPressEvent(...) for some
     //code to start with...
 }
