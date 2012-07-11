@@ -98,7 +98,7 @@ class TrackDAO : public QObject, public virtual DAO {
     void detectMovedFiles(QSet<int>* pTracksMovedSetNew, QSet<int>* pTracksMovedSetOld);
     void databaseTrackAdded(TrackPointer pTrack);
     void databaseTracksMoved(QSet<int> tracksMovedSetOld, QSet<int> tracksMovedSetNew);
-    void verifyTracksOutside(const QString& libraryPath);
+    void verifyTracksOutside(const QString& libraryPath, volatile bool* pCancel);
     bool relocateTrack(QString oldLocation, QString newLocation);
 
   signals:
@@ -108,6 +108,7 @@ class TrackDAO : public QObject, public virtual DAO {
     void tracksAdded(QSet<int> trackIds);
     void tracksRemoved(QSet<int> trackIds);
     void dbTrackAdded(TrackPointer pTrack);
+    void progressVerifyTracksOutside(QString path);
 
   public slots:
     // The public interface to the TrackDAO requires a TrackPointer so that we
