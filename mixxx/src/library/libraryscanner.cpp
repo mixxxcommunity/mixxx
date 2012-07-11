@@ -311,7 +311,7 @@ void LibraryScanner::scan(QString libraryPath)
             m_pProgress, SLOT(slotScanFinished()));
     connect(m_pProgress, SIGNAL(scanCancelled()),
             this, SLOT(cancel()));
-    connect(&m_trackDao, SIGNAL(progressVerifyTracksOutside()),
+    connect(&m_trackDao, SIGNAL(progressVerifyTracksOutside(QString)),
             m_pProgress, SLOT(slotUpdate(QString)));
     scan();
 }
