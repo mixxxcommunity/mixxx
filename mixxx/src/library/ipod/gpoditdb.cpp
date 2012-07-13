@@ -13,9 +13,10 @@
 #include "gpoditdb.h"
 
 
-GPodItdb::GPodItdb() {
+GPodItdb::GPodItdb() :
+        m_itdb(NULL),
+        m_libGPodLoaded(true) {
 
-    m_libGPodLoaded = true;
     // Load shared library
     QLibrary libGPod("libgpod");
 
