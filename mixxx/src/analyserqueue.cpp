@@ -1,6 +1,5 @@
 #include <QtDebug>
 #include <QMutexLocker>
-#include <QElapsedTimer>
 
 #include "trackinfoobject.h"
 #include "playerinfo.h"
@@ -116,7 +115,7 @@ bool AnalyserQueue::doAnalysis(TrackPointer tio, SoundSourceProxy *pSoundSource)
     SAMPLE *data16 = new SAMPLE[ANALYSISBLOCKSIZE];
     CSAMPLE *samples = new CSAMPLE[ANALYSISBLOCKSIZE];
 
-    QElapsedTimer progressUpdateInhibitTimer;
+    QTime progressUpdateInhibitTimer;
     progressUpdateInhibitTimer.start(); // Inhibit Updates for 60 milliseconds
 
     int read = 0;
@@ -158,7 +157,8 @@ bool AnalyserQueue::doAnalysis(TrackPointer tio, SoundSourceProxy *pSoundSource)
         // During the doAnalysis function it goes only to 90% because the finalise functions will take also some time
         processedSamples += read;
         int progress_new = ((float)processedSamples)/totalSamples * 900; //fp div here prevents insano signed overflow
-        if (progressUpdateInhibitTimer.hasExpired(60)) {
+
+        if (progressUpdateInhibitTimer.elapsed > 60) {
             // Inhibit Updates for 60 milliseconds
             progressUpdateInhibitTimer.start();
             tio->setAnalyserProgress(progress_new);

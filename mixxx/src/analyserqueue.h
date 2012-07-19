@@ -29,7 +29,7 @@ class AnalyserQueue : public QThread {
     void queueAnalyseTrack(TrackPointer tio);
 
   signals:
-    void trackProgress(TrackPointer pTrack,int progress);
+    void trackProgress(TrackPointer pTrack, int progress);
     void trackFinished(TrackPointer pTrack);
     void queueEmpty();
 
