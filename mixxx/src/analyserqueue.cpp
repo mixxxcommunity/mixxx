@@ -158,7 +158,7 @@ bool AnalyserQueue::doAnalysis(TrackPointer tio, SoundSourceProxy *pSoundSource)
         processedSamples += read;
         int progress_new = ((float)processedSamples)/totalSamples * 900; //fp div here prevents insano signed overflow
 
-        if (progressUpdateInhibitTimer.elapsed > 60) {
+        if (progressUpdateInhibitTimer.elapsed() > 60) {
             // Inhibit Updates for 60 milliseconds
             progressUpdateInhibitTimer.start();
             tio->setAnalyserProgress(progress_new);
