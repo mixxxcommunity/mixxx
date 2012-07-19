@@ -42,7 +42,8 @@
 TrackInfoObject::TrackInfoObject(const QString& file, bool parseHeader)
         : m_fileInfo(file),
           m_dateAdded(QDateTime::currentDateTime()),
-          m_qMutex(QMutex::Recursive) {
+          m_qMutex(QMutex::Recursive),
+          m_analyserProgress(-1) {
     initialize(parseHeader);
     m_waveform = new Waveform;
     m_waveformSummary = new Waveform;
@@ -732,6 +733,15 @@ void TrackInfoObject::setWaveformSummary(Waveform* pWaveformSummary) {
     m_waveformSummary = pWaveformSummary;
     lock.unlock();
     emit(waveformSummaryUpdated());
+}
+
+void TrackInfoObject::setAnalyserProgress(int progress) {
+    // progress in 0 .. 1000
+    if (progress != m_analyserProgress) {
+        m_analyserProgress = progress;
+        emit(analyserProgress(progress));
+        // usleep(100000);
+    }
 }
 
 void TrackInfoObject::setCuePoint(float cue)

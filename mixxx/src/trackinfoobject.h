@@ -224,6 +224,7 @@ public:
     Waveform* getWaveformSummary();
     const Waveform* getWaveformSummary() const;
     void setWaveformSummary(Waveform* pWaveformSummary);
+    void setAnalyserProgress(int progress);
 
     // Save the cue point (in samples... I think) 
     void setCuePoint(float cue);
@@ -268,6 +269,7 @@ public:
 signals:
     void waveformUpdated();
     void waveformSummaryUpdated();
+    void analyserProgress(int progress);
     void bpmUpdated(double bpm);
     void beatsUpdated();
     void ReplayGainUpdated(double replaygain);
@@ -378,6 +380,8 @@ private:
     //Visual waveform data
     Waveform* m_waveform;
     Waveform* m_waveformSummary;
+
+    int m_analyserProgress; // in %
 
     friend class TrackDAO;
 };

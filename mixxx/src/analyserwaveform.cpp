@@ -342,9 +342,7 @@ void AnalyserWaveform::process(const CSAMPLE *buffer, const int bufferLength) {
     }
 
     m_waveform->setCompletion(m_currentStride);
-    // move the summary completion 10% slower
-    // the last 10% are reported after finalise()
-    m_waveformSummary->setCompletion(m_currentSummaryStride * 9/10);
+    m_waveformSummary->setCompletion(m_currentSummaryStride);
 
     //qDebug() << "AnalyserWaveform::process - m_waveform->getCompletion()" << m_waveform->getCompletion();
     //qDebug() << "AnalyserWaveform::process - m_waveformSummary->getCompletion()" << m_waveformSummary->getCompletion();

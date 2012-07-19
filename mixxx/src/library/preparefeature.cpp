@@ -60,9 +60,6 @@ void PrepareFeature::bindWidget(WLibrarySidebar* sidebarWidget,
     connect(this, SIGNAL(trackAnalysisFinished(TrackPointer)),
             m_pPrepareView, SLOT(trackAnalysisFinished(TrackPointer)));
 
-    connect(this, SIGNAL(trackAnalysisFinished(TrackPointer)),
-            m_pPrepareView, SLOT(trackAnalysisFinished(TrackPointer)));
-
     m_pPrepareView->installEventFilter(keyboard);
 
     // Let the DlgPrepare know whether or not analysis is active.

@@ -32,7 +32,8 @@
 WOverview::WOverview(const char *pGroup, ConfigObject<ConfigValue>* pConfig, QWidget * parent)
     : WWidget(parent),
       m_pGroup(pGroup),
-      m_pConfig(pConfig) {
+      m_pConfig(pConfig),
+      m_analyserProgress(0) {
 
     m_sampleDuration = 0;
     m_iPos = 0;
@@ -59,7 +60,6 @@ WOverview::WOverview(const char *pGroup, ConfigObject<ConfigValue>* pConfig, QWi
     m_waveformPeak = -1.0;
     m_pixmapDone = false;
 
-    m_timerPixmapRefresh = -1;
     m_renderSampleLimit = 1000;
 
     m_a = 1.0;
@@ -160,16 +160,22 @@ void WOverview::slotWaveformSummaryUpdated() {
     m_waveform = m_pCurrentTrack->getWaveformSummary();
     // If the waveform is already complete, just draw it.
     if (m_waveform && m_waveform->getCompletion() == m_waveform->getDataSize()) {
-        m_visualSamplesByPixel = static_cast<double>(m_waveform->getDataSize()) /
-                static_cast<double>(width());
         m_actualCompletion = 0;
-        drawNextPixmapPart();
-    } else if (m_timerPixmapRefresh == -1) {
-        // The waveform either isn't present or is incomplete so start a timer
-        // to update when we get it.
-        m_timerPixmapRefresh = startTimer(60);
+        if (drawNextPixmapPart()) {
+            update();
+        }
     }
-    update();
+}
+
+void WOverview::slotAnalyserProgress(int progress) {
+    if (!m_pCurrentTrack) {
+        return;
+    }
+    m_analyserProgress = progress;
+    // progress 0 .. 1000
+    if (drawNextPixmapPart()) {
+        update();
+    }
 }
 
 void WOverview::slotLoadNewTrack(TrackPointer pTrack) {
@@ -177,6 +183,8 @@ void WOverview::slotLoadNewTrack(TrackPointer pTrack) {
     if (m_pCurrentTrack) {
         disconnect(m_pCurrentTrack.data(), SIGNAL(waveformSummaryUpdated()),
                    this, SLOT(slotWaveformSummaryUpdated()));
+        disconnect(m_pCurrentTrack.data(), SIGNAL(analyserProgress(int)),
+                   this, SLOT(slotAnalyzerProgress(int)));
     }
 
     m_actualCompletion = 0;
@@ -193,6 +201,9 @@ void WOverview::slotLoadNewTrack(TrackPointer pTrack) {
         connect(pTrack.data(), SIGNAL(waveformSummaryUpdated()),
                 this, SLOT(slotWaveformSummaryUpdated()));
         slotWaveformSummaryUpdated();
+
+        connect(pTrack.data(), SIGNAL(analyserProgress(int)),
+                this, SLOT(slotAnalyserProgress(int)));
         //qDebug() << "WOverview::slotLoadNewTrack - startTimer";
     }
     update();
@@ -202,6 +213,8 @@ void WOverview::slotUnloadTrack(TrackPointer /*pTrack*/) {
     if (m_pCurrentTrack) {
         disconnect(m_pCurrentTrack.data(), SIGNAL(waveformSummaryUpdated()),
                    this, SLOT(slotWaveformSummaryUpdated()));
+        disconnect(m_pCurrentTrack.data(), SIGNAL(analyserProgress(int)),
+                   this, SLOT(slotAnalyserProgress(int)));
     }
     m_pCurrentTrack.clear();
     m_waveform = NULL;
@@ -209,12 +222,6 @@ void WOverview::slotUnloadTrack(TrackPointer /*pTrack*/) {
     m_visualSamplesByPixel = 0.0;
     m_waveformPeak = -1.0;
     m_pixmapDone = false;
-
-    //qDebug() << "WOverview::slotUnloadTrack - kill Timer";
-    if (m_timerPixmapRefresh != -1) {
-        killTimer(m_timerPixmapRefresh);
-        m_timerPixmapRefresh = -1;
-    }
 
     update();
 }
@@ -244,15 +251,25 @@ void WOverview::onMarkRangeChange(double /*v*/) {
 bool WOverview::drawNextPixmapPart() {
     //qDebug() << "WOverview::drawNextPixmapPart() - m_waveform" << m_waveform;
 
+    m_visualSamplesByPixel = static_cast<double>(m_waveform->getDataSize()) /
+            static_cast<double>(width());
+
     if (!m_waveform || m_visualSamplesByPixel < 0.0001) {
         return false;
     }
 
     const int dataSize = m_waveform->getDataSize();
+    const int analyserCompletion = (int)((float)dataSize/m_analyserProgress*1000);
     const int waveformCompletion = m_waveform->getCompletion();
-    // test if there is some new to draw (at least of pixel width)
-    int completionIncrement = waveformCompletion - m_actualCompletion;
 
+    // test if there is some new to draw (at least of pixel width)
+    int completionIncrement;
+    if (analyserCompletion < waveformCompletion) {
+        // over all analyzer progress is slower than the pure waveform analysis
+        completionIncrement = analyserCompletion - m_actualCompletion;
+    } else {
+        completionIncrement = waveformCompletion - m_actualCompletion;
+    }
     if (dataSize == 0 || completionIncrement < m_visualSamplesByPixel) {
         return false;
     }
@@ -278,7 +295,7 @@ bool WOverview::drawNextPixmapPart() {
     //painter.scale(1.0,(double)(m_waveformPixmap.height())/(2*255.0));
 
     //draw only the new part
-    const float pixelStartPosition = 1.0 + (float)m_actualCompletion / (float)m_waveform->getDataSize() * (float)(width()-2);
+    const float pixelStartPosition = 1.0 + (float)m_actualCompletion / (float)dataSize * (float)(width()-2);
     const float pixelByVisualSamples = 1.0 / m_visualSamplesByPixel;
 
     const float alpha = 0.5; /*= math_min( 1.0, 3.0*math_max( 0.1, pixelByVisualSamples));*/
@@ -514,32 +531,6 @@ void WOverview::paintEvent(QPaintEvent *)
         painter.drawLine(m_iPos-1, 0, m_iPos-1, height());
     }
     painter.end();
-}
-
-void WOverview::timerEvent(QTimerEvent* timer) {
-
-    if (timer->timerId() == m_timerPixmapRefresh) {
-        if (m_waveform == NULL) {
-            return;
-        }
-
-        //qDebug() << "timerEvent - m_timerPixmapRefresh";
-        m_visualSamplesByPixel = (double)m_waveform->getDataSize() / (double)width();
-
-        if (drawNextPixmapPart())
-            update();
-
-        //qDebug() << "timerEvent - m_actualCompletion" << m_actualCompletion << "m_waveform->size()" << m_waveform->size();
-
-        //if m_waveform is empty ... actual computation did not start !
-        //it must be in the analyser queue, we need to wait until it ready to display
-        if (m_waveform->getDataSize() > 0 &&
-                m_actualCompletion + m_visualSamplesByPixel >= m_waveform->getDataSize()) {
-            //qDebug() << " WOverview::timerEvent - kill timer";
-            killTimer(m_timerPixmapRefresh);
-            m_timerPixmapRefresh = -1;
-        }
-    }
 }
 
 void WOverview::resizeEvent(QResizeEvent *) {
