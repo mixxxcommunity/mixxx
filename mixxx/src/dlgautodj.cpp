@@ -79,6 +79,9 @@ DlgAutoDJ::DlgAutoDJ(QWidget* parent, ConfigObject<ConfigValue>* pConfig,
     connect(pushButtonAutoDJ, SIGNAL(toggled(bool)),
             this,  SLOT(toggleAutoDJ(bool))); _blah;
 
+    connect(checkBoxReQueue, SIGNAL(stateChanged(int)),
+    		this, SLOT(setReQueue(int)));
+
     // playposition is from -0.14 to + 1.14
     m_pCOPlayPos1 = new ControlObjectThreadMain(
         ControlObject::getControl(ConfigKey("[Channel1]", "playposition")));
@@ -560,6 +563,10 @@ bool DlgAutoDJ::removePlayingTrackFromQueue(QString group) {
     // remove the top track
     m_pAutoDJTableModel->removeTrack(m_pAutoDJTableModel->index(0, 0));
 
+    // ReQueue if box is checked
+    if (m_pConfig->getValueString(ConfigKey(CONFIG_KEY, "ReQueue")).toInt()) {
+    	appendTrack(loadedId);
+    }
     return true;
 }
 
@@ -632,6 +639,10 @@ void DlgAutoDJ::transitionValueChanged(int value) {
     }
     m_pConfig->set(ConfigKey(CONFIG_KEY, kTransitionPreferenceName),
                    ConfigValue(value));
+}
+
+void DlgAutoDJ::setReQueue(int value) {
+	m_pConfig->set(ConfigKey(CONFIG_KEY, "ReQueue"), ConfigValue(value));
 }
 
 bool DlgAutoDJ::appendTrack(int trackId) {

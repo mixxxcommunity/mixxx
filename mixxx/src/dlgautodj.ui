@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>560</width>
+    <width>654</width>
     <height>399</height>
    </rect>
   </property>
@@ -105,6 +105,16 @@
        </property>
        <property name="text">
         <string>sec.</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="checkBoxReQueue">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add played tracks to the end of the AutoDJ playlist.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>ReQueue</string>
        </property>
       </widget>
      </item>
