@@ -259,7 +259,7 @@ bool WOverview::drawNextPixmapPart() {
     }
 
     const int dataSize = m_waveform->getDataSize();
-    const int analyserCompletion = (int)((float)dataSize/m_analyserProgress*1000);
+    const int analyserCompletion = (int)((float)dataSize * m_analyserProgress / 1000);
     const int waveformCompletion = m_waveform->getCompletion();
 
     // test if there is some new to draw (at least of pixel width)

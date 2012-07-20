@@ -165,7 +165,6 @@ bool AnalyserQueue::doAnalysis(TrackPointer tio, SoundSourceProxy *pSoundSource)
             if (progress != progress_new/10) {
                 progress = progress_new/10;
                 emit(trackProgress(tio, progress));
-                usleep(10000);
             }
         }
 

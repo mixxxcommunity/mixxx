@@ -41,8 +41,9 @@ private:
     static ControlObject *s_pEnableReplayGain;
     float m_fReplayGainCorrection;
     bool m_bSmoothFade;
-    float m_fClock;
-    float m_fSumClock;
+    float m_fCurrentReplayGain;
+    float m_fadeOffset;
+    clock_t m_fadeStart;
 
 };
 

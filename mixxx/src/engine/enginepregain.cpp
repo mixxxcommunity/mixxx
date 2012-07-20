@@ -45,8 +45,8 @@ EnginePregain::EnginePregain(const char * group)
     }
 
     m_bSmoothFade = false;
-    m_fClock=0;
-    m_fSumClock=0;
+    m_fCurrentReplayGain = 0.0f;
+    m_fadeOffset = 0.0f;
 }
 
 EnginePregain::~EnginePregain()
@@ -61,67 +61,56 @@ EnginePregain::~EnginePregain()
     s_pReplayGainBoost = NULL;
 }
 
-void EnginePregain::process(const CSAMPLE * pIn, const CSAMPLE * pOut, const int iBufferSize)
-{
-
+void EnginePregain::process(const CSAMPLE* pIn, const CSAMPLE* pOut, const int iBufferSize) {
     float fEnableReplayGain = s_pEnableReplayGain->get();
     float fReplayGainBoost = s_pReplayGainBoost->get();
-    CSAMPLE * pOutput = (CSAMPLE *)pOut;
+    CSAMPLE* pOutput = (CSAMPLE*)pOut;
     float fGain = potmeterPregain->get();
     float fReplayGain = m_pControlReplayGain->get();
-    m_fReplayGainCorrection=1;
+
     // TODO(XXX) Why do we do this? Removing it results in clipping at unity
     // gain so I think it was trying to compensate for some issue when we added
     // replaygain but even at unity gain (no RG) we are clipping. rryan 5/2012
-    fGain = fGain/2;
-    if(fReplayGain*fEnableReplayGain != 0)
-    {
+    fGain = fGain / 2;
+
+    if ((fReplayGain * fEnableReplayGain) != 0.0) {
+        float replayGainCorrection = fReplayGain * pow(10, fReplayGainBoost / 20);
+        if (m_fReplayGainCorrection != replayGainCorrection) {
+            // need to fade to new replay gain
+            // Do not fade when its the initial setup from m_fCurrentReplayGain = 0.0f
+            if (m_fadeOffset == 0) {
+                m_fadeOffset = replayGainCorrection - m_fReplayGainCorrection;
+                m_fadeStart = clock();
+            }
+
+            // fade duration 1 second
+            float fade_multi = ((float)(clock() - m_fadeStart)) / CLOCKS_PER_SEC;
+            if (fade_multi < 1.0f && m_fCurrentReplayGain > 0.0f) {
+                //Fade smoothly
+                m_fReplayGainCorrection = replayGainCorrection
+                        - (m_fadeOffset * (1.0f - fade_multi));
+            } else {
+                m_fReplayGainCorrection = replayGainCorrection;
+                m_fadeOffset = 0.0f;
+            }
+        }
+    } else {
+        m_fReplayGainCorrection = 1;
+    }
+    m_fCurrentReplayGain = fReplayGain;
+
         // Here is the point, when ReplayGain Analyser takes its action, suggested gain changes from 0 to a nonzero value
         // We want to smoothly fade to this last.
         // Anyway we have some the problem that code cannot block the full process for one second.
         // So we need to alter gain each time ::process is called.
 
-        if(m_bSmoothFade)//This means that a ReplayGain value has been calculated after the track has been loaded
-        {
-            if(m_fClock==0)
-                m_fClock=clock();
-            m_fSumClock += (float)((clock()-m_fClock)/CLOCKS_PER_SEC);
-            m_fClock=clock();
-            if(m_fSumClock<1)
-            {
-                //Fade smoothly
-
-                m_fReplayGainCorrection=(1-m_fSumClock)+(m_fSumClock)*fReplayGain*pow(10, fReplayGainBoost/20);
-
-            }
-            else
-            {
-                m_bSmoothFade = false;
-            }
-        }
-        else
-        {
-            //Passing a user defined boost
-            m_fReplayGainCorrection=fReplayGain*pow(10, fReplayGainBoost/20);
-        }
-    }
-    else
-    {
-        // If track has not ReplayGain value and ReplayGain is enabled
-        // we prepare for smoothfading to ReplayGain suggested gain
-        if(fEnableReplayGain != 0)
-        {
-            m_bSmoothFade=true;
-            m_fClock=0;
-            m_fSumClock=0;
-        }
-    }
-    fGain = fGain*m_fReplayGainCorrection;
-    m_pTotalGain->set(fGain);
+    fGain = fGain * m_fReplayGainCorrection;
 
     // Clamp gain to within [0, 2.0] to prevent insane gains. This can happen
     // (some corrupt files get really high replaygain values).
     fGain = math_max(0.0, math_min(2.0, fGain));
+
+    m_pTotalGain->set(fGain);
 
     //qDebug()<<"Clock"<<(float)clock()/CLOCKS_PER_SEC;
     // SampleUtil deals with aliased buffers and gains of 1 or 0.

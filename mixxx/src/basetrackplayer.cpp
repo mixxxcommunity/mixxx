@@ -150,6 +150,8 @@ void BaseTrackPlayer::slotLoadTrack(TrackPointer track, bool bStartFromEndPos)
         disconnect(m_pLoadedTrack.data(), 0, m_pBPM, 0);
         disconnect(m_pLoadedTrack.data(), 0, this, 0);
 
+        m_pReplayGain->slotSet(0);
+
         // Causes the track's data to be saved back to the library database.
         emit(unloadingTrack(m_pLoadedTrack));
     }
@@ -162,7 +164,7 @@ void BaseTrackPlayer::slotLoadTrack(TrackPointer track, bool bStartFromEndPos)
 
     // Listen for updates to the file's Replay Gain
     connect(m_pLoadedTrack.data(), SIGNAL(ReplayGainUpdated(double)),
-            this, SLOT(slotSetReplaGain(double)));
+            this, SLOT(slotSetReplayGain(double)));
 
     //Request a new track from the reader
     emit(loadTrack(track));
