@@ -109,6 +109,15 @@ DlgAutoDJ::DlgAutoDJ(QWidget* parent, ConfigObject<ConfigValue>* pConfig,
     } else {
         spinBoxTransition->setValue(str_autoDjTransition.toInt());
     }
+    QString str_autoDjRequeue = m_pConfig->getValueString(
+        ConfigKey(CONFIG_KEY, "Requeue"));
+    if (str_autoDjRequeue.isEmpty()) {
+    	checkBoxReQueue->setCheckState(Qt::Unchecked);
+    } else if (str_autoDjRequeue.toInt() == 2) {
+    	checkBoxReQueue->setCheckState(Qt::Checked);
+    } else {
+    	checkBoxReQueue->setCheckState(Qt::Unchecked);
+    }
 }
 
 DlgAutoDJ::~DlgAutoDJ() {
@@ -564,7 +573,7 @@ bool DlgAutoDJ::removePlayingTrackFromQueue(QString group) {
     m_pAutoDJTableModel->removeTrack(m_pAutoDJTableModel->index(0, 0));
 
     // ReQueue if box is checked
-    if (m_pConfig->getValueString(ConfigKey(CONFIG_KEY, "ReQueue")).toInt()) {
+    if (m_pConfig->getValueString(ConfigKey(CONFIG_KEY, "Requeue")).toInt()) {
     	appendTrack(loadedId);
     }
     return true;
@@ -642,7 +651,7 @@ void DlgAutoDJ::transitionValueChanged(int value) {
 }
 
 void DlgAutoDJ::setReQueue(int value) {
-	m_pConfig->set(ConfigKey(CONFIG_KEY, "ReQueue"), ConfigValue(value));
+	m_pConfig->set(ConfigKey(CONFIG_KEY, "Requeue"), ConfigValue(value));
 }
 
 bool DlgAutoDJ::appendTrack(int trackId) {

@@ -10,8 +10,7 @@ QGLContext* SharedGLContext::getContext() {
     if (s_pSharedGLContext == (QGLContext*)NULL) {
         s_pSharedGLContext = new QGLContext(QGLFormat::defaultFormat());
         s_pSharedGLContext->create();
-        s_pSharedGLContext->makeCurrent();
-    }
+        s_pSharedGLContext->makeCurrent(); // QGLContext::makeCurrent(): Cannot make invalid context current. Second call OK    }
 
     QGLContext* ctxt = new QGLContext(QGLFormat::defaultFormat());
     ctxt->create(s_pSharedGLContext);

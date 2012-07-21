@@ -442,9 +442,8 @@ QWidget* LegacySkinParser::parseVisual(QDomElement node) {
     viewer->installEventFilter(m_pControllerManager->getControllerLearningEventFilter());
 
     // Connect control proxy to widget, so delete can be handled by the QT object tree
-    // TODO(XXX) without viewer, it we will have a memory leak, why was this commented out?
     ControlObjectThreadWidget * p = new ControlObjectThreadWidget(
-                ControlObject::getControl(ConfigKey(channelStr, "wheel"))/*, viewer*/);
+                ControlObject::getControl(ConfigKey(channelStr, "wheel")), viewer);
 
     p->setWidget((QWidget *)viewer, true, false,
                  ControlObjectThreadWidget::EMIT_ON_PRESS, Qt::RightButton);
