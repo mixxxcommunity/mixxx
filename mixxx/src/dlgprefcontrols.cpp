@@ -611,8 +611,13 @@ void DlgPrefControls::onHide() {
 
 void DlgPrefControls::timerEvent(QTimerEvent * /*event*/) {
     //Just to refresh actual framrate any time the controller is modified
-    frameRateAverage->setText(QString::number(
-        WaveformWidgetFactory::instance()->getActualFrameRate()));
+    frameRateAverage->setText(
+            QString::number(WaveformWidgetFactory::instance()->getActualFrameRate(), 'f', 2) +
+            " (" +
+            QString::number(WaveformWidgetFactory::instance()->getMinimumFrameRate(), 'f', 2) +
+            " .. " +
+            QString::number(WaveformWidgetFactory::instance()->getMaximumFrameRate(), 'f', 2) +
+            ")");
 }
 
 void DlgPrefControls::initWaveformControl()

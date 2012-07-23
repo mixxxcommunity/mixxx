@@ -65,9 +65,9 @@ SoundManager::SoundManager(ConfigObject<ConfigValue> *pConfig, EngineMaster *pMa
     m_pControlObjectVinylControlMode = new ControlObjectThreadMain(
         new ControlObject(ConfigKey("[VinylControl]", "mode")));
     m_pControlObjectVinylControlMode1 = new ControlObjectThreadMain(
-        ControlObject::getControl(ConfigKey("[Channel1]", "vinylcontrol_mode")));
+        ControlObject::getControl(ConfigKey("[Channel1]", "vinylcontrol_mode"))); // TODO(XXX) returning Null
     m_pControlObjectVinylControlMode2 = new ControlObjectThreadMain(
-        ControlObject::getControl(ConfigKey("[Channel2]", "vinylcontrol_mode")));
+        ControlObject::getControl(ConfigKey("[Channel2]", "vinylcontrol_mode"))); // TODO(XXX) returning Null
     m_pControlObjectVinylControlGain = new ControlObjectThreadMain(
         new ControlObject(ConfigKey("[VinylControl]", "gain")));
 

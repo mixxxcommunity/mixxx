@@ -45,9 +45,9 @@ EngineFlanger::EngineFlanger(const char * group)
     // EngineFlanger per deck, so create these controls if they don't exist,
     // otherwise look them up.
 
-    potmeterDepth = ControlObject::getControl(ConfigKey("[Flanger]", "lfoDepth"));
-    potmeterDelay = ControlObject::getControl(ConfigKey("[Flanger]", "lfoDelay"));
-    potmeterLFOperiod = ControlObject::getControl(ConfigKey("[Flanger]", "lfoPeriod"));
+    potmeterDepth = ControlObject::getControl(ConfigKey("[Flanger]", "lfoDepth"));  // TODO(XXX) returning NULL
+    potmeterDelay = ControlObject::getControl(ConfigKey("[Flanger]", "lfoDelay"));  // TODO(XXX) returning NULL
+    potmeterLFOperiod = ControlObject::getControl(ConfigKey("[Flanger]", "lfoPeriod")); // TODO(XXX) returning NULL
 
     if (potmeterDepth == NULL)
         potmeterDepth = new ControlPotmeter(ConfigKey("[Flanger]", "lfoDepth"), 0., 1.);

@@ -17,6 +17,8 @@ GLWaveformWidget::GLWaveformWidget( const char* group, QWidget* parent)
         : QGLWidget(SharedGLContext::getContext(), parent),
           WaveformWidgetAbstract(group) {
 
+    // NULL Paint device
+
     addRenderer<WaveformRenderBackground>();
     addRenderer<WaveformRendererEndOfTrack>();
     addRenderer<WaveformRendererPreroll>();

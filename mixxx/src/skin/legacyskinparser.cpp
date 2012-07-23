@@ -261,7 +261,7 @@ QWidget* LegacySkinParser::parseNode(QDomElement node, QWidget *pGrandparent) {
     } else if (nodeName == "TableView") {
         return parseTableView(node);
     } else if (nodeName == "WidgetGroup") {
-        return parseWidgetGroup(node);
+        return parseWidgetGroup(node); //  ControlObject::getControl returning NULL for ( "[Samplers]" , "show_samplers" )
     } else if (nodeName == "Style") {
         return parseStyle(node);
     } else if (nodeName == "Spinny") {

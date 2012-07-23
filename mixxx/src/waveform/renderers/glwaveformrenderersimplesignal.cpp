@@ -20,6 +20,7 @@ void GLWaveformRendererSimpleSignal::onInit() {
 }
 
 void GLWaveformRendererSimpleSignal::onSetup(const QDomNode &node){
+    Q_UNUSED(node);
 }
 
 inline void setPoint(QPointF& point, qreal x, qreal y) {

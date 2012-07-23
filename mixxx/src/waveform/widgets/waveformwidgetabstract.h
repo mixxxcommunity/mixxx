@@ -33,11 +33,6 @@ class WaveformWidgetAbstract : public WaveformWidgetRenderer {
 
     virtual void resize( int width, int height);
 
-    //Those information enable automatic combobox creation and waveform selection
-    virtual QString getWaveformWidgetName() = 0;
-    virtual bool useOpenGl() const = 0;
-    virtual bool useOpenGLShaders() const = 0;
-
   protected:
     QWidget* m_widget;
 

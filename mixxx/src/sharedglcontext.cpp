@@ -8,11 +8,15 @@ QGLContext* SharedGLContext::s_pSharedGLContext = (QGLContext*)NULL;
 
 QGLContext* SharedGLContext::getContext() {
     if (s_pSharedGLContext == (QGLContext*)NULL) {
+        // QGLFormat::setDoubleBuffer()
         s_pSharedGLContext = new QGLContext(QGLFormat::defaultFormat());
-        s_pSharedGLContext->create();
-        s_pSharedGLContext->makeCurrent(); // QGLContext::makeCurrent(): Cannot make invalid context current. Second call OK    }
+        // Note: We have no valid painting device yet
+    }
+    // http://lists.trolltech.com/qt-interest/2006-04/msg00313.html
 
     QGLContext* ctxt = new QGLContext(QGLFormat::defaultFormat());
-    ctxt->create(s_pSharedGLContext);
+    // note: We have still no valid painting device
+    // create() is called from QGLWidget::setContext later
+    //ctxt->create(s_pSharedGLContext);
     return ctxt;
 }

@@ -40,12 +40,17 @@ void WaveformRenderBackground::generatePixmap() {
 
         if (!backgroundPixmap.isNull()){
             if (backgroundPixmap.width() == m_waveformRenderer->getWidth() &&
-                    backgroundPixmap.height() == m_waveformRenderer->getHeight()){
+                    backgroundPixmap.height() == m_waveformRenderer->getHeight()) {
                 m_backgroundPixmap = backgroundPixmap;
             } else {
                 qWarning() << "WaveformRenderBackground::generatePixmap - file("
                            << WWidget::getPath(m_backgroundPixmapPath)
-                           << ") do not fit the waveform widget size ...";
+                           << ")" << backgroundPixmap.width()
+                           << "x" << backgroundPixmap.height()
+                           << "do not fit the waveform widget size"
+                           << m_waveformRenderer->getWidth()
+                           << "x" << m_waveformRenderer->getHeight();
+
                 m_backgroundPixmap = QPixmap(m_waveformRenderer->getWidth(),
                                              m_waveformRenderer->getHeight());
                 QPainter painter(&m_backgroundPixmap);

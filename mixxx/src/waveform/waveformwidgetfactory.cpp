@@ -41,17 +41,18 @@ WaveformWidgetHolder::WaveformWidgetHolder(WaveformWidgetAbstract* waveformWidge
 
 WaveformWidgetFactory::WaveformWidgetFactory() :
         m_config(0),
-        m_time(new QTime()),
+        m_type(WaveformWidgetType::Count_WaveformwidgetType),
         m_skipRender(false),
         m_defaultZoom(3),
         m_zoomSync(false),
         m_overviewNormalized(false),
-        //setup the opengl default format
         m_openGLAvailable(false),
         m_openGLShaderAvailable(false),
-        m_actualFrameRate(0),
+        m_time(new QTime()),
         m_lastFrameTime(0), 
-        m_type(WaveformWidgetType::Count_WaveformwidgetType) {
+        m_actualFrameRate(0),
+        m_minimumFrameRate(1000),
+        m_maximumlFrameRate(0) {
 
     m_visualGain[All] = 1.5;
     m_visualGain[Low] = 1.0;
@@ -105,15 +106,13 @@ WaveformWidgetFactory::WaveformWidgetFactory() :
             m_openGLVersion = QString::number(majorVersion) + "." +
                     QString::number(minorVersion);
         }
-        // TODO(xxx) unusual code
-        // QGLShaderProgram::hasOpenGLShaderPrograms(); valgind error
+
         m_openGLAvailable = true;
-        {
-            QGLWidget glWidget;
-            glWidget.makeCurrent();
-            m_openGLShaderAvailable = QGLShaderProgram::hasOpenGLShaderPrograms();
-            glWidget.doneCurrent();
-        }
+
+        QGLWidget* glWidget = new QGLWidget(); // create paint device
+        // QGLShaderProgram::hasOpenGLShaderPrograms(); valgind error
+        m_openGLShaderAvailable = QGLShaderProgram::hasOpenGLShaderPrograms(glWidget->context());
+        delete glWidget;
     }
 
     evaluateWidgets();
@@ -395,10 +394,16 @@ void WaveformWidgetFactory::refresh() {
     // update.
     emit(waveformUpdateTick());
 
-    m_lastFrameTime = m_time->elapsed();
-    m_time->restart();
+    m_lastFrameTime = m_time->restart();
 
     m_actualFrameRate = 1000.0/(double)(m_lastFrameTime);
+
+
+    if ( m_minimumFrameRate > m_actualFrameRate) {
+        m_minimumFrameRate = m_actualFrameRate;
+    } else if (m_maximumlFrameRate < m_actualFrameRate) {
+        m_maximumlFrameRate = m_actualFrameRate;
+    }
 }
 
 WaveformWidgetType::Type WaveformWidgetFactory::autoChooseWidgetType() const {
@@ -418,41 +423,69 @@ WaveformWidgetType::Type WaveformWidgetFactory::autoChooseWidgetType() const {
 void WaveformWidgetFactory::evaluateWidgets() {
     m_waveformWidgetHandles.clear();
     for (int type = 0; type < WaveformWidgetType::Count_WaveformwidgetType; type++) {
-        WaveformWidgetAbstract* widget = 0;
+        QString widgetName;
+        bool useOpenGl;
+        bool useOpenGLShaders;
+
         switch(type) {
-        case WaveformWidgetType::EmptyWaveform : widget = new EmptyWaveformWidget(); break;
-        case WaveformWidgetType::SoftwareSimpleWaveform : break; //TODO: (vrince)
-        case WaveformWidgetType::SoftwareWaveform : widget = new SoftwareWaveformWidget(); break;
-        case WaveformWidgetType::QtSimpleWaveform : widget = new QtSimpleWaveformWidget(); break;
-        case WaveformWidgetType::QtWaveform : widget = new QtWaveformWidget(); break;
-        case WaveformWidgetType::GLSimpleWaveform : widget = new GLSimpleWaveformWidget(); break;
-        case WaveformWidgetType::GLWaveform : widget = new GLWaveformWidget(); break;
-        case WaveformWidgetType::GLSLWaveform : widget = new GLSLWaveformWidget(); break;
+        case WaveformWidgetType::EmptyWaveform:
+            widgetName = EmptyWaveformWidget::getWaveformWidgetName();
+            useOpenGl = EmptyWaveformWidget::useOpenGl();
+            useOpenGLShaders = EmptyWaveformWidget::useOpenGLShaders();
+            break;
+        case WaveformWidgetType::SoftwareSimpleWaveform:
+            continue; // //TODO(vrince):
+        case WaveformWidgetType::SoftwareWaveform:
+            widgetName = SoftwareWaveformWidget::getWaveformWidgetName();
+            useOpenGl = SoftwareWaveformWidget::useOpenGl();
+            useOpenGLShaders = SoftwareWaveformWidget::useOpenGLShaders();
+            break;
+        case WaveformWidgetType::QtSimpleWaveform:
+            widgetName = QtSimpleWaveformWidget::getWaveformWidgetName();
+            useOpenGl = QtSimpleWaveformWidget::useOpenGl();
+            useOpenGLShaders = QtSimpleWaveformWidget::useOpenGLShaders();
+            break;
+        case WaveformWidgetType::QtWaveform:
+            widgetName = QtWaveformWidget::getWaveformWidgetName();
+            useOpenGl = QtWaveformWidget::useOpenGl();
+            useOpenGLShaders = QtWaveformWidget::useOpenGLShaders();
+            break;
+        case WaveformWidgetType::GLSimpleWaveform:
+            widgetName = GLSimpleWaveformWidget::getWaveformWidgetName();
+            useOpenGl = GLSimpleWaveformWidget::useOpenGl();
+            useOpenGLShaders = GLSimpleWaveformWidget::useOpenGLShaders();
+            break;
+        case WaveformWidgetType::GLWaveform:
+            widgetName = GLWaveformWidget::getWaveformWidgetName();
+            useOpenGl = GLWaveformWidget::useOpenGl();
+            useOpenGLShaders = GLWaveformWidget::useOpenGLShaders();
+            break;
+        case WaveformWidgetType::GLSLWaveform:
+            widgetName = GLSLWaveformWidget::getWaveformWidgetName();
+            useOpenGl = GLSLWaveformWidget::useOpenGl();
+            useOpenGLShaders = GLSLWaveformWidget::useOpenGLShaders();
+            break;
         }
 
-        if (widget) {
-            QString widgetName = widget->getWaveformWidgetName();
-            if (widget->useOpenGLShaders()) {
-                widgetName += " " + tr("(GLSL)");
-            } else if (widget->useOpenGl()) {
-                widgetName += " " + tr("(GL)");
-            }
-
-            // add new handle for each available widget type
-            WaveformWidgetAbstractHandle handle;
-            handle.m_displayString = widgetName;
-            handle.m_type = (WaveformWidgetType::Type)type;
-
-            // NOTE: For the moment non active widget are not added to available handle
-            // but it could be useful to have them anyway but not selectable in the combo box
-            if ((widget->useOpenGl() && !isOpenGLAvailable()) ||
-                    (widget->useOpenGLShaders() && !isOpenGlShaderAvailable())) {
-                handle.m_active = false;
-                continue;
-            }
-            m_waveformWidgetHandles.push_back(handle);
+        if (useOpenGLShaders) {
+            widgetName += " " + tr("(GLSL)");
+        } else if (useOpenGl) {
+            widgetName += " " + tr("(GL)");
         }
-        delete widget;
+
+        // add new handle for each available widget type
+        WaveformWidgetAbstractHandle handle;
+        handle.m_displayString = widgetName;
+        handle.m_type = (WaveformWidgetType::Type)type;
+
+        // NOTE: For the moment non active widget are not added to available handle
+        // but it could be useful to have them anyway but not selectable in the combo box
+        if ((useOpenGl && !isOpenGLAvailable()) ||
+                (useOpenGLShaders && !isOpenGlShaderAvailable())) {
+            handle.m_active = false;
+            continue;
+        }
+        m_waveformWidgetHandles.push_back(handle);
     }
 }
 
