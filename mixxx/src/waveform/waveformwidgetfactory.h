@@ -63,7 +63,7 @@ class WaveformWidgetFactory : public QObject, public Singleton<WaveformWidgetFac
     void setFrameRate( int frameRate);
     int getFrameRate() const { return m_frameRate;}
     double getActualFrameRate() const { return m_actualFrameRate;}
-    double getMinimumFrameRate() const { return m_minimumFrameRate;}
+    double getMinimumFrameRate() const { return m_lastRenderDuration;}
     double getMaximumFrameRate() const { return m_maximumlFrameRate;}
 
     bool isOpenGLAvailable() const { return m_openGLAvailable;}
@@ -144,6 +144,7 @@ class WaveformWidgetFactory : public QObject, public Singleton<WaveformWidgetFac
     //Debug
     QTime* m_time;
     int m_lastFrameTime;
+    int m_lastRenderDuration;
     double m_actualFrameRate;
     double m_minimumFrameRate;
     double m_maximumlFrameRate;

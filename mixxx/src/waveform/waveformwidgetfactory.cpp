@@ -40,8 +40,8 @@ WaveformWidgetHolder::WaveformWidgetHolder(WaveformWidgetAbstract* waveformWidge
 ///////////////////////////////////////////
 
 WaveformWidgetFactory::WaveformWidgetFactory() :
-        m_config(0),
         m_type(WaveformWidgetType::Count_WaveformwidgetType),
+        m_config(0),
         m_skipRender(false),
         m_defaultZoom(3),
         m_zoomSync(false),
@@ -221,7 +221,6 @@ bool WaveformWidgetFactory::setWaveformWidget(WWaveformViewer* viewer, const QDo
 
     //Cast to widget done just after creation because it can't be perform in constructor (pure virtual)
     WaveformWidgetAbstract* waveformWidget = createWaveformWidget(m_type, viewer);
-    waveformWidget->castToQWidget();
     viewer->setWaveformWidget(waveformWidget);
     viewer->setup(node);
 
@@ -303,8 +302,6 @@ bool WaveformWidgetFactory::setWidgetTypeFromHandle(int handleIndex) {
         WWaveformViewer* viewer = holder.m_waveformViewer;
         WaveformWidgetAbstract* widget = createWaveformWidget(m_type, holder.m_waveformViewer);
         holder.m_waveformWidget = widget;
-        widget->castToQWidget();
-        //widget->hold();
         viewer->setWaveformWidget(widget);
         viewer->setup(holder.m_visualNodeCache);
         viewer->setZoom(previousZoom);
@@ -313,6 +310,9 @@ bool WaveformWidgetFactory::setWidgetTypeFromHandle(int handleIndex) {
         //viewer->resize(viewer->size());
         widget->resize(viewer->width(), viewer->height());
         widget->setTrack(pTrack);
+
+        m_maximumlFrameRate = 0;
+        m_minimumFrameRate = 2000;
     }
 
     m_skipRender = false;
@@ -381,6 +381,8 @@ void WaveformWidgetFactory::refresh() {
     if (m_skipRender)
         return;
 
+    int startTime = m_time->elapsed();
+
     for (unsigned int i = 0; i < m_waveformWidgetHolders.size(); i++)
         m_waveformWidgetHolders[i].m_waveformWidget->preRender();
 
@@ -396,13 +398,17 @@ void WaveformWidgetFactory::refresh() {
 
     m_lastFrameTime = m_time->restart();
 
-    m_actualFrameRate = 1000.0/(double)(m_lastFrameTime);
+    m_lastRenderDuration = m_lastFrameTime - startTime;
+
+    if (m_lastFrameTime && m_lastFrameTime <= 1000) {
+        m_actualFrameRate = 1000.0/(double)(m_lastFrameTime);
 
 
-    if ( m_minimumFrameRate > m_actualFrameRate) {
-        m_minimumFrameRate = m_actualFrameRate;
-    } else if (m_maximumlFrameRate < m_actualFrameRate) {
-        m_maximumlFrameRate = m_actualFrameRate;
+        if ( m_minimumFrameRate > m_actualFrameRate) {
+            m_minimumFrameRate = m_actualFrameRate;
+        } else if (m_maximumlFrameRate < m_actualFrameRate) {
+            m_maximumlFrameRate = m_actualFrameRate;
+        }
     }
 }
 
@@ -489,22 +495,45 @@ void WaveformWidgetFactory::evaluateWidgets() {
     }
 }
 
-WaveformWidgetAbstract* WaveformWidgetFactory::createWaveformWidget(WaveformWidgetType::Type type,
-                                                                    WWaveformViewer* viewer) {
+WaveformWidgetAbstract* WaveformWidgetFactory::createWaveformWidget(
+        WaveformWidgetType::Type type, WWaveformViewer* viewer) {
+    WaveformWidgetAbstract* widget = NULL;
     if (viewer) {
         switch(type) {
-        case WaveformWidgetType::EmptyWaveform : return new EmptyWaveformWidget(viewer->getGroup(), viewer);
-        case WaveformWidgetType::SoftwareSimpleWaveform : return 0; //TODO: (vrince)
-        case WaveformWidgetType::SoftwareWaveform : return new SoftwareWaveformWidget(viewer->getGroup(), viewer);
-        case WaveformWidgetType::QtSimpleWaveform : return new QtSimpleWaveformWidget(viewer->getGroup(), viewer);
-        case WaveformWidgetType::QtWaveform : return new QtWaveformWidget(viewer->getGroup(), viewer);
-        case WaveformWidgetType::GLSimpleWaveform : return new GLSimpleWaveformWidget(viewer->getGroup(), viewer);
-        case WaveformWidgetType::GLWaveform : return new GLWaveformWidget(viewer->getGroup(), viewer);
-        case WaveformWidgetType::GLSLWaveform : return new GLSLWaveformWidget(viewer->getGroup(), viewer);
-        default : return 0;
+        case WaveformWidgetType::SoftwareWaveform:
+            widget = new SoftwareWaveformWidget(viewer->getGroup(), viewer);
+            break;
+        case WaveformWidgetType::QtSimpleWaveform:
+            widget = new QtSimpleWaveformWidget(viewer->getGroup(), viewer);
+            break;
+        case WaveformWidgetType::QtWaveform:
+            widget = new QtWaveformWidget(viewer->getGroup(), viewer);
+            break;
+        case WaveformWidgetType::GLSimpleWaveform:
+            widget = new GLSimpleWaveformWidget(viewer->getGroup(), viewer);
+            break;
+        case WaveformWidgetType::GLWaveform:
+            widget = new GLWaveformWidget(viewer->getGroup(), viewer);
+            break;
+        case WaveformWidgetType::GLSLWaveform:
+            widget = new GLSLWaveformWidget(viewer->getGroup(), viewer);
+            break;
+        default:
+        //case WaveformWidgetType::SoftwareSimpleWaveform: TODO: (vrince)
+        //case WaveformWidgetType::EmptyWaveform:
+            widget = new EmptyWaveformWidget(viewer->getGroup(), viewer);
+            break;
         }
     }
-    return 0;
+    if (widget) {
+        widget->castToQWidget();
+        if(!widget->isValid()) {
+            qWarning() << "failed to init WafeformWidget" << type << "fall back to \"Empty\"";
+            delete widget;
+            widget = new EmptyWaveformWidget(viewer->getGroup(), viewer);
+        }
+    }
+    return widget;
 }
 
 int WaveformWidgetFactory::findIndexOf(WWaveformViewer* viewer) const {

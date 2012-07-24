@@ -16,9 +16,6 @@ GLWaveformRendererSimpleSignal::GLWaveformRendererSimpleSignal(
 GLWaveformRendererSimpleSignal::~GLWaveformRendererSimpleSignal(){
 }
 
-void GLWaveformRendererSimpleSignal::onInit() {
-}
-
 void GLWaveformRendererSimpleSignal::onSetup(const QDomNode &node){
     Q_UNUSED(node);
 }

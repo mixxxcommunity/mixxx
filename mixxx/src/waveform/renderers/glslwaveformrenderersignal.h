@@ -12,7 +12,7 @@ public:
     explicit GLSLWaveformRendererSignal(WaveformWidgetRenderer* waveformWidgetRenderer);
     virtual ~GLSLWaveformRendererSignal();
 
-    virtual void onInit();
+    virtual bool onInit();
     virtual void onSetup(const QDomNode& node);
     virtual void draw(QPainter* painter, QPaintEvent* event);
 

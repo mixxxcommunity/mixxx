@@ -76,14 +76,14 @@ QStringList plugin_paths; //yes this is global. sometimes global is good.
 //void qInitImages_mixxx();
 
 QFile Logfile; // global logfile variable
+QMutex mutexLogfile;
 
 /* Debug message handler which outputs to both a logfile and a
  * and prepends the thread the message came from too.
  */
 void MessageHandler(QtMsgType type, const char *input)
 {
-    static QMutex mutex;
-    QMutexLocker locker(&mutex);
+    QMutexLocker locker(&mutexLogfile);
     QByteArray ba;
     QThread* thread = QThread::currentThread();
     if (thread) {
@@ -310,8 +310,11 @@ int main(int argc, char * argv[])
 
     // Don't make any more output after this
     //    or mixxx.log will get clobbered!
-    if(Logfile.isOpen()) {
-        Logfile.close();
+    { // scope
+        QMutexLocker locker(&mutexLogfile);
+        if(Logfile.isOpen()) {
+            Logfile.close();
+        }
     }
 
     //delete plugin_paths;

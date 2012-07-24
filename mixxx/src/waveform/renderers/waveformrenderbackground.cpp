@@ -13,9 +13,6 @@ WaveformRenderBackground::WaveformRenderBackground(
 WaveformRenderBackground::~WaveformRenderBackground() {
 }
 
-void WaveformRenderBackground::init() {
-}
-
 void WaveformRenderBackground::setup(const QDomNode& node) {
     m_backgroundColor.setNamedColor(
         WWidget::selectNodeQString(node, "BgColor"));

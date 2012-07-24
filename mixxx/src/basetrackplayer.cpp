@@ -25,9 +25,9 @@ BaseTrackPlayer::BaseTrackPlayer(QObject* pParent,
                                  AnalyserQueue* pAnalyserQueue,
                                  QString group)
         : BasePlayer(pParent, group),
-          m_pAnalyserQueue(pAnalyserQueue),
           m_pConfig(pConfig),
-          m_pLoadedTrack() {
+          m_pLoadedTrack(),
+          m_pAnalyserQueue(pAnalyserQueue) {
 
     // Need to strdup the string because EngineChannel will save the pointer,
     // but we might get deleted before the EngineChannel. TODO(XXX)
@@ -116,8 +116,9 @@ BaseTrackPlayer::~BaseTrackPlayer()
     delete m_pDuration;
 }
 
-void BaseTrackPlayer::slotLoadTrack(TrackPointer track, bool bStartFromEndPos)
-{
+void BaseTrackPlayer::slotLoadTrack(TrackPointer track, bool bStartFromEndPos) {
+    Q_UNUSED(bStartFromEndPos);
+
     //Disconnect the old track's signals.
     if (m_pLoadedTrack) {
         // Save the loops that are currently set in a loop cue. If no loop cue is
