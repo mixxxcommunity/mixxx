@@ -77,7 +77,8 @@ void WaveformRenderMarkRange::draw(QPainter *painter, QPaintEvent * /*event*/) {
         //draw the correcponding portion of the selected pixmap
         //this shouldn't involve *any* scaling it should be fast even in software mode
         QRect rect(startPosition,0,endPosition-startPosition,m_waveformRenderer->getHeight());
-        painter->drawPixmap(rect, *selectedPixmap, rect);
+        //painter->drawPixmap(rect, *selectedPixmap, rect);
+        painter->drawImage(rect, selectedPixmap->toImage(), rect);
     }
 
     painter->restore();

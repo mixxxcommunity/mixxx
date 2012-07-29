@@ -56,7 +56,8 @@ void WaveformRenderMark::draw( QPainter* painter, QPaintEvent* /*event*/) {
 
             //check if the current point need to be displayed
             if( currentMarkPoint > -markHalfWidth && currentMarkPoint < m_waveformRenderer->getWidth() + markHalfWidth)
-                painter->drawPixmap(QPoint(currentMarkPoint-markHalfWidth,0), mark.m_pixmap);
+                //painter->drawPixmap(QPoint(currentMarkPoint-markHalfWidth,0), mark.m_pixmap);
+                painter->drawImage(QPoint(currentMarkPoint-markHalfWidth,0), mark.m_pixmap.toImage());
         }
     }
 

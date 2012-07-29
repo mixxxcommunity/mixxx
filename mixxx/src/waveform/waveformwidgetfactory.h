@@ -64,7 +64,7 @@ class WaveformWidgetFactory : public QObject, public Singleton<WaveformWidgetFac
     int getFrameRate() const { return m_frameRate;}
     double getActualFrameRate() const { return m_actualFrameRate;}
     double getMinimumFrameRate() const { return m_lastRenderDuration;}
-    double getMaximumFrameRate() const { return m_maximumlFrameRate;}
+    double getMaximumFrameRate() const { return m_lastFrameTime;}
 
     bool isOpenGLAvailable() const { return m_openGLAvailable;}
     QString getOpenGLVersion() const { return m_openGLVersion;}

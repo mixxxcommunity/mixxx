@@ -427,7 +427,9 @@ void GLSLWaveformRendererSignal::draw(QPainter* painter, QPaintEvent* /*event*/)
     glEnd();
     */
 
-    glDisable(GL_BLEND);
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
 
     painter->endNativePainting();
 }

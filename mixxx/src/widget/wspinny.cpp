@@ -162,7 +162,8 @@ void WSpinny::paintEvent(QPaintEvent *e)
     QPainter p(this);
 
     if (m_pBG) {
-        p.drawPixmap(0, 0, *m_pBG);
+        //p.drawPixmap(0, 0, *m_pBG);
+        p.drawImage(0, 0, m_pBG->toImage());
     }
 
 #ifdef __VINYLCONTROL__
@@ -220,7 +221,7 @@ void WSpinny::paintEvent(QPaintEvent *e)
     if (m_pFG && !m_pFG->isNull()) {
         //Now rotate the pixmap and draw it on the screen.
         p.rotate(m_fAngle);
-        p.drawPixmap(-(width() / 2), -(height() / 2), *m_pFG);
+        p.drawImage(-(width() / 2), -(height() / 2), m_pFG->toImage());
     }
 
     if (m_bGhostPlayback && m_pGhost && !m_pGhost->isNull())
@@ -228,7 +229,7 @@ void WSpinny::paintEvent(QPaintEvent *e)
         p.restore();
         p.save();
         p.rotate(m_fGhostAngle);
-        p.drawPixmap(-(width() / 2), -(height() / 2), *m_pGhost);
+        p.drawImage(-(width() / 2), -(height() / 2), m_pGhost->toImage());
 
         //Rotate back to the playback position (not the ghost positon),
         //and draw the beat marks from there.

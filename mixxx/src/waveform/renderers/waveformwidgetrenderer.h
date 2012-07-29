@@ -10,7 +10,7 @@
 #include "util.h"
 #include "waveform/renderers/waveformrendererabstract.h"
 
-//#define WAVEFORMWIDGETRENDERER_DEBUG
+#define WAVEFORMWIDGETRENDERER_DEBUG
 
 class TrackInfoObject;
 class ControlObjectThreadMain;

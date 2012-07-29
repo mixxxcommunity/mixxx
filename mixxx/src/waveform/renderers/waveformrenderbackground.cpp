@@ -28,7 +28,9 @@ void WaveformRenderBackground::draw(QPainter* painter,
     }
 
     //since we use opaque widget we need to draw the background !
-    painter->drawPixmap(QPoint(0, 0), m_backgroundPixmap);
+    // this produces a white background
+    //painter->drawPixmap(QPoint(0, 0), m_backgroundPixmap);
+    painter->drawImage(QPoint(0, 0), m_backgroundPixmap.toImage());
 }
 
 void WaveformRenderBackground::generatePixmap() {

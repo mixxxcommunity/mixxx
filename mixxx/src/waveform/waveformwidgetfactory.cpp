@@ -398,7 +398,7 @@ void WaveformWidgetFactory::refresh() {
 
     m_lastFrameTime = m_time->restart();
 
-    m_lastRenderDuration = m_lastFrameTime - startTime;
+    m_lastRenderDuration = startTime;
 
     if (m_lastFrameTime && m_lastFrameTime <= 1000) {
         m_actualFrameRate = 1000.0/(double)(m_lastFrameTime);
