@@ -20,7 +20,6 @@ EngineWorkerScheduler::~EngineWorkerScheduler() {
     m_bQuit = true;
     m_waitCondition.wakeAll();
     m_workerThreadPool.waitForDone();
-    wait(); // Wait for own scheduler thread
 }
 
 void EngineWorkerScheduler::bindWorker(EngineWorker* pWorker) {

@@ -43,6 +43,7 @@ WaveformWidgetFactory::WaveformWidgetFactory() :
         m_type(WaveformWidgetType::Count_WaveformwidgetType),
         m_config(0),
         m_skipRender(false),
+        m_frameRate(30),
         m_defaultZoom(3),
         m_zoomSync(false),
         m_overviewNormalized(false),
@@ -59,15 +60,15 @@ WaveformWidgetFactory::WaveformWidgetFactory() :
     m_visualGain[Mid] = 1.0;
     m_visualGain[High] = 1.0;
 
-    setFrameRate(33);
-
-
     if (QGLFormat::hasOpenGL()) {
         QGLFormat glFormat;
         glFormat.setDirectRendering(true);
         glFormat.setDoubleBuffer(true);
         glFormat.setDepth(false);
-        glFormat.setSwapInterval(0); //enable vertical sync to avoid cue line to be cut
+        // Disable waiting for vertical Sync
+        // This can be enabled when using a single Threads for each QGLContext
+        // Setting 1 causes QGLContext::swapBuffer to sleep until the next VSync
+        glFormat.setSwapInterval(0);
         glFormat.setRgba(true);
         QGLFormat::setDefaultFormat(glFormat);
 
@@ -244,6 +245,7 @@ void WaveformWidgetFactory::setFrameRate(int frameRate) {
     if (m_config) {
         m_config->set(ConfigKey("[Waveform]","FrameRate"), ConfigValue(m_frameRate));
     }
+    start();
 }
 
 bool WaveformWidgetFactory::setWidgetType(WaveformWidgetType::Type type) {
@@ -384,7 +386,7 @@ void WaveformWidgetFactory::refresh() {
     int startTime = m_time->elapsed();
 
     for (unsigned int i = 0; i < m_waveformWidgetHolders.size(); i++)
-        m_waveformWidgetHolders[i].m_waveformWidget->preRender();
+        // m_waveformWidgetHolders[i].m_waveformWidget->preRender();
 
     for (unsigned int i = 0; i < m_waveformWidgetHolders.size(); i++)
         m_waveformWidgetHolders[i].m_waveformWidget->render();

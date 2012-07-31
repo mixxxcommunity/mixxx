@@ -561,7 +561,6 @@ void DlgPrefControls::slotApply()
 
 void DlgPrefControls::slotSetFrameRate(int frameRate) {
     WaveformWidgetFactory::instance()->setFrameRate(frameRate);
-    WaveformWidgetFactory::instance()->start();
 }
 
 void DlgPrefControls::slotSetWaveformType(int index) {

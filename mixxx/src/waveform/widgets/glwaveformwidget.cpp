@@ -17,8 +17,6 @@ GLWaveformWidget::GLWaveformWidget( const char* group, QWidget* parent)
         : QGLWidget(SharedGLContext::getContext(), parent),
           WaveformWidgetAbstract(group) {
 
-    // NULL Paint device
-
     addRenderer<WaveformRenderBackground>();
     addRenderer<WaveformRendererEndOfTrack>();
     addRenderer<WaveformRendererPreroll>();
@@ -30,7 +28,7 @@ GLWaveformWidget::GLWaveformWidget( const char* group, QWidget* parent)
     setAttribute(Qt::WA_NoSystemBackground);
     setAttribute(Qt::WA_OpaquePaintEvent);
 
-    setAutoBufferSwap(false);
+    // setAutoBufferSwap(false);
 
     if (QGLContext::currentContext() != context()) {
         makeCurrent();
@@ -54,5 +52,5 @@ void GLWaveformWidget::paintEvent( QPaintEvent* event) {
 }
 
 void GLWaveformWidget::postRender() {
-    QGLWidget::swapBuffers();
+    // QGLWidget::swapBuffers();
 }

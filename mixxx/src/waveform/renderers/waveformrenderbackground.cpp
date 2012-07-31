@@ -27,9 +27,16 @@ void WaveformRenderBackground::draw(QPainter* painter,
         generatePixmap();
     }
 
-    //since we use opaque widget we need to draw the background !
-    // this produces a white background
+    // since we use opaque widget we need to draw the background !
     //painter->drawPixmap(QPoint(0, 0), m_backgroundPixmap);
+
+    // QImage image = pixmap.toImage();
+    // If the system depth is 16 and the pixmap doesn't have an alpha channel
+    // then we convert it to RGB16 in the hope that it gets uploaded as a 16
+    // bit texture which is much faster to access than a 32-bit one.
+    //if (pixmap.depth() == 16 && !image.hasAlphaChannel() )
+    //    image = image.convertToFormat(QImage::Format_RGB16);
+
     painter->drawImage(QPoint(0, 0), m_backgroundPixmap.toImage());
 }
 
