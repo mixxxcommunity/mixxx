@@ -162,12 +162,12 @@ int SoundDevicePortAudio::open()
 
     // Try open device using iChannelMax
     err = Pa_OpenStream(&m_pStream,
-                        pInputParams,                           // Input parameters
-                        pOutputParams,                      // Output parameters
-                        m_dSampleRate,                      // Sample rate
-                        m_framesPerBuffer,                       // Frames per buffer
-                        paClipOff,                                      // Stream flags
-                        callback,                                       // Stream callback
+                        pInputParams,
+                        pOutputParams,
+                        m_dSampleRate,
+                        m_framesPerBuffer,
+                        paClipOff, // Stream flags
+                        callback,    
                         (void*) this); // pointer passed to the callback function
 
     if (err != paNoError)
@@ -214,7 +214,7 @@ int SoundDevicePortAudio::open()
     // Get the actual details of the stream & update Mixxx's data
     const PaStreamInfo* streamDetails = Pa_GetStreamInfo(m_pStream);
     m_dSampleRate = streamDetails->sampleRate;
-    latencyMSec = streamDetails->outputLatency*1000;
+    latencyMSec = (streamDetails->outputLatency + streamDetails->inputLatency) * 1000 / 2;
     qDebug() << "   Actual sample rate: " << m_dSampleRate << "Hz, latency:" << latencyMSec << "ms";
 
     //Update the samplerate and latency ControlObjects, which allow the waveform view to properly correct

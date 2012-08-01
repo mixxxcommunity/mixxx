@@ -47,6 +47,7 @@ class EngineBufferScale;
 class EngineBufferScaleLinear;
 class EngineBufferScaleST;
 class EngineWorkerScheduler;
+class VisualPlayPosition;
 
 struct Hint;
 
@@ -213,7 +214,6 @@ private:
     ControlObject *visualBpm;
     ControlObject *m_pMasterRate;
     ControlPotmeter *playposSlider;
-    ControlPotmeter *visualPlaypos;
     ControlObject *m_pSampleRate;
     ControlPushButton *m_pKeylock;
 
@@ -256,6 +256,8 @@ private:
 #endif
     CSAMPLE* m_pDitherBuffer;
     unsigned int m_iDitherBufferReadIndex;
+
+    VisualPlayPosition* m_visualPlayPos;
 };
 
 #endif

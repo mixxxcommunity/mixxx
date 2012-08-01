@@ -14,6 +14,7 @@
 
 class TrackInfoObject;
 class ControlObjectThreadMain;
+class VisualPlayPosition;
 
 class WaveformWidgetRenderer {
 public:
@@ -91,7 +92,7 @@ protected:
 
     //TODO: vRince create some class to manage control/value
     //ControlConnection
-    ControlObjectThreadMain* m_playPosControlObject;
+    VisualPlayPosition* m_visualPlayPosition;
     double m_playPos;
     ControlObjectThreadMain* m_rateControlObject;
     double m_rate;
@@ -113,7 +114,6 @@ protected:
     int currentFrame;
 #endif
 
-    WaveformWidgetRenderer();
 private:
     DISALLOW_COPY_AND_ASSIGN(WaveformWidgetRenderer);
     friend class WaveformWidgetFactory;

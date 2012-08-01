@@ -23,7 +23,6 @@ class QtWaveformWidget : public QGLWidget, public WaveformWidgetAbstract {
     virtual void postRender();
 
   private:
-    QtWaveformWidget() {}
     friend class WaveformWidgetFactory;
 };
 

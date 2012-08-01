@@ -11,6 +11,7 @@
 #endif
 
 class ControlObjectThreadMain;
+class VisualPlayPosition;
 
 class WSpinny : public QGLWidget
 {
@@ -22,8 +23,6 @@ class WSpinny : public QGLWidget
         void dragEnterEvent(QDragEnterEvent *event);
         void dropEvent(QDropEvent *event);
     public slots:
-        void updateAngle(double);
-        void updateRate(double);
         void updateAngleForGhost();
         void updateVinylControlSpeed(double rpm);
         void updateVinylControlEnabled(double enabled);
@@ -47,7 +46,7 @@ class WSpinny : public QGLWidget
         QPixmap* m_pGhost;
         ControlObjectThreadMain* m_pPlay;
         ControlObjectThreadMain* m_pPlayPos;
-        ControlObjectThreadMain* m_pVisualPlayPos;
+        VisualPlayPosition* m_pVisualPlayPos;
         ControlObjectThreadMain* m_pDuration;
         ControlObjectThreadMain* m_pTrackSamples;
         ControlObjectThreadMain* m_pTrackSampleRate;
@@ -55,7 +54,6 @@ class WSpinny : public QGLWidget
         ControlObjectThreadMain* m_pScratch;
         ControlObjectThreadMain* m_pScratchToggle;
         ControlObjectThreadMain* m_pScratchPos;
-        ControlObjectThreadMain* m_pRate;
         ControlObjectThreadMain* m_pVinylControlSpeedType;
         ControlObjectThreadMain* m_pVinylControlEnabled;
         ControlObjectThreadMain* m_pSignalEnabled;

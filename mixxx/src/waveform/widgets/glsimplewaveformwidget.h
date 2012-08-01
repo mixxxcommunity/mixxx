@@ -23,7 +23,6 @@ class GLSimpleWaveformWidget : public QGLWidget, public WaveformWidgetAbstract {
     virtual void postRender();
 
   private:
-    GLSimpleWaveformWidget() {}
     friend class WaveformWidgetFactory;
 };
 #endif // GLSIMPLEWAVEFORMWIDGET_H

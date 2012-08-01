@@ -22,12 +22,6 @@ WNumberPos::WNumberPos(const char * group, QWidget * parent)
             this, SLOT(slotSetRemain(double)));
     slotSetRemain(m_pShowDurationRemaining->get());
 
-    // TODO(xxx) possible unused m_pRateControl and m_pRateDirControl?
-    m_pRateControl = new ControlObjectThreadWidget(
-        ControlObject::getControl(ConfigKey(group, "rate")));
-    m_pRateDirControl = new ControlObjectThreadWidget(
-        ControlObject::getControl(ConfigKey(group, "rate_dir")));
-
     m_pTrackSamples = new ControlObjectThreadWidget(
         ControlObject::getControl(ConfigKey(group, "track_samples")));
     connect(m_pTrackSamples, SIGNAL(valueChanged(double)),
@@ -49,8 +43,6 @@ WNumberPos::~WNumberPos() {
     delete m_pTrackSampleRate;
     delete m_pTrackSamples;
     delete m_pShowDurationRemaining;
-    delete m_pRateControl;
-    delete m_pRateDirControl;
 }
 
 void WNumberPos::mousePressEvent(QMouseEvent* pEvent) {

@@ -164,7 +164,7 @@ void WaveformRendererFilteredSignal::draw(QPainter* painter,
                 }
                 actualMidLineNumber++;
             }
-            if( maxHigh[0] && maxHigh[1]) {
+            if (maxHigh[0] && maxHigh[1]) {
                 switch( m_alignment) {
                 case Qt::AlignBottom :
                     m_highLines[actualHighLineNumber].setLine(

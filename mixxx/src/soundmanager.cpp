@@ -56,10 +56,6 @@ SoundManager::SoundManager(ConfigObject<ConfigValue> *pConfig, EngineMaster *pMa
     //uses them is called from the GUI thread (stuff like opening soundcards).
     // TODO(xxx) some of these ControlObject are not needed by soundmanager, or are unused here.
     // It is possible to take them out?
-    m_pControlObjectLatency = new ControlObjectThreadMain(
-        ControlObject::getControl(ConfigKey("[Master]", "latency")));
-    m_pControlObjectSampleRate = new ControlObjectThreadMain(
-        ControlObject::getControl(ConfigKey("[Master]", "samplerate")));
     m_pControlObjectSoundStatus = new ControlObject(ConfigKey("[SoundManager]", "status"));
     m_pControlObjectSoundStatus->set(SOUNDMANAGER_DISCONNECTED);
     m_pControlObjectVinylControlMode = new ControlObjectThreadMain(
@@ -84,12 +80,6 @@ SoundManager::SoundManager(ConfigObject<ConfigValue> *pConfig, EngineMaster *pMa
     }
     checkConfig();
     m_config.writeToDisk(); // in case anything changed by applying defaults
-
-    // TODO(bkgood) do these really need to be here? they're set in
-    // SoundDevicePortAudio::open
-    m_pControlObjectLatency->slotSet(
-        m_config.getFramesPerBuffer() / m_config.getSampleRate() * 1000);
-    m_pControlObjectSampleRate->slotSet(m_config.getSampleRate());
 }
 
 /** Destructor for the SoundManager class. Closes all the devices, cleans up their pointers
@@ -108,8 +98,6 @@ SoundManager::~SoundManager()
     // vinyl control proxies and input buffers are freed in closeDevices, called
     // by clearDeviceList -- bkgood
 
-    delete m_pControlObjectLatency;
-    delete m_pControlObjectSampleRate;
     delete m_pControlObjectSoundStatus;
     delete m_pControlObjectVinylControlMode;
     delete m_pControlObjectVinylControlMode1;

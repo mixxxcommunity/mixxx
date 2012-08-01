@@ -5,6 +5,7 @@
 #include "controlobjectthreadmain.h"
 #include "sharedglcontext.h"
 #include "wspinny.h"
+#include "visualplayposition.h"
 
 WSpinny::WSpinny(QWidget* parent, VinylControlManager* pVCMan)
         : QGLWidget(SharedGLContext::getContext(), parent),
@@ -13,7 +14,6 @@ WSpinny::WSpinny(QWidget* parent, VinylControlManager* pVCMan)
           m_pGhost(NULL),
           m_pPlay(NULL),
           m_pPlayPos(NULL),
-          m_pVisualPlayPos(NULL),
           m_pDuration(NULL),
           m_pTrackSamples(NULL),
           m_pBPM(NULL),
@@ -53,7 +53,6 @@ WSpinny::~WSpinny()
     WPixmapStore::deletePixmap(m_pGhost);
     delete m_pPlay;
     delete m_pPlayPos;
-    delete m_pVisualPlayPos;
     delete m_pDuration;
     delete m_pTrackSamples;
     delete m_pTrackSampleRate;
@@ -65,7 +64,6 @@ WSpinny::~WSpinny()
     delete m_pVinylControlSpeedType;
     delete m_pVinylControlEnabled;
     delete m_pSignalEnabled;
-    delete m_pRate;
 #endif
 
 }
@@ -96,8 +94,8 @@ void WSpinny::setup(QDomNode node, QString group)
                         ConfigKey(group, "play")));
     m_pPlayPos = new ControlObjectThreadMain(ControlObject::getControl(
                         ConfigKey(group, "playposition")));
-    m_pVisualPlayPos = new ControlObjectThreadMain(ControlObject::getControl(
-                        ConfigKey(group, "visual_playposition")));
+    m_pVisualPlayPos = VisualPlayPosition::getVisualPlayPosition(group);
+
     m_pDuration = new ControlObjectThreadMain(ControlObject::getControl(
                         ConfigKey(group, "duration")));
     m_pTrackSamples = new ControlObjectThreadMain(ControlObject::getControl(
@@ -118,10 +116,6 @@ void WSpinny::setup(QDomNode node, QString group)
     Q_ASSERT(m_pPlayPos);
     Q_ASSERT(m_pDuration);
 
-    //Repaint when visual_playposition changes.
-    connect(m_pVisualPlayPos, SIGNAL(valueChanged(double)),
-            this, SLOT(updateAngle(double)));
-
 #ifdef __VINYLCONTROL__
     m_pVinylControlSpeedType = new ControlObjectThreadMain(ControlObject::getControl(
                         ConfigKey(group, "vinylcontrol_speed_type")));
@@ -134,8 +128,6 @@ void WSpinny::setup(QDomNode node, QString group)
                         ConfigKey(group, "vinylcontrol_enabled")));
     m_pSignalEnabled = new ControlObjectThreadMain(ControlObject::getControl(
                         ConfigKey(group, "vinylcontrol_signal_enabled")));
-    m_pRate = new ControlObjectThreadMain(ControlObject::getControl(
-                        ConfigKey(group, "rate")));
 
     //Match the vinyl control's set RPM so that the spinny widget rotates at the same
     //speed as your physical decks, if you're using vinyl control.
@@ -146,9 +138,6 @@ void WSpinny::setup(QDomNode node, QString group)
     connect(m_pVinylControlEnabled, SIGNAL(valueChanged(double)),
             this, SLOT(updateVinylControlEnabled(double)));
 
-    //Check the rate to see if we are stopped
-    connect(m_pRate, SIGNAL(valueChanged(double)),
-            this, SLOT(updateRate(double)));
 #else
     //if no vinyl control, just call it 33
     this->updateVinylControlSpeed(33.0);
@@ -220,7 +209,7 @@ void WSpinny::paintEvent(QPaintEvent *e)
 
     if (m_pFG && !m_pFG->isNull()) {
         //Now rotate the pixmap and draw it on the screen.
-        p.rotate(m_fAngle);
+        p.rotate(calculateAngle(m_pVisualPlayPos->get()));
         p.drawImage(-(width() / 2), -(height() / 2), m_pFG->toImage());
     }
 
@@ -344,20 +333,6 @@ double WSpinny::calculatePositionFromAngle(double angle)
         return 0.0;
     }
     return playpos;
-}
-
-/** Update the playback angle saved in the widget and repaint.
-    @param playpos A normalized (0.0-1.0) playback position. (Not an angle!)
-*/
-void WSpinny::updateAngle(double playpos) {
-    m_fAngle = calculateAngle(playpos);
-}
-
-void WSpinny::updateRate(double rate) {
-    //if rate is zero, updateAngle won't get called,
-    if (rate == 0.0 && m_bVinylActive)
-    {
-    }
 }
 
 //Update the angle using the ghost playback position.

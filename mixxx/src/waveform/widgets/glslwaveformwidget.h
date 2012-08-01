@@ -29,7 +29,6 @@ class GLSLWaveformWidget : public QGLWidget, public WaveformWidgetAbstract {
   private:
     GLSLWaveformRendererSignal* signalRenderer_;
 
-    GLSLWaveformWidget() {}
     friend class WaveformWidgetFactory;
 };
 

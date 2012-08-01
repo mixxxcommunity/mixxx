@@ -100,8 +100,6 @@ private:
     QHash<AudioOutput, const AudioSource*> m_registeredSources;
     QHash<AudioInput, AudioDestination*> m_registeredDestinations;
 
-    ControlObjectThreadMain* m_pControlObjectLatency;
-    ControlObjectThreadMain* m_pControlObjectSampleRate;
     ControlObject* m_pControlObjectSoundStatus;
     ControlObjectThreadMain* m_pControlObjectVinylControlMode;
     ControlObjectThreadMain* m_pControlObjectVinylControlMode1;

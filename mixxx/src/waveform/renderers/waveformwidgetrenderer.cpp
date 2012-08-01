@@ -5,24 +5,12 @@
 #include "controlobjectthreadmain.h"
 #include "controlobject.h"
 #include "defs.h"
+#include "visualplayposition.h"
 
 #include <QPainter>
 
 const int WaveformWidgetRenderer::s_waveformMinZoom = 1;
 const int WaveformWidgetRenderer::s_waveformMaxZoom = 6;
-
-WaveformWidgetRenderer::WaveformWidgetRenderer() {
-    m_playPosControlObject = NULL;
-    m_rateControlObject = NULL;
-    m_rateRangeControlObject = NULL;
-    m_rateDirControlObject = NULL;
-    m_gainControlObject = NULL;
-    m_trackSamplesControlObject = NULL;
-
-#ifdef WAVEFORMWIDGETRENDERER_DEBUG
-    m_timer = NULL;
-#endif
-}
 
 WaveformWidgetRenderer::WaveformWidgetRenderer( const char* group) :
     m_group(group),
@@ -41,8 +29,7 @@ WaveformWidgetRenderer::WaveformWidgetRenderer( const char* group) :
     m_visualSamplePerPixel = 1.0;
     m_audioSamplePerPixel = 1.0;
 
-    // Really create some to manage those
-    m_playPosControlObject = NULL;
+    // Really create some to manage those;
     m_playPos = 0.0;
     m_rateControlObject = NULL;
     m_rate = 0.0;
@@ -74,7 +61,6 @@ WaveformWidgetRenderer::~WaveformWidgetRenderer() {
     for( int i = 0; i < m_rendererStack.size(); ++i)
         delete m_rendererStack[i];
 
-    delete m_playPosControlObject;
     delete m_rateControlObject;
     delete m_rateRangeControlObject;
     delete m_rateDirControlObject;
@@ -89,9 +75,8 @@ WaveformWidgetRenderer::~WaveformWidgetRenderer() {
 bool WaveformWidgetRenderer::init() {
 
     //qDebug() << "WaveformWidgetRenderer::init";
+    m_visualPlayPosition = VisualPlayPosition::getVisualPlayPosition(m_group);
 
-    m_playPosControlObject = new ControlObjectThreadMain(
-                ControlObject::getControl( ConfigKey(m_group, "visual_playposition")));
     m_rateControlObject = new ControlObjectThreadMain(
                 ControlObject::getControl( ConfigKey(m_group, "rate")));
     m_rateRangeControlObject = new ControlObjectThreadMain(
@@ -118,6 +103,7 @@ void WaveformWidgetRenderer::onPreRender() {
         return;
 
     //Fetch parameters before rendering in order the display all sub-renderers with the same values
+
     m_rate = m_rateControlObject->get();
     m_rateDir = m_rateDirControlObject->get();
     m_rateRange = m_rateRangeControlObject->get();
@@ -143,7 +129,7 @@ void WaveformWidgetRenderer::onPreRender() {
     if (m_audioSamplePerPixel) {
         double trackPixel = (double)m_trackSamples / 2 / m_audioSamplePerPixel;
         double displayedLengthHalf = (double)m_width / trackPixel / 2;
-        m_playPos = round(m_playPosControlObject->get() * trackPixel)/(double)trackPixel; // Avoid pixel jitter in play position
+        m_playPos = round(m_visualPlayPosition->get() * trackPixel)/(double)trackPixel; // Avoid pixel jitter in play position
         m_firstDisplayedPosition = m_playPos - displayedLengthHalf;
         m_lastDisplayedPosition = m_playPos + displayedLengthHalf;
         m_rendererTransformationOffset = - m_firstDisplayedPosition;

@@ -6,6 +6,7 @@
 
 #include "engine/enginebuffer.h"
 #include "engine/bpmcontrol.h"
+#include "visualplayposition.h"
 
 const int minBpm = 30;
 const int maxInterval = (int)(1000.*(60./(CSAMPLE)minBpm));
@@ -267,8 +268,8 @@ bool BpmControl::syncPhase() {
     double dThisPosition = getCurrentSample();
     double dOtherLength = ControlObject::getControl(
         ConfigKey(pOtherEngineBuffer->getGroup(), "track_samples"))->get();
-    double dOtherPosition = dOtherLength * ControlObject::getControl(
-        ConfigKey(pOtherEngineBuffer->getGroup(), "visual_playposition"))->get();
+    double dOtherPosition = dOtherLength *
+            VisualPlayPosition::getVisualPlayPosition(pOtherEngineBuffer->getGroup())->getEnginePlayPos();
 
     double dThisPrevBeat = m_pBeats->findPrevBeat(dThisPosition);
     double dThisNextBeat = m_pBeats->findNextBeat(dThisPosition);
@@ -338,9 +339,7 @@ void BpmControl::slotRateChanged(double) {
 }
 
 void BpmControl::trackLoaded(TrackPointer pTrack) {
-    if (m_pTrack) {
-        trackUnloaded(m_pTrack);
-    }
+    trackUnloaded(m_pTrack);
 
     if (pTrack) {
         m_pTrack = pTrack;
@@ -351,12 +350,13 @@ void BpmControl::trackLoaded(TrackPointer pTrack) {
 }
 
 void BpmControl::trackUnloaded(TrackPointer pTrack) {
+    Q_UNUSED(pTrack);
     if (m_pTrack) {
         disconnect(m_pTrack.data(), SIGNAL(beatsUpdated()),
                    this, SLOT(slotUpdatedTrackBeats()));
+        m_pTrack.clear();
+        m_pBeats.clear();
     }
-    m_pTrack.clear();
-    m_pBeats.clear();
 }
 
 void BpmControl::slotUpdatedTrackBeats()

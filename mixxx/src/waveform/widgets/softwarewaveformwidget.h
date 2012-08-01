@@ -23,7 +23,6 @@ class SoftwareWaveformWidget : public QWidget, public WaveformWidgetAbstract {
     virtual void updateVisualSamplingPerPixel();
 
   private:
-    SoftwareWaveformWidget() {}
     SoftwareWaveformWidget(const char* group, QWidget* parent);
     friend class WaveformWidgetFactory;
 };

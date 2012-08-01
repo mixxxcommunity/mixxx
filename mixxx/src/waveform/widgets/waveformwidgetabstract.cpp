@@ -4,12 +4,6 @@
 #include <QtDebug>
 #include <QWidget>
 
-// Default constructor is only use by the factory to evaluate dynamically
-// WaveformWidget
-WaveformWidgetAbstract::WaveformWidgetAbstract() :
-    WaveformWidgetRenderer() {
-    m_widget = NULL;
-}
 
 WaveformWidgetAbstract::WaveformWidgetAbstract( const char* group) :
     WaveformWidgetRenderer(group) {

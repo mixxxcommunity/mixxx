@@ -102,6 +102,7 @@ bool PlayerInfo::isTrackLoaded(TrackPointer pTrack) const {
 }
 
 void PlayerInfo::timerEvent(QTimerEvent* pTimerEvent) {
+    Q_UNUSED(pTimerEvent);
     updateCurrentPlayingDeck();
 }
 
@@ -183,4 +184,3 @@ bool PlayerInfo::isTrackPlaying(TrackInfoObject* pTrack) const {
     }
     return false;
 }
-

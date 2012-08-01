@@ -37,6 +37,7 @@
 #include "engine/ratecontrol.h"
 #include "engine/bpmcontrol.h"
 #include "engine/quantizecontrol.h"
+#include "visualplayposition.h"
 
 #ifdef __VINYLCONTROL__
 #include "engine/vinylcontrolcontrol.h"
@@ -159,8 +160,7 @@ EngineBuffer::EngineBuffer(const char * _group, ConfigObject<ConfigValue> * _con
             Qt::DirectConnection);
 
     // Control used to communicate ratio playpos to GUI thread
-    visualPlaypos = new ControlPotmeter(
-        ConfigKey(group, "visual_playposition"), kMinPlayposRange, kMaxPlayposRange);
+    m_visualPlayPos = VisualPlayPosition::getVisualPlayPosition(group);
 
     // m_pTrackEnd is used to signal when at end of file during
     // playback. TODO(XXX) This should not even be a control object because it
@@ -254,7 +254,6 @@ EngineBuffer::~EngineBuffer()
     delete stopButton;
     delete rateEngine;
     delete playposSlider;
-    delete visualPlaypos;
 
     delete m_pTrackEndCOT;
     delete m_pTrackEnd;
@@ -758,8 +757,6 @@ void EngineBuffer::updateIndicators(double rate, int iBufferSize) {
     if (file_length_old!=0.) {
         fFractionalPlaypos = math_min(filepos_play,file_length_old);
         fFractionalPlaypos /= file_length_old;
-    } else {
-        fFractionalPlaypos = 0.;
     }
 
     // Update indicators that are only updated after every
@@ -783,7 +780,7 @@ void EngineBuffer::updateIndicators(double rate, int iBufferSize) {
 
     // Update visual control object, this needs to be done more often than the
     // rateEngine and playpos slider
-    visualPlaypos->set(fFractionalPlaypos);
+    m_visualPlayPos->trySet(fFractionalPlaypos, rate, (double)iBufferSize/file_length_old);
 }
 
 void EngineBuffer::hintReader(const double dRate,

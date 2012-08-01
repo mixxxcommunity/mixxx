@@ -614,6 +614,7 @@ class MixxxCore(Feature):
                    "soundmanagerutil.cpp",
                    "dlgprefrecord.cpp",
                    "playerinfo.cpp",
+                   "visualplayposition.cpp",
 
                    "recording/enginerecord.cpp",
                    "recording/encoder.cpp",
