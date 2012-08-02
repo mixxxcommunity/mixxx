@@ -214,7 +214,11 @@ int SoundDevicePortAudio::open()
     // Get the actual details of the stream & update Mixxx's data
     const PaStreamInfo* streamDetails = Pa_GetStreamInfo(m_pStream);
     m_dSampleRate = streamDetails->sampleRate;
-    latencyMSec = (streamDetails->outputLatency + streamDetails->inputLatency) * 1000 / 2;
+    latencyMSec = streamDetails->outputLatency * 1000;
+    if (m_hostAPI == MIXXX_PORTAUDIO_ALSA_STRING) {
+        // This is a workaround for a PA Bug reported on https://bugs.launchpad.net/mixxx/+bug/884705
+        latencyMSec /= 2;
+    }
     qDebug() << "   Actual sample rate: " << m_dSampleRate << "Hz, latency:" << latencyMSec << "ms";
 
     //Update the samplerate and latency ControlObjects, which allow the waveform view to properly correct
