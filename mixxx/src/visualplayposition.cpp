@@ -41,7 +41,8 @@ double VisualPlayPosition::get() {
     if (m_playPos != -1) {
         playPos = m_playPos;
         playPos += m_positionStep * m_time.elapsed() / m_latency->get() * m_rate;
-        //qDebug() << m_playPos << playPos << m_positionStep << m_time.elapsed() << m_latency->get() << m_rate;
+        qDebug() << m_playPos << playPos << m_positionStep << m_time.elapsed()
+                 << m_latency->get() << m_rate << QTime::currentTime().msec();
         return playPos;
     }
     return 0;

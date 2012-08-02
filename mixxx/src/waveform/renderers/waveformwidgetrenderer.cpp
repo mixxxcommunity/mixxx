@@ -210,7 +210,7 @@ void WaveformWidgetRenderer::draw( QPainter* painter, QPaintEvent* event) {
     m_lastSystemFramesTime[currentFrame] = m_lastSystemFrameTime;
     m_lastFramesTime[currentFrame] = m_lastFrameTime;
 #endif
-
+    qDebug() << "swap buffer" << m_group << QTime::currentTime().msec();
 }
 
 void WaveformWidgetRenderer::resize( int width, int height) {
