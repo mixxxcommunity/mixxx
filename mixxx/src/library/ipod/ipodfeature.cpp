@@ -206,14 +206,14 @@ void IPodFeature::onRightClickChild(const QPoint& globalPos, QModelIndex index) 
     menu.exec(globalPos);
 }
 
-bool IPodFeature::dropAccept(QUrl url) {
-    Q_UNUSED(url);
+bool IPodFeature::dropAccept(QList<QUrl> urls) {
+    Q_UNUSED(urls);
     return false;
 }
 
-bool IPodFeature::dropAcceptChild(const QModelIndex& index, QUrl url) {
+bool IPodFeature::dropAcceptChild(const QModelIndex& index, QList<QUrl> urls) {
     Q_UNUSED(index);
-    Q_UNUSED(url);
+    Q_UNUSED(urls);
     return false;
 }
 

@@ -399,12 +399,10 @@ void WaveformWidgetFactory::refresh() {
     emit(waveformUpdateTick());
 
     m_lastFrameTime = m_time->restart();
-
     m_lastRenderDuration = startTime;
 
     if (m_lastFrameTime && m_lastFrameTime <= 1000) {
         m_actualFrameRate = 1000.0/(double)(m_lastFrameTime);
-
 
         if ( m_minimumFrameRate > m_actualFrameRate) {
             m_minimumFrameRate = m_actualFrameRate;
