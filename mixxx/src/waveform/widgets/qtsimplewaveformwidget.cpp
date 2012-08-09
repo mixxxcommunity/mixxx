@@ -13,7 +13,7 @@
 #include "waveform/renderers/waveformrenderbeat.h"
 
 QtSimpleWaveformWidget::QtSimpleWaveformWidget( const char* group, QWidget* parent)
-        : QGLWidget(SharedGLContext::getContext(), parent),
+        : QGLWidget(parent, SharedGLContext::getShareWidget()),
           WaveformWidgetAbstract(group) {
     addRenderer<WaveformRenderBackground>();
     addRenderer<WaveformRendererEndOfTrack>();

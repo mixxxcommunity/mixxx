@@ -96,7 +96,7 @@ bool WaveformWidgetRenderer::init() {
     return true;
 }
 
-void WaveformWidgetRenderer::onPreRender() {
+void WaveformWidgetRenderer::onPreRender(const QTime& posTime) {
 
     m_trackSamples = m_trackSamplesControlObject->get();
     if (m_trackSamples < 0.0)
@@ -129,7 +129,8 @@ void WaveformWidgetRenderer::onPreRender() {
     if (m_audioSamplePerPixel) {
         double trackPixel = (double)m_trackSamples / 2 / m_audioSamplePerPixel;
         double displayedLengthHalf = (double)m_width / trackPixel / 2;
-        m_playPos = round(m_visualPlayPosition->get() * trackPixel)/(double)trackPixel; // Avoid pixel jitter in play position
+        m_playPos = round(m_visualPlayPosition->getAt(posTime) * trackPixel)/(double)trackPixel; // Avoid pixel jitter in play position
+        m_playPosVSample = m_playPos * m_trackInfoObject->getWaveform()->getDataSize();
         m_firstDisplayedPosition = m_playPos - displayedLengthHalf;
         m_lastDisplayedPosition = m_playPos + displayedLengthHalf;
         m_rendererTransformationOffset = - m_firstDisplayedPosition;
@@ -159,8 +160,6 @@ void WaveformWidgetRenderer::draw( QPainter* painter, QPaintEvent* event) {
 #ifdef WAVEFORMWIDGETRENDERER_DEBUG
     m_lastSystemFrameTime = m_timer->restart();
 #endif
-
-    onPreRender();
 
     //not ready to display need to wait until track initialization is done
     //draw only first is stack (background)
@@ -210,7 +209,6 @@ void WaveformWidgetRenderer::draw( QPainter* painter, QPaintEvent* event) {
     m_lastSystemFramesTime[currentFrame] = m_lastSystemFrameTime;
     m_lastFramesTime[currentFrame] = m_lastFrameTime;
 #endif
-    qDebug() << "swap buffer" << m_group << QTime::currentTime().msec();
 }
 
 void WaveformWidgetRenderer::resize( int width, int height) {

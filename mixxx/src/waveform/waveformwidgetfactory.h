@@ -8,6 +8,7 @@
 #include "waveform/waveform.h"
 
 #include <QObject>
+#include <QTime>
 
 #include <vector>
 
@@ -15,7 +16,8 @@ class WWaveformViewer;
 class WaveformWidgetAbstract;
 class ControlObjectThreadMain;
 class QTimer;
-class QTime;
+class VSyncThread;
+
 
 class WaveformWidgetAbstractHandle {
   public:
@@ -141,8 +143,11 @@ class WaveformWidgetFactory : public QObject, public Singleton<WaveformWidgetFac
     QString m_openGLVersion;
     bool m_openGLShaderAvailable;
 
+    VSyncThread* m_vsyncThread;
+
     //Debug
-    QTime* m_time;
+    QTime m_time;
+    QTime m_delayTime;
     int m_lastFrameTime;
     int m_lastRenderDuration;
     double m_actualFrameRate;

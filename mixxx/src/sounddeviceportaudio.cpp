@@ -25,6 +25,7 @@
 #include "sounddeviceportaudio.h"
 #include "soundmanagerutil.h"
 #include "controlobject.h"
+#include "visualplayposition.h"
 
 SoundDevicePortAudio::SoundDevicePortAudio(ConfigObject<ConfigValue> *config, SoundManager *sm,
                                            const PaDeviceInfo *deviceInfo, unsigned int devIndex)
@@ -297,8 +298,10 @@ QString SoundDevicePortAudio::getError() const {
                  out of samples (ie. when it needs more sound to play)
         -------- ------------------------------------------------------
  */
-int SoundDevicePortAudio::callbackProcess(unsigned long framesPerBuffer, float *output, short *in)
-{
+int SoundDevicePortAudio::callbackProcess(unsigned long framesPerBuffer,
+        float *output, short *in, const PaStreamCallbackTimeInfo *timeInfo,
+        PaStreamCallbackFlags statusFlags) {
+
     //qDebug() << "SoundDevicePortAudio::callbackProcess:" << getInternalName();
 
     static ControlObject* pControlObjectVinylControlGain =
@@ -313,6 +316,8 @@ int SoundDevicePortAudio::callbackProcess(unsigned long framesPerBuffer, float *
         QThread::currentThread()->setPriority(QThread::TimeCriticalPriority);
         m_bSetThreadPriority = true;
     }
+
+    VisualPlayPosition::setTimeInfo(timeInfo);
 
     //Send audio from the soundcard's input off to the SoundManager...
     if (in && framesPerBuffer > 0)
@@ -344,8 +349,8 @@ int SoundDevicePortAudio::callbackProcess(unsigned long framesPerBuffer, float *
     {
         assert(iFrameSize > 0);
         QHash<AudioOutput, const CSAMPLE*> outputAudio
-            = m_pSoundManager->requestBuffer(m_audioOutputs, framesPerBuffer,
-                                             this, Pa_GetStreamTime(m_pStream));
+            = m_pSoundManager->requestBuffer(m_audioOutputs,
+                    framesPerBuffer, this);
 
         // Reset sample for each open channel
         memset(output, 0, framesPerBuffer * iFrameSize * sizeof(*output));
@@ -402,24 +407,8 @@ int paV19Callback(const void *inputBuffer, void *outputBuffer,
                   unsigned long framesPerBuffer,
                   const PaStreamCallbackTimeInfo *timeInfo,
                   PaStreamCallbackFlags statusFlags,
-                  void *soundDevice)
-{
-    /*
-       //Variables that are used in the human-readable form of function call from hell (below).
-       static PlayerPortAudio* _player;
-       static int devIndex;
-       _player = ((PAPlayerCallbackStuff*)_callbackStuff)->player;
-       devIndex = ((PAPlayerCallbackStuff*)_callbackStuff)->devIndex;
-     */
-    // these two are unused for now, suppressing compiler warnings -bkgood
-    Q_UNUSED(timeInfo);
-    Q_UNUSED(statusFlags);
-
-    //Human-readable form of the function call from hell:
-    //return _player->callbackProcess(framesPerBuffer, (float *)outputBuffer, devIndex);
-
+                  void *soundDevice) {
     return ((SoundDevicePortAudio*) soundDevice)->callbackProcess(framesPerBuffer,
-            (float*) outputBuffer, (short*) inputBuffer);
-//    return ((SoundDevicePortAudio*)_callbackStuff)->callbackProcess(framesPerBuffer, (float*) outputBuffer, (short*) inputBuffer);
+            (float*) outputBuffer, (short*) inputBuffer, timeInfo, statusFlags);
 }
 

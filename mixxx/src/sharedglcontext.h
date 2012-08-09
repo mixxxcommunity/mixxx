@@ -1,15 +1,15 @@
 #ifndef SHAREDGLCONTEXT_H_
 #define SHAREDGLCONTEXT_H_
 
-class QGLContext;
+class QGLWidget;
 
 class SharedGLContext 
 {
     public:
-        static QGLContext* getContext();
+        static const QGLWidget* getShareWidget();
     private:
         SharedGLContext() { };
-        static QGLContext* s_pSharedGLContext;
+        static QGLWidget* s_pShareWidget;
 };
 
 #endif //SHAREDGLCONTEXT_H_

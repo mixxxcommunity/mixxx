@@ -8,7 +8,7 @@
 #include "visualplayposition.h"
 
 WSpinny::WSpinny(QWidget* parent, VinylControlManager* pVCMan)
-        : QGLWidget(SharedGLContext::getContext(), parent),
+        : QGLWidget(parent, SharedGLContext::getShareWidget()),
           m_pBG(NULL),
           m_pFG(NULL),
           m_pGhost(NULL),
@@ -209,7 +209,7 @@ void WSpinny::paintEvent(QPaintEvent *e)
 
     if (m_pFG && !m_pFG->isNull()) {
         //Now rotate the pixmap and draw it on the screen.
-        p.rotate(calculateAngle(m_pVisualPlayPos->get()));
+        p.rotate(calculateAngle(m_pVisualPlayPos->getAt(QTime::currentTime())));
         p.drawImage(-(width() / 2), -(height() / 2), m_pFG->toImage());
     }
 

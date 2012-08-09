@@ -13,7 +13,7 @@
 #include "sharedglcontext.h"
 
 GLSLWaveformWidget::GLSLWaveformWidget( const char* group, QWidget* parent)
-        : QGLWidget(SharedGLContext::getContext(), parent),
+        : QGLWidget(parent, SharedGLContext::getShareWidget()),
           WaveformWidgetAbstract(group) {
 
     addRenderer<WaveformRenderBackground>();

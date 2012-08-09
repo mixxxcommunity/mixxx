@@ -80,11 +80,11 @@ void EnginePregain::process(const CSAMPLE* pIn, const CSAMPLE* pOut, const int i
             // Do not fade when its the initial setup from m_fCurrentReplayGain = 0.0f
             if (m_fadeOffset == 0) {
                 m_fadeOffset = replayGainCorrection - m_fReplayGainCorrection;
-                m_fadeStart = clock();
+                m_fadeStart = QTime::currentTime();
             }
 
-            // fade duration 1 second
-            float fade_multi = ((float)(clock() - m_fadeStart)) / CLOCKS_PER_SEC;
+            // fade duration 3 second
+            float fade_multi = ((float)m_fadeStart.msecsTo(QTime::currentTime())) / 3000;
             if (fade_multi < 1.0f && m_fCurrentReplayGain > 0.0f) {
                 //Fade smoothly
                 m_fReplayGainCorrection = replayGainCorrection

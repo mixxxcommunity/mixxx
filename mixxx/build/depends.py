@@ -553,6 +553,7 @@ class MixxxCore(Feature):
                    "waveform/waveform.cpp",
                    "waveform/waveformfactory.cpp",
                    "waveform/waveformwidgetfactory.cpp",
+                   "waveform/vsyncthread.cpp", 
                    "waveform/renderers/waveformwidgetrenderer.cpp",
                    "waveform/renderers/waveformrendererabstract.cpp",
                    "waveform/renderers/waveformrenderbackground.cpp",

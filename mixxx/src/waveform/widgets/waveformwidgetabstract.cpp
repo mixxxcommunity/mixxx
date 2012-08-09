@@ -25,8 +25,8 @@ void WaveformWidgetAbstract::release() {
     }
 }
 
-void WaveformWidgetAbstract::preRender() {
-    WaveformWidgetRenderer::onPreRender();
+void WaveformWidgetAbstract::preRender(const QTime& posTime) {
+    WaveformWidgetRenderer::onPreRender(posTime);
 }
 
 void WaveformWidgetAbstract::render() {
@@ -34,7 +34,8 @@ void WaveformWidgetAbstract::render() {
         if (!m_widget->isVisible()) {
             m_widget->show();
         }
-        m_widget->update();
+        //m_widget->update();
+        m_widget->repaint(); // Repaints the widget directly by calling paintEvent()
     }
 }
 

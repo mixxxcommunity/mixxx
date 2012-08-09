@@ -515,8 +515,7 @@ void SoundManager::checkConfig() {
 //Requests a buffer in the proper format, if we're prepared to give one.
 QHash<AudioOutput, const CSAMPLE*>
 SoundManager::requestBuffer(QList<AudioOutput> outputs,
-    unsigned long iFramesPerBuffer, SoundDevice* device,
-    double streamTime /* = 0 */)
+    unsigned long iFramesPerBuffer, SoundDevice* device)
 {
     Q_UNUSED(outputs); // unused, we just give the caller the full hash -bkgood
     //qDebug() << "SoundManager::requestBuffer()";

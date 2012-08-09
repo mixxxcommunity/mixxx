@@ -10,7 +10,7 @@
 #include "util.h"
 #include "waveform/renderers/waveformrendererabstract.h"
 
-#define WAVEFORMWIDGETRENDERER_DEBUG
+// #define WAVEFORMWIDGETRENDERER_DEBUG
 
 class TrackInfoObject;
 class ControlObjectThreadMain;
@@ -29,7 +29,7 @@ public:
     virtual bool onInit() {return true;}
 
     void setup(const QDomNode& node);
-    void onPreRender();
+    void onPreRender(const QTime& posTime);
     void draw(QPainter* painter, QPaintEvent* event);
 
     const char* getGroup() const { return m_group;}
@@ -54,6 +54,7 @@ public:
     double transformPositionInRendererWorld(double position) const;
 
     double getPlayPos() const { return m_playPos;}
+    double getPlayPosVSample() const { return m_playPosVSample;}
     double getZoomFactor() const { return m_zoomFactor;}
     double getRateAdjust() const { return m_rateAdjust;}
     double getGain() const { return m_gain;}
@@ -94,6 +95,7 @@ protected:
     //ControlConnection
     VisualPlayPosition* m_visualPlayPosition;
     double m_playPos;
+    int m_playPosVSample;
     ControlObjectThreadMain* m_rateControlObject;
     double m_rate;
     ControlObjectThreadMain* m_rateRangeControlObject;

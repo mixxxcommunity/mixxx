@@ -17,6 +17,8 @@
 #ifndef ENGINEPREGAIN_H
 #define ENGINEPREGAIN_H
 
+#include <QTime>
+
 #include "engine/engineobject.h"
 #include "controlobject.h"
 
@@ -42,7 +44,7 @@ private:
     bool m_bSmoothFade;
     float m_fCurrentReplayGain;
     float m_fadeOffset;
-    clock_t m_fadeStart;
+    QTime m_fadeStart;
 
 };
 

@@ -29,25 +29,26 @@ void WaveformRendererPreroll::draw(QPainter* painter, QPaintEvent* event) {
     if (!track) {
         return;
     }
-    const Waveform* waveform = track->getWaveform();
+
     int samplesPerPixel = m_waveformRenderer->getVisualSamplePerPixel();
     int numberOfSamples = m_waveformRenderer->getWidth() * samplesPerPixel;
 
-    int currentPosition = 0;
-
-    //TODO (vRince) not really accurate since waveform size une visual reasampling and
-    //have two mores samples to hold the complete visual data
-    currentPosition = m_waveformRenderer->getPlayPos()*waveform->getDataSize();
-    m_waveformRenderer->regulateVisualSample(currentPosition);
+    // TODO (vRince) not really accurate since waveform size une visual reasampling and
+    // have two mores samples to hold the complete visual data
+    int currentPosition = m_waveformRenderer->getPlayPosVSample();
+    // m_waveformRenderer->regulateVisualSample(currentPosition);
 
     // Some of the pre-roll is on screen. Draw little triangles to indicate
     // where the pre-roll is located.
     if (currentPosition < numberOfSamples) {
         painter->save();
+        painter->setRenderHint(QPainter::Antialiasing);
+        //painter->setRenderHint(QPainter::HighQualityAntialiasing);
+        //painter->setBackgroundMode(Qt::TransparentMode);
         painter->setWorldMatrixEnabled(false);
         painter->setPen(QPen(QBrush(m_color), 1));
         double start_index = 0;
-        int end_index = (numberOfSamples - currentPosition) / 2.0;
+        int end_index = (numberOfSamples - currentPosition) / 2;
         QPolygonF polygon;
         const int polyWidth = 40.0 / samplesPerPixel;
         const float halfHeight = m_waveformRenderer->getHeight()/2.0;
@@ -55,13 +56,13 @@ void WaveformRendererPreroll::draw(QPainter* painter, QPaintEvent* event) {
         polygon << QPointF(0, halfHeight)
                 << QPointF(-polyWidth, halfHeight - halfPolyHeight)
                 << QPointF(-polyWidth, halfHeight + halfPolyHeight);
-        polygon.translate(end_index/samplesPerPixel, 0);
+        polygon.translate(((qreal)end_index)/samplesPerPixel, 0);
 
         int index = end_index;
         while (index > start_index) {
             painter->drawPolygon(polygon);
-            polygon.translate(-polyWidth, 0);
-            index -= polyWidth;
+            polygon.translate(-(polyWidth+1), 0);
+            index -= (polyWidth+1);
         }
         painter->restore();
     }

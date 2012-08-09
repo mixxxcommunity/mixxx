@@ -1,22 +1,19 @@
-#include <QGLContext>
+#include <QGLWidget>
 #include <QGLFormat>
 #include "sharedglcontext.h"
+#include <qdebug.h>
 
-/** Singleton wrapper around QGLContext */
+// Singleton wrapper around QGLWidget
 
-QGLContext* SharedGLContext::s_pSharedGLContext = (QGLContext*)NULL;
+// static
+QGLWidget* SharedGLContext::s_pShareWidget = NULL;
 
-QGLContext* SharedGLContext::getContext() {
-    if (s_pSharedGLContext == (QGLContext*)NULL) {
-        // QGLFormat::setDoubleBuffer()
-        s_pSharedGLContext = new QGLContext(QGLFormat::defaultFormat());
-        // Note: We have no valid painting device yet
+// static
+const QGLWidget* SharedGLContext::getShareWidget() {
+    if (s_pShareWidget == NULL) {
+        // defaultFormat is configured in WaveformWidgetFactory::WaveformWidgetFactory();
+        s_pShareWidget = new QGLWidget(QGLFormat::defaultFormat());
+        qDebug() << "swap intervall" << QGLFormat::defaultFormat().swapInterval();
     }
-    // http://lists.trolltech.com/qt-interest/2006-04/msg00313.html
-
-    QGLContext* ctxt = new QGLContext(QGLFormat::defaultFormat());
-    // note: We have still no valid painting device
-    // create() is called from QGLWidget::setContext later
-    //ctxt->create(s_pSharedGLContext);
-    return ctxt;
+    return s_pShareWidget;
 }

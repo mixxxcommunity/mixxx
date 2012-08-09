@@ -14,7 +14,7 @@
 #include "sharedglcontext.h"
 
 GLWaveformWidget::GLWaveformWidget( const char* group, QWidget* parent)
-        : QGLWidget(SharedGLContext::getContext(), parent),
+        : QGLWidget(parent, SharedGLContext::getShareWidget()),
           WaveformWidgetAbstract(group) {
 
     addRenderer<WaveformRenderBackground>();
@@ -28,7 +28,7 @@ GLWaveformWidget::GLWaveformWidget( const char* group, QWidget* parent)
     setAttribute(Qt::WA_NoSystemBackground);
     setAttribute(Qt::WA_OpaquePaintEvent);
 
-    // setAutoBufferSwap(false);
+    setAutoBufferSwap(false);
 
     if (QGLContext::currentContext() != context()) {
         makeCurrent();
@@ -52,5 +52,5 @@ void GLWaveformWidget::paintEvent( QPaintEvent* event) {
 }
 
 void GLWaveformWidget::postRender() {
-    // QGLWidget::swapBuffers();
+    QGLWidget::swapBuffers();
 }

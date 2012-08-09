@@ -61,7 +61,7 @@ public:
     void checkConfig();
     QHash<AudioOutput, const CSAMPLE*> requestBuffer(
         QList<AudioOutput> outputs, unsigned long iFramesPerBuffer,
-        SoundDevice *device, double streamTime = 0);
+        SoundDevice *device);
     void pushBuffer(QList<AudioInput> inputs, short *inputBuffer,
         unsigned long iFramesPerBuffer, unsigned int iFrameSize);
     void registerOutput(AudioOutput output, const AudioSource *src);

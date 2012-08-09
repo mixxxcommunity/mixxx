@@ -19,6 +19,7 @@
 #include "waveform/widgets/glslwaveformwidget.h"
 #include "waveform/widgets/waveformwidgetabstract.h"
 #include "widget/wwaveformviewer.h"
+#include "waveform/vsyncthread.h"
 
 ///////////////////////////////////////////
 
@@ -49,7 +50,6 @@ WaveformWidgetFactory::WaveformWidgetFactory() :
         m_overviewNormalized(false),
         m_openGLAvailable(false),
         m_openGLShaderAvailable(false),
-        m_time(new QTime()),
         m_lastFrameTime(0), 
         m_actualFrameRate(0),
         m_minimumFrameRate(1000),
@@ -59,6 +59,9 @@ WaveformWidgetFactory::WaveformWidgetFactory() :
     m_visualGain[Low] = 1.0;
     m_visualGain[Mid] = 1.0;
     m_visualGain[High] = 1.0;
+
+
+    m_lastRenderDuration = 0;
 
     if (QGLFormat::hasOpenGL()) {
         QGLFormat glFormat;
@@ -117,11 +120,19 @@ WaveformWidgetFactory::WaveformWidgetFactory() :
     }
 
     evaluateWidgets();
+
+    //m_vsyncThread = new VSyncThread();
+    //m_vsyncThread->start();
+
+    //connect(m_vsyncThread, SIGNAL(vsync()),
+    //        this, SLOT(refresh()), Qt::BlockingQueuedConnection);
+
+
     start();
 }
 
 WaveformWidgetFactory::~WaveformWidgetFactory() {
-    delete m_time;
+    //delete m_vsyncThread;
 }
 
 bool WaveformWidgetFactory::setConfig(ConfigObject<ConfigValue> *config){
@@ -183,7 +194,8 @@ bool WaveformWidgetFactory::setConfig(ConfigObject<ConfigValue> *config){
 void WaveformWidgetFactory::start() {
     //qDebug() << "WaveformWidgetFactory::start";
     killTimer(m_mainTimerId);
-    m_mainTimerId = startTimer(1000.0/double(m_frameRate));
+    m_mainTimerId = startTimer(1000/m_frameRate);
+    m_delayTime = QTime::currentTime();
 }
 
 void WaveformWidgetFactory::stop() {
@@ -234,6 +246,7 @@ bool WaveformWidgetFactory::setWaveformWidget(WWaveformViewer* viewer, const QDo
     }
 
     viewer->setZoom(m_defaultZoom);
+    viewer->update();
 
     qDebug() << "WaveformWidgetFactory::setWaveformWidget - waveform widget added in factory, index" << index;
 
@@ -241,7 +254,7 @@ bool WaveformWidgetFactory::setWaveformWidget(WWaveformViewer* viewer, const QDo
 }
 
 void WaveformWidgetFactory::setFrameRate(int frameRate) {
-    m_frameRate = math_min(60, math_max(10, frameRate));
+    m_frameRate = math_min(120, math_max(1, frameRate));
     if (m_config) {
         m_config->set(ConfigKey("[Waveform]","FrameRate"), ConfigValue(m_frameRate));
     }
@@ -312,7 +325,7 @@ bool WaveformWidgetFactory::setWidgetTypeFromHandle(int handleIndex) {
         //viewer->resize(viewer->size());
         widget->resize(viewer->width(), viewer->height());
         widget->setTrack(pTrack);
-
+        viewer->update();
         m_maximumlFrameRate = 0;
         m_minimumFrameRate = 2000;
     }
@@ -383,33 +396,65 @@ void WaveformWidgetFactory::refresh() {
     if (m_skipRender)
         return;
 
-    int startTime = m_time->elapsed();
+    m_lastFrameTime = m_time.restart();
 
-    for (unsigned int i = 0; i < m_waveformWidgetHolders.size(); i++)
-        // m_waveformWidgetHolders[i].m_waveformWidget->preRender();
+    //qDebug() << "refresh()" << QTime::currentTime().msec() << m_lastFrameTime;
 
-    for (unsigned int i = 0; i < m_waveformWidgetHolders.size(); i++)
-        m_waveformWidgetHolders[i].m_waveformWidget->render();
+    //int startTime;
 
-    for (unsigned int i = 0; i < m_waveformWidgetHolders.size(); i++)
-        m_waveformWidgetHolders[i].m_waveformWidget->postRender();
+    if (m_type) {   // no regular updates for an empty waveform
+        // Show rendered buffer from last run
+        for (unsigned int i = 0; i < m_waveformWidgetHolders.size(); i++) {
+            // Show rendered buffer from last run
+            m_waveformWidgetHolders[i].m_waveformWidget->postRender();
+        }
+        QTime now = QTime::currentTime();
+        int frame_time = 1000 / m_frameRate;
+        int delay = m_delayTime.msecsTo(now) % frame_time;
+
+        if (delay > 16) {
+            // We have already lost at least one  Vsync
+            start();
+            //qDebug() << "refresh (frame lost)" << QTime::currentTime().msec() << delay;
+            m_lastRenderDuration++;
+            delay = 0;
+        } else {
+            //qDebug() << "refresh" << QTime::currentTime().msec() << delay;
+        }
+
+        QTime nextFrameTime = now.addMSecs(16-delay);
+
+        for (unsigned int i = 0; i < m_waveformWidgetHolders.size(); i++) {
+            // Calculate play position for the new Frame in following run
+            m_waveformWidgetHolders[i].m_waveformWidget->preRender(nextFrameTime);
+        }
+    }
+
+    // Now the time uncritically time consuming things
 
     // Notify all other waveform-like widgets (e.g. WSpinny's) that they should
     // update.
     emit(waveformUpdateTick());
 
-    m_lastFrameTime = m_time->restart();
-    m_lastRenderDuration = startTime;
+
+    if (m_type) {   // no regular updates for an empty waveform
+        for (unsigned int i = 0; i < m_waveformWidgetHolders.size(); i++) {
+            m_waveformWidgetHolders[i].m_waveformWidget->render();
+        }
+    }
+
+    // m_lastRenderDuration = startTime;
 
     if (m_lastFrameTime && m_lastFrameTime <= 1000) {
         m_actualFrameRate = 1000.0/(double)(m_lastFrameTime);
 
-        if ( m_minimumFrameRate > m_actualFrameRate) {
+        if (m_minimumFrameRate > m_actualFrameRate) {
             m_minimumFrameRate = m_actualFrameRate;
         } else if (m_maximumlFrameRate < m_actualFrameRate) {
             m_maximumlFrameRate = m_actualFrameRate;
         }
     }
+    //qDebug() << "refresh end" << m_time.elapsed();
 }
 
 WaveformWidgetType::Type WaveformWidgetFactory::autoChooseWidgetType() const {
