@@ -99,16 +99,9 @@ void EnginePregain::process(const CSAMPLE* pIn, const CSAMPLE* pOut, const int i
     }
     m_fCurrentReplayGain = fReplayGain;
 
-        // Here is the point, when ReplayGain Analyser takes its action, suggested gain changes from 0 to a nonzero value
-        // We want to smoothly fade to this last.
-        // Anyway we have some the problem that code cannot block the full process for one second.
-        // So we need to alter gain each time ::process is called.
-
-    fGain = fGain * m_fReplayGainCorrection;
-
     // Clamp gain to within [0, 2.0] to prevent insane gains. This can happen
     // (some corrupt files get really high replaygain values).
-    fGain = math_max(0.0, math_min(2.0, fGain));
+    fGain = fGain * math_max(0.0, math_min(2.0, m_fReplayGainCorrection));
 
     m_pTotalGain->set(fGain);
 
