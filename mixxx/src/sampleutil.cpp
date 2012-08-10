@@ -709,6 +709,42 @@ void SampleUtil::sumAbsPerChannel(CSAMPLE* pfAbsL, CSAMPLE* pfAbsR,
     *pfAbsR = fAbsR;
 }
 
+// static
+bool SampleUtil::sumAbsPerChannelAndClamp(CSAMPLE* pfAbsL,
+        CSAMPLE* pfAbsR, CSAMPLE fMax, CSAMPLE* pBuffer, int iNumSamples) {
+    Q_ASSERT(iNumSamples % 2 == 0);
+    if (m_sOptimizationsOn) {
+        sseSumAbsPerChannel(pfAbsL, pfAbsR, pBuffer, iNumSamples);
+        return sseCopyClampBuffer(fMax, -fMax, pBuffer, pBuffer, iNumSamples);
+    }
+
+    CSAMPLE fAbsL = 0.0f;
+    CSAMPLE fAbsR = 0.0f;
+    CSAMPLE fAbs;
+    bool clamped = false;
+
+    for (int i = 0; i < iNumSamples; i += 2) {
+        fAbs = fabs(pBuffer[i]);
+        fAbsL += fabs(pBuffer[i]);
+        if (fAbs > fMax) {
+            clamped = true;
+            pBuffer[i] = fMax;
+        }
+
+        fAbs = fabs(pBuffer[i+1]);
+        fAbsR += fabs(pBuffer[i+1]);
+        if (fAbs > fMax) {
+            clamped = true;
+            pBuffer[i+1] = fMax;
+        }
+    }
+
+    *pfAbsL = fAbsL;
+    *pfAbsR = fAbsR;
+    return clamped;
+}
+
+
 void SampleUtil::sseSumAbsPerChannel(CSAMPLE* pfAbsL, CSAMPLE* pfAbsR,
                                      const CSAMPLE* pBuffer, int iNumSamples) {
 #ifdef __SSE__

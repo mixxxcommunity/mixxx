@@ -7,7 +7,6 @@
 #include "circularbuffer.h"
 #include "controlpushbutton.h"
 #include "engine/enginechannel.h"
-#include "engine/engineclipping.h"
 #include "engine/enginevumeter.h"
 #include "soundmanagerutil.h"
 
@@ -42,7 +41,6 @@ class EngineMicrophone : public EngineChannel, public AudioDestination {
     double getSoloDamping();
 
   private:
-    EngineClipping m_clipping;
     EngineVuMeter m_vuMeter;
     ControlObject* m_pEnabled;
     ControlPushButton* m_pControlTalkover;

@@ -10,7 +10,6 @@
 
 EngineMicrophone::EngineMicrophone(const char* pGroup)
         : EngineChannel(pGroup, EngineChannel::CENTER),
-          m_clipping(pGroup),
           m_vuMeter(pGroup),
           m_pEnabled(new ControlObject(ConfigKey(pGroup, "enabled"))),
           m_pControlTalkover(new ControlPushButton(ConfigKey(pGroup, "talkover"))),
@@ -123,8 +122,6 @@ void EngineMicrophone::process(const CSAMPLE* pInput, const CSAMPLE* pOutput, co
         m_sampleBuffer.skip(iBufferSize);
     }
 
-    // Apply clipping
-    m_clipping.process(pOut, pOut, iBufferSize);
-    // Update VU meter
+    // Update VU meter and Apply clipping
     m_vuMeter.process(pOut, pOut, iBufferSize);
 }

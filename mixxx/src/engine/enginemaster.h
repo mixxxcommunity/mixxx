@@ -147,7 +147,7 @@ class EngineMaster : public EngineObject, public AudioSource {
     ControlObject* m_pMasterSampleRate;
     ControlObject* m_pMasterLatency;
     ControlPotmeter* m_pMasterRate;
-    EngineClipping *clipping, *head_clipping;
+    EngineClipping* head_clipping;
 
 #ifdef __LADSPA__
     EngineLADSPA *ladspa;

@@ -33,6 +33,10 @@ EngineVuMeter::EngineVuMeter(const char * group) {
     // right channel VU meter
     m_ctrlVuMeterR = new ControlPotmeter(ConfigKey(group, "VuMeterR"), 0., 1.);
     m_ctrlVuMeterR->set(0);
+    // VU meter clipping indicator
+    m_ctrlClipping = new ControlPotmeter(ConfigKey(group, "PeakIndicator"), 0., 1.);
+    m_ctrlClipping->set(0);
+
 
     // Initialize the calculation:
     m_iSamplesCalculated = 0;
@@ -40,6 +44,7 @@ EngineVuMeter::EngineVuMeter(const char * group) {
     m_fRMSvolumeSumL = 0;
     m_fRMSvolumeR = 0;
     m_fRMSvolumeSumR = 0;
+    m_clamped = 0;
 }
 
 EngineVuMeter::~EngineVuMeter()
@@ -51,11 +56,20 @@ EngineVuMeter::~EngineVuMeter()
 
 void EngineVuMeter::process(const CSAMPLE * pIn, const CSAMPLE *, const int iBufferSize)
 {
-
+    CSAMPLE* pInOut = (CSAMPLE*)pIn;
     CSAMPLE fVolSumL, fVolSumR;
-    SampleUtil::sumAbsPerChannel(&fVolSumL, &fVolSumR, pIn, iBufferSize);
+    static const FLOAT_TYPE kfMaxAmp = 32767.;
+    bool clamped =
+    SampleUtil::sumAbsPerChannelAndClamp(&fVolSumL, &fVolSumR, kfMaxAmp, pInOut, iBufferSize);
     m_fRMSvolumeSumL += fVolSumL;
     m_fRMSvolumeSumR += fVolSumR;
+
+
+
+    if(clamped) {
+        // Switch clipping LED on for UPDATE_RATE / 5
+        m_clamped = 5;
+    }
 
     m_iSamplesCalculated += iBufferSize/2;
 
@@ -84,6 +98,17 @@ void EngineVuMeter::process(const CSAMPLE * pIn, const CSAMPLE *, const int iBuf
         m_iSamplesCalculated = 0;
         m_fRMSvolumeSumL = 0;
         m_fRMSvolumeSumR = 0;
+
+        if (m_clamped) {
+            if ( m_ctrlClipping->get() == 0) {
+                m_ctrlClipping->set(1.);
+            }
+            m_clamped--;
+        } else {
+            if ( m_ctrlClipping->get() == 1) {
+                m_ctrlClipping->set(0);
+            }
+        }
     }
 }
 

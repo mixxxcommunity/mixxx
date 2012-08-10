@@ -39,11 +39,13 @@ private:
     ControlPotmeter *m_ctrlVuMeter;
     ControlPotmeter *m_ctrlVuMeterL;
     ControlPotmeter *m_ctrlVuMeterR;
+    ControlPotmeter *m_ctrlClipping;
     FLOAT_TYPE m_fRMSvolumeL;
     FLOAT_TYPE m_fRMSvolumeSumL;
     FLOAT_TYPE m_fRMSvolumeR;
     FLOAT_TYPE m_fRMSvolumeSumR;
     int m_iSamplesCalculated;
+    int m_clamped;
 
     void doSmooth(FLOAT_TYPE &currentVolume, FLOAT_TYPE newVolume);
 };

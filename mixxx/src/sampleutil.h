@@ -135,6 +135,10 @@ class SampleUtil {
     static void sumAbsPerChannel(CSAMPLE* pfAbsL, CSAMPLE* pfAbsR,
                                  const CSAMPLE* pBuffer, int iNumSamples);
 
+    // The same as above with additional clamping
+    static bool sumAbsPerChannelAndClamp(CSAMPLE* pfAbsL, CSAMPLE* pfAbsR, CSAMPLE fMax,
+                                 CSAMPLE* pBuffer, int iNumSamples);
+
     // Returns true if the buffer contains any samples outside of the range
     // [fMin,fMax].
     static bool isOutsideRange(CSAMPLE fMax, CSAMPLE fMin,

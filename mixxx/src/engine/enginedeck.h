@@ -26,7 +26,6 @@ class EngineBuffer;
 class EnginePregain;
 class EngineBuffer;
 class EngineFilterBlock;
-class EngineClipping;
 class EngineFlanger;
 class EngineVuMeter;
 class EngineVinylSoundEmu;
@@ -48,7 +47,6 @@ class EngineDeck : public EngineChannel {
   private:
     ConfigObject<ConfigValue>* m_pConfig;
     EngineBuffer* m_pBuffer;
-    EngineClipping* m_pClipping;
     EngineFilterBlock* m_pFilter;
     EngineFlanger* m_pFlanger;
     EnginePregain* m_pPregain;

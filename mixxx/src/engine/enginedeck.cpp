@@ -34,7 +34,6 @@ EngineDeck::EngineDeck(const char* group,
     m_pPregain = new EnginePregain(group);
     m_pFilter = new EngineFilterBlock(group);
     m_pFlanger = new EngineFlanger(group);
-    m_pClipping = new EngineClipping(group);
     m_pBuffer = new EngineBuffer(group, pConfig);
     m_pVinylSoundEmu = new EngineVinylSoundEmu(pConfig, group);
     m_pVUMeter = new EngineVuMeter(group);
@@ -42,7 +41,6 @@ EngineDeck::EngineDeck(const char* group,
 
 EngineDeck::~EngineDeck() {
     delete m_pBuffer;
-    delete m_pClipping;
     delete m_pFilter;
     delete m_pFlanger;
     delete m_pPregain;
@@ -61,9 +59,7 @@ void EngineDeck::process(const CSAMPLE*, const CSAMPLE * pOut, const int iBuffer
     m_pFilter->process(pOut, pOut, iBufferSize);
     // TODO(XXX) LADSPA
     m_pFlanger->process(pOut, pOut, iBufferSize);
-    // Apply clipping
-    m_pClipping->process(pOut, pOut, iBufferSize);
-    // Update VU meter
+    // Update VU meter and clamp
     m_pVUMeter->process(pOut, pOut, iBufferSize);
 }
 

@@ -99,9 +99,10 @@ void EnginePregain::process(const CSAMPLE* pIn, const CSAMPLE* pOut, const int i
     }
     m_fCurrentReplayGain = fReplayGain;
 
-    // Clamp gain to within [0, 2.0] to prevent insane gains. This can happen
-    // (some corrupt files get really high replaygain values).
-    fGain = fGain * math_max(0.0, math_min(2.0, m_fReplayGainCorrection));
+    // Clamp gain to within [0, 10.0] to prevent insane gains. This can happen
+    // (some corrupt files get really high replay gain values).
+    // 10 allows a maximum replay Gain Boost * calculated replay gain of ~2
+    fGain = fGain * math_max(0.0, math_min(10.0, m_fReplayGainCorrection));
 
     m_pTotalGain->set(fGain);
 

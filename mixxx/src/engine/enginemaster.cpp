@@ -72,9 +72,6 @@ EngineMaster::EngineMaster(ConfigObject<ConfigValue> * _config,
     // Master volume
     m_pMasterVolume = new ControlLogpotmeter(ConfigKey(group, "volume"), 5.);
 
-    // Clipping
-    clipping = new EngineClipping(group);
-
     // VU meter:
     vumeter = new EngineVuMeter(group);
 
@@ -87,7 +84,7 @@ EngineMaster::EngineMaster(ConfigObject<ConfigValue> * _config,
     head_mix->set(-1.);
 
     // Headphone Clipping
-    head_clipping = new EngineClipping("");
+    head_clipping = new EngineClipping();
 
     // Allocate buffers
     m_pHead = SampleUtil::alloc(MAX_BUFFER_LEN);
@@ -133,7 +130,6 @@ EngineMaster::~EngineMaster()
     delete head_mix;
     delete m_pMasterVolume;
     delete m_pHeadVolume;
-    delete clipping;
     delete vumeter;
     delete head_clipping;
     delete sidechain;
@@ -414,9 +410,6 @@ void EngineMaster::process(const CSAMPLE *, const CSAMPLE *pOut, const int iBuff
     ladspa->process(m_pMaster, m_pMaster, iBufferSize);
 #endif
 
-    // Clipping
-    clipping->process(m_pMaster, m_pMaster, iBufferSize);
-
     // Balance values
     float balright = 1.;
     float balleft = 1.;
@@ -429,8 +422,8 @@ void EngineMaster::process(const CSAMPLE *, const CSAMPLE *pOut, const int iBuff
     // Perform balancing on main out
     SampleUtil::applyAlternatingGain(m_pMaster, balleft, balright, iBufferSize);
 
-    // Update VU meter (it does not return anything). Needs to be here so that
-    // master balance is reflected in the VU meter.
+    // Update VU meter and apply clipping.
+    // Needs to be here so that master balance is reflected in the VU meter.
     if (vumeter != NULL)
         vumeter->process(m_pMaster, m_pMaster, iBufferSize);
 
