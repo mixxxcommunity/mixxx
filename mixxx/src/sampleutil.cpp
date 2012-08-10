@@ -725,17 +725,25 @@ bool SampleUtil::sumAbsPerChannelAndClamp(CSAMPLE* pfAbsL,
 
     for (int i = 0; i < iNumSamples; i += 2) {
         fAbs = fabs(pBuffer[i]);
-        fAbsL += fabs(pBuffer[i]);
+        fAbsL += fAbs;
         if (fAbs > fMax) {
             clamped = true;
-            pBuffer[i] = fMax;
+            if (pBuffer[i] < 0) {
+                pBuffer[i] = -fMax;
+            } else {
+                pBuffer[i] = fMax;
+            }
         }
 
         fAbs = fabs(pBuffer[i+1]);
-        fAbsR += fabs(pBuffer[i+1]);
+        fAbsR += fAbs;
         if (fAbs > fMax) {
             clamped = true;
-            pBuffer[i+1] = fMax;
+            if (pBuffer[i] < 0) {
+                pBuffer[i] = -fMax;
+            } else {
+                pBuffer[i] = fMax;
+            }
         }
     }
 
