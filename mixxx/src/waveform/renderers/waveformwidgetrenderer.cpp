@@ -6,7 +6,7 @@
 #include "controlobject.h"
 #include "defs.h"
 #include "visualplayposition.h"
-#include "math.h"
+#include "mathstuff.h"
 
 #include <QPainter>
 
