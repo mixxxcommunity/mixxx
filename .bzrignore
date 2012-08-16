@@ -198,3 +198,11 @@ osx64_build/waveform
 osx64_build/widget
 osx64_build/xmlparse.o
 mixxx/.sconf_temp
+.DS_Store
+res/controllers/Nintendo Wiimote.hid.xml.OTHER
+src/library/autodjfeature.*.OTHER
+src/library/autodjfeature.h.OTHER
+src/library/autodjfeature.cpp.OTHER
+res/controllers/Sony SixxAxis.hid.xml.OTHER
+res/controllers/Pioneer CDJ HID.hid.xml.OTHER
+res/controllers/Hercules DJ Console Mk2.hid.xml.OTHER
