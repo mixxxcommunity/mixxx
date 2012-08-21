@@ -65,8 +65,11 @@ class SoundDevicePortAudio : public SoundDevice
 	    PaStreamParameters m_inputParams;
         /** A string describing the last PortAudio error to occur */
         QString m_lastError;
-  private:
-    bool m_bSetThreadPriority;
+
+        bool m_bSetThreadPriority;
+
+        ControlObject* m_pMasterUnderfowCount;
+        int m_undeflowUpdateCount;
 };
 
 

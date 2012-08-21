@@ -30,7 +30,9 @@
 SoundDevicePortAudio::SoundDevicePortAudio(ConfigObject<ConfigValue> *config, SoundManager *sm,
                                            const PaDeviceInfo *deviceInfo, unsigned int devIndex)
         : SoundDevice(config, sm),
-          m_bSetThreadPriority(false)
+          m_bSetThreadPriority(false),
+          m_pMasterUnderfowCount(NULL),
+          m_undeflowUpdateCount(0)
 {
     //qDebug() << "SoundDevicePortAudio::SoundDevicePortAudio()";
     m_deviceInfo = deviceInfo;
@@ -49,7 +51,9 @@ SoundDevicePortAudio::SoundDevicePortAudio(ConfigObject<ConfigValue> *config, So
 
 SoundDevicePortAudio::~SoundDevicePortAudio()
 {
-
+    if (m_pMasterUnderfowCount) {
+        delete m_pMasterUnderfowCount;
+    }
 }
 
 int SoundDevicePortAudio::open()
@@ -107,8 +111,8 @@ int SoundDevicePortAudio::open()
 
     //Get latency in milleseconds
     qDebug() << "framesPerBuffer:" << m_framesPerBuffer;
-    double latencyMSec = m_framesPerBuffer / m_dSampleRate * 1000;
-    qDebug() << "Requested sample rate: " << m_dSampleRate << "Hz, latency:" << latencyMSec << "ms";
+    double bufferMSec = m_framesPerBuffer / m_dSampleRate * 1000;
+    qDebug() << "Requested sample rate: " << m_dSampleRate << "Hz, latency:" << bufferMSec << "ms";
 
     qDebug() << "Output channels:" << m_outputParams.channelCount << "| Input channels:"
         << m_inputParams.channelCount;
@@ -148,12 +152,12 @@ int SoundDevicePortAudio::open()
     //Fill out the rest of the info.
     m_outputParams.device = m_devId;
     m_outputParams.sampleFormat = paFloat32;
-    m_outputParams.suggestedLatency = latencyMSec / 1000.0;
+    m_outputParams.suggestedLatency = bufferMSec / 1000.0;
     m_outputParams.hostApiSpecificStreamInfo = NULL;
 
     m_inputParams.device  = m_devId;
     m_inputParams.sampleFormat  = paInt16; //This is how our vinyl control stuff like samples.
-    m_inputParams.suggestedLatency = latencyMSec / 1000.0;
+    m_inputParams.suggestedLatency = bufferMSec / 1000.0;
     m_inputParams.hostApiSpecificStreamInfo = NULL;
 
     qDebug() << "Opening stream with id" << m_devId;
@@ -215,12 +219,8 @@ int SoundDevicePortAudio::open()
     // Get the actual details of the stream & update Mixxx's data
     const PaStreamInfo* streamDetails = Pa_GetStreamInfo(m_pStream);
     m_dSampleRate = streamDetails->sampleRate;
-    latencyMSec = streamDetails->outputLatency * 1000;
-    if (m_hostAPI == MIXXX_PORTAUDIO_ALSA_STRING) {
-        // This is a workaround for a PA Bug reported on https://bugs.launchpad.net/mixxx/+bug/884705
-        latencyMSec /= 2;
-    }
-    qDebug() << "   Actual sample rate: " << m_dSampleRate << "Hz, latency:" << latencyMSec << "ms";
+    double currentLatencyMSec = streamDetails->outputLatency * 1000;
+    qDebug() << "   Actual sample rate: " << m_dSampleRate << "Hz, latency:" << currentLatencyMSec << "ms";
 
     //Update the samplerate and latency ControlObjects, which allow the waveform view to properly correct
     //for the latency.
@@ -229,15 +229,27 @@ int SoundDevicePortAudio::open()
         new ControlObjectThreadMain(ControlObject::getControl(ConfigKey("[Master]","samplerate")));
     ControlObjectThreadMain* pControlObjectLatency =
         new ControlObjectThreadMain(ControlObject::getControl(ConfigKey("[Master]","latency")));
+    ControlObjectThreadMain* pControlObjectAudioBufferSize =
+        new ControlObjectThreadMain(ControlObject::getControl(ConfigKey("[Master]","audio_buffer_size")));
+    if (m_pMasterUnderfowCount == NULL) {
+        m_pMasterUnderfowCount = ControlObject::getControl(ConfigKey("[Master]", "undeflow_count"));
+    }
+    ControlObjectThreadMain* pMasterUnderfowCount =
+        new ControlObjectThreadMain(m_pMasterUnderfowCount);
 
-    pControlObjectLatency->slotSet(latencyMSec);
+
+    pControlObjectLatency->slotSet(currentLatencyMSec);
     pControlObjectSampleRate->slotSet(m_dSampleRate);
+    pControlObjectAudioBufferSize->slotSet(bufferMSec);
+    pMasterUnderfowCount->slotSet(0);
 
     //qDebug() << "SampleRate" << pControlObjectSampleRate->get();
     //qDebug() << "Latency" << pControlObjectLatency->get();
 
     delete pControlObjectLatency;
     delete pControlObjectSampleRate;
+    delete pControlObjectAudioBufferSize;
+    delete pMasterUnderfowCount;
     return OK;
 }
 
@@ -318,6 +330,15 @@ int SoundDevicePortAudio::callbackProcess(unsigned long framesPerBuffer,
     }
 
     VisualPlayPosition::setTimeInfo(timeInfo);
+    if (!m_undeflowUpdateCount) {
+        if (statusFlags & (paOutputUnderflow | paInputOverflow)) {
+            m_pMasterUnderfowCount->add(1);
+            m_undeflowUpdateCount = 40;
+        }
+    } else {
+        m_undeflowUpdateCount--;
+    }
+
 
     //Send audio from the soundcard's input off to the SoundManager...
     if (in && framesPerBuffer > 0)

@@ -30,7 +30,7 @@ class VisualPlayPosition
     QTime m_timeDac;
     int m_deltatime;
     QMutex m_mutex;
-    ControlObjectThreadMain* m_latency;
+    ControlObjectThreadMain* m_audioBufferSize;
     PaTime m_outputBufferDacTime;
 
     static QMap<QString, VisualPlayPosition*> m_listVisualPlayPosition;

@@ -17,8 +17,8 @@ QTime VisualPlayPosition::m_timeInfoTime;
 VisualPlayPosition::VisualPlayPosition() :
     m_playPos(-1) {
 
-    m_latency = new ControlObjectThreadMain(
-        ControlObject::getControl(ConfigKey("[Master]","latency")));
+    m_audioBufferSize = new ControlObjectThreadMain(
+        ControlObject::getControl(ConfigKey("[Master]","audio_buffer_size")));
 }
 
 VisualPlayPosition::~VisualPlayPosition() {
@@ -56,7 +56,7 @@ double VisualPlayPosition::getAt(const QTime& posTime) {
     if (m_playPos != -1) {
         int msecsToPosTime = m_timeDac.msecsTo(posTime);
         playPos = m_playPos;  // load playPos for the first sample in Buffer
-        playPos += m_positionStep * msecsToPosTime / m_latency->get() * m_rate;
+        playPos += m_positionStep * msecsToPosTime / m_audioBufferSize->get() * m_rate;
         //qDebug() << "delta Pos" << playPos - m_playPosOld << msecsToPosTime;
         m_playPosOld = playPos;
         return playPos;
