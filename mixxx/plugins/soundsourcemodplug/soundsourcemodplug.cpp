@@ -19,7 +19,9 @@
 #include <unistd.h>
 #include <QFile>
 
+/* read files in 256k chunks. Limit to 250 MB/file (~25min/track) */
 #define BUFFERSIZE 262144
+#define BUFFERSIZE_LIMIT 262144000
 
 namespace Mixxx {
 
@@ -103,11 +105,8 @@ int SoundSourceModPlug::open() {
     // temporary buffer to read samples
     char *tmpbuf = new char[BUFFERSIZE];
     int count = 1;
-    while (count != 0)
+    while ((count != 0) && (smplbuf.length() < BUFFERSIZE_LIMIT))
     {
-        // read module into memory as fast as possible
-        usleep(2000); // force sleep
-
         /* Read sample data into the buffer.  Returns the number of bytes read.  If the end
          * of the mod has been reached, zero is returned. */
         count = ModPlug::ModPlug_Read(file, tmpbuf, BUFFERSIZE);
@@ -200,8 +199,8 @@ int SoundSourceModPlug::parseHeader()
     }
     setComment(QString(ModPlug::ModPlug_GetMessage(file)));
     setTitle(QString(ModPlug::ModPlug_GetName(file)));
-//    setDuration(ModPlug::ModPlug_GetLength(file) / 1000);
-    setDuration(ModPlug::ModPlug_GetLength(file) >> 10);
+    setDuration(ModPlug::ModPlug_GetLength(file) / 1000);
+    // FIXME: BPM is always 0 when track is not running
     setBPM(ModPlug::ModPlug_GetCurrentTempo(file));
     return OK;
 }
