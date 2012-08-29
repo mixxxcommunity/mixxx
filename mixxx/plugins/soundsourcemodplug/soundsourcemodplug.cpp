@@ -44,12 +44,12 @@ SoundSourceModPlug::SoundSourceModPlug(QString qFilename) :
     settings.mFrequency = 44100;   /* Sampling rate - 11025, 22050, or 44100 */
     settings.mResamplingMode = ModPlug::MODPLUG_RESAMPLE_SPLINE;
 
-    settings.mStereoSeparation = 256; /* Stereo separation, 1 - 256 */
+    settings.mStereoSeparation = 128; /* Stereo separation, 1 - 256 */
     settings.mMaxMixChannels = 128; /* Maximum number of mixing channels (polyphony), 32 - 256 */
 
     settings.mReverbDepth = 0;    /* Reverb level 0(quiet)-100(loud)      */
     settings.mReverbDelay = 50;   /* Reverb delay in ms, usually 40-200ms */
-    settings.mBassAmount = 60;    /* XBass level 0(quiet)-100(loud)       */
+    settings.mBassAmount = 30;    /* XBass level 0(quiet)-100(loud)       */
     settings.mBassRange = 40;     /* XBass cutoff in Hz 10-100            */
     settings.mSurroundDepth = 0;  /* Surround level 0(quiet)-100(heavy)   */
     settings.mSurroundDelay = 5;  /* Surround delay in ms, usually 5-40ms */
