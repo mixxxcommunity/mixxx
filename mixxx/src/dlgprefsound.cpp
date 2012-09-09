@@ -91,9 +91,9 @@ DlgPrefSound::DlgPrefSound(QWidget *pParent, SoundManager *pSoundManager,
     connect(m_pSoundManager, SIGNAL(inputRegistered(AudioInput, AudioDestination*)),
             this, SLOT(loadSettings()));
 
-    m_pMasterUnderfowCount =
-                    new ControlObjectThreadMain(ControlObject::getControl(ConfigKey("[Master]", "undeflow_count")));
-    connect(m_pMasterUnderfowCount, SIGNAL(valueChanged(double)),
+    m_pMasterUnderflowCount =
+                    new ControlObjectThreadMain(ControlObject::getControl(ConfigKey("[Master]", "underflow_count")));
+    connect(m_pMasterUnderflowCount, SIGNAL(valueChanged(double)),
             this, SLOT(bufferUnderflow(double)));
 
     m_pMasterLatency =
@@ -103,7 +103,7 @@ DlgPrefSound::DlgPrefSound(QWidget *pParent, SoundManager *pSoundManager,
 }
 
 DlgPrefSound::~DlgPrefSound() {
-    delete m_pMasterUnderfowCount;
+    delete m_pMasterUnderflowCount;
     delete m_pMasterLatency;
 }
 

@@ -41,6 +41,9 @@
         <file>images/library/ic_library_cover_hide.png</file>
         <file>images/library/ic_library_zoom_in.png</file>
         <file>images/library/vinyl-record.png</file>
+        <file>shaders/computemaxsignal.frag</file>
+        <file>shaders/filteredsignal.frag</file>
+        <file>shaders/passthrough.vert</file>
         <file>translations/mixxx_ar.qm</file>
         <file>translations/mixxx_ast.qm</file>
         <file>translations/mixxx_bg.qm</file>

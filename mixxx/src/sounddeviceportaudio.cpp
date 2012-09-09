@@ -31,7 +31,7 @@ SoundDevicePortAudio::SoundDevicePortAudio(ConfigObject<ConfigValue> *config, So
                                            const PaDeviceInfo *deviceInfo, unsigned int devIndex)
         : SoundDevice(config, sm),
           m_bSetThreadPriority(false),
-          m_pMasterUnderfowCount(NULL),
+          m_pMasterUnderflowCount(NULL),
           m_undeflowUpdateCount(0)
 {
     //qDebug() << "SoundDevicePortAudio::SoundDevicePortAudio()";
@@ -51,8 +51,8 @@ SoundDevicePortAudio::SoundDevicePortAudio(ConfigObject<ConfigValue> *config, So
 
 SoundDevicePortAudio::~SoundDevicePortAudio()
 {
-    if (m_pMasterUnderfowCount) {
-        delete m_pMasterUnderfowCount;
+    if (m_pMasterUnderflowCount) {
+        delete m_pMasterUnderflowCount;
     }
 }
 
@@ -231,17 +231,16 @@ int SoundDevicePortAudio::open()
         new ControlObjectThreadMain(ControlObject::getControl(ConfigKey("[Master]","latency")));
     ControlObjectThreadMain* pControlObjectAudioBufferSize =
         new ControlObjectThreadMain(ControlObject::getControl(ConfigKey("[Master]","audio_buffer_size")));
-    if (m_pMasterUnderfowCount == NULL) {
-        m_pMasterUnderfowCount = ControlObject::getControl(ConfigKey("[Master]", "undeflow_count"));
+    if (m_pMasterUnderflowCount == NULL) {
+        m_pMasterUnderflowCount = ControlObject::getControl(ConfigKey("[Master]", "underflow_count"));
     }
-    ControlObjectThreadMain* pMasterUnderfowCount =
-        new ControlObjectThreadMain(m_pMasterUnderfowCount);
-
+    ControlObjectThreadMain* pMasterUnderflowCount =
+        new ControlObjectThreadMain(m_pMasterUnderflowCount);
 
     pControlObjectLatency->slotSet(currentLatencyMSec);
     pControlObjectSampleRate->slotSet(m_dSampleRate);
     pControlObjectAudioBufferSize->slotSet(bufferMSec);
-    pMasterUnderfowCount->slotSet(0);
+    pMasterUnderflowCount->slotSet(0);
 
     //qDebug() << "SampleRate" << pControlObjectSampleRate->get();
     //qDebug() << "Latency" << pControlObjectLatency->get();
@@ -249,7 +248,7 @@ int SoundDevicePortAudio::open()
     delete pControlObjectLatency;
     delete pControlObjectSampleRate;
     delete pControlObjectAudioBufferSize;
-    delete pMasterUnderfowCount;
+    delete pMasterUnderflowCount;
     return OK;
 }
 
@@ -332,7 +331,7 @@ int SoundDevicePortAudio::callbackProcess(unsigned long framesPerBuffer,
     VisualPlayPosition::setTimeInfo(timeInfo);
     if (!m_undeflowUpdateCount) {
         if (statusFlags & (paOutputUnderflow | paInputOverflow)) {
-            m_pMasterUnderfowCount->add(1);
+            m_pMasterUnderflowCount->add(1);
             m_undeflowUpdateCount = 40;
         }
     } else {

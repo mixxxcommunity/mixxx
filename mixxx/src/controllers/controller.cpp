@@ -34,10 +34,6 @@ QString Controller::defaultPreset() {
             .append(m_sDeviceName.replace(" ", "_") + presetExtension());
 }
 
-QString Controller::presetExtension() {
-    return CONTROLLER_PRESET_EXTENSION;
-}
-
 void Controller::startEngine()
 {
     if (debugging()) {
@@ -50,8 +46,7 @@ void Controller::startEngine()
     m_pEngine = new ControllerEngine(this);
 }
 
-void Controller::stopEngine()
-{
+void Controller::stopEngine() {
     if (debugging()) {
         qDebug() << "  Shutting down engine";
     }

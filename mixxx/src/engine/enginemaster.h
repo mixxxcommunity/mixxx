@@ -147,9 +147,9 @@ class EngineMaster : public EngineObject, public AudioSource {
     ControlObject* m_pMasterSampleRate;
     ControlObject* m_pMasterLatency;
     ControlObject* m_pMasterAudioBufferSize;
-    ControlObject* m_pMasterUnderfowCount;
+    ControlObject* m_pMasterUnderflowCount;
     ControlPotmeter* m_pMasterRate;
-    EngineClipping* head_clipping;
+    EngineClipping *clipping, *head_clipping;
 
 #ifdef __LADSPA__
     EngineLADSPA *ladspa;
@@ -158,7 +158,7 @@ class EngineMaster : public EngineObject, public AudioSource {
     EngineSideChain *sidechain;
 
     ControlPotmeter *crossfader, *head_mix, *m_pBalance,
-        *xFaderMode, *xFaderCurve, *xFaderCalibration;
+        *xFaderMode, *xFaderCurve, *xFaderCalibration, *xFaderReverse;
 
     ConstantGainCalculator m_headphoneGain;
 };

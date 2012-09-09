@@ -65,7 +65,7 @@ private:
     SoundManager *m_pSoundManager;
     PlayerManager *m_pPlayerManager;
     ConfigObject<ConfigValue> *m_pConfig;
-    ControlObjectThreadMain* m_pMasterUnderfowCount;
+    ControlObjectThreadMain* m_pMasterUnderflowCount;
     ControlObjectThreadMain* m_pMasterLatency;
     QList<SoundDevice*> m_inputDevices;
     QList<SoundDevice*> m_outputDevices;

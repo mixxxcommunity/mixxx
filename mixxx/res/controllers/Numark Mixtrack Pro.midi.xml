@@ -4,6 +4,7 @@ Modify by Darío José Freije 6/2/2012-->
     <info>
       <name>Numark MixTrack Pro</name>
       <author>Matteo (matteo@magm3.com), James Ralston, and Darío José Freije</author>
+      <description>MIDI Mapping for Numark MixTrack Pro</description>
     </info>
     <controller id="Numark Mix Track Pro MIDI 1">
         <scriptfiles>
@@ -581,7 +582,7 @@ Modify by Darío José Freije 6/2/2012-->
                 <options>
                     <script-binding/>
                 </options>
-            </control>-
+            </control>
             <control>
                 <status>0x90</status>
                 <midino>0x4D</midino>
@@ -607,7 +608,7 @@ Modify by Darío José Freije 6/2/2012-->
                 <key>flanger</key>
                 <options>
                     <normal/>
-                </options>
+                </options> 
             </control>
         </controls>
 
@@ -618,9 +619,6 @@ Modify by Darío José Freije 6/2/2012-->
             <output>
                 <group>[Channel1]</group>
                 <key>play</key>
-                <options>
-                    <normal/>
-                </options>
                 <minimum>0</minimum>
                 <maximum>0.1</maximum>
                 <status>0x90</status>
@@ -632,9 +630,6 @@ Modify by Darío José Freije 6/2/2012-->
             <output>
                 <group>[Channel1]</group>
                 <key>LoadSelectedTrack</key>
-                <options>
-                    <normal/>
-                </options>
                 <minimum>0</minimum>
                 <maximum>0.1</maximum>
                 <status>0x90</status>
@@ -646,9 +641,6 @@ Modify by Darío José Freije 6/2/2012-->
             <output>
                 <group>[Channel1]</group>
                 <key>beatsync</key>
-                <options>
-                    <normal/>
-                </options>
                 <minimum>0</minimum>
                 <maximum>0.1</maximum>
                 <status>0x90</status>
@@ -659,9 +651,6 @@ Modify by Darío José Freije 6/2/2012-->
             <output>
                 <group>[Channel1]</group>
                 <key>pfl</key>
-                <options>
-                    <normal/>
-                </options>
                 <minimum>0</minimum>
                 <maximum>0.1</maximum>
                 <status>0x90</status>
@@ -672,9 +661,6 @@ Modify by Darío José Freije 6/2/2012-->
             <output>
                 <group>[Channel1]</group>
                 <key>keylock</key>
-                <options>
-                    <normal/>
-                </options>
                 <minimum>0</minimum>
                 <maximum>0.1</maximum>
                 <status>0x90</status>
@@ -685,9 +671,6 @@ Modify by Darío José Freije 6/2/2012-->
             <output>
                 <group>[Channel1]</group>
                 <key>flanger</key>
-                <options>
-                    <normal/>
-                </options>
                 <minimum>0</minimum>
                 <maximum>0.1</maximum>
                 <status>0x90</status>
@@ -698,9 +681,6 @@ Modify by Darío José Freije 6/2/2012-->
             <output>
                 <group>[Channel1]</group>
                 <key>rate</key>
-                <options>
-                    <normal/>
-                </options>
                 <minimum>-0.1</minimum>
                 <maximum>0.1</maximum>
                 <status>0x90</status>
@@ -712,9 +692,6 @@ Modify by Darío José Freije 6/2/2012-->
             <output>
                 <group>[Channel2]</group>
                 <key>play</key>
-                <options>
-                    <normal/>
-                </options>
                 <minimum>0</minimum>
                 <maximum>0.1</maximum>
                 <status>0x90</status>
@@ -726,9 +703,6 @@ Modify by Darío José Freije 6/2/2012-->
             <output>
                 <group>[Channel2]</group>
                 <key>LoadSelectedTrack</key>
-                <options>
-                    <normal/>
-                </options>
                 <minimum>0</minimum>
                 <maximum>0.1</maximum>
                 <status>0x90</status>
@@ -740,9 +714,6 @@ Modify by Darío José Freije 6/2/2012-->
             <output>
                 <group>[Channel2]</group>
                 <key>beatsync</key>
-                <options>
-                    <normal/>
-                </options>
                 <minimum>0</minimum>
                 <maximum>0.1</maximum>
                 <status>0x90</status>
@@ -754,9 +725,6 @@ Modify by Darío José Freije 6/2/2012-->
             <output>
                 <group>[Channel2]</group>
                 <key>pfl</key>
-                <options>
-                    <normal/>
-                </options>
                 <minimum>0</minimum>
                 <maximum>0.1</maximum>
                 <status>0x90</status>
@@ -767,9 +735,6 @@ Modify by Darío José Freije 6/2/2012-->
             <output>
                 <group>[Channel2]</group>
                 <key>keylock</key>
-                <options>
-                    <normal/>
-                </options>
                 <minimum>0</minimum>
                 <maximum>0.1</maximum>
                 <status>0x90</status>
@@ -780,9 +745,6 @@ Modify by Darío José Freije 6/2/2012-->
             <output>
                 <group>[Channel2]</group>
                 <key>flanger</key>
-                <options>
-                    <normal/>
-                </options>
                 <minimum>0</minimum>
                 <maximum>0.1</maximum>
                 <status>0x90</status>
@@ -793,9 +755,6 @@ Modify by Darío José Freije 6/2/2012-->
 	    <output>
                 <group>[Channel2]</group>
                 <key>rate</key>
-                <options>
-                    <normal/>
-                </options>
                 <minimum>-0.1</minimum>
                 <maximum>0.1</maximum>
                 <status>0x90</status>

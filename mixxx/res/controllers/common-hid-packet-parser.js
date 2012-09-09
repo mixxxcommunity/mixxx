@@ -23,9 +23,9 @@ HIDBitVector.prototype.getOffset = function(bitmask) {
 // Add a control bitmask to the HIDBitVector 
 HIDBitVector.prototype.addBitMask = function(group,name,bitmask) {
     var bit = new Object();
-    bit.type = 'button';
+    bit.type = "button";
     bit.packet = undefined;
-    bit.id = group+'.'+name;
+    bit.id = group+"."+name;
     bit.group = group;
     bit.name = name;
     bit.mapped_group = undefined;
@@ -43,9 +43,9 @@ HIDBitVector.prototype.addBitMask = function(group,name,bitmask) {
 // Add a Output control bitmask to the HIDBitVector 
 HIDBitVector.prototype.addOutputMask = function(group,name,bitmask) {
     var bit = new Object();
-    bit.type = 'output';
+    bit.type = "output";
     bit.packet = undefined;
-    bit.id = group+'.'+name;
+    bit.id = group+"."+name;
     bit.group = group;
     bit.name = name;
     bit.mapped_group = undefined;
@@ -64,6 +64,7 @@ HIDBitVector.prototype.addOutputMask = function(group,name,bitmask) {
 // Don't call directly, this is available as HIDController.modifiers
 function HIDModifierList() {
     this.modifiers = Object();
+    this.callbacks = Object();
 }
 
 // Add a new modifier to controller. 
@@ -78,12 +79,16 @@ HIDModifierList.prototype.add = function(name) {
 // Set modifier value
 HIDModifierList.prototype.set = function(name,value) {
     if ((!name in this.modifiers)) {
-        HIDDebug("Unknonwn modifier: " + name);
+        HIDDebug("Unknown modifier: " + name);
         return;
     }
     this.modifiers[name] = value;
+    if (name in this.callbacks) {
+        var callback = this.callbacks[name];
+        callback(value);
+    }
 }
- 
+
 // Get modifier value
 HIDModifierList.prototype.get = function(name) {
     if (!(name in this.modifiers)) {
@@ -91,6 +96,15 @@ HIDModifierList.prototype.get = function(name) {
         return false;
     }
     return this.modifiers[name];
+}
+
+// Set modifier callback (update function after modifier state changes)
+HIDModifierList.prototype.setCallback = function(name,callback) {
+    if ((!name in this.modifiers)) {
+        HIDDebug("Unknonwn modifier: " + name);
+        return;
+    }
+    this.callbacks[name] = callback;
 }
 
 //
@@ -110,31 +124,59 @@ function HIDPacket(name,header,length,callback) {
     this.length = length;
     this.callback = callback;
 
+    this.groups = new Object();
+
     // Size of various 'pack' values in bytes
     this.packSizes = { b: 1, B: 1, h: 2, H: 2, i: 4, I: 4 };
-    this.signedPackFormats = [ 'b', 'h', 'i'];
+    this.signedPackFormats = [ "b", "h", "i"];
 }
 
 // Pack a field value to the packet.
 // Can only pack bits and byte values, patches welcome.
 HIDPacket.prototype.pack = function(packet,field) {
-    if (field.type=='bitvector') {
+    var value = 0;
+    if (!(field.pack in this.packSizes)) {
+        HIDDebug("ERROR parsing packed value: invalid pack format " + field.pack);
+        return;
+    }
+    var bytes = this.packSizes[field.pack];
+    var signed = false;
+    if (this.signedPackFormats.indexOf(field.pack)!=-1)
+        signed = true;
+
+    if (field.type=="bitvector") {
+        // TODO - fix multi byte bit vector outputs
+        if (bytes>1) {
+            HIDDebug("ERROR: packing multibyte bit vectors not yet supported");
+            return;
+        }
         for (bit_id in field.value.bits) {
             var bit = field.value.bits[bit_id];
             packet.data[field.offset] = packet.data[field.offset] | bit.value;
         }
         return;
     }
-    if (!(field.pack in this.packSizes)) {
-        HIDDebug("Error packing field: unknown pack value " + field.pack);
+
+    value = (field.value!=undefined) ? field.value : 0;  
+
+    if (value<field.min || value>field.max) {
+        HIDDebug("ERROR " + field.id + " packed value out of range: " + value);
         return;
     }
-    var signed = false;
-    if (this.signedPackFormats.indexOf(field.pack)!=-1)
-        signed = true;
 
-    // TODO - implement packing anything else but unsigned byte
-    packet.data[field.offset] = field.value;
+    for (var byte_index=0;byte_index<bytes;byte_index++) {
+        var index = field.offset+byte_index;
+        if (signed) {
+            if (value>=0) {
+                packet.data[index] = (value>>(byte_index*8)) & 255;
+            } else {
+                packet.data[index] = 255 - ((-(value+1)>>(byte_index*8)) & 255);
+            }
+        } else {
+            packet.data[index] = (value>>(byte_index*8)) & 255;
+        }
+    }
+
 }
 
 // Parse and return field value matching the 'pack' field from field attributes.
@@ -195,7 +237,7 @@ HIDPacket.prototype.getFieldByOffset = function(offset,pack) {
     var end_offset = offset + this.packSizes[pack];
     if (end_offset>this.length) {
         HIDDebug("Invalid offset+pack range " +
-            offset + '-' + end_offset +
+            offset + "-" + end_offset +
             " for " +  this.length + " byte packet"
         );
         return undefined;
@@ -227,7 +269,7 @@ HIDPacket.prototype.getFieldByOffset = function(offset,pack) {
 // Return a field by group and name from the packet,
 // Returns undefined if field could not be found
 HIDPacket.prototype.getField = function(group,name) {
-    var field_id = group+'.'+name;
+    var field_id = group+"."+name;
     if (!(group in this.groups)) {
         HIDDebug("PACKET " + this.name + " group not found " + group);
         return undefined;
@@ -242,7 +284,7 @@ HIDPacket.prototype.getField = function(group,name) {
         var control_group = this.groups[group_name];
         for (field_name in control_group) {
             var field = control_group[field_name];
-            if (field==undefined || field.type!='bitvector')
+            if (field==undefined || field.type!="bitvector")
                 continue
             for (bit_name in field.value.bits) {
                 var bit = field.value.bits[bit_name];
@@ -263,7 +305,7 @@ HIDPacket.prototype.lookupBit = function(group,name) {
         HIDDebug("Bitvector match not found: "+group+"."+name);
         return undefined;
     }
-    var bit_id = group+'.'+name;
+    var bit_id = group+"."+name;
     for (bit_name in field.value.bits) {
         var bit = field.value.bits[bit_name];
         if (bit.id==bit_id)
@@ -298,11 +340,11 @@ HIDPacket.prototype.addControl = function(group,name,offset,pack,bitmask,isEncod
     var control_group = this.getGroup(group,true);
     var bitvector = undefined;
     if (control_group==undefined) {
-        HIDDebug('ERROR creating HID packet group ' + group);
+        HIDDebug("ERROR creating HID packet group " + group);
         return;
     }
     if (!(pack in this.packSizes)) {
-        HIDDebug('Unknown pack value ' + pack);
+        HIDDebug("Unknown pack value " + pack);
         return;
     }
 
@@ -322,7 +364,7 @@ HIDPacket.prototype.addControl = function(group,name,offset,pack,bitmask,isEncod
 
     field = new Object();
     field.packet = undefined;
-    field.id = group+'.'+name;    
+    field.id = group+"."+name;    
     field.group = group;
     field.name = name;
     field.mapped_group = undefined;
@@ -348,7 +390,7 @@ HIDPacket.prototype.addControl = function(group,name,offset,pack,bitmask,isEncod
     }
 
     if (bitmask==undefined || bitmask==packet_max_value) {
-        field.type = 'control';
+        field.type = "control";
         field.value = undefined;
         field.delta = 0;
         field.mindelta = 0;
@@ -359,10 +401,10 @@ HIDPacket.prototype.addControl = function(group,name,offset,pack,bitmask,isEncod
         }
         // Create a new bitvector field and add the bit to that
         // TODO - accept controls with bitmask < packet_max_value
-        field_name = 'bitvector_' + offset;
-        field.type = 'bitvector';
+        field_name = "bitvector_" + offset;
+        field.type = "bitvector";
         field.name = field_name;
-        field.id = group+'.'+field_name;
+        field.id = group+"."+field_name;
         bitvector = new HIDBitVector(field.max);
         bitvector.size = field.max;
         bitvector.addBitMask(group,name,bitmask);
@@ -388,7 +430,7 @@ HIDPacket.prototype.addOutput = function(group,name,offset,pack,bitmask,callback
     var control_group = this.getGroup(group,true);
     var field = undefined;
     var bitvector = undefined;
-    var field_id = group+'.'+name;
+    var field_id = group+"."+name;
 
     if (control_group==undefined) {
         return;
@@ -426,17 +468,24 @@ HIDPacket.prototype.addOutput = function(group,name,offset,pack,bitmask,callback
     field.toggle = undefined;
 
     var packet_max_value = Math.pow(2,this.packSizes[field.pack]*8);
+    if (this.signedPackFormats.indexOf(pack)!=-1) {
+        field.min = 0 - (packet_max_value/2)+1;
+        field.max = (packet_max_value/2)-1;
+    } else {
+        field.min = 0;
+        field.max = packet_max_value-1;
+    }
     if (bitmask==undefined || bitmask==packet_max_value) {
-        field.type = 'output';
+        field.type = "output";
         field.value = undefined;
         field.delta = undefined;
         field.mindelta = undefined;
     } else {
         // Create new Output bitvector control field, add bit to it
         // rewrite name to use bitvector instead
-        field_name = 'bitvector_' + offset;
-        field.type = 'bitvector';
-        field.id = group+'.'+field_name;
+        field_name = "bitvector_" + offset;
+        field.type = "bitvector";
+        field.id = group+"."+field_name;
         field.name = field_name;
         bitvector = new HIDBitVector();
         bitvector.size = field.max;
@@ -454,7 +503,7 @@ HIDPacket.prototype.addOutput = function(group,name,offset,pack,bitmask,callback
 // Does not make sense for Output fields but you can do that.
 HIDPacket.prototype.setCallback = function(group,name,callback) {
     var field = this.getField(group,name);
-    var field_id = group+'.'+name;
+    var field_id = group+"."+name;
     if (callback==undefined) {
         HIDDebug("Callback to add was undefined for " + field_id);
         return;
@@ -464,7 +513,7 @@ HIDPacket.prototype.setCallback = function(group,name,callback) {
         );
         return;
     }
-    if (field.type=='bitvector') {
+    if (field.type=="bitvector") {
         for (var bit_id in field.value.bits) {
             var bit = field.value.bits[bit_id];
             if (bit_id!=field_id)
@@ -483,7 +532,7 @@ HIDPacket.prototype.setCallback = function(group,name,callback) {
 HIDPacket.prototype.setIgnored = function(group,name,ignored) {
     var field = this.getField(group,name);
     if (field==undefined) {
-        HIDDebug("ERROR setting ignored flag for " + group +' ' + name);
+        HIDDebug("ERROR setting ignored flag for " + group +" " + name);
         return;
     }
     field.ignored = ignored;
@@ -494,10 +543,10 @@ HIDPacket.prototype.setIgnored = function(group,name,ignored) {
 HIDPacket.prototype.setMinDelta = function(group,name,mindelta) {
     field = this.getField(group,name);
     if (field==undefined) {
-        HIDDebug("ERROR adjusting mindelta for " + group +' ' + name);
+        HIDDebug("ERROR adjusting mindelta for " + group +" " + name);
         return;
     }
-    if (field.type=='bitvector') {
+    if (field.type=="bitvector") {
         HIDDebug("ERROR setting mindelta for bitvector packet does not make sense");
         return;
     }
@@ -548,13 +597,13 @@ HIDPacket.prototype.parse = function(data) {
                 return;
             }
 
-            if (field.type=='bitvector') {
+            if (field.type=="bitvector") {
 				// Bitvector deltas are checked in parseBitVector
                 var changed_bits = this.parseBitVector(field,value);
                 for (bit_name in changed_bits) 
                     field_changes[bit_name] = changed_bits[bit_name];
 
-            } else if (field.type=='control') {
+            } else if (field.type=="control") {
                 if (field.value==value)
                     continue;
                 if (field.ignored || field.value==undefined) {
@@ -604,7 +653,7 @@ HIDPacket.prototype.send = function() {
         var group = this.groups[group_name];
         for (var field_name in group) {
             var field = group[field_name];
-            if (field.type=='bitvector') {
+            if (field.type=="bitvector") {
                 for (var bit_id in field.value.bits) {
                     var bit = field.value.bits[bit_id];
                 }
@@ -652,6 +701,13 @@ function HIDController () {
 
     this.InputPackets = new Object();
     this.OutputPackets = new Object();
+    // Default input control packet name: can be modified for controllers 
+    // which can swap modes (wiimote for example)
+    this.defaultPacket = "control";
+
+    // Callback functions called by deck switching. Undefined by default
+    this.disconnectDeck = undefined;
+    this.connectDeck = undefined;
 
     // Scratch parameter defaults for this.scratchEnable function
     // override for custom control
@@ -668,22 +724,22 @@ function HIDController () {
     // Output color values to send 
     this.LEDColors = {off: 0x0, on: 0x7f};
     // Toggle buttons
-    this.toggleButtons = [ 'play', 'pfl', 'keylock', 'quantize' ];
+    this.toggleButtons = [ "play", "pfl", "keylock", "quantize", "reverse" ];
 
     // Override to set specific colors for multicolor button Output per deck
-    this.deckOutputColors = {1: 'on', 2: 'on', 3: 'on', 4: 'on'};
+    this.deckOutputColors = {1: "on", 2: "on", 3: "on", 4: "on"};
     // Mapping of automatic deck switching with deckSwitch function
-    this.virtualDecks = ['deck','deck1','deck2','deck3','deck4'];
+    this.virtualDecks = ["deck","deck1","deck2","deck3","deck4"];
     this.deckSwitchMap = { 1: 2, 2: 1, 3: 4, 4: 3, undefined: 1 };
 
     // Standard target groups available in mixxx. This is used by 
     // HID packet parser to recognize group parameters we should 
     // try sending to mixxx.
     this.valid_groups = [
-    '[Channel1]','[Channel2]','[Channel3]','[Channel4]',
-    '[Sampler1]','[Sampler2]','[Sampler3]','[Sampler4]',
-    '[Master]','[Effects]','[Playlist]','[Flanger]',
-    '[Microphone]'
+    "[Channel1]","[Channel2]","[Channel3]","[Channel4]",
+    "[Sampler1]","[Sampler2]","[Sampler3]","[Sampler4]",
+    "[Master]","[Effects]","[Playlist]","[Flanger]",
+    "[Microphone]"
 ]
 
 
@@ -740,18 +796,18 @@ HIDController.prototype.resolveGroup = function(group) {
     if (this.valid_groups.indexOf(group)!=-1) {
         return group;
     }
-    if (group=='deck' || group==undefined) {
+    if (group=="deck" || group==undefined) {
         if (this.activeDeck==undefined)
             return undefined;
-        return '[Channel' + this.activeDeck + ']';
+        return "[Channel" + this.activeDeck + "]";
     }
     if (this.activeDeck==1 || this.activeDeck==2) {
-        if (group=='deck1') return '[Channel1]';
-        if (group=='deck2') return '[Channel2]';
+        if (group=="deck1") return "[Channel1]";
+        if (group=="deck2") return "[Channel2]";
     }
     if (this.activeDeck==3 || this.activeDeck==4) {
-        if (group=='deck1') return '[Channel3]';
-        if (group=='deck2') return '[Channel4]';
+        if (group=="deck1") return "[Channel3]";
+        if (group=="deck2") return "[Channel4]";
     }
     return undefined;
 }
@@ -765,7 +821,7 @@ HIDController.prototype.getOutputField = function(m_group,m_name) {
             var group = packet.groups[group_name];
             for (var field_name in group) {
                 var field = group[field_name];
-                if (field.type=='bitvector') {
+                if (field.type=="bitvector") {
                     for (var bit_id in field.value.bits) {
                         var bit = field.value.bits[bit_id];
                         if (bit.mapped_group==m_group && bit.mapped_name==m_name)
@@ -837,20 +893,20 @@ HIDController.prototype.getScaler = function(name,callback) {
 
 // Change type of a previously defined field to modifier and register it
 HIDController.prototype.linkModifier = function(group,name,modifier) {
-    var packet = this.getInputPacket('control');
+    var packet = this.getInputPacket(this.defaultPacket);
     if (packet==undefined) {
         HIDDebug(
-            "ERROR creating modifier: input packet 'control' not found"
+            "ERROR creating modifier: input packet "+this.defaultPacket+" not found"
         );
         return;
     }
-    var bit_id = group+'.'+name;
+    var bit_id = group+"."+name;
     var field = packet.lookupBit(group,name);
     if (field==undefined) {
         HIDDebug("BIT field not found: " + bit_id);
         return;
     }
-    field.group = 'modifiers';
+    field.group = "modifiers";
     field.name = modifier;
     this.modifiers.set(modifier);
 }
@@ -863,20 +919,20 @@ HIDController.prototype.unlinkModifier = function(group,name,modifier) {
 // Link a previously declared HID control to actual mixxx control
 HIDController.prototype.linkControl = function(group,name,m_group,m_name,callback) {
     var field;
-    var packet = this.getInputPacket('control');
+    var packet = this.getInputPacket(this.defaultPacket);
     if (packet==undefined) {
-        HIDDebug("ERROR creating modifier: input packet 'control' not found");
+        HIDDebug("ERROR creating modifier: input packet "+this.defaultPacket+" not found");
         return;
     }
     field = packet.getField(group,name);
     if (field==undefined) {
-        HIDDebug("Field not found: " + group+'.'+name);
+        HIDDebug("Field not found: " + group+"."+name);
         return;
     }
-    if (field.type=='bitvector') {
+    if (field.type=="bitvector") {
         field = packet.lookupBit(group,name);
         if (field==undefined) {
-            HIDDebug("bit not found: " + group+'.'+name);
+            HIDDebug("bit not found: " + group+"."+name);
             return;
         }
     } 
@@ -893,8 +949,8 @@ HIDController.prototype.unlinkControl = function(group,name) {
 
 // Register HID input packet type to controller.
 // Input packets can be responses from device to queries, or control 
-// data details. The default control data packet must be called 
-// 'control' to allow automatic processing.
+// data details. The default control data packet must be named in
+// variable this.defaultPacket to allow automatic processing.
 HIDController.prototype.registerInputPacket = function(packet) {
     var name;
     // Find modifiers and other special cases from packet fields
@@ -903,15 +959,15 @@ HIDController.prototype.registerInputPacket = function(packet) {
         for (var field_name in group) {
             var field = group[field_name];
             field.packet = packet;
-            if (field.type=='bitvector') {
+            if (field.type=="bitvector") {
                 for (var bit_id in field.value.bits) {
                     var bit = field.value.bits[bit_id];
                     bit.packet = packet;
-                    if (bit.group=='modifiers') 
+                    if (bit.group=="modifiers") 
                         this.modifiers.add(bit.name);
                 }
             } else {
-                if (field.group=='modifiers') 
+                if (field.group=="modifiers") 
                     this.modifiers.add(field.name);
             }
         }
@@ -933,7 +989,7 @@ HIDController.prototype.registerOutputPacket = function(packet) {
         for (var field_name in group) {
             var field = group[field_name];
             field.packet = packet;
-            if (field.type=='bitvector') {
+            if (field.type=="bitvector") {
                 for (var bit_id in field.value.bits) {
                     var bit = field.value.bits[bit_id];
                     bit.packet = packet;
@@ -943,7 +999,7 @@ HIDController.prototype.registerOutputPacket = function(packet) {
     }
 }
 
-// Parse a received input packet fields with 'unpack' calls to fields
+// Parse a received input packet fields with "unpack" calls to fields
 // Calls packet callback and returns, if packet callback was defined
 // Calls processIncomingPacket and processes automated events there.
 // If defined, calls processDelta for results after processing automated fields
@@ -973,7 +1029,7 @@ HIDController.prototype.parsePacket = function(data,length) {
             return;
         }
         // Process named group controls
-        if (packet.name=='control')
+        if (packet.name==this.defaultPacket)
             this.processIncomingPacket(packet,changed_data);
         // Process generic changed_data packet, if callback is defined
         if (this.processDelta!=undefined)
@@ -987,7 +1043,7 @@ HIDController.prototype.parsePacket = function(data,length) {
 }
 
 // Process the modified field values (delta) from input packet fields for
-// input control packet, if packet name is 'control'.
+// input control packet, if packet name is in this.defaultPacket.
 //
 // Button field processing:
 // - Sets modifiers from buttons
@@ -1010,12 +1066,12 @@ HIDController.prototype.processIncomingPacket = function(packet,delta) {
             && this.ignoredControlChanges.indexOf(name) != -1)
                 continue;
         field = delta[name];
-        if (field.type=='button') 
+        if (field.type=="button") 
             this.processButton(field);
-        else if (field.type=='control') 
+        else if (field.type=="control") 
             this.processControl(field);
         else
-            HIDDebug("Unknown field type " + field.type);
+            HIDDebug("Unknown field " + field.name + " type " + field.type);
     }
 }
 
@@ -1027,7 +1083,7 @@ HIDController.prototype.getActiveFieldGroup = function(field) {
     group = field.group;
     if (group==undefined) {
         if (this.activeDeck!=undefined)
-            return '[Channel' + this.activeDeck + ']';
+            return "[Channel" + this.activeDeck + "]";
     }
     if (this.valid_groups.indexOf(group)!=-1) {
         HIDDebug("Resolving group " + group);
@@ -1058,7 +1114,7 @@ HIDController.prototype.processButton = function(field) {
         return;
     }
 
-    if (group=='modifiers') {
+    if (group=="modifiers") {
         if (field.value!=0)
             this.modifiers.set(control,true);
         else
@@ -1077,7 +1133,7 @@ HIDController.prototype.processButton = function(field) {
         field.callback(field);
         return;        
     }
-    if (control=='jog_touch') {
+    if (control=="jog_touch") {
         if (group!=undefined) {
             if (field.value==this.buttonStates.pressed) 
                 this.enableScratch(group,true);
@@ -1090,8 +1146,8 @@ HIDController.prototype.processButton = function(field) {
         if (field.value==this.buttonStates.released)
             return;
         if (engine.getValue(group,control)) {
-            if (control=='play')
-                engine.setValue(group,'stop',true);
+            if (control=="play")
+                engine.setValue(group,"stop",true);
             else
                 engine.setValue(group,control,false);
         } else {
@@ -1127,11 +1183,11 @@ HIDController.prototype.processControl = function(field) {
         value = field.callback(field);
         return;
     }
-    if (group=='modifiers') {
+    if (group=="modifiers") {
         this.modifiers.set(control,field.value);
         return;
     }
-    if (control=='jog_wheel') {
+    if (control=="jog_wheel") {
         // Handle jog wheel scratching transparently
         this.jog_wheel(field);
         return;
@@ -1151,14 +1207,23 @@ HIDController.prototype.processControl = function(field) {
     }
 }
 
+// Toggle control state from toggle button
+HIDController.prototype.toggle = function(group,control,value) {
+    if (value==this.buttonStates.released)
+        return;
+    var status = (engine.getValue(group,control)==true) ? false : true;
+    engine.setValue(group,control,status);
+}
+
 // Toggle play/pause state
 HIDController.prototype.togglePlay = function(group,field) {
     if (field.value==this.buttonStates.released)
         return;
-    if (engine.getValue(group,'play'))
-        engine.setValue(group,'stop',true);
+    var status = (engine.getValue(group,"play")) ? false : true;
+    if (!status)
+        engine.setValue(group,"stop",true);
     else
-        engine.setValue(group,'play',true);
+        engine.setValue(group,"play",true);
 }
 
 // Processing of the 'jog_touch' special button name, which is used to detect
@@ -1183,9 +1248,11 @@ HIDController.prototype.enableScratch = function(group,status) {
             this.scratchBeta,
             this.rampedScratchEnable
         );
+        if (this.enableScratchCallback!=undefined) this.enableScratchCallback(true);
     } else {
         this.isScratchEnabled = false;
         engine.scratchDisable(deck,this.rampedScratchDisable);
+        if (this.enableScratchCallback!=undefined) this.enableScratchCallback(false);
     }
 }
 
@@ -1217,21 +1284,21 @@ HIDController.prototype.jog_wheel = function(field) {
         var deck = this.resolveDeck(active_group);
         if (deck==undefined)
             return;
-        scaler = this.getScaler('jog_scratch');
+        scaler = this.getScaler("jog_scratch");
         if (scaler!=undefined)
-            value = scaler(active_group,'jog_scratch',value);
+            value = scaler(active_group,"jog_scratch",value);
         else
             HIDDebug("WARNING non jog_scratch scaler, you likely want one");
         engine.scratchTick(deck,value);
     } else {
         if (active_group==undefined)
             return;
-        scaler = this.getScaler('jog');
+        scaler = this.getScaler("jog");
         if (scaler!=undefined)
-            value = scaler(active_group,'jog',value);
+            value = scaler(active_group,"jog",value);
         else
             HIDDebug("WARNING non jog scaler, you likely want one");
-        engine.setValue(active_group,'jog',value);
+        engine.setValue(active_group,"jog",value);
     }
 }
 
@@ -1246,12 +1313,12 @@ HIDController.prototype.stopAutoRepeatTimer = function(timer_id) {
 
 // Toggle field autorepeat on or off
 HIDController.prototype.setAutoRepeat = function(group,name,callback,interval) {
-    var packet = this.getInputPacket('control');
+    var packet = this.getInputPacket(this.defaultPacket);
     var field = packet.getField(group,name);
-    if (field!=undefined && field.type=='bitvector')
+    if (field!=undefined && field.type=="bitvector")
         var field = packet.lookupBit(group,name);
     if (field==undefined) {
-        HIDDebug("setAutoRepeat: field not found " +group+'.'+name);
+        HIDDebug("setAutoRepeat: field not found " +group+"."+name);
         return;
     }
     field.auto_repeat = callback;
@@ -1274,12 +1341,12 @@ HIDController.prototype.autorepeatTimer = function() {
     var field_name;
     var bit_name;
     var bit;
-    var packet = this.InputPackets['control'];
+    var packet = this.InputPackets[this.defaultPacket];
     for (group_name in packet.groups) {
         group = packet.groups[group_name];
         for (field_name in group) {
             field = group[field_name];
-            if (field.type!='bitvector') {
+            if (field.type!="bitvector") {
                 if (field.auto_repeat)
                     this.processControl(field);
                 continue
@@ -1300,12 +1367,21 @@ HIDController.prototype.switchDeck = function(deck) {
     var group;
     var controlgroup;
     if (deck==undefined) {
-        deck = this.deckSwitchMap[this.activeDeck];
-        if (deck==undefined)
-            deck=1;
+        if (this.activeDeck==undefined) {
+            deck = 1;
+        } else {
+            // This is unusable: num_decks has always minimum 4 decks
+            // var totalDecks = engine.getValue("[Master]","num_decks");
+            // deck = (this.activeDeck+1) % totalDecks;
+            deck = this.deckSwitchMap[this.activeDeck];
+            if (deck==undefined)
+                deck=1;
+        }
     }
     new_group = this.resolveDeckGroup(deck);
     HIDDebug("Switching to deck " + deck + " group " + new_group);
+    if (this.disconnectDeck!=undefined)
+        this.disconnectDeck();
     for (var packet_name in this.OutputPackets) {
         packet = this.OutputPackets[packet_name];
         var send_packet = false;
@@ -1313,7 +1389,7 @@ HIDController.prototype.switchDeck = function(deck) {
             var group = packet.groups[group_name];
             for (var field_name in group) {
                 field = group[field_name];
-                if (field.type=='bitvector') {
+                if (field.type=="bitvector") {
                     for (var bit_id in field.value.bits) {
                         var bit = field.value.bits[bit_id];
                         if (this.virtualDecks.indexOf(bit.mapped_group)==-1)
@@ -1359,6 +1435,8 @@ HIDController.prototype.switchDeck = function(deck) {
         }
     }
     this.activeDeck = deck;
+    if (this.connectDeck!=undefined)
+        this.connectDeck();
 }
 
 // Link a virtual HID Output to mixxx control
@@ -1379,9 +1457,9 @@ HIDController.prototype.linkOutput = function(group,name,m_group,m_name,callback
     field.mapped_callback = callback;
     engine.connectControl(controlgroup,m_name,callback);
     if (engine.getValue(controlgroup,m_name)) 
-        this.setOutput(m_group,m_name,'on');
+        this.setOutput(m_group,m_name,"on");
     else
-        this.setOutput(m_group,m_name,'off');
+        this.setOutput(m_group,m_name,"off");
 }
 
 // Unlink a virtual HID Output from mixxx control
@@ -1420,11 +1498,36 @@ HIDController.prototype.setOutput = function(group,name,value,send_packet) {
 HIDController.prototype.setOutputToggle = function(group,name,toggle_value) {
     var field = this.getOutputField(group,name);
     if (field==undefined) {
-        HIDDebug("setOutputToggle: unknown field " +group+'.'+name);
+        HIDDebug("setOutputToggle: unknown field " +group+"."+name);
         return;
     }
     field.value = toggle_value<<field.bit_offset;
     field.toggle = toggle_value<<field.bit_offset;
     field.packet.send();
 }
+
+// Manual packing test functions 
+//var packet = new HIDPacket("test",[0x1,0x2],6);
+//var field;
+//packet.addOutput("test","ushort",2,"H");
+//packet.addOutput("test","short",4,"h");
+//field = packet.getField("test","ushort");
+//print("FIELD " + field.id + " MIN " + field.min + " MAX " + field.max);
+//field.value = 1024;
+//field = packet.getField("test","short");
+//field.value = -32767;
+//print("FIELD " + field.id + " MIN " + field.min + " MAX " + field.max);
+//var out = { "length": packet.length, "data": []};
+//for (var i=0;i<packet.header.length;i++) {
+//    out.data[i] = i;
+//}
+//for (var group_name in packet.groups) {
+//    var group = packet.groups[group_name];
+//    for (var field_name in group) {
+//        var field = group[field_name];
+//        print("PACKING " + field.id);
+//        packet.pack(out,field);
+//    }
+//}
+//for (var i=0;i<out.length;i++) { print("BYTE " +i+ " VALUE " +out.data[i]); }
 

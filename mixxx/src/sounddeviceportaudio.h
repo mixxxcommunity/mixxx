@@ -68,7 +68,7 @@ class SoundDevicePortAudio : public SoundDevice
 
         bool m_bSetThreadPriority;
 
-        ControlObject* m_pMasterUnderfowCount;
+        ControlObject* m_pMasterUnderflowCount;
         int m_undeflowUpdateCount;
 };
 

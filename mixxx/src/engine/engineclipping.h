@@ -23,11 +23,14 @@
 class EngineClipping : public EngineObject 
 {
 private:
-
+    bool clipped;
+    ControlPotmeter *m_ctrlClipping;
+    int m_duration;
 public:
-    EngineClipping();
+    EngineClipping(const char *group);
     ~EngineClipping();
     void process(const CSAMPLE *pIn, const CSAMPLE *pOut, const int iBufferSize);
+    bool hasClipped();
 };
 
 #endif // ENGINECLIPPING_H

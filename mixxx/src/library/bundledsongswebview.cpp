@@ -30,12 +30,11 @@ BundledSongsWebView::BundledSongsWebView(QWidget* parent,
                                          QString promoBundlePath,
                                          QString localURL, bool firstRun,
                                          ConfigObject<ConfigValue>* config) :
-    QWebView(parent),
-    AbstractLibraryView(),
-    m_pTrackCollection(trackCollection),
-    m_bFirstRun(firstRun),
-    m_pConfig(config)
-{
+        QWebView(parent),
+        AbstractLibraryView(),
+        m_bFirstRun(firstRun),
+        m_pConfig(config),
+        m_pTrackCollection(trackCollection) {
     m_sPromoBundlePath = promoBundlePath;
     m_sLocalURL = localURL;
     m_statTracking = (int)m_pConfig->getValueString(ConfigKey(CONFIG_KEY,"StatTracking")).toInt();

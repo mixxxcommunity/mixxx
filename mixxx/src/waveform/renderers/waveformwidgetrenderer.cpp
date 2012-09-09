@@ -1,6 +1,7 @@
-#include "waveformwidgetrenderer.h"
-#include "waveform/waveform.h"
+#include <QPainter>
 
+#include "waveform/renderers/waveformwidgetrenderer.h"
+#include "waveform/waveform.h"
 #include "widget/wwidget.h"
 #include "controlobjectthreadmain.h"
 #include "controlobject.h"
@@ -128,8 +129,10 @@ void WaveformWidgetRenderer::onPreRender(const QTime& posTime) {
     }
 
     if (m_audioSamplePerPixel) {
-        double trackPixel = (double)m_trackSamples / 2 / m_audioSamplePerPixel;
-        double displayedLengthHalf = (double)m_width / trackPixel / 2;
+        double trackPixel = static_cast<double>(m_trackSamples) / 2.0 / m_audioSamplePerPixel;
+        double displayedLengthHalf = static_cast<double>(m_width) / trackPixel / 2.0;
+        // Avoid pixel jitter in play position by rounding to the nearest track
+        // pixel.
         m_playPos = round(m_visualPlayPosition->getAt(posTime) * trackPixel)/(double)trackPixel; // Avoid pixel jitter in play position
         m_playPosVSample = m_playPos * m_trackInfoObject->getWaveform()->getDataSize();
         m_firstDisplayedPosition = m_playPos - displayedLengthHalf;
