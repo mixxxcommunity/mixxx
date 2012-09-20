@@ -29,9 +29,9 @@ void WaveformRendererPreroll::draw(QPainter* painter, QPaintEvent* event) {
     if (!track) {
         return;
     }
-
-    int samplesPerPixel = m_waveformRenderer->getVisualSamplePerPixel();
-    int numberOfSamples = m_waveformRenderer->getWidth() * samplesPerPixel;
+    const Waveform* waveform = track->getWaveform();
+    double samplesPerPixel = m_waveformRenderer->getVisualSamplePerPixel();
+    double numberOfSamples = m_waveformRenderer->getWidth() * samplesPerPixel;
 
     // TODO (vRince) not really accurate since waveform size une visual reasampling and
     // have two mores samples to hold the complete visual data
@@ -48,9 +48,9 @@ void WaveformRendererPreroll::draw(QPainter* painter, QPaintEvent* event) {
         painter->setWorldMatrixEnabled(false);
         painter->setPen(QPen(QBrush(m_color), 1));
         double start_index = 0;
-        int end_index = (numberOfSamples - currentPosition) / 2;
+        int end_index = static_cast<int>((numberOfSamples - currentPosition) / 2.0);
         QPolygonF polygon;
-        const int polyWidth = 40.0 / samplesPerPixel;
+        const int polyWidth = static_cast<int>(40.0 / samplesPerPixel);
         const float halfHeight = m_waveformRenderer->getHeight()/2.0;
         const float halfPolyHeight = m_waveformRenderer->getHeight()/5.0;
         polygon << QPointF(0, halfHeight)
