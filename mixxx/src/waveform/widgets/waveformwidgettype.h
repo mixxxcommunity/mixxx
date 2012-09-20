@@ -12,6 +12,7 @@ class WaveformWidgetType {
         GLSimpleWaveform,
         GLWaveform,
         GLSLWaveform,
+        GLVSyncTest,
         Count_WaveformwidgetType // Also used as invalid value
     };
 };

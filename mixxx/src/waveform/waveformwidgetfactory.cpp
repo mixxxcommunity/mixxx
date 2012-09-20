@@ -17,6 +17,7 @@
 #include "waveform/widgets/qtwaveformwidget.h"
 #include "waveform/widgets/qtsimplewaveformwidget.h"
 #include "waveform/widgets/glslwaveformwidget.h"
+#include "waveform/widgets/glvsynctestwidget.h"
 #include "waveform/widgets/waveformwidgetabstract.h"
 #include "widget/wwaveformviewer.h"
 #include "waveform/vsyncthread.h"
@@ -516,6 +517,11 @@ void WaveformWidgetFactory::evaluateWidgets() {
             useOpenGl = GLSLWaveformWidget::useOpenGl();
             useOpenGLShaders = GLSLWaveformWidget::useOpenGLShaders();
             break;
+        case WaveformWidgetType::GLVSyncTest:
+            widgetName = GLVSyncTestWidget::getWaveformWidgetName();
+            useOpenGl = GLVSyncTestWidget::useOpenGl();
+            useOpenGLShaders = GLVSyncTestWidget::useOpenGLShaders();
+            break;
         }
 
         if (useOpenGLShaders) {
@@ -562,6 +568,9 @@ WaveformWidgetAbstract* WaveformWidgetFactory::createWaveformWidget(
             break;
         case WaveformWidgetType::GLSLWaveform:
             widget = new GLSLWaveformWidget(viewer->getGroup(), viewer);
+            break;
+        case WaveformWidgetType::GLVSyncTest:
+            widget = new GLVSyncTestWidget(viewer->getGroup(), viewer);
             break;
         default:
         //case WaveformWidgetType::SoftwareSimpleWaveform: TODO: (vrince)
