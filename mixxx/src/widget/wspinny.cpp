@@ -1,11 +1,21 @@
+#warning math.h
 #include <math.h>
+#warning mathstuff.h
 #include "mathstuff.h"
+#warning wpixmapstore.h
 #include "wpixmapstore.h"
+#warning controlobject.h
 #include "controlobject.h"
+
+#warning controlobjectthreadmain.h
 #include "controlobjectthreadmain.h"
+#warning controlobjectthreadmain.h
 #include "sharedglcontext.h"
+#warning wspinny.h
 #include "wspinny.h"
+#warning visualplayposition.h
 #include "visualplayposition.h"
+#warning wspinny.cpp
 
 WSpinny::WSpinny(QWidget* parent, VinylControlManager* pVCMan)
         : QGLWidget(parent, SharedGLContext::getShareWidget()),
