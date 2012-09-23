@@ -2,13 +2,19 @@
 #ifndef _WSPINNY_H
 #define _WSPINNY_H
 
+#pragma message("#include <QGLWidget>")
 #include <QGLWidget>
+#pragma message("#include wwidget.h")
 #include "wwidget.h"
+#pragma message("#include vinylcontrol/vinylcontrolmanager.h")
 #include "vinylcontrol/vinylcontrolmanager.h"
 #ifdef __VINYLCONTROL__
+#pragma message("#vinylcontrol/vinylcontrolproxy.h")
 #include "vinylcontrol/vinylcontrolproxy.h"
+#pragma message("#vinylcontrol/vinylcontrol.h")
 #include "vinylcontrol/vinylcontrol.h"
 #endif
+#pragma message("wspinny.h")
 
 class ControlObjectThreadMain;
 class VisualPlayPosition;

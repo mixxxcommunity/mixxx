@@ -1,20 +1,13 @@
-#pragma message("math.h")
-#include <math.h>
-#pragma message("mathstuff.h")
-#include "mathstuff.h"
-#pragma message("wpixmapstore.h")
-#include "wpixmapstore.h"
-#pragma message("controlobject.h")
-#include "controlobject.h"
-#pragma message("controlobjectthreadmain.h")
-#include "controlobjectthreadmain.h"
-#pragma message("controlobjectthreadmain.h")
-#include "sharedglcontext.h"
-#pragma message("wspinny.h")
+#pragma message("start #include wspinny.h")
 #include "wspinny.h"
-#pragma message("visualplayposition.h")
+#pragma message("end #include wspinny.h")
+#include <math.h>
+#include "mathstuff.h"
+#include "wpixmapstore.h"
+#include "controlobject.h"
+#include "controlobjectthreadmain.h"
+#include "sharedglcontext.h"
 #include "visualplayposition.h"
-#pragma message("wspinny.cpp")
 
 WSpinny::WSpinny(QWidget* parent, VinylControlManager* pVCMan)
         : QGLWidget(parent, SharedGLContext::getShareWidget()),
