@@ -14,7 +14,7 @@ if int(build.flags['mediafoundation']):
     env["LINKFLAGS"].remove("/entry:mainCRTStartup")
     env["LINKFLAGS"].remove("/subsystem:windows")
     ssmediafoundation_bin = env.SharedLibrary('soundsourcemediafoundation',
-        ['soundsource.cpp', 'soundsourcemediafoundation.cpp', "../../src/buildversion.cpp"],
+        ['soundsource.cpp', 'soundsourcemediafoundation.cpp', "../../../src/buildversion.cpp"],
         LINKCOM  = [env['LINKCOM'],
             'mt.exe -nologo -manifest ${TARGET}.manifest -outputresource:$TARGET;1'])
     Return("ssmediafoundation_bin")
