@@ -107,6 +107,9 @@
       </layout>
      </item>
      <item>
+<<<<<<< TREE
+      <layout class="QHBoxLayout" name="underflowHLayout"/>
+=======
       <layout class="QHBoxLayout" name="underflowHLayout">
        <item>
         <widget class="QLabel" name="underflowLabel">
@@ -123,6 +126,7 @@
         </widget>
        </item>
       </layout>
+>>>>>>> MERGE-SOURCE
      </item>
     </layout>
    </item>

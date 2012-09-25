@@ -3,16 +3,22 @@
 
 #include <QTime>
 #include <QThread>
+#include "vsync.h"
+
+#include <qx11info_x11.h>
 
 class QGLWidget;
 
 class VSyncThread : public QThread {
     Q_OBJECT
   public:
-    VSyncThread();
+    VSyncThread(QWidget* parent);
     ~VSyncThread();
     void run();
     void stop();
+
+    bool waitForVideoSync();
+
 
   signals:
     void vsync();
@@ -20,6 +26,20 @@ class VSyncThread : public QThread {
   private:
     bool doRendering;
     QGLWidget *glw;
+
+
+    bool glXExtensionSupported(Display *dpy, int screen, const char *extension);
+
+    typedef int (*qt_glXGetVideoSyncSGI)(uint *);
+    typedef int (*qt_glXWaitVideoSyncSGI)(int, int, uint *);
+    typedef int (*qt_glXSwapIntervalSGI)(int interval);
+
+    qt_glXGetVideoSyncSGI glXGetVideoSyncSGI;
+    qt_glXWaitVideoSyncSGI glXWaitVideoSyncSGI;
+    qt_glXSwapIntervalSGI glXSwapIntervalSGI;
+
+    uint m_counter;
+
 };
 
 
