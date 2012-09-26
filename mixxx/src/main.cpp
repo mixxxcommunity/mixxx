@@ -34,7 +34,7 @@
 #include "qpixmap.h"
 #include "qsplashscreen.h"
 #include "errordialoghandler.h"
-#include "buildversion.h"
+#include "defs_version.h"
 
 #ifdef __LADSPA__
 #include <ladspa/ladspaloader.h>
@@ -169,7 +169,7 @@ int main(int argc, char * argv[])
     CmdlineArgs& args = CmdlineArgs::Instance();
     if (!args.Parse(argc, argv)) {
         fputs("Mixxx digital DJ software v", stdout);
-        fputs(BuildVersion::versionName(), stdout);
+        fputs(VERSION, stdout);
         fputs(" - Command line options", stdout);
         fputs(
                    "\n(These are case-sensitive.)\n\n\

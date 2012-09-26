@@ -24,7 +24,7 @@
 #include <QString>
 
 #include "defs.h"
-#include "buildversion.h"
+#include "defs_version.h"
 #include "soundsource.h"
 
 #ifdef Q_WS_WIN
@@ -74,7 +74,7 @@ class SoundSourceMediaFoundation : public Mixxx::SoundSource {
 
 extern "C" MY_EXPORT const char* getMixxxVersion()
 {
-    return BuildVersion::versionName();
+    return VERSION;
 }
 
 extern "C" MY_EXPORT int getSoundSourceAPIVersion()

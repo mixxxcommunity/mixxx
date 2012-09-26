@@ -494,11 +494,11 @@ class MixxxCore(Feature):
 
                    "main.cpp",
                    "mixxx.cpp",
-                   "buildversion.cpp",
                    "errordialoghandler.cpp",
                    "upgrade.cpp",
 
                    "soundsource.cpp",
+                   "performancetimer.cpp",
 
                    "sharedglcontext.cpp",
                    "widget/wwidget.cpp",

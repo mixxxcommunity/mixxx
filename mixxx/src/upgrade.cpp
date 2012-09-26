@@ -16,7 +16,7 @@
 ***************************************************************************/
 
 #include <QtCore>
-#include "buildversion.h"
+#include "defs_version.h"
 
 #include "configobject.h"
 #include "upgrade.h"
@@ -170,8 +170,8 @@ ConfigObject<ConfigValue>* Upgrade::versionUpgrade(const QString& settingsPath) 
         else {
 #endif
             //This must have been the first run... right? :)
-            qDebug() << "No version number in configuration file. Setting to" << BuildVersion::versionName();
-            config->set(ConfigKey("[Config]","Version"), ConfigValue(BuildVersion::versionName()));
+            qDebug() << "No version number in configuration file. Setting to" << VERSION;
+            config->set(ConfigKey("[Config]","Version"), ConfigValue(VERSION));
             m_bFirstRun = true;
             return config;
 #ifdef __APPLE__
@@ -180,8 +180,8 @@ ConfigObject<ConfigValue>* Upgrade::versionUpgrade(const QString& settingsPath) 
     }
 
     // If it's already current, stop here
-    if (configVersion == BuildVersion::versionName()) {
-        qDebug() << "Configuration file is at the current version" << BuildVersion::versionName();
+    if (configVersion == VERSION) {
+        qDebug() << "Configuration file is at the current version" << VERSION;
         return config;
     }
 
@@ -328,7 +328,7 @@ ConfigObject<ConfigValue>* Upgrade::versionUpgrade(const QString& settingsPath) 
     }
     */
 
-    if (configVersion == BuildVersion::versionName()) qDebug() << "Configuration file is now at the current version" << BuildVersion::versionName();
+    if (configVersion == VERSION) qDebug() << "Configuration file is now at the current version" << VERSION;
     else {
         /* Way too verbose, this confuses the hell out of Linux users when they see this:
         qWarning() << "Configuration file is at version" << configVersion
@@ -337,7 +337,7 @@ ConfigObject<ConfigValue>* Upgrade::versionUpgrade(const QString& settingsPath) 
                    << "\n-> Leaving the configuration file version as-is.";
         */
         qWarning() << "Configuration file is at version" << configVersion
-                   << "instead of the current" << BuildVersion::versionName();
+                   << "instead of the current" << VERSION;
     }
 
     return config;
