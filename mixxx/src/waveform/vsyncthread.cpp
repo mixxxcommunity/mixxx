@@ -8,7 +8,6 @@
 #include <GL/glx.h>
 
 #include "vsyncthread.h"
-#include "vsync.h"
 #include "performancetimer.h"
 
 

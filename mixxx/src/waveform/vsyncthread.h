@@ -3,7 +3,6 @@
 
 #include <QTime>
 #include <QThread>
-#include "vsync.h"
 
 #include <qx11info_x11.h>
 
