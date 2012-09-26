@@ -232,6 +232,16 @@ qint64 PerformanceTimer::elapsed() const
     return getTimeFromTick(li.QuadPart - t1);
 }
 
+qint64 PerformanceTimer::restart()
+{
+    LARGE_INTEGER li;
+    qint64 start;
+    start = t1;
+    QueryPerformanceCounter(&li);
+    t1 = li.QuadPart;
+    return getTimeFromTick(t1 - start);
+}
+
 ////////////////////////////// Default //////////////////////////////
 #else
 
