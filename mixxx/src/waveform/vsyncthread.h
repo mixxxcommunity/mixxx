@@ -26,7 +26,11 @@ class VSyncThread : public QThread {
     bool doRendering;
     QGLWidget *glw;
 
+#if defined(__APPLE__)
 
+#elif defined(__WINDOWS__)
+
+#else
     bool glXExtensionSupported(Display *dpy, int screen, const char *extension);
 
     typedef int (*qt_glXGetVideoSyncSGI)(uint *);
@@ -38,6 +42,7 @@ class VSyncThread : public QThread {
     qt_glXSwapIntervalSGI glXSwapIntervalSGI;
 
     uint m_counter;
+#endif
 
 };
 

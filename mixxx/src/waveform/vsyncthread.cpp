@@ -5,13 +5,25 @@
 #include <QTime>
 #include <qdebug.h>
 #include <QTime>
-#include <GL/glx.h>
+#if defined(__APPLE__)
+
+#elif defined(__WINDOWS__)
+
+#else
+   #include <GL/glx.h>
+#endif
+
 
 #include "vsyncthread.h"
 #include "performancetimer.h"
 
+#if defined(__APPLE__)
 
-extern const QX11Info *qt_x11Info(const QPaintDevice *pd);
+#elif defined(__WINDOWS__)
+
+#else
+   extern const QX11Info *qt_x11Info(const QPaintDevice *pd);
+#endif
 
 VSyncThread::VSyncThread(QWidget* parent)
         : QThread() {
@@ -30,6 +42,11 @@ VSyncThread::VSyncThread(QWidget* parent)
     //glw->resize(255,255);
     //glw->show();
 
+#if defined(__APPLE__)
+
+#elif defined(__WINDOWS__)
+
+#else
     const QX11Info *xinfo = qt_x11Info(glw);
     if (glXExtensionSupported(xinfo->display(), xinfo->screen(), "GLX_SGI_video_sync")) {
         glXGetVideoSyncSGI =  (qt_glXGetVideoSyncSGI)glXGetProcAddressARB((const GLubyte *)"glXGetVideoSyncSGI");
@@ -39,6 +56,7 @@ VSyncThread::VSyncThread(QWidget* parent)
     if (glXExtensionSupported(xinfo->display(), xinfo->screen(), "GLX_SGI_swap_control")) {
         glXSwapIntervalSGI =  (qt_glXSwapIntervalSGI)glXGetProcAddressARB((const GLubyte *)"glXSwapIntervalSGI");
     }
+#endif
 }
 
 VSyncThread::~VSyncThread() {
@@ -94,6 +112,11 @@ bool VSyncThread::waitForVideoSync() {
         glw->makeCurrent();
     }
 
+#if defined(__APPLE__)
+
+#elif defined(__WINDOWS__)
+
+#else
     if (glXGetVideoSyncSGI && glXWaitVideoSyncSGI) {
         //if (!glXGetVideoSyncSGI(&counter)) {
             glXWaitVideoSyncSGI(2, (counter + 1) % 2, &counter);
@@ -118,9 +141,16 @@ bool VSyncThread::waitForVideoSync() {
         // http://www.inb.uni-luebeck.de/~boehme/xvideo_sync.html
         return true;
     }
+#endif
     return false;
 }
 
+
+#if defined(__APPLE__)
+
+#elif defined(__WINDOWS__)
+
+#else
 // from mesa-demos-8.0.1/src/xdemos/glsync.c (MIT license)
 bool VSyncThread::glXExtensionSupported(Display *dpy, int screen, const char *extension) {
     const char *extensionsString, *pos;
@@ -132,5 +162,5 @@ bool VSyncThread::glXExtensionSupported(Display *dpy, int screen, const char *ex
     return pos!=NULL && (pos==extensionsString || pos[-1]==' ') &&
         (pos[strlen(extension)]==' ' || pos[strlen(extension)]=='\0');
 }
-
+#endif
 

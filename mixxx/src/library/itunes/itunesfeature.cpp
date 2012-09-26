@@ -203,7 +203,7 @@ QString ITunesFeature::getiTunesMusicPath() {
 #elif defined(__WINDOWS__)
     musicFolder = QDesktopServices::storageLocation(QDesktopServices::MusicLocation) + "\\iTunes\\iTunes Music Library.xml";
 #else
-		musicFolder = "";
+    musicFolder = "";
 #endif
     qDebug() << "ITunesLibrary=[" << musicFolder << "]";
     return musicFolder;
