@@ -94,6 +94,8 @@ class WaveformWidgetFactory : public QObject, public Singleton<WaveformWidgetFac
 
     void addTimerListener(QWidget* pWidget);
 
+    void startVSync(QWidget *parent);
+
   public slots:
     void start();
     void stop();

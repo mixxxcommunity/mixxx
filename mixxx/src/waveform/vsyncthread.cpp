@@ -26,7 +26,8 @@
 #endif
 
 VSyncThread::VSyncThread(QWidget* parent)
-        : QThread() {
+        : QThread(),
+          m_syncTime(33333) {
     doRendering = true;
 
     //QGLFormat glFormat = QGLFormat::defaultFormat();
@@ -35,12 +36,13 @@ VSyncThread::VSyncThread(QWidget* parent)
 
     glw = new QGLWidget(parent);
 
-    qDebug() << glw->size();
+    //qDebug() << glw->size();
 
-    glw->moveToThread(this);
+    //glw->moveToThread(this);
 
-    //glw->resize(255,255);
-    //glw->show();
+    glw->resize(1,1);
+    glw->hide();
+
 
 #if defined(__APPLE__)
 
@@ -74,30 +76,29 @@ void VSyncThread::stop()
 
 void VSyncThread::run() {
     QThread::currentThread()->setObjectName("VSyncThread");
-    // glw->makeCurrent();
 
+    glw->makeCurrent();
 
-    PerformanceTimer timer;
+    int usRest;
+    int usWait = m_syncTime;
+    int usLast;
 
-    timer.start();
+    m_timer.start();
 
     while (doRendering) {
-        qDebug()  << "VSync 1" << timer.elapsed();
         if (!waitForVideoSync()){
-            usleep(16600);
+            usRest = usWait - m_timer.elapsed() / 1000;
+            if (usRest > 1) {
+                usleep(usRest);
+            }
         }
-        //qDebug()  << "VSync 3" << timer.elapsed();
-        //m_vsync.waitForVideoSync();
-        qDebug()  << "VSync 4                           " << timer.restart();
-       // emit(vsync());
-        //qDebug()  << "VSync 1" << timer.elapsed();
 
-        // Wait vor VSync
-        //qDebug()  << "VSync" << QTime::currentTime().msec() << glw->format().swapInterval();
-        // glw->swapBuffers(); // sleeps until vsync
-        //emit(vsync());
-        // qDebug() << "VSync" << QTime::currentTime().msec();
-        //msleep(10); // additional sleep in case of waiting for vsync fails
+        usLast = m_timer.restart() / 1000;
+        qDebug()  << "VSync 4                           " << usLast;
+        emit(vsync());
+        usWait -= usLast;
+        usWait %= m_syncTime;
+        usWait += m_syncTime;
     }
 }
 
@@ -118,7 +119,8 @@ bool VSyncThread::waitForVideoSync() {
 
 #else
     if (glXGetVideoSyncSGI && glXWaitVideoSyncSGI) {
-        //if (!glXGetVideoSyncSGI(&counter)) {
+        counter = m_counter;
+        if (!glXGetVideoSyncSGI(&counter)) {
             glXWaitVideoSyncSGI(2, (counter + 1) % 2, &counter);
             if (counter < m_counter)
                 fprintf(stderr, "error:  vblank count went backwards: %d -> %d\n", m_counter, counter);
@@ -128,7 +130,7 @@ bool VSyncThread::waitForVideoSync() {
                 fprintf(stderr, "error:  one counter lost: %d\n", counter);
             m_counter = counter;
             return true;
-        //}
+        }
         //    qDebug() << m_counter;
         // glXWaitVideoSyncSGI(2, (m_counter + 1) % 2, &m_counter);
         //glXWaitVideoSyncSGI(1, 0, &m_counter);
@@ -139,7 +141,6 @@ bool VSyncThread::waitForVideoSync() {
         // https://code.launchpad.net/~vanvugt/compiz/fix-763005-trunk/+merge/71307
         // http://www.bitsphere.co.za/gameDev/openGL/vsync.php
         // http://www.inb.uni-luebeck.de/~boehme/xvideo_sync.html
-        return true;
     }
 #endif
     return false;
@@ -164,3 +165,11 @@ bool VSyncThread::glXExtensionSupported(Display *dpy, int screen, const char *ex
 }
 #endif
 
+
+qint64 VSyncThread::elapsed() {
+    return m_timer.elapsed();
+}
+
+void VSyncThread::setSyncTime(int syncTime) {
+    m_syncTime = syncTime;
+}
