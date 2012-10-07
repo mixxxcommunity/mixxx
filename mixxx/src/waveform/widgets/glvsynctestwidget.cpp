@@ -17,13 +17,13 @@ GLVSyncTestWidget::GLVSyncTestWidget( const char* group, QWidget* parent)
     : QGLWidget(parent, SharedGLContext::getShareWidget()),
       WaveformWidgetAbstract(group) {
 
-    addRenderer<WaveformRenderBackground>();
-    addRenderer<WaveformRendererEndOfTrack>();
-    addRenderer<WaveformRendererPreroll>();
-    addRenderer<WaveformRenderMarkRange>();
-    addRenderer<GLVSyncTestRenderer>();
-    addRenderer<WaveformRenderMark>();
-    addRenderer<WaveformRenderBeat>();
+    addRenderer<WaveformRenderBackground>(); // 9089 µs
+    addRenderer<WaveformRendererEndOfTrack>(); // 677 µs
+    addRenderer<WaveformRendererPreroll>(); // 2034 µs
+    addRenderer<WaveformRenderMarkRange>(); // 793 µs
+    addRenderer<GLVSyncTestRenderer>(); // 841 µs
+    addRenderer<WaveformRenderMark>(); // 711 µs
+    addRenderer<WaveformRenderBeat>(); // 1183 µs
 
     setAttribute(Qt::WA_NoSystemBackground);
     setAttribute(Qt::WA_OpaquePaintEvent);

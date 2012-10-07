@@ -5,6 +5,7 @@
 #include <QThread>
 
 #include <qx11info_x11.h>
+#include "performancetimer.h"
 
 class QGLWidget;
 
@@ -17,7 +18,11 @@ class VSyncThread : public QThread {
     void stop();
 
     bool waitForVideoSync();
-
+    int elapsed();
+    int usToNextSync();
+    void setUsSyncTime(int usSyncTimer);
+    void setVSync(bool checked);
+    int rtErrorCnt();
 
   signals:
     void vsync();
@@ -42,8 +47,12 @@ class VSyncThread : public QThread {
     qt_glXSwapIntervalSGI glXSwapIntervalSGI;
 
     uint m_counter;
+    int m_usSyncTime;
+    bool m_vSync;
+    int m_rtErrorCnt;
 #endif
 
+    PerformanceTimer m_timer;
 };
 
 

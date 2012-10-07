@@ -37,7 +37,23 @@ void WaveformRenderBackground::draw(QPainter* painter,
     //if (pixmap.depth() == 16 && !image.hasAlphaChannel() )
     //    image = image.convertToFormat(QImage::Format_RGB16);
 
-    painter->drawImage(QPoint(0, 0), m_backgroundPixmap.toImage());
+    //58 µs (QWidget)
+    //151 µs (QGlWidget)
+    //painter->fillRect(m_backgroundImage.rect(), m_backgroundColor);
+
+    // 731 µs (QWidget)
+    // 166 µs (QGlWidget)
+    painter->drawImage(QPoint(0, 0), m_backgroundImage);
+
+    // This produces a white back ground with Linux QT 4.6 QGlWidget and Intel i915 driver
+    // time for such a setup:
+    // 38 µs (QWidget)
+    // 549 µs (QGlWidget)
+    //painter->drawPixmap(QPoint(0, 0), m_backgroundPixmap);
+
+
+    // 9089 µs (QGlWidget)
+    //painter->drawImage(QPoint(0, 0), m_backgroundPixmap.toImage());
 }
 
 void WaveformRenderBackground::generatePixmap() {
@@ -78,5 +94,8 @@ void WaveformRenderBackground::generatePixmap() {
                                      m_waveformRenderer->getHeight());
         m_backgroundPixmap.fill(m_backgroundColor);
     }
+    m_backgroundImage = m_backgroundPixmap.toImage();
+
+
     setDirty(false);
 }

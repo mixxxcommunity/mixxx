@@ -64,9 +64,12 @@ class WaveformWidgetFactory : public QObject, public Singleton<WaveformWidgetFac
 
     void setFrameRate( int frameRate);
     int getFrameRate() const { return m_frameRate;}
+    bool getVSync() const { return m_vSync;}
     double getActualFrameRate() const { return m_actualFrameRate;}
     double getMinimumFrameRate() const { return m_lastRenderDuration;}
     double getMaximumFrameRate() const { return m_lastFrameTime;}
+
+    int rtErrorCnt();
 
     bool isOpenGLAvailable() const { return m_openGLAvailable;}
     QString getOpenGLVersion() const { return m_openGLVersion;}
@@ -93,6 +96,10 @@ class WaveformWidgetFactory : public QObject, public Singleton<WaveformWidgetFac
     void destroyWidgets();
 
     void addTimerListener(QWidget* pWidget);
+
+    void startVSync(QWidget *parent);
+    void setVSync(bool checked);
+
 
   public slots:
     void start();
@@ -153,6 +160,7 @@ class WaveformWidgetFactory : public QObject, public Singleton<WaveformWidgetFac
     double m_actualFrameRate;
     double m_minimumFrameRate;
     double m_maximumlFrameRate;
+    bool m_vSync;
 };
 
 #endif // WAVEFORMWIDGETFACTORY_H

@@ -562,6 +562,10 @@ void DlgPrefControls::slotSetFrameRate(int frameRate) {
     WaveformWidgetFactory::instance()->setFrameRate(frameRate);
 }
 
+void DlgPrefControls::slotSetVSync(bool checked) {
+    WaveformWidgetFactory::instance()->setVSync(checked);
+}
+
 void DlgPrefControls::slotSetWaveformType(int index) {
     if (WaveformWidgetFactory::instance()->setWidgetTypeFromHandle(index)) {
         // It was changed to a valid type. Previously we rebooted the Mixxx GUI
@@ -611,11 +615,15 @@ void DlgPrefControls::timerEvent(QTimerEvent * /*event*/) {
     //Just to refresh actual framrate any time the controller is modified
     frameRateAverage->setText(
             QString::number(WaveformWidgetFactory::instance()->getActualFrameRate(), 'f', 2) +
-            " (" +
-            QString::number(WaveformWidgetFactory::instance()->getMinimumFrameRate(), 'f', 2) +
+            " e" +
+            QString::number(WaveformWidgetFactory::instance()->rtErrorCnt()));
+
+     /*
+            +
             " .. " +
             QString::number(WaveformWidgetFactory::instance()->getMaximumFrameRate(), 'f', 2) +
             ")");
+            */
 }
 
 void DlgPrefControls::initWaveformControl()
@@ -642,6 +650,7 @@ void DlgPrefControls::initWaveformControl()
         waveformTypeComboBox->setCurrentIndex(currentIndex);
 
     frameRateSpinBox->setValue(factory->getFrameRate());
+    vSyncCheckBox->setChecked(factory->getVSync());
 
     synchronizeZoomCheckBox->setChecked( factory->isZoomSync());
     allVisualGain->setValue(factory->getVisualGain(WaveformWidgetFactory::All));
@@ -659,6 +668,8 @@ void DlgPrefControls::initWaveformControl()
 
     connect(frameRateSpinBox, SIGNAL(valueChanged(int)),
             this, SLOT(slotSetFrameRate(int)));
+    connect(vSyncCheckBox,  SIGNAL(clicked(bool)),
+            this, SLOT(slotSetVSync(bool)));
     connect(waveformTypeComboBox, SIGNAL(currentIndexChanged(int)),
             this, SLOT(slotSetWaveformType(int)));
     connect(defaultZoomComboBox, SIGNAL(currentIndexChanged(int)),

@@ -9,6 +9,8 @@
 #include "visualplayposition.h"
 #include "mathstuff.h"
 
+#include "performancetimer.h"
+
 #include <QPainter>
 
 const int WaveformWidgetRenderer::s_waveformMinZoom = 1;
@@ -42,7 +44,7 @@ WaveformWidgetRenderer::WaveformWidgetRenderer( const char* group) :
     m_gainControlObject = NULL;
     m_gain = 1.0;
     m_trackSamplesControlObject = NULL;
-    m_trackSamples = -1.0;
+    m_trackSamples = 0.0;
 
 
 #ifdef WAVEFORMWIDGETRENDERER_DEBUG
@@ -101,7 +103,7 @@ bool WaveformWidgetRenderer::init() {
 void WaveformWidgetRenderer::onPreRender(const QTime& posTime) {
 
     m_trackSamples = m_trackSamplesControlObject->get();
-    if (m_trackSamples < 0.0)
+    if (m_trackSamples <= 0.0)
         return;
 
     //Fetch parameters before rendering in order the display all sub-renderers with the same values
@@ -165,15 +167,20 @@ void WaveformWidgetRenderer::draw( QPainter* painter, QPaintEvent* event) {
     m_lastSystemFrameTime = m_timer->restart();
 #endif
 
+    PerformanceTimer timer;
+    timer.start();
+
     //not ready to display need to wait until track initialization is done
     //draw only first is stack (background)
-    if( m_trackSamples < 0.0) {
+    if( m_trackSamples <= 0.0) {
         if( !m_rendererStack.empty())
             m_rendererStack[0]->draw( painter, event);
         return;
     } else {
-        for( int i = 0; i < m_rendererStack.size(); ++i)
+        for( int i = 0; i < m_rendererStack.size(); ++i) {
             m_rendererStack[i]->draw( painter, event);
+            qDebug() << i << "  " << timer.restart();
+        }
 
         painter->setPen(m_axesColor);
         painter->drawLine(m_width/2,0,m_width/2,m_height);
@@ -268,7 +275,7 @@ void WaveformWidgetRenderer::setTrack(TrackPointer track)
     m_trackInfoObject = track;
     m_playPos = 0.0;
     //used to postpone first display until track sample is actually available
-    m_trackSamples = -1.0;
+    m_trackSamples = 0.0;
 
     for( int i = 0; i < m_rendererStack.size(); ++i) {
         m_rendererStack[i]->onSetTrack();

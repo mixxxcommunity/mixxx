@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>519</width>
-    <height>798</height>
+    <width>497</width>
+    <height>845</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -208,7 +208,7 @@
        </property>
       </widget>
      </item>
-     <item row="9" column="0">
+     <item row="11" column="0">
       <widget class="QLabel" name="textLabelAllowTrackLoadToPlayingDeck">
        <property name="text">
         <string>Track load behaviour</string>
@@ -218,10 +218,10 @@
        </property>
       </widget>
      </item>
-     <item row="9" column="1" colspan="2">
+     <item row="11" column="1" colspan="2">
       <widget class="QComboBox" name="ComboBoxAllowTrackLoadToPlayingDeck"/>
      </item>
-     <item row="11" column="0">
+     <item row="13" column="0">
       <widget class="QLabel" name="lable_shortcuts">
        <property name="text">
         <string>Shortcuts</string>
@@ -231,36 +231,13 @@
        </property>
       </widget>
      </item>
-     <item row="11" column="1" colspan="2">
+     <item row="13" column="1" colspan="2">
       <widget class="QComboBox" name="ComboBoxShortcutsSource"/>
      </item>
-     <item row="7" column="0">
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>Cue behaviour</string>
-       </property>
-       <property name="buddy">
-        <cstring>ComboBoxCueDefault</cstring>
-       </property>
-      </widget>
-     </item>
      <item row="8" column="1" colspan="2">
-      <widget class="QComboBox" name="ComboBoxCueDefault"/>
-     </item>
-     <item row="7" column="0">
-      <widget class="QLabel" name="textLabelCueRecall">
-       <property name="text">
-        <string>Auto Recall Cue</string>
-       </property>
-       <property name="buddy">
-        <cstring>ComboBoxCueRecall</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="7" column="1" colspan="2">
       <widget class="QComboBox" name="ComboBoxCueRecall"/>
      </item>
-     <item row="13" column="0">
+     <item row="15" column="0">
       <widget class="QLabel" name="textLabelLocale">
        <property name="text">
         <string>Locale</string>
@@ -270,7 +247,7 @@
        </property>
       </widget>
      </item>
-     <item row="13" column="1" colspan="2">
+     <item row="15" column="1" colspan="2">
       <widget class="QComboBox" name="ComboBoxLocale"/>
      </item>
      <item row="1" column="1" colspan="2">
@@ -280,6 +257,29 @@
        </property>
        <property name="alignment">
         <set>Qt::AlignJustify|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="1" colspan="2">
+      <widget class="QComboBox" name="ComboBoxCueDefault"/>
+     </item>
+     <item row="7" column="0">
+      <widget class="QLabel" name="labelCueBehaviour">
+       <property name="text">
+        <string>Cue behaviour</string>
+       </property>
+       <property name="buddy">
+        <cstring>ComboBoxCueDefault</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="0">
+      <widget class="QLabel" name="textLabelCueRecall">
+       <property name="text">
+        <string>Auto Recall Cue</string>
+       </property>
+       <property name="buddy">
+        <cstring>ComboBoxCueRecall</cstring>
        </property>
       </widget>
      </item>
@@ -652,7 +652,7 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="5">
+      <item row="3" column="5">
        <widget class="QDoubleSpinBox" name="highVisualGain">
         <property name="toolTip">
          <string>Visual gain of the high frequencies</string>
@@ -671,7 +671,7 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="4">
+      <item row="3" column="4">
        <widget class="QDoubleSpinBox" name="midVisualGain">
         <property name="toolTip">
          <string>Visual gain of the middle frequencies</string>
@@ -690,7 +690,7 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="3">
+      <item row="3" column="3">
        <widget class="QDoubleSpinBox" name="lowVisualGain">
         <property name="toolTip">
          <string>Visual gain of the low frequencies</string>
@@ -709,7 +709,7 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="2">
+      <item row="3" column="2">
        <widget class="QDoubleSpinBox" name="allVisualGain">
         <property name="toolTip">
          <string>Global visual gain</string>
@@ -728,7 +728,7 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
+      <item row="3" column="0">
        <widget class="QLabel" name="visualGainLabel">
         <property name="text">
          <string>Visual gain</string>
@@ -754,10 +754,10 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="2" colspan="2">
+      <item row="5" column="2" colspan="2">
        <widget class="QComboBox" name="defaultZoomComboBox"/>
       </item>
-      <item row="4" column="0">
+      <item row="5" column="0">
        <widget class="QLabel" name="defaultZoomLabel">
         <property name="text">
          <string>Default zoom</string>
@@ -770,7 +770,7 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="4" colspan="2">
+      <item row="5" column="4" colspan="2">
        <widget class="QCheckBox" name="synchronizeZoomCheckBox">
         <property name="toolTip">
          <string>Synchronize zoom level across all waveform displays.</string>
@@ -780,7 +780,7 @@
         </property>
        </widget>
       </item>
-      <item row="5" column="0">
+      <item row="6" column="0">
        <widget class="QLabel" name="openGlStatusLabel">
         <property name="toolTip">
          <string/>
@@ -793,7 +793,7 @@
         </property>
        </widget>
       </item>
-      <item row="5" column="2" colspan="4">
+      <item row="6" column="2" colspan="4">
        <widget class="QLabel" name="openGlStatusIcon">
         <property name="toolTip">
          <string>Displays which OpenGL version is supported by the current platform.</string>
@@ -813,17 +813,24 @@
         </property>
        </widget>
       </item>
-      <item row="5" column="1">
+      <item row="6" column="1">
        <widget class="QLabel" name="dummySpacerLabel">
         <property name="text">
          <string/>
         </property>
        </widget>
       </item>
-      <item row="3" column="2" colspan="4">
+      <item row="4" column="2" colspan="4">
        <widget class="QCheckBox" name="normalizeOverviewCheckBox">
         <property name="text">
          <string>Normalize Overview</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QCheckBox" name="vSyncCheckBox">
+        <property name="text">
+         <string>Wait for VSync</string>
         </property>
        </widget>
       </item>
@@ -841,7 +848,6 @@
   <tabstop>ComboBoxRateRange</tabstop>
   <tabstop>ComboBoxRateDir</tabstop>
   <tabstop>ComboBoxCueRecall</tabstop>
-  <tabstop>ComboBoxCueDefault</tabstop>
   <tabstop>ComboBoxAllowTrackLoadToPlayingDeck</tabstop>
   <tabstop>ComboBoxLocale</tabstop>
   <tabstop>waveformTypeComboBox</tabstop>

@@ -22,6 +22,8 @@
 #include "widget/wwaveformviewer.h"
 #include "waveform/vsyncthread.h"
 
+#include "performancetimer.h"
+
 ///////////////////////////////////////////
 
 WaveformWidgetAbstractHandle::WaveformWidgetAbstractHandle()
@@ -121,19 +123,10 @@ WaveformWidgetFactory::WaveformWidgetFactory() :
     }
 
     evaluateWidgets();
-
-    //m_vsyncThread = new VSyncThread();
-    //m_vsyncThread->start();
-
-    //connect(m_vsyncThread, SIGNAL(vsync()),
-    //        this, SLOT(refresh()), Qt::BlockingQueuedConnection);
-
-
-    start();
 }
 
 WaveformWidgetFactory::~WaveformWidgetFactory() {
-    //delete m_vsyncThread;
+    delete m_vsyncThread;
 }
 
 bool WaveformWidgetFactory::setConfig(ConfigObject<ConfigValue> *config){
@@ -149,6 +142,9 @@ bool WaveformWidgetFactory::setConfig(ConfigObject<ConfigValue> *config){
     } else {
         m_config->set(ConfigKey("[Waveform]","FrameRate"), ConfigValue(m_frameRate));
     }
+
+    bool vsync = m_config->getValueString(ConfigKey("[Waveform]","VSync"),"0").toInt();
+    setVSync(vsync);
 
     int defaultZoom = m_config->getValueString(ConfigKey("[Waveform]","DefaultZoom")).toInt(&ok);
     if (ok) {
@@ -194,9 +190,9 @@ bool WaveformWidgetFactory::setConfig(ConfigObject<ConfigValue> *config){
 
 void WaveformWidgetFactory::start() {
     //qDebug() << "WaveformWidgetFactory::start";
-    killTimer(m_mainTimerId);
-    m_mainTimerId = startTimer(1000/m_frameRate);
-    m_delayTime = QTime::currentTime();
+//    killTimer(m_mainTimerId);
+//    m_mainTimerId = startTimer(1000/m_frameRate);
+//    m_delayTime = QTime::currentTime();
 }
 
 void WaveformWidgetFactory::stop() {
@@ -259,7 +255,15 @@ void WaveformWidgetFactory::setFrameRate(int frameRate) {
     if (m_config) {
         m_config->set(ConfigKey("[Waveform]","FrameRate"), ConfigValue(m_frameRate));
     }
-    start();
+    m_vsyncThread->setUsSyncTime(1000000/m_frameRate);
+}
+
+void WaveformWidgetFactory::setVSync(bool checked) {
+    if (m_config) {
+        m_config->set(ConfigKey("[Waveform]","VSync"), ConfigValue(checked));
+    }
+    m_vSync = checked;
+    m_vsyncThread->setVSync(checked);
 }
 
 bool WaveformWidgetFactory::setWidgetType(WaveformWidgetType::Type type) {
@@ -403,32 +407,30 @@ void WaveformWidgetFactory::refresh() {
 
     //int startTime;
 
+    qDebug() << "signal" << m_vsyncThread->elapsed();
+
     if (m_type) {   // no regular updates for an empty waveform
-        // Show rendered buffer from last run
+        // Swap rendered buffer from last run
+        // It may happen that there is an artificially delayed due to
+        // anti tearing driver settings
         for (unsigned int i = 0; i < m_waveformWidgetHolders.size(); i++) {
             // Show rendered buffer from last run
             m_waveformWidgetHolders[i].m_waveformWidget->postRender();
+            qDebug() << "swap" << i << m_vsyncThread->elapsed();
         }
+
         QTime now = QTime::currentTime();
-        int frame_time = 1000 / m_frameRate;
-        int delay = m_delayTime.msecsTo(now) % frame_time;
+        // next rendered frame is displayed after next buffer swap and than after VSync
+        int usToNextSync = m_vsyncThread->usToNextSync();
 
-        if (delay > 16) {
-            // We have already lost at least one  Vsync
-            start();
-            //qDebug() << "refresh (frame lost)" << QTime::currentTime().msec() << delay;
-            m_lastRenderDuration++;
-            delay = 0;
-        } else {
-            //qDebug() << "refresh" << QTime::currentTime().msec() << delay;
-        }
-
-        QTime nextFrameTime = now.addMSecs(16-delay);
+        QTime nextFrameTime = now.addMSecs(usToNextSync/1000);
 
         for (unsigned int i = 0; i < m_waveformWidgetHolders.size(); i++) {
             // Calculate play position for the new Frame in following run
             m_waveformWidgetHolders[i].m_waveformWidget->preRender(nextFrameTime);
         }
+        qDebug() << "prerender" << m_vsyncThread->elapsed();
+
     }
 
     // Now the time uncritically time consuming things
@@ -443,6 +445,9 @@ void WaveformWidgetFactory::refresh() {
             m_waveformWidgetHolders[i].m_waveformWidget->render();
         }
     }
+
+    qDebug() << "render" << m_vsyncThread->elapsed();
+
 
     // m_lastRenderDuration = startTime;
 
@@ -595,4 +600,21 @@ int WaveformWidgetFactory::findIndexOf(WWaveformViewer* viewer) const {
         if (m_waveformWidgetHolders[i].m_waveformViewer == viewer)
             return i;
     return -1;
+}
+
+void WaveformWidgetFactory::startVSync(QWidget *parent) {
+
+    m_vsyncThread = new VSyncThread(parent);
+    m_vsyncThread->start();
+
+    connect(m_vsyncThread, SIGNAL(vsync()),
+            this, SLOT(refresh()), Qt::BlockingQueuedConnection);
+
+}
+
+int WaveformWidgetFactory::rtErrorCnt() {
+    if (m_vsyncThread) {
+        return m_vsyncThread->rtErrorCnt();
+    }
+    return 0;
 }

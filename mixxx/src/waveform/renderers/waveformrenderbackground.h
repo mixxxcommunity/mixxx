@@ -26,6 +26,7 @@ class WaveformRenderBackground : public WaveformRendererAbstract {
     QString m_backgroundPixmapPath;
     QColor m_backgroundColor;
     QPixmap m_backgroundPixmap;
+    QImage m_backgroundImage;
 
     DISALLOW_COPY_AND_ASSIGN(WaveformRenderBackground);
 };
