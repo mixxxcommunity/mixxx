@@ -9,8 +9,7 @@
 
 #include <QObject>
 #include <QTime>
-
-#include <vector>
+#include <QVector>
 
 class WWaveformViewer;
 class WaveformWidgetAbstract;
@@ -36,7 +35,9 @@ class WaveformWidgetAbstractHandle {
 };
 
 class WaveformWidgetHolder {
-private:
+  public:
+    WaveformWidgetHolder();
+  private:
     WaveformWidgetHolder(WaveformWidgetAbstract* waveformWidget,
                          WWaveformViewer* waveformViewer,
                          const QDomNode& visualNodeCache);
@@ -92,7 +93,7 @@ class WaveformWidgetFactory : public QObject, public Singleton<WaveformWidgetFac
     void setOverviewNormalized(bool normalize);
     int isOverviewNormalized() const { return m_overviewNormalized;}
 
-    const std::vector<WaveformWidgetAbstractHandle> getAvailableTypes() const { return m_waveformWidgetHandles;}
+    const QVector<WaveformWidgetAbstractHandle> getAvailableTypes() const { return m_waveformWidgetHandles;}
     void destroyWidgets();
 
     void addTimerListener(QWidget* pWidget);
@@ -129,10 +130,11 @@ class WaveformWidgetFactory : public QObject, public Singleton<WaveformWidgetFac
     int findIndexOf( WWaveformViewer* viewer) const;
 
     //All type of available widgets
-    std::vector<WaveformWidgetAbstractHandle> m_waveformWidgetHandles;
+
+    QVector<WaveformWidgetAbstractHandle> m_waveformWidgetHandles;
 
     //Currently in use widgets/visual/node
-    std::vector<WaveformWidgetHolder> m_waveformWidgetHolders;
+    QVector<WaveformWidgetHolder> m_waveformWidgetHolders;
 
     WaveformWidgetType::Type m_type;
 

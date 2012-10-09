@@ -52,7 +52,6 @@ EngineMaster::EngineMaster(ConfigObject<ConfigValue> * _config,
     m_pMasterSampleRate = new ControlObject(ConfigKey(group, "samplerate"));
     m_pMasterSampleRate->set(44100.);
 
-
     m_pMasterLatency = new ControlObject(ConfigKey(group, "latency"));
     m_pMasterAudioBufferSize = new ControlObject(ConfigKey(group, "audio_buffer_size"));
     m_pMasterUnderflowCount = new ControlObject(ConfigKey(group, "underflow_count"));

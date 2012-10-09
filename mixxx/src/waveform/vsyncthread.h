@@ -47,11 +47,11 @@ class VSyncThread : public QThread {
     qt_glXSwapIntervalSGI glXSwapIntervalSGI;
 
     uint m_counter;
+#endif
+
     int m_usSyncTime;
     bool m_vSync;
     int m_rtErrorCnt;
-#endif
-
     PerformanceTimer m_timer;
 };
 

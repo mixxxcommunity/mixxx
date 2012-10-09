@@ -639,8 +639,8 @@ void DlgPrefControls::initWaveformControl()
     WaveformWidgetType::Type currentType = factory->getType();
     int currentIndex = -1;
 
-    std::vector<WaveformWidgetAbstractHandle> handles = factory->getAvailableTypes();
-    for (unsigned int i = 0; i < handles.size(); i++) {
+    QVector<WaveformWidgetAbstractHandle> handles = factory->getAvailableTypes();
+    for (int i = 0; i < handles.size(); i++) {
         waveformTypeComboBox->addItem(handles[i].getDisplayName());
         if (handles[i].getType() == currentType)
             currentIndex = i;

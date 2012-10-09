@@ -85,7 +85,7 @@ void VSyncThread::run() {
     int usWait = m_usSyncTime;
     int usLast;
 
-    bool vSync = m_vSync;
+    // bool vSync = m_vSync;
 
 
     m_timer.start();

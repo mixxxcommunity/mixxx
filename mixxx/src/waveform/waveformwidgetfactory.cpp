@@ -33,6 +33,12 @@ WaveformWidgetAbstractHandle::WaveformWidgetAbstractHandle()
 
 ///////////////////////////////////////////
 
+WaveformWidgetHolder::WaveformWidgetHolder()
+    : m_waveformWidget(NULL),
+      m_waveformViewer(NULL),
+      m_visualNodeCache(QDomNode()) {
+}
+
 WaveformWidgetHolder::WaveformWidgetHolder(WaveformWidgetAbstract* waveformWidget,
                                            WWaveformViewer* waveformViewer,
                                            const QDomNode& visualNodeCache)
@@ -207,7 +213,7 @@ void WaveformWidgetFactory::timerEvent(QTimerEvent *timerEvent) {
 }
 
 void WaveformWidgetFactory::destroyWidgets() {
-    for (unsigned int i = 0; i < m_waveformWidgetHolders.size(); i++) {
+    for (int i = 0; i < m_waveformWidgetHolders.size(); i++) {
         WaveformWidgetAbstract* pWidget = m_waveformWidgetHolders[i].m_waveformWidget;;
         m_waveformWidgetHolders[i].m_waveformWidget = NULL;
         delete pWidget;
@@ -271,7 +277,7 @@ bool WaveformWidgetFactory::setWidgetType(WaveformWidgetType::Type type) {
         return true;
 
     // check if type is acceptable
-    for (unsigned int i = 0; i < m_waveformWidgetHandles.size(); i++) {
+    for (int i = 0; i < m_waveformWidgetHandles.size(); i++) {
         WaveformWidgetAbstractHandle& handle = m_waveformWidgetHandles[i];
         if (handle.m_type == type) {
             // type is acceptable
@@ -312,7 +318,7 @@ bool WaveformWidgetFactory::setWidgetTypeFromHandle(int handleIndex) {
     //qDebug() << "recreate start";
 
     //re-create/setup all waveform widgets
-    for (unsigned int i = 0; i < m_waveformWidgetHolders.size(); i++) {
+    for (int i = 0; i < m_waveformWidgetHolders.size(); i++) {
         WaveformWidgetHolder& holder = m_waveformWidgetHolders[i];
         WaveformWidgetAbstract* previousWidget = holder.m_waveformWidget;
         TrackPointer pTrack = previousWidget->getTrackInfo();
@@ -347,7 +353,7 @@ void WaveformWidgetFactory::setDefaultZoom(int zoom) {
         m_config->set(ConfigKey("[Waveform]","DefaultZoom"), ConfigValue(m_defaultZoom));
     }
 
-    for (unsigned int i = 0; i < m_waveformWidgetHolders.size(); i++) {
+    for (int i = 0; i < m_waveformWidgetHolders.size(); i++) {
         m_waveformWidgetHolders[i].m_waveformViewer->setZoom(m_defaultZoom);
     }
 }
@@ -363,7 +369,7 @@ void WaveformWidgetFactory::setZoomSync(bool sync) {
     }
 
     int refZoom = m_waveformWidgetHolders[0].m_waveformWidget->getZoomFactor();
-    for (unsigned int i = 1; i < m_waveformWidgetHolders.size(); i++) {
+    for (int i = 1; i < m_waveformWidgetHolders.size(); i++) {
         m_waveformWidgetHolders[i].m_waveformViewer->setZoom(refZoom);
     }
 }
@@ -413,7 +419,7 @@ void WaveformWidgetFactory::refresh() {
         // Swap rendered buffer from last run
         // It may happen that there is an artificially delayed due to
         // anti tearing driver settings
-        for (unsigned int i = 0; i < m_waveformWidgetHolders.size(); i++) {
+        for (int i = 0; i < m_waveformWidgetHolders.size(); i++) {
             // Show rendered buffer from last run
             m_waveformWidgetHolders[i].m_waveformWidget->postRender();
             qDebug() << "swap" << i << m_vsyncThread->elapsed();
@@ -425,7 +431,7 @@ void WaveformWidgetFactory::refresh() {
 
         QTime nextFrameTime = now.addMSecs(usToNextSync/1000);
 
-        for (unsigned int i = 0; i < m_waveformWidgetHolders.size(); i++) {
+        for (int i = 0; i < m_waveformWidgetHolders.size(); i++) {
             // Calculate play position for the new Frame in following run
             m_waveformWidgetHolders[i].m_waveformWidget->preRender(nextFrameTime);
         }
@@ -441,7 +447,7 @@ void WaveformWidgetFactory::refresh() {
 
 
     if (m_type) {   // no regular updates for an empty waveform
-        for (unsigned int i = 0; i < m_waveformWidgetHolders.size(); i++) {
+        for (int i = 0; i < m_waveformWidgetHolders.size(); i++) {
             m_waveformWidgetHolders[i].m_waveformWidget->render();
         }
     }

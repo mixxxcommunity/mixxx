@@ -1,6 +1,4 @@
-#pragma message("start #include wspinny.h")
 #include "wspinny.h"
-#pragma message("end #include wspinny.h")
 #include <math.h>
 #include "mathstuff.h"
 #include "wpixmapstore.h"

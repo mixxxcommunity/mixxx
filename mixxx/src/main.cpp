@@ -154,7 +154,7 @@ int main(int argc, char * argv[])
 {
 
 #ifdef Q_WS_X11
-//    XInitThreads();
+    XInitThreads();
 #endif
 
     // Check if an instance of Mixxx is already running
