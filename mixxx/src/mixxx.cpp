@@ -361,30 +361,6 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
     m_pVCManager = NULL;
 #endif
 
-    //Scan the library directory.
-    m_pLibraryScanner = new LibraryScanner(m_pLibrary->getTrackCollection());
-
-    //Refresh the library models when the library (re)scan is finished.
-    connect(m_pLibraryScanner, SIGNAL(scanFinished()),
-            m_pLibrary, SLOT(slotRefreshLibraryModels()));
-
-    //Scan the library for new files and directories
-    bool rescan = (bool)m_pConfig->getValueString(ConfigKey("[Library]","RescanOnStartup")).toInt();
-    // rescan the library if we get a new plugin
-    QSet<QString> prev_plugins = QSet<QString>::fromList(m_pConfig->getValueString(
-        ConfigKey("[Library]", "SupportedFileExtensions")).split(",", QString::SkipEmptyParts));
-    QSet<QString> curr_plugins = QSet<QString>::fromList(
-        SoundSourceProxy::supportedFileExtensions());
-    rescan = rescan || (prev_plugins != curr_plugins);
-
-    if(rescan || hasChanged_MusicDir){
-        m_pLibraryScanner->scan(
-            m_pConfig->getValueString(ConfigKey("[Playlist]", "Directory")));
-        qDebug() << "Rescan finished";
-    }
-    m_pConfig->set(ConfigKey("[Library]", "SupportedFileExtensions"),
-        QStringList(SoundSourceProxy::supportedFileExtensions()).join(","));
-
     // Call inits to invoke all other construction parts
 
     // Intialize default BPM system values
@@ -419,6 +395,8 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
     WaveformWidgetFactory::instance()->setConfig(m_pConfig);
 
     m_pSkinLoader = new SkinLoader(m_pConfig);
+    connect(this, SIGNAL(newSkinLoaded()),
+            this, SLOT(onNewSkinLoaded()));
 
     // Initialize preference dialog
     m_pPrefDlg = new DlgPreferences(this, m_pSkinLoader, m_pSoundManager, m_pPlayerManager,
@@ -475,8 +453,6 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
 
     initActions();
     initMenuBar();
-    connect(this, SIGNAL(newSkinLoaded()),
-            this, SLOT(onNewSkinLoaded()));
 
     // Use frame as container for view, needed for fullscreen display
     m_pView = new QFrame();
@@ -536,6 +512,33 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
     // Wait until all other ControlObjects are set up
     //  before initializing controllers
     m_pControllerManager->setUpDevices();
+
+    // Scan the library for new files and directories
+    bool rescan = (bool)m_pConfig->getValueString(ConfigKey("[Library]","RescanOnStartup")).toInt();
+    // rescan the library if we get a new plugin
+    QSet<QString> prev_plugins = QSet<QString>::fromList(m_pConfig->getValueString(
+        ConfigKey("[Library]", "SupportedFileExtensions")).split(",", QString::SkipEmptyParts));
+    QSet<QString> curr_plugins = QSet<QString>::fromList(
+        SoundSourceProxy::supportedFileExtensions());
+    rescan = rescan || (prev_plugins != curr_plugins);
+    m_pConfig->set(ConfigKey("[Library]", "SupportedFileExtensions"),
+        QStringList(SoundSourceProxy::supportedFileExtensions()).join(","));
+
+    // Scan the library directory. Initialize this after the skinloader has
+    // loaded a skin, see Bug #1047435
+    m_pLibraryScanner = new LibraryScanner(m_pLibrary->getTrackCollection());
+    connect(m_pLibraryScanner, SIGNAL(scanFinished()),
+            this, SLOT(slotEnableRescanLibraryAction()));
+
+    //Refresh the library models when the library (re)scan is finished.
+    connect(m_pLibraryScanner, SIGNAL(scanFinished()),
+            m_pLibrary, SLOT(slotRefreshLibraryModels()));
+
+    if (rescan || hasChanged_MusicDir) {
+        m_pLibraryScanner->scan(
+            m_pConfig->getValueString(ConfigKey("[Playlist]", "Directory")));
+        qDebug() << "Rescan finished";
+    }
 }
 
 MixxxApp::~MixxxApp()
@@ -842,8 +845,6 @@ void MixxxApp::initActions()
     m_pLibraryRescan->setCheckable(false);
     connect(m_pLibraryRescan, SIGNAL(triggered()),
             this, SLOT(slotScanLibrary()));
-    connect(m_pLibraryScanner, SIGNAL(scanFinished()),
-            this, SLOT(slotEnableRescanLibraryAction()));
 
     QString createPlaylistTitle = tr("Add &New Playlist");
     QString createPlaylistText = tr("Create a new playlist");
@@ -1399,6 +1400,7 @@ void MixxxApp::slotHelpAbout() {
 "Max Linke<br>"
 "Neale Pickett<br>"
 "Aaron Mavrinac<br>"
+"Markus H&auml;rer<br>"
 
 "</p>"
 "<p align=\"center\"><b>%3</b></p>"
