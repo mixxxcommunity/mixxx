@@ -76,7 +76,7 @@ public:
 protected:
     const char* m_group;
     TrackPointer m_trackInfoObject;
-    QVector<WaveformRendererAbstract*> m_rendererStack;
+    QList<WaveformRendererAbstract*> m_rendererStack;
     int m_height;
     int m_width;
     QColor m_axesColor;

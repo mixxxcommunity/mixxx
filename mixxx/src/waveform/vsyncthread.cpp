@@ -85,21 +85,21 @@ void VSyncThread::run() {
     int usWait = m_usSyncTime;
     int usLast;
 
-    // bool vSync = m_vSync;
+    bool inSync;
 
 
     m_timer.start();
 
     while (doRendering) {
+        inSync = false;
         if (m_vSync) {
-            if (!waitForVideoSync()){
-                // Driver does not support wait for vsync
-                usRest = usWait - m_timer.elapsed() / 1000;
-                if (usRest > 1) {
-                    usleep(usRest);
-                }
+            if (waitForVideoSync()){
+                inSync = true;
             }
-        } else {
+        }
+
+        if (!inSync) {
+            // sync by sleep
             usRest = usWait - m_timer.elapsed() / 1000;
             if (usRest > 1) {
                 usleep(usRest);
