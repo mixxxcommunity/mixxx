@@ -90,9 +90,7 @@ bool loadTranslations(const QLocale& systemLocale, QString userLocale,
     return pTranslator->load(translation + prefix + userLocale, translationPath);
 }
 
-MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
-{
-
+MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args) {
     QString buildBranch, buildRevision, buildFlags;
 #ifdef BUILD_BRANCH
     buildBranch = BUILD_BRANCH;
