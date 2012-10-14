@@ -3,6 +3,7 @@
 
 #include <QString>
 #include <QPixmap>
+#include <QImage>
 
 class ControlObject;
 class QDomNode;
@@ -22,6 +23,7 @@ private:
     Qt::Alignment m_align;
     QString m_pixmapPath;
     QPixmap m_pixmap;
+    QImage m_image;
 
     friend class WaveformMarkSet;
     friend class WaveformRenderMark;

@@ -55,12 +55,11 @@ void WaveformRenderMark::draw( QPainter* painter, QPaintEvent* /*event*/) {
             const int markHalfWidth = mark.m_pixmap.width()/2.0;
 
             //check if the current point need to be displayed
-            if( currentMarkPoint > -markHalfWidth && currentMarkPoint < m_waveformRenderer->getWidth() + markHalfWidth)
-                //painter->drawPixmap(QPoint(currentMarkPoint-markHalfWidth,0), mark.m_pixmap);
-                painter->drawImage(QPoint(currentMarkPoint-markHalfWidth,0), mark.m_pixmap.toImage());
+            if( currentMarkPoint > -markHalfWidth && currentMarkPoint < m_waveformRenderer->getWidth() + markHalfWidth) {
+                painter->drawImage(QPoint(currentMarkPoint-markHalfWidth,0), mark.m_image);
+            }
         }
     }
-
     painter->restore();
 }
 
@@ -72,6 +71,7 @@ void WaveformRenderMark::generateMarkPixmap( WaveformMark& mark) {
         // deleting it -- for now we'll just load the pixmap directly.
         QString path =  WWidget::getPath(mark.m_pixmapPath);
         mark.m_pixmap = QPixmap( path);
+        mark.m_image = mark.m_pixmap.toImage();
 
         // If loading the pixmap didn't fail, then we're done. Otherwise fall
         // through and render a label.
@@ -211,4 +211,5 @@ void WaveformRenderMark::generateMarkPixmap( WaveformMark& mark) {
         painter.drawLine( middle - 1, lineTop, middle - 1, lineBottom);
         painter.drawLine( middle + 1, lineTop, middle + 1, lineBottom);
     }
+    mark.m_image = mark.m_pixmap.toImage();
 }

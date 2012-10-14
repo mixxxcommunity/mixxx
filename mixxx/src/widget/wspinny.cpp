@@ -75,10 +75,13 @@ void WSpinny::setup(QDomNode node, QString group)
     // Set pixmaps
     m_pBG = WPixmapStore::getPixmap(WWidget::getPath(WWidget::selectNodeQString(node,
                                                     "PathBackground")));
+    m_pBGImage = m_pBG->toImage();
     m_pFG = WPixmapStore::getPixmap(WWidget::getPath(WWidget::selectNodeQString(node,
                                                     "PathForeground")));
+    m_pFGImage = m_pFG->toImage();
     m_pGhost = WPixmapStore::getPixmap(WWidget::getPath(WWidget::selectNodeQString(node,
                                                     "PathGhost")));
+    m_pGhostImage = m_pGhost->toImage();
     if (m_pBG && !m_pBG->isNull()) {
         setFixedSize(m_pBG->size());
     }
@@ -152,7 +155,7 @@ void WSpinny::paintEvent(QPaintEvent *e)
 
     if (m_pBG) {
         //p.drawPixmap(0, 0, *m_pBG);
-        p.drawImage(0, 0, m_pBG->toImage());
+        p.drawImage(0, 0, m_pBGImage);
     }
 
 #ifdef __VINYLCONTROL__
@@ -210,7 +213,7 @@ void WSpinny::paintEvent(QPaintEvent *e)
     if (m_pFG && !m_pFG->isNull()) {
         //Now rotate the pixmap and draw it on the screen.
         p.rotate(calculateAngle(m_pVisualPlayPos->getAt(QTime::currentTime())));
-        p.drawImage(-(width() / 2), -(height() / 2), m_pFG->toImage());
+        p.drawImage(-(width() / 2), -(height() / 2), m_pFGImage);
     }
 
     if (m_bGhostPlayback && m_pGhost && !m_pGhost->isNull())
@@ -218,7 +221,7 @@ void WSpinny::paintEvent(QPaintEvent *e)
         p.restore();
         p.save();
         p.rotate(m_fGhostAngle);
-        p.drawImage(-(width() / 2), -(height() / 2), m_pGhost->toImage());
+        p.drawImage(-(width() / 2), -(height() / 2), m_pGhostImage);
 
         //Rotate back to the playback position (not the ghost positon),
         //and draw the beat marks from there.

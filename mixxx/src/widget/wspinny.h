@@ -42,8 +42,11 @@ class WSpinny : public QGLWidget
         double calculatePositionFromAngle(double angle);
     private:
         QPixmap* m_pBG;
+        QImage m_pBGImage;
         QPixmap* m_pFG;
+        QImage m_pFGImage;
         QPixmap* m_pGhost;
+        QImage m_pGhostImage;
         ControlObjectThreadMain* m_pPlay;
         ControlObjectThreadMain* m_pPlayPos;
         VisualPlayPosition* m_pVisualPlayPos;
