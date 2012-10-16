@@ -105,19 +105,35 @@ void VSyncThread::run() {
                 usleep(usRest);
             }
         }
-
+        // <- Assume we are VSynced here ->
+        // now we have one VSync interval time for swap
         usLast = m_timer.restart() / 1000;
-        qDebug()  << "VSync 4                           " << usLast;
         emit(vsync());
-        usWait -= usLast;
-        if (usWait < (-1 * m_usSyncTime)) {
-            m_rtErrorCnt++;
-            if (m_vSync) {
-                // try to stay in right intervals
-                usWait %= m_usSyncTime;
-            } else {
-                // start from new
-                usWait = 0;
+        qDebug()  << "VSync 4                           " << usLast;
+
+        if (!inSync) {
+            usWait -= usLast;
+            if (usWait < (-1 * m_usSyncTime)) {
+                m_rtErrorCnt++;
+                if (m_vSync) {
+                    // try to stay in right intervals
+                    usWait %= m_usSyncTime;
+                } else {
+                    // start from new
+                    usWait = 0;
+                }
+            }
+        } else {
+            // we are synced
+            usWait = 0;
+            // Sleep to hit the desired interval
+            usRest = m_usSyncTime - 8000 - m_timer.elapsed() / 1000;
+            if (usRest < 0) {
+                m_rtErrorCnt++;
+            }
+            usRest -= 800;  // - 8 ms for up to 120 Hz Displays
+            if (usRest > 1) {
+                usleep(usRest);
             }
         }
         usWait += m_usSyncTime;
@@ -126,6 +142,7 @@ void VSyncThread::run() {
 
 bool VSyncThread::waitForVideoSync() {
     uint counter;
+    uint counter_start;
 
     if (!glw->parentWidget()->isVisible()) {
         return false;
@@ -141,18 +158,22 @@ bool VSyncThread::waitForVideoSync() {
 
 #else
     if (glXGetVideoSyncSGI && glXWaitVideoSyncSGI) {
-        counter = m_counter;
-        if (!glXGetVideoSyncSGI(&counter)) {
-            glXWaitVideoSyncSGI(2, (counter + 1) % 2, &counter);
-            if (counter < m_counter)
-                fprintf(stderr, "error:  vblank count went backwards: %d -> %d\n", m_counter, counter);
-            if (counter == m_counter)
-                fprintf(stderr, "error:  count didn't change: %d\n", counter);
-            if (counter > m_counter + 1)
-                fprintf(stderr, "error:  one counter lost: %d\n", counter);
-            m_counter = counter;
+        if (!glXWaitVideoSyncSGI(1, 0, &counter)) {
             return true;
         }
+ /*
+        if (!glXGetVideoSyncSGI(&counter_start)) {
+            counter = counter_start;
+            glXWaitVideoSyncSGI(2, (counter + 1) % 2, &counter);
+            if (counter < counter_start)
+                fprintf(stderr, "error:  vblank count went backwards: %d -> %d\n", counter_start, counter);
+            if (counter == counter_start)
+                fprintf(stderr, "error:  count didn't change: %d\n", counter);
+            if (counter > counter_start + 1)
+                fprintf(stderr, "error:  one counter lost: %d\n", counter);
+            return true;
+        }
+*/
         //    qDebug() << m_counter;
         // glXWaitVideoSyncSGI(2, (m_counter + 1) % 2, &m_counter);
         //glXWaitVideoSyncSGI(1, 0, &m_counter);
