@@ -18,8 +18,8 @@ AnalyserWaveform::AnalyserWaveform(ConfigObject<ConfigValue>* pConfig) {
     qDebug() << "AnalyserWaveform::AnalyserWaveform()";
     m_skipProcessing = false;
 
-    m_waveform = 0;
-    m_waveformSummary = 0;
+    m_waveform = NULL;
+    m_waveformSummary = NULL;
 
     m_filter[0] = 0;
     m_filter[1] = 0;
@@ -78,31 +78,22 @@ bool AnalyserWaveform::initialise(TrackPointer tio, int sampleRate, int totalSam
         while (it.hasNext()) {
             const AnalysisDao::AnalysisInfo& analysis = it.next();
 
-            if (analysis.type == AnalysisDao::TYPE_WAVEFORM &&
-                analysis.version == WaveformFactory::getPreferredWaveformVersion() &&
-                missingWaveform && !loadedWaveform) {
-                Waveform* pLoadedWaveform =
-                        WaveformFactory::loadWaveformFromAnalysis(tio, analysis);
-
-                if (pLoadedWaveform && pLoadedWaveform->isValid()) {
-                    m_waveform = pLoadedWaveform;
-                    loadedWaveform = true;
-                    tio->setWaveform(pLoadedWaveform);
+            if (analysis.type == AnalysisDao::TYPE_WAVEFORM
+                    && analysis.version
+                            == WaveformFactory::getPreferredWaveformVersion()
+                    && missingWaveform && !loadedWaveform) {
+                if (WaveformFactory::updateWaveformFromAnalysis(m_waveform, analysis)) {
+                    tio->waveformNew();
                 } else {
-                    delete pLoadedWaveform;
                     m_analysisDao->deleteAnalysis(analysis.analysisId);
                 }
             } else if (analysis.type == AnalysisDao::TYPE_WAVESUMMARY &&
                        analysis.version == WaveformFactory::getPreferredWaveformSummaryVersion() &&
                        missingWavesummary && !loadedWavesummary) {
-                Waveform* pLoadedWaveformSummary =
-                        WaveformFactory::loadWaveformFromAnalysis(tio, analysis);
-                if (pLoadedWaveformSummary && pLoadedWaveformSummary->isValid()) {
-                    m_waveformSummary = pLoadedWaveformSummary;
-                    tio->setWaveformSummary(pLoadedWaveformSummary);
+                if (WaveformFactory::updateWaveformFromAnalysis(m_waveformSummary, analysis)) {
+                    tio->waveformSummaryNew();
                     loadedWavesummary = true;
                 } else {
-                    delete pLoadedWaveformSummary;
                     m_analysisDao->deleteAnalysis(analysis.analysisId);
                 }
             }

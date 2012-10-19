@@ -43,11 +43,15 @@ void QtWaveformWidget::castToQWidget() {
 }
 
 void QtWaveformWidget::paintEvent( QPaintEvent* event) {
+    Q_UNUSED(event);
+}
+
+void QtWaveformWidget::render() {
     if (QGLContext::currentContext() != context()) {
         makeCurrent();
     }
     QPainter painter(this);
-    draw(&painter, event);
+    draw(&painter, NULL);
 }
 
 void QtWaveformWidget::postRender() {

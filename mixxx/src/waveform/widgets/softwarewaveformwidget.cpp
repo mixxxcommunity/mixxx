@@ -37,7 +37,7 @@ void SoftwareWaveformWidget::castToQWidget() {
 
 void SoftwareWaveformWidget::paintEvent( QPaintEvent* event) {
     QPainter painter(this);
-    draw(&painter,event);
+    draw(&painter, event);
 }
 
 void SoftwareWaveformWidget::updateVisualSamplingPerPixel() {

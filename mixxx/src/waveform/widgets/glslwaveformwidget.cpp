@@ -42,10 +42,15 @@ void GLSLWaveformWidget::castToQWidget() {
 }
 
 void GLSLWaveformWidget::paintEvent( QPaintEvent* event) {
-    makeCurrent();
+    Q_UNUSED(event);
+}
+
+void GLSLWaveformWidget::render() {
+    if (QGLContext::currentContext() != context()) {
+        makeCurrent();
+    }
     QPainter painter(this);
-    draw(&painter,event);
-    QGLWidget::swapBuffers();
+    draw(&painter, NULL);
 }
 
 void GLSLWaveformWidget::resize( int width, int height) {
@@ -60,4 +65,8 @@ void GLSLWaveformWidget::mouseDoubleClickEvent(QMouseEvent *event) {
         makeCurrent();
         signalRenderer_->loadShaders();
     }
+}
+
+void GLSLWaveformWidget::postRender() {
+    swapBuffers();
 }

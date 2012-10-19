@@ -172,14 +172,17 @@ void WaveformWidgetRenderer::draw( QPainter* painter, QPaintEvent* event) {
 
     //not ready to display need to wait until track initialization is done
     //draw only first is stack (background)
-    if( m_trackSamples <= 0.0) {
-        if( !m_rendererStack.empty())
-            m_rendererStack[0]->draw( painter, event);
+    int stackSize = m_rendererStack.size();
+    if (m_trackSamples <= 0.0) {
+        if (stackSize) {
+            m_rendererStack.at(0)->draw(painter, event);
+        }
         return;
     } else {
-        for( int i = 0; i < m_rendererStack.size(); ++i) {
-            m_rendererStack[i]->draw( painter, event);
+        for (int i = 0; i < stackSize; i++) {
+            m_rendererStack.at(i)->draw(painter, event);
             qDebug() << i << "  " << timer.restart();
+            timer.restart();
         }
 
         painter->setPen(m_axesColor);

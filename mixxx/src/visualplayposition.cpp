@@ -47,9 +47,11 @@ bool VisualPlayPosition::trySet(double playPos, double rate, double positionStep
 double VisualPlayPosition::getAt(const QTime& posTime) {
     QMutexLocker locker(&m_mutex);
 
-//    static double testPos = 0;
-//    testPos += 0.000017759; //0.000016608; //  1.46257e-05;
-//    return testPos;
+    //static double testPos = 0;
+    //testPos += 0.000017759; //0.000016608; //  1.46257e-05;
+
+    //testPos +=  0.000016608; //  1.46257e-05;
+    //return testPos;
 
     double playPos;
 

@@ -50,6 +50,7 @@ class VSyncThread : public QThread {
 #endif
 
     int m_usSyncTime;
+    int m_usWait;
     bool m_vSync;
     int m_rtErrorCnt;
     PerformanceTimer m_timer;

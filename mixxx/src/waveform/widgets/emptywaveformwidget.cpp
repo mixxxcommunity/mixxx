@@ -25,6 +25,11 @@ void EmptyWaveformWidget::castToQWidget() {
 }
 
 void EmptyWaveformWidget::paintEvent(QPaintEvent* event) {
+    // Only render Qt thinks it is required
     QPainter painter(this);
     draw(&painter,event);
+}
+
+void EmptyWaveformWidget::render() {
+    // skip update every frame
 }

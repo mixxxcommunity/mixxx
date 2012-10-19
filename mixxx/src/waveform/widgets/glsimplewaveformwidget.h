@@ -21,6 +21,7 @@ class GLSimpleWaveformWidget : public QGLWidget, public WaveformWidgetAbstract {
     virtual void castToQWidget();
     virtual void paintEvent(QPaintEvent* event);
     virtual void postRender();
+    virtual void render();
 
   private:
     friend class WaveformWidgetFactory;

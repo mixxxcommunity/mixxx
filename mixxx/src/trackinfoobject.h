@@ -218,12 +218,11 @@ public:
     void setURL(QString url);
 
     Waveform* getWaveform();
-    const Waveform* getWaveform() const;
-    void setWaveform(Waveform* pWaveform);
+    void waveformNew();
 
     Waveform* getWaveformSummary();
     const Waveform* getWaveformSummary() const;
-    void setWaveformSummary(Waveform* pWaveformSummary);
+    void waveformSummaryNew();
     void setAnalyserProgress(int progress);
 
     // Save the cue point (in samples... I think) 

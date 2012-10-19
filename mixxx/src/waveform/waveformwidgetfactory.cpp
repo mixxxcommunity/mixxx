@@ -336,6 +336,7 @@ bool WaveformWidgetFactory::setWidgetTypeFromHandle(int handleIndex) {
         //viewer->resize(viewer->size());
         widget->resize(viewer->width(), viewer->height());
         widget->setTrack(pTrack);
+        widget->getWidget()->show();
         viewer->update();
         m_maximumlFrameRate = 0;
         m_minimumFrameRate = 2000;
@@ -445,15 +446,15 @@ void WaveformWidgetFactory::refresh() {
     // update.
     emit(waveformUpdateTick());
 
+    qDebug() << "emit" << m_vsyncThread->elapsed();
+
 
     if (m_type) {   // no regular updates for an empty waveform
         for (int i = 0; i < m_waveformWidgetHolders.size(); i++) {
             m_waveformWidgetHolders[i].m_waveformWidget->render();
+            qDebug() << "render" << i << m_vsyncThread->elapsed();
         }
     }
-
-    qDebug() << "render" << m_vsyncThread->elapsed();
-
 
     // m_lastRenderDuration = startTime;
 
@@ -466,7 +467,7 @@ void WaveformWidgetFactory::refresh() {
             m_maximumlFrameRate = m_actualFrameRate;
         }
     }
-    //qDebug() << "refresh end" << m_time.elapsed();
+    qDebug() << "refresh end" << m_vsyncThread->elapsed();
 }
 
 WaveformWidgetType::Type WaveformWidgetFactory::autoChooseWidgetType() const {
@@ -602,9 +603,11 @@ WaveformWidgetAbstract* WaveformWidgetFactory::createWaveformWidget(
 }
 
 int WaveformWidgetFactory::findIndexOf(WWaveformViewer* viewer) const {
-    for (int i = 0; i < (int)m_waveformWidgetHolders.size(); i++)
-        if (m_waveformWidgetHolders[i].m_waveformViewer == viewer)
+    for (int i = 0; i < (int)m_waveformWidgetHolders.size(); i++) {
+        if (m_waveformWidgetHolders[i].m_waveformViewer == viewer) {
             return i;
+        }
+    }
     return -1;
 }
 

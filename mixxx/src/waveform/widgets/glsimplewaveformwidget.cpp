@@ -46,11 +46,14 @@ void GLSimpleWaveformWidget::castToQWidget() {
 }
 
 void GLSimpleWaveformWidget::paintEvent( QPaintEvent* event) {
+}
+
+void GLSimpleWaveformWidget::render() {
     if (QGLContext::currentContext() != context()) {
         makeCurrent();
     }
     QPainter painter(this);
-    draw(&painter,event);
+    draw(&painter, NULL);
 }
 
 void GLSimpleWaveformWidget::postRender() {

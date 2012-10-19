@@ -82,61 +82,53 @@ void VSyncThread::run() {
     glw->makeCurrent();
 
     int usRest;
-    int usWait = m_usSyncTime;
     int usLast;
 
     bool inSync;
 
-
+    m_usWait = m_usSyncTime;
     m_timer.start();
 
     while (doRendering) {
         inSync = false;
         if (m_vSync) {
-            if (waitForVideoSync()){
-                inSync = true;
+            usRest = m_usWait - m_timer.elapsed() / 1000;
+            // Sleep to hit the desired interval
+            usRest -= 8333;  // -8.333 ms for up to 120 Hz Displays
+            if (usRest > 100) {
+                usleep(usRest);
+            }
+            usRest = m_usWait - m_timer.elapsed() / 1000;
+            if (usRest > 100) {
+                inSync = waitForVideoSync();
             }
         }
 
         if (!inSync) {
             // sync by sleep
-            usRest = usWait - m_timer.elapsed() / 1000;
-            if (usRest > 1) {
+            usRest = m_usWait - m_timer.elapsed() / 1000;
+            if (usRest > 100) {
                 usleep(usRest);
             }
         }
         // <- Assume we are VSynced here ->
         // now we have one VSync interval time for swap
+        // First calculate the m_usWait for the next frame
         usLast = m_timer.restart() / 1000;
-        emit(vsync());
-        qDebug()  << "VSync 4                           " << usLast;
-
-        if (!inSync) {
-            usWait -= usLast;
-            if (usWait < (-1 * m_usSyncTime)) {
-                m_rtErrorCnt++;
-                if (m_vSync) {
-                    // try to stay in right intervals
-                    usWait %= m_usSyncTime;
-                } else {
-                    // start from new
-                    usWait = 0;
-                }
-            }
+        usRest = m_usWait - usLast;
+        if (usRest < -8333) { // -8.333 ms for up to 120 Hz Displays
+            // Out of syc, start new
+            m_rtErrorCnt++;
+            m_usWait = m_usSyncTime;
+        } else if (!inSync) {
+            // try to stay in right intervals
+            m_usWait = m_usSyncTime + (usRest % m_usSyncTime);
         } else {
             // we are synced
-            usWait = 0;
-            // Sleep to hit the desired interval
-            usRest = m_usSyncTime - 8000 - m_timer.elapsed() / 1000;
-            if (usRest < 0) {
-                m_rtErrorCnt++;
-            }
-            usRest -= 800;  // - 8 ms for up to 120 Hz Displays
-            if (usRest > 1) {
-                usleep(usRest);
-            }
+            m_usWait = m_usSyncTime;
         }
-        usWait += m_usSyncTime;
+        emit(vsync());
+        qDebug()  << "VSync 4                           " << usLast << usRest << inSync;
     }
 }
 
@@ -221,7 +213,12 @@ void VSyncThread::setVSync(bool checked) {
 }
 
 int VSyncThread::usToNextSync() {
-    return m_usSyncTime - (elapsed() % m_usSyncTime);
+    int usRest = m_usWait - m_timer.elapsed() / 1000;
+    if (usRest < 0) {
+        usRest %= m_usSyncTime;
+        usRest += m_usSyncTime;
+    }
+    return usRest;
 }
 
 int VSyncThread::rtErrorCnt() {
