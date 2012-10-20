@@ -13,6 +13,8 @@
 #include "waveform/renderers/waveformrendererendoftrack.h"
 #include "waveform/renderers/waveformrenderbeat.h"
 
+#include "performancetimer.h"
+
 GLVSyncTestWidget::GLVSyncTestWidget( const char* group, QWidget* parent)
     : QGLWidget(parent, SharedGLContext::getShareWidget()),
       WaveformWidgetAbstract(group) {
@@ -47,15 +49,23 @@ void GLVSyncTestWidget::castToQWidget() {
 }
 
 void GLVSyncTestWidget::paintEvent( QPaintEvent* event) {
-
+    Q_UNUSED(event);
 }
 
 void GLVSyncTestWidget::render() {
+    PerformanceTimer timer;
+    timer.start();
+    int t1, t2, t3;
+
     if (QGLContext::currentContext() != context()) {
         makeCurrent();
     }
+    t1 = timer.restart();
     QPainter painter(this);
+    t2 = timer.restart();
     draw(&painter, NULL);
+    t3 = timer.restart();
+    qDebug() << "GLVSyncTestWidget "<< t1 << t2 << t3;
 }
 
 void GLVSyncTestWidget::postRender() {

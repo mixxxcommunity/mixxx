@@ -167,8 +167,8 @@ void WaveformWidgetRenderer::draw( QPainter* painter, QPaintEvent* event) {
     m_lastSystemFrameTime = m_timer->restart();
 #endif
 
-    PerformanceTimer timer;
-    timer.start();
+//    PerformanceTimer timer;
+//    timer.start();
 
     //not ready to display need to wait until track initialization is done
     //draw only first is stack (background)
@@ -180,9 +180,9 @@ void WaveformWidgetRenderer::draw( QPainter* painter, QPaintEvent* event) {
         return;
     } else {
         for (int i = 0; i < stackSize; i++) {
+ //           qDebug() << i << " a  " << timer.restart();
             m_rendererStack.at(i)->draw(painter, event);
-            qDebug() << i << "  " << timer.restart();
-            timer.restart();
+ //           qDebug() << i << " e " << timer.restart();
         }
 
         painter->setPen(m_axesColor);
@@ -223,6 +223,8 @@ void WaveformWidgetRenderer::draw( QPainter* painter, QPaintEvent* event) {
     m_lastSystemFramesTime[currentFrame] = m_lastSystemFrameTime;
     m_lastFramesTime[currentFrame] = m_lastFrameTime;
 #endif
+
+ //   qDebug() << "draw() ende" << timer.restart();
 }
 
 void WaveformWidgetRenderer::resize( int width, int height) {

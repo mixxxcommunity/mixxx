@@ -420,11 +420,12 @@ void WaveformWidgetFactory::refresh() {
         // Swap rendered buffer from last run
         // It may happen that there is an artificially delayed due to
         // anti tearing driver settings
-        for (int i = 0; i < m_waveformWidgetHolders.size(); i++) {
-            // Show rendered buffer from last run
-            m_waveformWidgetHolders[i].m_waveformWidget->postRender();
-            qDebug() << "swap" << i << m_vsyncThread->elapsed();
-        }
+// For drivers where swapBuffers does not return until Vsync
+//        for (int i = 0; i < m_waveformWidgetHolders.size(); i++) {
+//            // Show rendered buffer from last run
+//            m_waveformWidgetHolders[i].m_waveformWidget->postRender();
+//            qDebug() << "swap" << i << m_vsyncThread->elapsed();
+//        }
 
         QTime now = QTime::currentTime();
         // next rendered frame is displayed after next buffer swap and than after VSync
@@ -437,22 +438,29 @@ void WaveformWidgetFactory::refresh() {
             m_waveformWidgetHolders[i].m_waveformWidget->preRender(nextFrameTime);
         }
         qDebug() << "prerender" << m_vsyncThread->elapsed();
-
     }
 
     // Now the time uncritically time consuming things
 
     // Notify all other waveform-like widgets (e.g. WSpinny's) that they should
     // update.
-    emit(waveformUpdateTick());
-
-    qDebug() << "emit" << m_vsyncThread->elapsed();
+//    emit(waveformUpdateTick());
+//    qDebug() << "emit" << m_vsyncThread->elapsed();
 
 
     if (m_type) {   // no regular updates for an empty waveform
         for (int i = 0; i < m_waveformWidgetHolders.size(); i++) {
             m_waveformWidgetHolders[i].m_waveformWidget->render();
             qDebug() << "render" << i << m_vsyncThread->elapsed();
+        }
+
+        // For drivers where swapBuffers schedules the swap until VSync
+        // Like xorg radeon 1:6.14.99
+        for (int i = 0; i < m_waveformWidgetHolders.size(); i++) {
+            // schedule swapBuffers, the following makeCurrent is delayed until
+            // the swap actually finished (after vSync)
+            m_waveformWidgetHolders[i].m_waveformWidget->postRender();
+            qDebug() << "swap" << i << m_vsyncThread->elapsed();
         }
     }
 
