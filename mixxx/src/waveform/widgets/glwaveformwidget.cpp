@@ -12,6 +12,7 @@
 #include "waveform/renderers/waveformrendererendoftrack.h"
 #include "waveform/renderers/waveformrenderbeat.h"
 #include "sharedglcontext.h"
+#include "performancetimer.h"
 
 GLWaveformWidget::GLWaveformWidget( const char* group, QWidget* parent)
         : QGLWidget(parent, SharedGLContext::getShareWidget()),
@@ -48,11 +49,18 @@ void GLWaveformWidget::paintEvent( QPaintEvent* event) {
 }
 
 void GLWaveformWidget::render() {
-    if (QGLContext::currentContext() != context()) {
-        makeCurrent();
-    }
+    PerformanceTimer timer;
+    int t1, t2, t3;
+    timer.start();
+    // QPainter makes QGLContext::currentContext() == context()
+    // this may delayed until previous buffer swap finished
     QPainter painter(this);
+    t1 = timer.restart();
     draw(&painter, NULL);
+    t2 = timer.restart();
+    glFinish();
+    t3 = timer.restart();
+    qDebug() << "GLWaveformWidget"<< t1 << t2 << t3;
 }
 
 void GLWaveformWidget::postRender() {

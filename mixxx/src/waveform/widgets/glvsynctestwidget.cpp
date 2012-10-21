@@ -54,16 +54,15 @@ void GLVSyncTestWidget::paintEvent( QPaintEvent* event) {
 
 void GLVSyncTestWidget::render() {
     PerformanceTimer timer;
-    timer.start();
     int t1, t2, t3;
-
-    if (QGLContext::currentContext() != context()) {
-        makeCurrent();
-    }
-    t1 = timer.restart();
+    timer.start();
+    // QPainter makes QGLContext::currentContext() == context()
+    // this may delayed until previous buffer swap finished
     QPainter painter(this);
-    t2 = timer.restart();
+    t1 = timer.restart();
     draw(&painter, NULL);
+    t2 = timer.restart();
+    glFinish();
     t3 = timer.restart();
     qDebug() << "GLVSyncTestWidget "<< t1 << t2 << t3;
 }

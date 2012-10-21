@@ -417,10 +417,8 @@ void WaveformWidgetFactory::refresh() {
     qDebug() << "signal" << m_vsyncThread->elapsed();
 
     if (m_type) {   // no regular updates for an empty waveform
-        // Swap rendered buffer from last run
-        // It may happen that there is an artificially delayed due to
-        // anti tearing driver settings
 // For drivers where swapBuffers does not return until Vsync
+//        // Swap rendered buffer from last run
 //        for (int i = 0; i < m_waveformWidgetHolders.size(); i++) {
 //            // Show rendered buffer from last run
 //            m_waveformWidgetHolders[i].m_waveformWidget->postRender();
@@ -447,7 +445,9 @@ void WaveformWidgetFactory::refresh() {
 //    emit(waveformUpdateTick());
 //    qDebug() << "emit" << m_vsyncThread->elapsed();
 
-
+    // It may happen that there is an artificially delayed due to
+    // anti tearing driver settings
+    // all render commands are delayed until the swap from the previous run is executed
     if (m_type) {   // no regular updates for an empty waveform
         for (int i = 0; i < m_waveformWidgetHolders.size(); i++) {
             m_waveformWidgetHolders[i].m_waveformWidget->render();
@@ -455,7 +455,9 @@ void WaveformWidgetFactory::refresh() {
         }
 
         // For drivers where swapBuffers schedules the swap until VSync
-        // Like xorg radeon 1:6.14.99
+        // Like:
+        // xorg radeon 1:6.14.99
+        // xorg intel 2:2.9.1
         for (int i = 0; i < m_waveformWidgetHolders.size(); i++) {
             // schedule swapBuffers, the following makeCurrent is delayed until
             // the swap actually finished (after vSync)
