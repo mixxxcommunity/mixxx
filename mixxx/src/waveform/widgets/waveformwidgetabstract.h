@@ -28,7 +28,7 @@ class WaveformWidgetAbstract : public WaveformWidgetRenderer {
     void release();
 
     virtual void preRender(const QTime& posTime);
-    virtual void render();
+    virtual int render();
     virtual void postRender() {};
 
     virtual void resize( int width, int height);

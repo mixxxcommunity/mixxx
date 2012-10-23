@@ -22,7 +22,7 @@ class EmptyWaveformWidget : public QWidget, public WaveformWidgetAbstract {
   protected:
     virtual void castToQWidget();
     virtual void paintEvent(QPaintEvent* event);
-    virtual void render();
+    virtual int render();
 
   private:
     EmptyWaveformWidget(const char* group, QWidget* parent);

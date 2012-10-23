@@ -59,6 +59,7 @@ WaveformWidgetFactory::WaveformWidgetFactory() :
         m_overviewNormalized(false),
         m_openGLAvailable(false),
         m_openGLShaderAvailable(false),
+        m_vsyncThread(NULL),
         m_lastFrameTime(0), 
         m_actualFrameRate(0),
         m_minimumFrameRate(1000),
@@ -132,7 +133,9 @@ WaveformWidgetFactory::WaveformWidgetFactory() :
 }
 
 WaveformWidgetFactory::~WaveformWidgetFactory() {
-    delete m_vsyncThread;
+    if (m_vsyncThread) {
+        delete m_vsyncThread;
+    }
 }
 
 bool WaveformWidgetFactory::setConfig(ConfigObject<ConfigValue> *config){
@@ -251,6 +254,10 @@ bool WaveformWidgetFactory::setWaveformWidget(WWaveformViewer* viewer, const QDo
     viewer->setZoom(m_defaultZoom);
     viewer->update();
 
+    if (index == (m_waveformWidgetHolders.size() - 1)) {
+//        startVSync(waveformWidget->getWidget());
+    }
+
     qDebug() << "WaveformWidgetFactory::setWaveformWidget - waveform widget added in factory, index" << index;
 
     return true;
@@ -340,6 +347,9 @@ bool WaveformWidgetFactory::setWidgetTypeFromHandle(int handleIndex) {
         viewer->update();
         m_maximumlFrameRate = 0;
         m_minimumFrameRate = 2000;
+        if (i == (m_waveformWidgetHolders.size() - 1)) {
+//            startVSync(widget->getWidget());
+        }
     }
 
     m_skipRender = false;
@@ -405,6 +415,9 @@ void WaveformWidgetFactory::notifyZoomChange(WWaveformViewer* viewer) {
 }
 
 void WaveformWidgetFactory::refresh() {
+    int paintersSetupTime0 = 0;
+    int paintersSetupTime1 = 0;
+
     if (m_skipRender)
         return;
 
@@ -414,7 +427,7 @@ void WaveformWidgetFactory::refresh() {
 
     //int startTime;
 
-    qDebug() << "signal" << m_vsyncThread->elapsed();
+    // qDebug() << "signal" << m_vsyncThread->elapsed();
 
     if (m_type) {   // no regular updates for an empty waveform
 // For drivers where swapBuffers does not return until Vsync
@@ -435,7 +448,7 @@ void WaveformWidgetFactory::refresh() {
             // Calculate play position for the new Frame in following run
             m_waveformWidgetHolders[i].m_waveformWidget->preRender(nextFrameTime);
         }
-        qDebug() << "prerender" << m_vsyncThread->elapsed();
+        // qDebug() << "prerender" << m_vsyncThread->elapsed();
     }
 
     // Now the time uncritically time consuming things
@@ -450,8 +463,21 @@ void WaveformWidgetFactory::refresh() {
     // all render commands are delayed until the swap from the previous run is executed
     if (m_type) {   // no regular updates for an empty waveform
         for (int i = 0; i < m_waveformWidgetHolders.size(); i++) {
-            m_waveformWidgetHolders[i].m_waveformWidget->render();
-            qDebug() << "render" << i << m_vsyncThread->elapsed();
+            if (i == 0) {
+                paintersSetupTime0 = m_waveformWidgetHolders[0].m_waveformWidget->render();
+            } else if (i == 1) {
+                paintersSetupTime1 = m_waveformWidgetHolders[1].m_waveformWidget->render();
+            } else {
+                m_waveformWidgetHolders[i].m_waveformWidget->render();
+            }
+ //           qDebug() << "render" << i << m_vsyncThread->elapsed();
+        }
+
+        if (paintersSetupTime1 && paintersSetupTime0 > (paintersSetupTime1 + 1000)) {
+            m_vsyncThread->setSwapWait(paintersSetupTime0 - paintersSetupTime1);
+//            qDebug() << "setSwapWait" << paintersSetupTime0 - paintersSetupTime1;
+        } else {
+            m_vsyncThread->setSwapWait(0);
         }
 
         // For drivers where swapBuffers schedules the swap until VSync
@@ -462,7 +488,7 @@ void WaveformWidgetFactory::refresh() {
             // schedule swapBuffers, the following makeCurrent is delayed until
             // the swap actually finished (after vSync)
             m_waveformWidgetHolders[i].m_waveformWidget->postRender();
-            qDebug() << "swap" << i << m_vsyncThread->elapsed();
+   //         qDebug() << "swap" << i << m_vsyncThread->elapsed();
         }
     }
 
@@ -477,7 +503,7 @@ void WaveformWidgetFactory::refresh() {
             m_maximumlFrameRate = m_actualFrameRate;
         }
     }
-    qDebug() << "refresh end" << m_vsyncThread->elapsed();
+ //   qDebug() << "refresh end" << m_vsyncThread->elapsed();
 }
 
 WaveformWidgetType::Type WaveformWidgetFactory::autoChooseWidgetType() const {
@@ -600,13 +626,17 @@ WaveformWidgetAbstract* WaveformWidgetFactory::createWaveformWidget(
             widget = new EmptyWaveformWidget(viewer->getGroup(), viewer);
             break;
         }
-    }
-    if (widget) {
         widget->castToQWidget();
-        if(!widget->isValid()) {
+        if (!widget->isValid()) {
             qWarning() << "failed to init WafeformWidget" << type << "fall back to \"Empty\"";
             delete widget;
             widget = new EmptyWaveformWidget(viewer->getGroup(), viewer);
+            widget->castToQWidget();
+            if (!widget->isValid()) {
+                qWarning() << "failed to init EmptyWaveformWidget";
+                delete widget;
+                widget = NULL;
+            }
         }
     }
     return widget;
@@ -622,7 +652,10 @@ int WaveformWidgetFactory::findIndexOf(WWaveformViewer* viewer) const {
 }
 
 void WaveformWidgetFactory::startVSync(QWidget *parent) {
-
+    if (m_vsyncThread) {
+        disconnect(m_vsyncThread, SIGNAL(vsync()), this, SLOT(refresh()));
+        delete m_vsyncThread;
+    }
     m_vsyncThread = new VSyncThread(parent);
     m_vsyncThread->start();
 

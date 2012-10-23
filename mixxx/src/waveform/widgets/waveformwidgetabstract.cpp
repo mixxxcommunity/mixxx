@@ -30,14 +30,12 @@ void WaveformWidgetAbstract::preRender(const QTime& posTime) {
     WaveformWidgetRenderer::onPreRender(posTime);
 }
 
-void WaveformWidgetAbstract::render() {
+int WaveformWidgetAbstract::render() {
     if (m_widget) {
-        if (!m_widget->isVisible()) {
-            m_widget->show();
-        }
         //m_widget->update();
         m_widget->repaint(); // Repaints the widget directly by calling paintEvent()
     }
+    return 0; // Time for Painter setup, unknown in this case
 }
 
 void WaveformWidgetAbstract::resize( int width, int height) {

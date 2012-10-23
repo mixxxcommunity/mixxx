@@ -26,7 +26,7 @@ class GLSLWaveformWidget : public QGLWidget, public WaveformWidgetAbstract {
     virtual void paintEvent(QPaintEvent* event);
     virtual void mouseDoubleClickEvent(QMouseEvent *);
     virtual void postRender();
-    virtual void render();
+    virtual int render();
 
   private:
     GLSLWaveformRendererSignal* signalRenderer_;

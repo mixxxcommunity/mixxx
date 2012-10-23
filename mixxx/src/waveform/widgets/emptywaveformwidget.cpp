@@ -30,6 +30,7 @@ void EmptyWaveformWidget::paintEvent(QPaintEvent* event) {
     draw(&painter,event);
 }
 
-void EmptyWaveformWidget::render() {
+int EmptyWaveformWidget::render() {
     // skip update every frame
+    return 0;
 }

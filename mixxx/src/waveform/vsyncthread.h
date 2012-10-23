@@ -23,6 +23,7 @@ class VSyncThread : public QThread {
     void setUsSyncTime(int usSyncTimer);
     void setVSync(bool checked);
     int rtErrorCnt();
+    void setSwapWait(int sw);
 
   signals:
     void vsync();
@@ -53,6 +54,7 @@ class VSyncThread : public QThread {
     int m_usWait;
     bool m_vSync;
     int m_rtErrorCnt;
+    int m_swapWait;
     PerformanceTimer m_timer;
 };
 

@@ -29,7 +29,8 @@ VSyncThread::VSyncThread(QWidget* parent)
         : QThread(),
           m_usSyncTime(33333),
           m_vSync(false),
-          m_rtErrorCnt(0) {
+          m_rtErrorCnt(0),
+          m_swapWait(0) {
     doRendering = true;
 
     //QGLFormat glFormat = QGLFormat::defaultFormat();
@@ -37,13 +38,12 @@ VSyncThread::VSyncThread(QWidget* parent)
     //glw = new QGLWidget(glFormat);
 
     glw = new QGLWidget(parent);
-
-    //qDebug() << glw->size();
-
-    //glw->moveToThread(this);
-
-    glw->resize(1,1);
+    qDebug() << parent->size();
+    glw->resize(parent->size());
     glw->hide();
+    qDebug() << glw->size();
+    qDebug() << glw->pos();
+    qDebug() << glw->mapToGlobal(QPoint(0,0));
 
 
 #if defined(__APPLE__)
@@ -66,7 +66,6 @@ VSyncThread::VSyncThread(QWidget* parent)
 VSyncThread::~VSyncThread() {
     doRendering = false;
     wait();
-
     delete glw;
 }
 
@@ -128,7 +127,8 @@ void VSyncThread::run() {
             m_usWait = m_usSyncTime;
         }
         emit(vsync());
-        qDebug()  << "VSync 4                           " << usLast << usRest << inSync;
+        m_usWait += m_swapWait; // shift interval to avoid waiting for swap
+  //      qDebug()  << "VSync 4                           " << usLast << usRest << inSync;
     }
 }
 
@@ -223,4 +223,8 @@ int VSyncThread::usToNextSync() {
 
 int VSyncThread::rtErrorCnt() {
     return m_rtErrorCnt;
+}
+
+void VSyncThread::setSwapWait(int sw) {
+    m_swapWait = sw;
 }
