@@ -101,18 +101,10 @@ class WaveformWidgetFactory : public QObject, public Singleton<WaveformWidgetFac
     void startVSync(QWidget *parent);
     void setVSync(bool checked);
 
-
-  public slots:
-    void start();
-    void stop();
-
     void notifyZoomChange(WWaveformViewer *viewer);
 
   signals:
     void waveformUpdateTick();
-
-  protected:
-    void timerEvent(QTimerEvent *timerEvent);
 
   protected:
     WaveformWidgetFactory();
@@ -122,6 +114,7 @@ class WaveformWidgetFactory : public QObject, public Singleton<WaveformWidgetFac
 
   private slots:
     void refresh();
+    void postRefresh();
 
   private:
     WaveformWidgetType::Type autoChooseWidgetType() const;

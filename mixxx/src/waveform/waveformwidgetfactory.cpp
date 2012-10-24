@@ -197,24 +197,6 @@ bool WaveformWidgetFactory::setConfig(ConfigObject<ConfigValue> *config){
     return true;
 }
 
-void WaveformWidgetFactory::start() {
-    //qDebug() << "WaveformWidgetFactory::start";
-//    killTimer(m_mainTimerId);
-//    m_mainTimerId = startTimer(1000/m_frameRate);
-//    m_delayTime = QTime::currentTime();
-}
-
-void WaveformWidgetFactory::stop() {
-    killTimer(m_mainTimerId);
-    m_mainTimerId = -1;
-}
-
-void WaveformWidgetFactory::timerEvent(QTimerEvent *timerEvent) {
-    if (timerEvent->timerId() == m_mainTimerId) {
-        refresh();
-    }
-}
-
 void WaveformWidgetFactory::destroyWidgets() {
     for (int i = 0; i < m_waveformWidgetHolders.size(); i++) {
         WaveformWidgetAbstract* pWidget = m_waveformWidgetHolders[i].m_waveformWidget;;
@@ -423,21 +405,8 @@ void WaveformWidgetFactory::refresh() {
 
     m_lastFrameTime = m_time.restart();
 
-    //qDebug() << "refresh()" << QTime::currentTime().msec() << m_lastFrameTime;
-
-    //int startTime;
-
-    // qDebug() << "signal" << m_vsyncThread->elapsed();
 
     if (m_type) {   // no regular updates for an empty waveform
-// For drivers where swapBuffers does not return until Vsync
-//        // Swap rendered buffer from last run
-//        for (int i = 0; i < m_waveformWidgetHolders.size(); i++) {
-//            // Show rendered buffer from last run
-//            m_waveformWidgetHolders[i].m_waveformWidget->postRender();
-//            qDebug() << "swap" << i << m_vsyncThread->elapsed();
-//        }
-
         QTime now = QTime::currentTime();
         // next rendered frame is displayed after next buffer swap and than after VSync
         int usToNextSync = m_vsyncThread->usToNextSync();
@@ -448,20 +417,11 @@ void WaveformWidgetFactory::refresh() {
             // Calculate play position for the new Frame in following run
             m_waveformWidgetHolders[i].m_waveformWidget->preRender(nextFrameTime);
         }
-        // qDebug() << "prerender" << m_vsyncThread->elapsed();
-    }
+        //qDebug() << "prerender" << m_vsyncThread->elapsed();
 
-    // Now the time uncritically time consuming things
-
-    // Notify all other waveform-like widgets (e.g. WSpinny's) that they should
-    // update.
-//    emit(waveformUpdateTick());
-//    qDebug() << "emit" << m_vsyncThread->elapsed();
-
-    // It may happen that there is an artificially delayed due to
-    // anti tearing driver settings
-    // all render commands are delayed until the swap from the previous run is executed
-    if (m_type) {   // no regular updates for an empty waveform
+        // It may happen that there is an artificially delayed due to
+        // anti tearing driver settings
+        // all render commands are delayed until the swap from the previous run is executed
         for (int i = 0; i < m_waveformWidgetHolders.size(); i++) {
             if (i == 0) {
                 paintersSetupTime0 = m_waveformWidgetHolders[0].m_waveformWidget->render();
@@ -470,27 +430,26 @@ void WaveformWidgetFactory::refresh() {
             } else {
                 m_waveformWidgetHolders[i].m_waveformWidget->render();
             }
- //           qDebug() << "render" << i << m_vsyncThread->elapsed();
+            //qDebug() << "render" << i << m_vsyncThread->elapsed();
         }
 
+        // if waveform 1 takes significant longer for render, assume a delay
+        // until Vsync within the driver
+        // happens at least in:
+        // xorg radeon 1:6.14.99
+        // xorg intel 2:2.9.1
         if (paintersSetupTime1 && paintersSetupTime0 > (paintersSetupTime1 + 1000)) {
             m_vsyncThread->setSwapWait(paintersSetupTime0 - paintersSetupTime1);
-//            qDebug() << "setSwapWait" << paintersSetupTime0 - paintersSetupTime1;
+            //qDebug() << "setSwapWait" << paintersSetupTime0 - paintersSetupTime1;
         } else {
             m_vsyncThread->setSwapWait(0);
         }
-
-        // For drivers where swapBuffers schedules the swap until VSync
-        // Like:
-        // xorg radeon 1:6.14.99
-        // xorg intel 2:2.9.1
-        for (int i = 0; i < m_waveformWidgetHolders.size(); i++) {
-            // schedule swapBuffers, the following makeCurrent is delayed until
-            // the swap actually finished (after vSync)
-            m_waveformWidgetHolders[i].m_waveformWidget->postRender();
-   //         qDebug() << "swap" << i << m_vsyncThread->elapsed();
-        }
     }
+
+    // Notify all other waveform-like widgets (e.g. WSpinny's) that they should
+    // update.
+    //emit(waveformUpdateTick());
+    //qDebug() << "emit" << m_vsyncThread->elapsed();
 
     // m_lastRenderDuration = startTime;
 
@@ -503,7 +462,23 @@ void WaveformWidgetFactory::refresh() {
             m_maximumlFrameRate = m_actualFrameRate;
         }
     }
- //   qDebug() << "refresh end" << m_vsyncThread->elapsed();
+    // qDebug() << "refresh end" << m_vsyncThread->elapsed();
+}
+
+void WaveformWidgetFactory::postRefresh() {
+    // Do this in an extra slot to be sure to hit the desired interval
+    if (m_type) {   // no regular updates for an empty waveform
+        // Show rendered buffer from last refresh() run
+        // It is delayed unit the render Queue is empty, then
+        // it schedules the actual swap until VSync
+        // Like setting SwapbufferWait = enabled (default) in driver:
+        // xorg radeon 1:6.14.99
+        // xorg intel 2:2.9.1
+        for (int i = 0; i < m_waveformWidgetHolders.size(); i++) {
+            m_waveformWidgetHolders[i].m_waveformWidget->postRender();
+        }
+    }
+    //qDebug() << "postRefresh end" << m_vsyncThread->elapsed();
 }
 
 WaveformWidgetType::Type WaveformWidgetFactory::autoChooseWidgetType() const {
@@ -653,14 +628,17 @@ int WaveformWidgetFactory::findIndexOf(WWaveformViewer* viewer) const {
 
 void WaveformWidgetFactory::startVSync(QWidget *parent) {
     if (m_vsyncThread) {
-        disconnect(m_vsyncThread, SIGNAL(vsync()), this, SLOT(refresh()));
+        disconnect(m_vsyncThread, SIGNAL(vsync1()), this, SLOT(refresh()));
+        disconnect(m_vsyncThread, SIGNAL(vsync2()), this, SLOT(postRefresh()));
         delete m_vsyncThread;
     }
     m_vsyncThread = new VSyncThread(parent);
     m_vsyncThread->start();
 
-    connect(m_vsyncThread, SIGNAL(vsync()),
+    connect(m_vsyncThread, SIGNAL(vsync1()),
             this, SLOT(refresh()), Qt::BlockingQueuedConnection);
+    connect(m_vsyncThread, SIGNAL(vsync2()),
+            this, SLOT(postRefresh()), Qt::BlockingQueuedConnection);
 
 }
 

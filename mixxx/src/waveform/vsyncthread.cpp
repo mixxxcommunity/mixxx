@@ -38,13 +38,15 @@ VSyncThread::VSyncThread(QWidget* parent)
     //glw = new QGLWidget(glFormat);
 
     glw = new QGLWidget(parent);
+    glw->resize(1,1);
+    /*
     qDebug() << parent->size();
     glw->resize(parent->size());
     glw->hide();
     qDebug() << glw->size();
     qDebug() << glw->pos();
     qDebug() << glw->mapToGlobal(QPoint(0,0));
-
+    */
 
 #if defined(__APPLE__)
 
@@ -92,12 +94,6 @@ void VSyncThread::run() {
         inSync = false;
         if (m_vSync) {
             usRest = m_usWait - m_timer.elapsed() / 1000;
-            // Sleep to hit the desired interval
-            usRest -= 8333;  // -8.333 ms for up to 120 Hz Displays
-            if (usRest > 100) {
-                usleep(usRest);
-            }
-            usRest = m_usWait - m_timer.elapsed() / 1000;
             if (usRest > 100) {
                 inSync = waitForVideoSync();
             }
@@ -126,15 +122,26 @@ void VSyncThread::run() {
             // we are synced
             m_usWait = m_usSyncTime;
         }
-        emit(vsync());
-        m_usWait += m_swapWait; // shift interval to avoid waiting for swap
-  //      qDebug()  << "VSync 4                           " << usLast << usRest << inSync;
+        emit(vsync1()); // renders the waveform, Possible delayed due to anti tearing
+        m_usWait += m_swapWait; // shift interval to avoid waiting for swap again
+
+        // Sleep to hit the desired interval and avoid a jitter
+        // by swapping to early when using a frame rate smaler then the display refresh rate
+        usRest = m_usWait - m_timer.elapsed() / 1000;
+        usRest -= 8333;  // -8.333 ms for up to 120 Hz Displays
+        if (usRest > 100) {
+            usleep(usRest);
+        }
+        emit(vsync2()); // swaps the new waveform to front
+
+
+        // qDebug()  << "VSync 4                           " << usLast << inSync;
     }
 }
 
 bool VSyncThread::waitForVideoSync() {
     uint counter;
-    uint counter_start;
+    //uint counter_start;
 
     if (!glw->parentWidget()->isVisible()) {
         return false;

@@ -26,7 +26,8 @@ class VSyncThread : public QThread {
     void setSwapWait(int sw);
 
   signals:
-    void vsync();
+    void vsync1();
+    void vsync2();
         
   private:
     bool doRendering;

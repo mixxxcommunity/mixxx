@@ -59,7 +59,7 @@ int GLWaveformWidget::render() {
     t1 = timer.restart();
     draw(&painter, NULL);
     //t2 = timer.restart();
-    //glFinish();
+    // glFinish();
     //t3 = timer.restart();
     //qDebug() << "GLVSyncTestWidget "<< t1 << t2 << t3;
     return t1/1000; // return timer for painter setup
