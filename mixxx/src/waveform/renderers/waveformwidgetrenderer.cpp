@@ -161,8 +161,6 @@ void WaveformWidgetRenderer::onPreRender(const QTime& posTime) {
 
 void WaveformWidgetRenderer::draw( QPainter* painter, QPaintEvent* event) {
 
-    static int realtimeError = 0;
-
 #ifdef WAVEFORMWIDGETRENDERER_DEBUG
     m_lastSystemFrameTime = m_timer->restart();
 #endif
@@ -196,8 +194,6 @@ void WaveformWidgetRenderer::draw( QPainter* painter, QPaintEvent* event) {
         frameMax = math_max( frameMax, m_lastFramesTime[i]);
         systemMax = math_max( systemMax, m_lastSystemFramesTime[i]);
     }
-
-    realtimeError = realtimeError - 33 + m_lastSystemFrameTime + m_lastFrameTime;
 
     //hud debug display
     painter->drawText(1,12,

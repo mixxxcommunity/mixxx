@@ -26,7 +26,8 @@ VisualPlayPosition::~VisualPlayPosition() {
 }
 
 // This function must be called only form the engine thread (PA callback)
-bool VisualPlayPosition::trySet(double playPos, double rate, double positionStep) {
+bool VisualPlayPosition::trySet(double playPos, double rate,
+                double positionStep, double pSlipPosition) {
     if (m_mutex.tryLock()) {
         //QTime now = QTime::currentTime();
         //qDebug() << now.msec();
@@ -38,6 +39,7 @@ bool VisualPlayPosition::trySet(double playPos, double rate, double positionStep
         m_playPos = playPos;
         m_rate = rate;
         m_positionStep = positionStep;
+        m_pSlipPosition = pSlipPosition;
         m_mutex.unlock();
         return true;
     }
@@ -62,6 +64,28 @@ double VisualPlayPosition::getAt(const QTime& posTime) {
         return playPos;
     }
     return 0;
+}
+
+void VisualPlayPosition::getPlaySlipAt(const QTime& posTime, double* playPosition, double* slipPosition) {
+    QMutexLocker locker(&m_mutex);
+
+    //static double testPos = 0;
+    //testPos += 0.000017759; //0.000016608; //  1.46257e-05;
+    //return testPos;
+
+    double playPos;
+
+    if (m_playPos != -1) {
+        int msecsToPosTime = m_timeDac.msecsTo(posTime);
+        playPos = m_playPos;  // load playPos for the first sample in Buffer
+        playPos += m_positionStep * msecsToPosTime / m_audioBufferSize->get() * m_rate;
+        //qDebug() << "delta Pos" << playPos - m_playPosOld << msecsToPosTime;
+        m_playPosOld = playPos;
+        *playPosition = playPos;
+    } else {
+        *playPosition = 0;
+    }
+    *slipPosition = m_pSlipPosition;
 }
 
 double VisualPlayPosition::getEnginePlayPos() {

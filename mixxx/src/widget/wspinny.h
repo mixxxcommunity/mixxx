@@ -24,12 +24,6 @@ class WSpinny : public QGLWidget {
     void dropEvent(QDropEvent *event);
 
   public slots:
-    // Update the playback angle saved in the widget and repaint. Playpos is a
-    // normalized (0.0-1.0) playback position. (Not an angle!)
-    void updateAngleFromPlaypos(double playpos);
-    void updateGhostAngleFromPlaypos(double playpos);
-
-    void updateRate(double);
     void updateVinylControlSpeed(double rpm);
     void updateVinylControlEnabled(double enabled);
     void invalidateVinylControl();
@@ -71,7 +65,6 @@ class WSpinny : public QGLWidget {
     ControlObjectThreadMain* m_pVinylControlEnabled;
     ControlObjectThreadMain* m_pSignalEnabled;
     ControlObjectThreadMain* m_pSlipEnabled;
-    ControlObjectThreadMain* m_pSlipPosition;
 
 #ifdef __VINYLCONTROL__
     VinylControlManager* m_pVCManager;
@@ -85,8 +78,7 @@ class WSpinny : public QGLWidget {
     int m_iTimerId;
     int m_iSignalUpdateTick;
     QString m_group;
-    float m_fAngle; //Degrees
-    float m_fGhostAngle;
+    float m_fGhostAngle; //Degrees
     int m_iStartMouseX;
     int m_iStartMouseY;
     int m_iFullRotations;

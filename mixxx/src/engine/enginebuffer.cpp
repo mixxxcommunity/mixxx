@@ -159,7 +159,6 @@ EngineBuffer::EngineBuffer(const char * _group, ConfigObject<ConfigValue> * _con
     connect(m_pSlipButton, SIGNAL(valueChangedFromEngine(double)),
             this, SLOT(slotControlSlip(double)),
             Qt::DirectConnection);
-    m_pSlipPosition = new ControlObject(ConfigKey(group, "slip_playposition"));
 
     // Actual rate (used in visuals, not for control)
     rateEngine = new ControlObject(ConfigKey(group, "rateEngine"));
@@ -527,13 +526,11 @@ void EngineBuffer::slotControlSlip(double v)
         // TODO(rryan): Should this filepos instead be the RAMAN current
         // position? filepos_play could be out of date.
         m_dSlipPosition = filepos_play;
-        m_pSlipPosition->set(fractionalPlayposFromAbsolute(m_dSlipPosition));
         m_dSlipRate = rate_old;
     } else {
-        // TODO(owen) assuming that looping will get cancelled properly
+        // TODO(owen) assuming that looping will get canceled properly
         slotControlSeekAbs(m_dSlipPosition);
         m_dSlipPosition = 0;
-        m_pSlipPosition->set(0);
     }
 }
 
@@ -574,8 +571,7 @@ void EngineBuffer::process(const CSAMPLE *, const CSAMPLE * pOut, const int iBuf
         // Update the slipped position
         if (m_bSlipEnabled) {
             m_dSlipPosition += static_cast<double>(iBufferSize) * m_dSlipRate;
-            m_pSlipPosition->set(fractionalPlayposFromAbsolute(m_dSlipPosition));
-        }
+         }
 
         // Scratching always disables keylock because keylock sounds terrible
         // when not going at a constant rate.
@@ -879,7 +875,9 @@ void EngineBuffer::updateIndicators(double rate, int iBufferSize) {
 
     // Update visual control object, this needs to be done more often than the
     // rateEngine and playpos slider
-    m_visualPlayPos->trySet(fFractionalPlaypos, rate, (double)iBufferSize/file_length_old);
+    m_visualPlayPos->trySet(fFractionalPlaypos, rate,
+            (double)iBufferSize/file_length_old,
+            fractionalPlayposFromAbsolute(m_dSlipPosition));
 }
 
 void EngineBuffer::hintReader(const double dRate,

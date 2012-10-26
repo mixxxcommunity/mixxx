@@ -107,13 +107,16 @@ void VSyncThread::run() {
             }
         }
         // <- Assume we are VSynced here ->
-        // now we have one VSync interval time for swap
-        // First calculate the m_usWait for the next frame
+        // now we have one VSync interval time for swap.
         usLast = m_timer.restart() / 1000;
+        if (usRest < 0) {
+            // Swaping was delayed
+            // Asume the real swap happens on the following VSync
+            m_rtErrorCnt++; // Count as Real Time Error
+        }
         usRest = m_usWait - usLast;
         if (usRest < -8333) { // -8.333 ms for up to 120 Hz Displays
             // Out of syc, start new
-            m_rtErrorCnt++;
             m_usWait = m_usSyncTime;
         } else if (!inSync) {
             // try to stay in right intervals

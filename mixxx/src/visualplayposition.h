@@ -15,8 +15,9 @@ class VisualPlayPosition
     VisualPlayPosition();
     ~VisualPlayPosition();
 
-    bool trySet(double playPos, double rate, double positionStep);
+    bool trySet(double playPos, double rate, double positionStep, double pSlipPosition);
     double getAt(const QTime& posTime);
+    void getPlaySlipAt(const QTime& posTime, double* playPosition, double* slipPosition);
     double getEnginePlayPos();
     static VisualPlayPosition* getVisualPlayPosition(QString group);
     static void setTimeInfo(const PaStreamCallbackTimeInfo *timeInfo);
@@ -27,6 +28,7 @@ class VisualPlayPosition
     double m_playPosOld;
     double m_rate;
     double m_positionStep;
+    double m_pSlipPosition;
     QTime m_timeDac;
     int m_deltatime;
     QMutex m_mutex;

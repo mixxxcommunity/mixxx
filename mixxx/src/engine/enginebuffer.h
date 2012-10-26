@@ -220,7 +220,6 @@ private:
     ControlObjectThreadMain *playButtonCOT, *playStartButtonCOT, *stopStartButtonCOT, *m_pTrackEndCOT, *stopButtonCOT;
     ControlObject *fwdButton, *backButton;
     ControlPushButton* m_pSlipButton;
-    ControlObject* m_pSlipPosition;
 
     ControlObject *rateEngine;
     ControlObject *visualBpm;

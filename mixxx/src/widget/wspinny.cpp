@@ -26,7 +26,6 @@ WSpinny::WSpinny(QWidget* parent, VinylControlManager* pVCMan)
           m_bSignalActive(true),
           m_iSize(0),
           m_iSignalUpdateTick(0),
-          m_fAngle(0.0f),
           m_fGhostAngle(0.0f),
           m_iStartMouseX(-1),
           m_iStartMouseY(-1),
@@ -116,10 +115,6 @@ void WSpinny::setup(QDomNode node, QString group)
 
     m_pSlipEnabled = new ControlObjectThreadMain(ControlObject::getControl(
         ConfigKey(group, "slip_enabled")));
-    m_pSlipPosition = new ControlObjectThreadMain(ControlObject::getControl(
-        ConfigKey(group, "slip_playposition")));
-    connect(m_pSlipPosition, SIGNAL(valueChanged(double)),
-            this, SLOT(updateGhostAngleFromPlaypos(double)));
 
 #ifdef __VINYLCONTROL__
     m_pVinylControlSpeedType = new ControlObjectThreadMain(ControlObject::getControl(
@@ -149,8 +144,7 @@ void WSpinny::setup(QDomNode node, QString group)
 #endif
 }
 
-void WSpinny::paintEvent(QPaintEvent *e)
-{
+void WSpinny::paintEvent(QPaintEvent *e) {
     Q_UNUSED(e); //ditch unused param warning
 
     QPainter p(this);
@@ -170,24 +164,24 @@ void WSpinny::paintEvent(QPaintEvent *e)
         if (m_iSignalUpdateTick == 0)
         {
             unsigned char * buf = m_pVinylControl->getScopeBytemap();
-            int r,g,b;
-            QColor qual_color = QColor();
-            float signalQuality = m_pVinylControl->getTimecodeQuality();
-
-            //color is related to signal quality
-            //hsv:  s=1, v=1
-            //h is the only variable.
-            //h=0 is red, h=120 is green
-            qual_color.setHsv((int)(120.0 * signalQuality), 255, 255);
-            qual_color.getRgb(&r, &g, &b);
-
             if (buf) {
+                int r,g,b;
+                QColor qual_color = QColor();
+                float signalQuality = m_pVinylControl->getTimecodeQuality();
+
+                //color is related to signal quality
+                //hsv:  s=1, v=1
+                //h is the only variable.
+                //h=0 is red, h=120 is green
+                qual_color.setHsv((int)(120.0 * signalQuality), 255, 255);
+                qual_color.getRgb(&r, &g, &b);
+
                 for (int y=0; y<m_iSize; y++) {
                     QRgb *line = (QRgb *)m_qImage.scanLine(y);
                     for(int x=0; x<m_iSize; x++) {
-                        //use xwax's bitmap to set alpha data only
-                        //adjust alpha by 3/4 so it's not quite so distracting
-                        //setpixel is slow, use scanlines instead
+                        // use xwax's bitmap to set alpha data only
+                        // adjust alpha by 3/4 so it's not quite so distracting
+                        // setpixel is slow, use scanlines instead
                         //m_qImage.setPixel(x, y, qRgba(r,g,b,(int)buf[x+m_iSize*y] * .75));
                         *line = qRgba(r,g,b,(int)(buf[x+m_iSize*y] * .75));
                         line++;
@@ -216,16 +210,20 @@ void WSpinny::paintEvent(QPaintEvent *e)
         p.save();
     }
 
+    double playPosition;
+    double slipPosition;
+    m_pVisualPlayPos->getPlaySlipAt(QTime::currentTime(), &playPosition, &slipPosition);
+
     if (m_pFG && !m_pFG->isNull()) {
-        //Now rotate the pixmap and draw it on the screen.
-        p.rotate(calculateAngle(m_pVisualPlayPos->getAt(QTime::currentTime())));
+        // Now rotate the pixmap and draw it on the screen.
+        p.rotate(calculateAngle(playPosition));
         p.drawImage(-(width() / 2), -(height() / 2), m_pFGImage);
     }
 
     if (bGhostPlayback && m_pGhost && !m_pGhost->isNull()) {
         p.restore();
         p.save();
-        p.rotate(m_fGhostAngle);
+        p.rotate(calculateAngle(slipPosition));
         p.drawImage(-(width() / 2), -(height() / 2), m_pGhostImage);
 
         //Rotate back to the playback position (not the ghost positon),
@@ -320,17 +318,6 @@ double WSpinny::calculatePositionFromAngle(double angle)
         return 0.0;
     }
     return playpos;
-}
-
-void WSpinny::updateAngleFromPlaypos(double playpos) {
-    m_fAngle = calculateAngle(playpos);
-}
-
-void WSpinny::updateGhostAngleFromPlaypos(double playpos) {
-    m_fGhostAngle = calculateAngle(playpos);
-}
-
-void WSpinny::updateRate(double rate) {
 }
 
 void WSpinny::updateVinylControlSpeed(double rpm) {
