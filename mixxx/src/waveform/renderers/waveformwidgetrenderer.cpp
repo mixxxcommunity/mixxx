@@ -100,7 +100,7 @@ bool WaveformWidgetRenderer::init() {
     return true;
 }
 
-void WaveformWidgetRenderer::onPreRender(const QTime& posTime) {
+void WaveformWidgetRenderer::onPreRender(VSyncThread* vsyncThread) {
 
     m_trackSamples = m_trackSamplesControlObject->get();
     if (m_trackSamples <= 0.0)
@@ -135,7 +135,7 @@ void WaveformWidgetRenderer::onPreRender(const QTime& posTime) {
         double displayedLengthHalf = static_cast<double>(m_width) / trackPixel / 2.0;
         // Avoid pixel jitter in play position by rounding to the nearest track
         // pixel.
-        m_playPos = round(m_visualPlayPosition->getAt(posTime) * trackPixel)/(double)trackPixel; // Avoid pixel jitter in play position
+        m_playPos = round(m_visualPlayPosition->getAt(vsyncThread) * trackPixel)/(double)trackPixel; // Avoid pixel jitter in play position
         m_playPosVSample = m_playPos * m_trackInfoObject->getWaveform()->getDataSize();
         m_firstDisplayedPosition = m_playPos - displayedLengthHalf;
         m_lastDisplayedPosition = m_playPos + displayedLengthHalf;

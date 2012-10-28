@@ -2,12 +2,14 @@
 #define VISUALPLAYPOSITION_H
 
 #include <portaudio.h>
+#include "performancetimer.h"
 
 #include <QMutex>
 #include <QTime>
 #include <QMap>
 
 class ControlObjectThreadMain;
+class VSyncThread;
 
 class VisualPlayPosition
 {
@@ -16,8 +18,8 @@ class VisualPlayPosition
     ~VisualPlayPosition();
 
     bool trySet(double playPos, double rate, double positionStep, double pSlipPosition);
-    double getAt(const QTime& posTime);
-    void getPlaySlipAt(const QTime& posTime, double* playPosition, double* slipPosition);
+    double getAt(VSyncThread* vsyncThread);
+    void getPlaySlipAt(int usFromNow, double* playPosition, double* slipPosition);
     double getEnginePlayPos();
     static VisualPlayPosition* getVisualPlayPosition(QString group);
     static void setTimeInfo(const PaStreamCallbackTimeInfo *timeInfo);
@@ -29,7 +31,8 @@ class VisualPlayPosition
     double m_rate;
     double m_positionStep;
     double m_pSlipPosition;
-    QTime m_timeDac;
+    int m_timeDac;
+    PerformanceTimer m_referenceTime;
     int m_deltatime;
     QMutex m_mutex;
     ControlObjectThreadMain* m_audioBufferSize;
@@ -37,7 +40,7 @@ class VisualPlayPosition
 
     static QMap<QString, VisualPlayPosition*> m_listVisualPlayPosition;
     static const PaStreamCallbackTimeInfo* m_timeInfo;
-    static QTime m_timeInfoTime;
+    static PerformanceTimer m_timeInfoTime;
 
 };
 

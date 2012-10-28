@@ -212,7 +212,7 @@ void WSpinny::paintEvent(QPaintEvent *e) {
 
     double playPosition;
     double slipPosition;
-    m_pVisualPlayPos->getPlaySlipAt(QTime::currentTime(), &playPosition, &slipPosition);
+    m_pVisualPlayPos->getPlaySlipAt(0, &playPosition, &slipPosition);
 
     if (m_pFG && !m_pFG->isNull()) {
         // Now rotate the pixmap and draw it on the screen.

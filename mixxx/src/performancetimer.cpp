@@ -207,6 +207,14 @@ qint64 PerformanceTimer::restart()
     return sec * Q_INT64_C(1000000000) + frac;
 }
 
+qint64 PerformanceTimer::difference(PerformanceTimer* timer)
+{
+    qint64 sec, frac;
+    sec = t1 - timer->t1;
+    frac = t2 - timer->t2;
+    return sec * Q_INT64_C(1000000000) + frac;
+}
+
 ////////////////////////////// Windows //////////////////////////////
 #elif defined(Q_OS_WIN)
 

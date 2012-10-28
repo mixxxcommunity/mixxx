@@ -407,15 +407,10 @@ void WaveformWidgetFactory::refresh() {
 
 
     if (m_type) {   // no regular updates for an empty waveform
-        QTime now = QTime::currentTime();
         // next rendered frame is displayed after next buffer swap and than after VSync
-        int usToNextSync = m_vsyncThread->usToNextSync();
-
-        QTime nextFrameTime = now.addMSecs(usToNextSync/1000);
-
         for (int i = 0; i < m_waveformWidgetHolders.size(); i++) {
             // Calculate play position for the new Frame in following run
-            m_waveformWidgetHolders[i].m_waveformWidget->preRender(nextFrameTime);
+            m_waveformWidgetHolders[i].m_waveformWidget->preRender(m_vsyncThread);
         }
         //qDebug() << "prerender" << m_vsyncThread->elapsed();
 

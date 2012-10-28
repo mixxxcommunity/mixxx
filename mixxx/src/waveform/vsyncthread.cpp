@@ -138,7 +138,7 @@ void VSyncThread::run() {
         emit(vsync2()); // swaps the new waveform to front
 
 
-        // qDebug()  << "VSync 4                           " << usLast << inSync;
+        //qDebug()  << "VSync 4                           " << usLast << inSync;
     }
 }
 
@@ -229,6 +229,11 @@ int VSyncThread::usToNextSync() {
         usRest += m_usSyncTime;
     }
     return usRest;
+}
+
+int VSyncThread::usFromTimerToNextSync(PerformanceTimer* timer) {
+    int difference = m_timer.difference(timer) / 1000;
+    return difference + m_usWait;
 }
 
 int VSyncThread::rtErrorCnt() {

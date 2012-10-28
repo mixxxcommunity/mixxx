@@ -24,6 +24,8 @@ class VSyncThread : public QThread {
     void setVSync(bool checked);
     int rtErrorCnt();
     void setSwapWait(int sw);
+    int usFromTimerToNextSync(PerformanceTimer* timer);
+
 
   signals:
     void vsync1();

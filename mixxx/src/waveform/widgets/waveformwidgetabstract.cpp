@@ -26,8 +26,8 @@ void WaveformWidgetAbstract::release() {
     }
 }
 
-void WaveformWidgetAbstract::preRender(const QTime& posTime) {
-    WaveformWidgetRenderer::onPreRender(posTime);
+void WaveformWidgetAbstract::preRender(VSyncThread* vsyncThread) {
+    WaveformWidgetRenderer::onPreRender(vsyncThread);
 }
 
 int WaveformWidgetAbstract::render() {

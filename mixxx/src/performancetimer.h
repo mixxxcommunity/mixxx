@@ -57,6 +57,7 @@ public:
     void start();
     qint64 elapsed() const;
     qint64 restart();
+    qint64 difference(PerformanceTimer* timer);
 
 private:
     qint64 t1;
