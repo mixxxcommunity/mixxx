@@ -26,16 +26,25 @@ class AnalyserQueue : public QThread {
 
   public slots:
     void queueAnalyseTrack(TrackPointer tio);
+    void slotUpdateProgress();
 
   signals:
     void trackProgress(TrackPointer pTrack, int progress);
     void trackFinished(int size);
     void queueEmpty();
+    void updateProgress();
 
   protected:
     void run();
 
   private:
+
+    struct progress_info {
+        TrackPointer current_track;
+        int track_progress; // in 0.1 %
+        int queue_size;
+    };
+
     void addAnalyser(Analyser* an);
 
     QList<Analyser*> m_aq;
@@ -51,6 +60,7 @@ class AnalyserQueue : public QThread {
     QQueue<TrackPointer> m_tioq;
     QMutex m_qm;
     QWaitCondition m_qwait;
+    struct progress_info m_progressInfo;
 };
 
 #endif
