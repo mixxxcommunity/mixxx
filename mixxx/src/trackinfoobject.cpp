@@ -703,13 +703,18 @@ void TrackInfoObject::waveformSummaryNew() {
     emit(waveformSummaryUpdated());
 }
 
+// This is called from the AnalyserQueue Thread
 void TrackInfoObject::setAnalyserProgress(int progress) {
     // progress in 0 .. 1000
     if (progress != m_analyserProgress) {
+        // m_analyserProgress is threadsave because it is only written here!
         m_analyserProgress = progress;
         emit(analyserProgress(progress));
-        // usleep(100000);
     }
+}
+
+int TrackInfoObject::getAnalyserProgress() const {
+    return m_analyserProgress;
 }
 
 void TrackInfoObject::setCuePoint(float cue)
@@ -806,7 +811,7 @@ void TrackInfoObject::setDirty(bool bDirty) {
     }
     // Emit a changed signal regardless if this attempted to set us dirty.
     if (bDirty) {
-    	emit(changed(this));
+        emit(changed(this));
     }
 
     //qDebug() << QString("TrackInfoObject %1 %2 set to %3").arg(QString::number(m_iId), m_fileInfo.absoluteFilePath(), m_bDirty ? "dirty" : "clean");

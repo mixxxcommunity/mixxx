@@ -40,7 +40,7 @@ class PrepareFeature : public LibraryFeature {
 
   signals:
     void trackAnalysisProgress(TrackPointer pTrack, int progress);
-    void trackAnalysisFinished(TrackPointer pTrack);
+    void trackAnalysisFinished(int size);
     void analysisActive(bool bActive);
 
   public slots:
@@ -54,7 +54,7 @@ class PrepareFeature : public LibraryFeature {
     void analyzeTracks(QList<int> trackIds);
     void stopAnalysis();
     void slotTrackAnalysisProgress(TrackPointer pTrack, int progress);
-    void slotTrackAnalysisFinished(TrackPointer pTrack);
+    void slotTrackAnalysisFinished(int size);
 
   private:
     void cleanupAnalyser();

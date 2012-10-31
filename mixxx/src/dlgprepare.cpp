@@ -156,7 +156,7 @@ void DlgPrepare::analyze() {
             }
         }
         m_tracksInCueue = trackIds.count();
-        m_tracksFinished = 0;
+        m_currentTrack = 1;
         emit(analyzeTracks(trackIds));
     }
 }
@@ -173,16 +173,20 @@ void DlgPrepare::analysisActive(bool bActive) {
     }
 }
 
-void DlgPrepare::trackAnalysisFinished(TrackPointer tio) {
-    qDebug() << "Analysis finished on track:" << tio->getInfo();
-    m_tracksFinished++;
+// slot
+void DlgPrepare::trackAnalysisFinished(int size) {
+    qDebug() << "Analysis finished" << size << "tracks left";
+    if (size > 0) {
+        m_currentTrack = m_tracksInCueue - size + 1;
+    }
 }
 
+// slot
 void DlgPrepare::trackAnalysisProgress(TrackPointer tio, int progress) {
     Q_UNUSED(tio);
     if (m_bAnalysisActive) {
         QString text = tr("Analyzing %1/%2 %3%").arg(
-                QString::number(m_tracksFinished),
+                QString::number(m_currentTrack),
                 QString::number(m_tracksInCueue),
                 QString::number(progress));
         labelProgress->setText(text);

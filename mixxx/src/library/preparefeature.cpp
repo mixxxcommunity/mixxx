@@ -57,8 +57,8 @@ void PrepareFeature::bindWidget(WLibrarySidebar* sidebarWidget,
             m_pPrepareView, SLOT(analysisActive(bool)));
     connect(this, SIGNAL(trackAnalysisProgress(TrackPointer, int)),
             m_pPrepareView, SLOT(trackAnalysisProgress(TrackPointer, int)));
-    connect(this, SIGNAL(trackAnalysisFinished(TrackPointer)),
-            m_pPrepareView, SLOT(trackAnalysisFinished(TrackPointer)));
+    connect(this, SIGNAL(trackAnalysisFinished(int)),
+            m_pPrepareView, SLOT(trackAnalysisFinished(int)));
 
     m_pPrepareView->installEventFilter(keyboard);
 
@@ -130,18 +130,18 @@ void PrepareFeature::onLazyChildExpandation(const QModelIndex &index){
 
 void PrepareFeature::analyzeTracks(QList<int> trackIds) {
     if (m_pAnalyserQueue == NULL) {
-        //Save the old BPM detection prefs setting (on or off)
+        // Save the old BPM detection prefs setting (on or off)
         m_iOldBpmEnabled = m_pConfig->getValueString(ConfigKey("[BPM]","BPMDetectionEnabled")).toInt();
-        //Force BPM detection to be on.
+        // Force BPM detection to be on.
         m_pConfig->set(ConfigKey("[BPM]","BPMDetectionEnabled"), ConfigValue(1));
-        //Note: this sucks... we should refactor the prefs/analyser to fix this hacky bit ^^^^.
+        // Note: this sucks... we should refactor the prefs/analyser to fix this hacky bit ^^^^.
 
         m_pAnalyserQueue = AnalyserQueue::createPrepareViewAnalyserQueue(m_pConfig);
 
         connect(m_pAnalyserQueue, SIGNAL(trackProgress(TrackPointer, int)),
                 this, SLOT(slotTrackAnalysisProgress(TrackPointer, int)));
-        connect(m_pAnalyserQueue, SIGNAL(trackFinished(TrackPointer)),
-                this, SLOT(slotTrackAnalysisFinished(TrackPointer)));
+        connect(m_pAnalyserQueue, SIGNAL(trackFinished(int)),
+                this, SLOT(slotTrackAnalysisFinished(int)));
         connect(m_pAnalyserQueue, SIGNAL(queueEmpty()),
                 this, SLOT(stopAnalysis()));
         emit(analysisActive(true));
@@ -161,9 +161,9 @@ void PrepareFeature::slotTrackAnalysisProgress(TrackPointer pTrack, int progress
     emit(trackAnalysisProgress(pTrack, progress));
 }
 
-void PrepareFeature::slotTrackAnalysisFinished(TrackPointer pTrack) {
+void PrepareFeature::slotTrackAnalysisFinished(int size) {
     //qDebug() << this << "trackAnalysisFinished" << pTrack->getInfo();
-    emit(trackAnalysisFinished(pTrack));
+    emit(trackAnalysisFinished(size));
 }
 
 void PrepareFeature::stopAnalysis() {

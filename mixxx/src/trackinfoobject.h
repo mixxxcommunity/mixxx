@@ -224,6 +224,7 @@ public:
     const Waveform* getWaveformSummary() const;
     void waveformSummaryNew();
     void setAnalyserProgress(int progress);
+    int getAnalyserProgress() const;
 
     // Save the cue point (in samples... I think) 
     void setCuePoint(float cue);
@@ -380,7 +381,7 @@ private:
     Waveform* m_waveform;
     Waveform* m_waveformSummary;
 
-    int m_analyserProgress; // in %
+    int m_analyserProgress; // in 0.1%
 
     friend class TrackDAO;
 };

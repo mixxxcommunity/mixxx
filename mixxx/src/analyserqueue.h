@@ -19,7 +19,6 @@ class AnalyserQueue : public QThread {
     AnalyserQueue();
     virtual ~AnalyserQueue();
     void stop();
-    int numQueuedTracks();
 
     static AnalyserQueue* createDefaultAnalyserQueue(ConfigObject<ConfigValue> *_config);
     static AnalyserQueue* createPrepareViewAnalyserQueue(ConfigObject<ConfigValue> *_config);
@@ -30,7 +29,7 @@ class AnalyserQueue : public QThread {
 
   signals:
     void trackProgress(TrackPointer pTrack, int progress);
-    void trackFinished(TrackPointer pTrack);
+    void trackFinished(int size);
     void queueEmpty();
 
   protected:

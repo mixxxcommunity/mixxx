@@ -184,3 +184,4 @@ bool PlayerInfo::isTrackPlaying(TrackInfoObject* pTrack) const {
     }
     return false;
 }
+

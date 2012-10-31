@@ -126,7 +126,7 @@ private slots:
     float m_a;
     float m_b;
 
-    int m_analyserProgress;
+    int m_analyserProgress; // in 0.1%
 };
 
 #endif

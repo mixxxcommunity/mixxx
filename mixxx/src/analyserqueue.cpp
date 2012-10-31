@@ -21,6 +21,11 @@
 
 #include <typeinfo>
 
+#define FINALISE_PERCENT 0 // in 0.1%,
+                           // 0 for no progress during finalize
+                           // 100 for 10% step after finalise
+
+
 AnalyserQueue::AnalyserQueue() :
     m_aq(),
     m_exit(false),
@@ -30,17 +35,11 @@ AnalyserQueue::AnalyserQueue() :
     m_qwait() {
 }
 
-int AnalyserQueue::numQueuedTracks() {
-    m_qm.lock();
-    int numQueuedTracks = m_tioq.count();
-    m_qm.unlock();
-    return numQueuedTracks;
-}
-
 void AnalyserQueue::addAnalyser(Analyser* an) {
     m_aq.push_back(an);
 }
 
+// This is called from the AnalyserQueue thread
 bool AnalyserQueue::isLoadedTrackWaiting() {
     QMutexLocker queueLocker(&m_qm);
 
@@ -56,9 +55,9 @@ bool AnalyserQueue::isLoadedTrackWaiting() {
     return false;
 }
 
+// This is called from the AnalyserQueue thread
 TrackPointer AnalyserQueue::dequeueNextBlocking() {
     m_qm.lock();
-
     if (m_tioq.isEmpty()) {
         m_qwait.wait(&m_qm);
 
@@ -99,9 +98,8 @@ TrackPointer AnalyserQueue::dequeueNextBlocking() {
     return pLoadTrack;
 }
 
-
+// This is called from the AnalyserQueue thread
 bool AnalyserQueue::doAnalysis(TrackPointer tio, SoundSourceProxy *pSoundSource) {
-
     // TonalAnalyser requires a block size of 65536. Using a different value
     // breaks the tonal analyser. We need to use a smaller block size becuase on
     // Linux, the AnalyserQueue can starve the CPU of its resources, resulting
@@ -154,18 +152,19 @@ bool AnalyserQueue::doAnalysis(TrackPointer tio, SoundSourceProxy *pSoundSource)
         }
 
         // emit progress updates to whoever cares
-        // During the doAnalysis function it goes only to 90% because the finalise functions will take also some time
+        // During the doAnalysis function it goes only to 100% - FINALISE_PERCENT because the
+        // finalise functions will take also some time
         processedSamples += read;
-        int progress_new = ((float)processedSamples)/totalSamples * 900; //fp div here prevents insano signed overflow
+        int progress_new = ((float)processedSamples)/totalSamples * (1000 - FINALISE_PERCENT); //fp div here prevents insano signed overflow
 
         if (progressUpdateInhibitTimer.elapsed() > 60) {
             // Inhibit Updates for 60 milliseconds
-            progressUpdateInhibitTimer.start();
             tio->setAnalyserProgress(progress_new);
             if (progress != progress_new/10) {
                 progress = progress_new/10;
                 emit(trackProgress(tio, progress));
             }
+            progressUpdateInhibitTimer.start();
         }
 
         // Since this is a background analysis queue, we should co-operatively
@@ -176,11 +175,9 @@ bool AnalyserQueue::doAnalysis(TrackPointer tio, SoundSourceProxy *pSoundSource)
         //QThread::usleep(10);
 
         //has something new entered the queue?
-        if (m_aiCheckPriorities)
-        {
+        if (m_aiCheckPriorities) {
             m_aiCheckPriorities = false;
-            if (! PlayerInfo::Instance().isTrackLoaded(tio) && isLoadedTrackWaiting())
-            {
+            if (!PlayerInfo::Instance().isTrackLoaded(tio) && isLoadedTrackWaiting()) {
                 qDebug() << "Interrupting analysis to give preference to a loaded track.";
                 dieflag = true;
                 cancelled = true;
@@ -208,20 +205,19 @@ void AnalyserQueue::run() {
     unsigned static id = 0; //the id of this thread, for debugging purposes //XXX copypasta (should factor this out somehow), -kousu 2/2009
     QThread::currentThread()->setObjectName(QString("AnalyserQueue %1").arg(++id));
 
-    // If there are no analysers, don't waste time running.
+    // If there are no analyzers, don't waste time running.
     if (m_aq.size() == 0)
         return;
 
     while (!m_exit) {
         TrackPointer nextTrack = dequeueNextBlocking();
 
-        if (m_exit) //When exit is set, it makes the above unblock first.
-            return;
-
-        // If the track is NULL, get the next one. Could happen if the track was
-        // queued but then deleted.
-        if (!nextTrack)
+        // If the track is NULL, try to get the next one.
+        // Could happen if the track was queued but then deleted.
+        // Or if dequeueNextBlocking is unblocked by exit == true
+        if (!nextTrack) {
             continue;
+        }
 
         // Get the audio
         SoundSourceProxy * pSoundSource = new SoundSourceProxy(nextTrack);
@@ -238,7 +234,9 @@ void AnalyserQueue::run() {
         bool processTrack = false;
         while (it.hasNext()) {
             // Make sure not to short-circuit initialise(...)
-            processTrack = it.next()->initialise(nextTrack, iSampleRate, iNumSamples) || processTrack;
+            if (it.next()->initialise(nextTrack, iSampleRate, iNumSamples)) {
+                processTrack = true;
+            }
         }
 
         if (processTrack) {
@@ -255,7 +253,7 @@ void AnalyserQueue::run() {
                 bool completed = doAnalysis(nextTrack, pSoundSource);
 
                 if (!completed) {
-                    //This track was cancelled //  progress < 90%
+                    //This track was cancelled
                     QListIterator<Analyser*> itf(m_aq);
                     while (itf.hasNext()) {
                         itf.next()->cleanup(nextTrack);
@@ -264,7 +262,7 @@ void AnalyserQueue::run() {
                     emit(trackProgress(nextTrack, 0)); // 0% finished, restart analysis required
                     nextTrack->setAnalyserProgress(0);
                 } else {
-                    // 90% finished
+                    // 100% - FINALISE_PERCENT finished
                     QListIterator<Analyser*> itf(m_aq);
                     while (itf.hasNext()) {
                         itf.next()->finalise(nextTrack);
@@ -280,12 +278,14 @@ void AnalyserQueue::run() {
         }
 
         delete pSoundSource;
-        emit(trackFinished(nextTrack));
 
         m_qm.lock();
-        bool empty = m_tioq.isEmpty();
+        int size = m_tioq.size();
         m_qm.unlock();
-        if (empty) {
+
+        emit(trackFinished(size));
+
+        if (size == 0) {
             emit(queueEmpty());
         }
     }
@@ -295,13 +295,14 @@ void AnalyserQueue::run() {
 void AnalyserQueue::queueAnalyseTrack(TrackPointer tio) {
     m_qm.lock();
     m_aiCheckPriorities = true;
-    if( !m_tioq.contains(tio)){
+    if (!m_tioq.contains(tio)) {
         m_tioq.enqueue(tio);
         m_qwait.wakeAll();
-    }
+    } 
     m_qm.unlock();
 }
 
+// static
 AnalyserQueue* AnalyserQueue::createAnalyserQueue(QList<Analyser*> analysers) {
     AnalyserQueue* ret = new AnalyserQueue();
 
@@ -314,6 +315,7 @@ AnalyserQueue* AnalyserQueue::createAnalyserQueue(QList<Analyser*> analysers) {
     return ret;
 }
 
+// static
 AnalyserQueue* AnalyserQueue::createDefaultAnalyserQueue(ConfigObject<ConfigValue> *_config) {
     AnalyserQueue* ret = new AnalyserQueue();
 
@@ -335,6 +337,7 @@ AnalyserQueue* AnalyserQueue::createDefaultAnalyserQueue(ConfigObject<ConfigValu
     return ret;
 }
 
+// static
 AnalyserQueue* AnalyserQueue::createPrepareViewAnalyserQueue(ConfigObject<ConfigValue> *_config) {
     AnalyserQueue* ret = new AnalyserQueue();
 

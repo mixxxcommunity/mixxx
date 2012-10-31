@@ -123,8 +123,8 @@ bool AnalyserWaveform::initialise(TrackPointer tio, int sampleRate, int totalSam
 
     //qDebug() << summaryWaveformSampleRate;
 
-    m_waveform->computeBestVisualSampleRate(sampleRate,mainWaveformSampleRate);
-    m_waveformSummary->computeBestVisualSampleRate(sampleRate,summaryWaveformSampleRate);
+    m_waveform->computeBestVisualSampleRate(sampleRate, mainWaveformSampleRate);
+    m_waveformSummary->computeBestVisualSampleRate(sampleRate, summaryWaveformSampleRate);
 
     // getDataSize() of both waveform and waveformSummary are now totalSamples
     m_waveform->allocateForAudioSamples(totalSamples);

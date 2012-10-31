@@ -39,13 +39,13 @@ WOverview::WOverview(const char *pGroup, ConfigObject<ConfigValue>* pConfig, QWi
 
     m_totalGainControl = new ControlObjectThreadMain(
                 ControlObject::getControl( ConfigKey(m_pGroup,"total_gain")));
-    connect( m_totalGainControl, SIGNAL(valueChanged(double)),
+    connect(m_totalGainControl, SIGNAL(valueChanged(double)),
              this, SLOT(onTotalGainChange(double)));
     m_totalGain = 1.0;
 
     m_endOfTrackControl = new ControlObjectThreadMain(
                 ControlObject::getControl( ConfigKey(m_pGroup,"end_of_track")));
-    connect( m_endOfTrackControl, SIGNAL(valueChanged(double)),
+    connect(m_endOfTrackControl, SIGNAL(valueChanged(double)),
              this, SLOT( onEndOfTrackChange(double)));
     m_endOfTrack = false;
 
@@ -114,19 +114,19 @@ void WOverview::setup(QDomNode node) {
             WaveformMarkRange& markRange = m_markRanges.back();
             markRange.setup( m_pGroup, child);
 
-            connect( markRange.m_markEnabledControl, SIGNAL(valueChanged(double)),
+            connect(markRange.m_markEnabledControl, SIGNAL(valueChanged(double)),
                      this, SLOT(onMarkRangeChange(double)));
-            connect( markRange.m_markEnabledControl, SIGNAL(valueChangedFromEngine(double)),
+            connect(markRange.m_markEnabledControl, SIGNAL(valueChangedFromEngine(double)),
                      this, SLOT(onMarkChanged(double)));
 
-            connect( markRange.m_markStartPointControl, SIGNAL(valueChanged(double)),
+            connect(markRange.m_markStartPointControl, SIGNAL(valueChanged(double)),
                      this, SLOT(onMarkRangeChange(double)));
-            connect( markRange.m_markStartPointControl, SIGNAL(valueChangedFromEngine(double)),
+            connect(markRange.m_markStartPointControl, SIGNAL(valueChangedFromEngine(double)),
                      this, SLOT(onMarkRangeChange(double)));
 
-            connect( markRange.m_markEndPointControl, SIGNAL(valueChanged(double)),
+            connect(markRange.m_markEndPointControl, SIGNAL(valueChanged(double)),
                      this, SLOT(onMarkRangeChange(double)));
-            connect( markRange.m_markEndPointControl, SIGNAL(valueChangedFromEngine(double)),
+            connect(markRange.m_markEndPointControl, SIGNAL(valueChangedFromEngine(double)),
                      this, SLOT(onMarkRangeChange(double)));
         }
         child = child.nextSibling();
@@ -197,13 +197,17 @@ void WOverview::slotLoadNewTrack(TrackPointer pTrack) {
 
     if (pTrack) {
         m_pCurrentTrack = pTrack;
+        m_analyserProgress = pTrack->getAnalyserProgress();
+        m_waveform = pTrack->getWaveformSummary();
+
         connect(pTrack.data(), SIGNAL(waveformSummaryUpdated()),
                 this, SLOT(slotWaveformSummaryUpdated()));
-        slotWaveformSummaryUpdated();
 
         connect(pTrack.data(), SIGNAL(analyserProgress(int)),
                 this, SLOT(slotAnalyserProgress(int)));
         //qDebug() << "WOverview::slotLoadNewTrack - startTimer";
+
+        drawNextPixmapPart();
     }
     update();
 }
@@ -347,7 +351,7 @@ bool WOverview::drawNextPixmapPart() {
 
     m_actualCompletion = nextCompletion;
 
-    //test if the complete wavefrom is done
+    //test if the complete waveform is done
     if( m_actualCompletion >= dataSize - 2) {
         m_pixmapDone = true;
         //qDebug() << "m_waveformPeakRatio" << m_waveformPeak;
