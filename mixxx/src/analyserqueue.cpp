@@ -118,6 +118,7 @@ bool AnalyserQueue::doAnalysis(TrackPointer tio, SoundSourceProxy *pSoundSource)
     QTime progressUpdateInhibitTimer;
     progressUpdateInhibitTimer.start(); // Inhibit Updates for 60 milliseconds
 
+    int progress;
     int read = 0;
     bool dieflag = false;
     bool cancelled = false;
@@ -152,16 +153,21 @@ bool AnalyserQueue::doAnalysis(TrackPointer tio, SoundSourceProxy *pSoundSource)
             //qDebug() << "Done " << typeid(*an).name() << ".process()";
         }
 
-        // emit progress updates to whoever cares
-        // During the doAnalysis function it goes only to 100% - FINALISE_PERCENT because the
-        // finalise functions will take also some time
+        // emit progress updates
+        // During the doAnalysis function it goes only to 100% - FINALISE_PERCENT
+        // because the finalise functions will take also some time
         processedSamples += read;
-        m_progressInfo.track_progress = ((float)processedSamples)/totalSamples * (1000 - FINALISE_PERCENT); //fp div here prevents insano signed overflow
+        //fp div here prevents insano signed overflow
+        progress = (int)(((float)processedSamples)/totalSamples
+                * (1000 - FINALISE_PERCENT));
 
-        if (progressUpdateInhibitTimer.elapsed() > 60) {
-            // Inhibit Updates for 60 milliseconds
-            emit(updateProgress());
-            progressUpdateInhibitTimer.start();
+        if (m_progressInfo.track_progress != progress) {
+            if (progressUpdateInhibitTimer.elapsed() > 60) {
+                // Inhibit Updates for 60 milliseconds
+                m_progressInfo.track_progress = progress;
+                emit(updateProgress());
+                progressUpdateInhibitTimer.start();
+            }
         }
 
         // Since this is a background analysis queue, we should co-operatively
@@ -240,6 +246,7 @@ void AnalyserQueue::run() {
             }
         }
 
+        m_progressInfo.current_track = nextTrack;
         m_qm.lock();
         m_progressInfo.queue_size = m_tioq.size();
         m_qm.unlock();
@@ -253,7 +260,6 @@ void AnalyserQueue::run() {
                 }
                 queueAnalyseTrack(nextTrack);
             } else {
-                m_progressInfo.current_track = nextTrack;
                 m_progressInfo.track_progress = 0;
                 emit(updateProgress());
                 bool completed = doAnalysis(nextTrack, pSoundSource);
@@ -269,6 +275,7 @@ void AnalyserQueue::run() {
                     emit(updateProgress());
                 } else {
                     // 100% - FINALISE_PERCENT finished
+                    // This takes around 3 sec on a Atom Netbook
                     QListIterator<Analyser*> itf(m_aq);
                     while (itf.hasNext()) {
                         itf.next()->finalise(nextTrack);

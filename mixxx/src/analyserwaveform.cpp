@@ -67,8 +67,6 @@ bool AnalyserWaveform::initialise(TrackPointer tio, int sampleRate, int totalSam
     int trackId = tio->getId();
     bool missingWaveform = m_waveform->getDataSize() == 0;
     bool missingWavesummary = m_waveformSummary->getDataSize() == 0;
-    bool loadedWaveform = false;
-    bool loadedWavesummary = false;
 
     if (trackId != -1 && (missingWaveform || missingWavesummary)) {
         QList<AnalysisDao::AnalysisInfo> analyses =
@@ -79,20 +77,20 @@ bool AnalyserWaveform::initialise(TrackPointer tio, int sampleRate, int totalSam
             const AnalysisDao::AnalysisInfo& analysis = it.next();
 
             if (analysis.type == AnalysisDao::TYPE_WAVEFORM
-                    && analysis.version
-                            == WaveformFactory::getPreferredWaveformVersion()
-                    && missingWaveform && !loadedWaveform) {
+                    && analysis.version == WaveformFactory::getPreferredWaveformVersion()
+                    && missingWaveform) {
                 if (WaveformFactory::updateWaveformFromAnalysis(m_waveform, analysis)) {
                     tio->waveformNew();
+                    missingWaveform = false;
                 } else {
                     m_analysisDao->deleteAnalysis(analysis.analysisId);
                 }
-            } else if (analysis.type == AnalysisDao::TYPE_WAVESUMMARY &&
-                       analysis.version == WaveformFactory::getPreferredWaveformSummaryVersion() &&
-                       missingWavesummary && !loadedWavesummary) {
+            } else if (analysis.type == AnalysisDao::TYPE_WAVESUMMARY
+                    && analysis.version == WaveformFactory::getPreferredWaveformSummaryVersion()
+                    && missingWavesummary) {
                 if (WaveformFactory::updateWaveformFromAnalysis(m_waveformSummary, analysis)) {
                     tio->waveformSummaryNew();
-                    loadedWavesummary = true;
+                    missingWavesummary = false;
                 } else {
                     m_analysisDao->deleteAnalysis(analysis.analysisId);
                 }
@@ -101,9 +99,8 @@ bool AnalyserWaveform::initialise(TrackPointer tio, int sampleRate, int totalSam
     }
 
     // If we don't need to calculate the waveform/wavesummary, skip.
-    if ((!missingWaveform || loadedWaveform) &&
-        (!missingWavesummary || loadedWavesummary)) {
-        qDebug() << "AnalyserWaveform::initialise - Waveform loaded";
+    if (!missingWaveform && !missingWavesummary) {
+        qDebug() << "AnalyserWaveform::initialise - Stored waveform loaded";
         m_skipProcessing = true;
         return false;
     }

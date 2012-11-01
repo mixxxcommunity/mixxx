@@ -703,7 +703,6 @@ void TrackInfoObject::waveformSummaryNew() {
     emit(waveformSummaryUpdated());
 }
 
-// This is called from the AnalyserQueue Thread
 void TrackInfoObject::setAnalyserProgress(int progress) {
     // progress in 0 .. 1000
     if (progress != m_analyserProgress) {
