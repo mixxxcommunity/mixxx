@@ -706,7 +706,6 @@ void TrackInfoObject::waveformSummaryNew() {
 void TrackInfoObject::setAnalyserProgress(int progress) {
     // progress in 0 .. 1000
     if (progress != m_analyserProgress) {
-        // m_analyserProgress is threadsave because it is only written here!
         m_analyserProgress = progress;
         emit(analyserProgress(progress));
     }

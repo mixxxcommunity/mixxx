@@ -143,7 +143,7 @@ void PrepareFeature::analyzeTracks(QList<int> trackIds) {
         connect(m_pAnalyserQueue, SIGNAL(trackFinished(int)),
                 this, SLOT(slotTrackAnalysisFinished(int)));
         connect(m_pAnalyserQueue, SIGNAL(queueEmpty()),
-                this, SLOT(stopAnalysis()));
+                this, SLOT(cleanupAnalyser()));
         emit(analysisActive(true));
     }
 
@@ -168,16 +168,18 @@ void PrepareFeature::slotTrackAnalysisFinished(int size) {
 
 void PrepareFeature::stopAnalysis() {
     //qDebug() << this << "stopAnalysis()";
-    cleanupAnalyser();
-    emit(analysisActive(false));
+    if (m_pAnalyserQueue != NULL) {
+        m_pAnalyserQueue->stop();
+    }
 }
 
 void PrepareFeature::cleanupAnalyser() {
+    emit(analysisActive(false));
     if (m_pAnalyserQueue != NULL) {
-        delete m_pAnalyserQueue;
+        m_pAnalyserQueue->stop();
+        m_pAnalyserQueue->deleteLater();
         m_pAnalyserQueue = NULL;
         //Restore old BPM detection setting for preferences...
         m_pConfig->set(ConfigKey("[BPM]","BPMDetectionEnabled"), ConfigValue(m_iOldBpmEnabled));
     }
-
 }

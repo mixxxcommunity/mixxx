@@ -118,10 +118,10 @@ bool AnalyserQueue::doAnalysis(TrackPointer tio, SoundSourceProxy *pSoundSource)
     QTime progressUpdateInhibitTimer;
     progressUpdateInhibitTimer.start(); // Inhibit Updates for 60 milliseconds
 
-    int progress;
     int read = 0;
     bool dieflag = false;
     bool cancelled = false;
+    int progress; // progress in 0 ... 100
 
     do {
         read = pSoundSource->read(ANALYSISBLOCKSIZE, data16);
@@ -201,6 +201,9 @@ bool AnalyserQueue::doAnalysis(TrackPointer tio, SoundSourceProxy *pSoundSource)
 
 void AnalyserQueue::stop() {
     m_exit = true;
+    m_qm.lock();
+    m_qwait.wakeAll();
+    m_qm.unlock();
 }
 
 void AnalyserQueue::run() {
@@ -299,6 +302,7 @@ void AnalyserQueue::run() {
             emit(queueEmpty()); // emit asynchrony for no deadlock
         }
     }
+    emit(queueEmpty()); // emit in case of exit;  
 }
 
 //slot
@@ -308,7 +312,7 @@ void AnalyserQueue::queueAnalyseTrack(TrackPointer tio) {
     if (!m_tioq.contains(tio)) {
         m_tioq.enqueue(tio);
         m_qwait.wakeAll();
-    } 
+    }
     m_qm.unlock();
 }
 
@@ -377,21 +381,14 @@ AnalyserQueue* AnalyserQueue::createPrepareViewAnalyserQueue(ConfigObject<Config
 }
 
 AnalyserQueue::~AnalyserQueue() {
-    QListIterator<Analyser*> it(m_aq);
-
     stop();
-
-    m_qm.lock();
-    m_qwait.wakeAll();
-    m_qm.unlock();
-
     wait(); //Wait until thread has actually stopped before proceeding.
 
+    QListIterator<Analyser*> it(m_aq);
     while (it.hasNext()) {
         Analyser* an = it.next();
         //qDebug() << "AnalyserQueue: deleting " << typeid(an).name();
         delete an;
     }
+    //qDebug() << "AnalyserQueue::~AnalyserQueue()";
 }
-
-

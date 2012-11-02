@@ -53,11 +53,11 @@ class PrepareFeature : public LibraryFeature {
   private slots:
     void analyzeTracks(QList<int> trackIds);
     void stopAnalysis();
+    void cleanupAnalyser();
     void slotTrackAnalysisProgress(TrackPointer pTrack, int progress);
     void slotTrackAnalysisFinished(int size);
 
   private:
-    void cleanupAnalyser();
     ConfigObject<ConfigValue>* m_pConfig;
     TrackCollection* m_pTrackCollection;
     AnalyserQueue* m_pAnalyserQueue;
