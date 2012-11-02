@@ -5,6 +5,7 @@
 #include <QThread>
 #include <QQueue>
 #include <QWaitCondition>
+#include <QSemaphore>
 
 #include "configobject.h"
 #include "analyser.h"
@@ -43,6 +44,7 @@ class AnalyserQueue : public QThread {
         TrackPointer current_track;
         int track_progress; // in 0.1 %
         int queue_size;
+        QSemaphore sema;
     };
 
     void addAnalyser(Analyser* an);
@@ -52,6 +54,7 @@ class AnalyserQueue : public QThread {
     bool isLoadedTrackWaiting();
     TrackPointer dequeueNextBlocking();
     bool doAnalysis(TrackPointer tio, SoundSourceProxy *pSoundSource);
+    void emitUpdateProgress(int progress);
 
     bool m_exit;
     QAtomicInt m_aiCheckPriorities;

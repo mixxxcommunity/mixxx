@@ -4,7 +4,6 @@
 
 #include "sampleutil.h"
 #include "trackinfoobject.h"
-#include "playerinfo.h"
 #include "analyserrg.h"
 #include "../lib/replaygain/replaygain.h"
 
@@ -78,7 +77,6 @@ void AnalyserGain::finalise(TrackPointer tio) {
     //qDebug() << "ReplayGain result is" << ReplayGainOutput << "pow:" << fReplayGain_Result;
     //qDebug()<<"ReplayGain outputs "<< ReplayGainOutput << "db for track "<< tio->getFilename();
     tio->setReplayGain(fReplayGain_Result);
-
     //if(fReplayGain_Result) qDebug() << "ReplayGain Analyser found a ReplayGain value of "<< 20*log10(fReplayGain_Result) << "dB for track " << (tio->getFilename());
     m_bStepControl=false;
     //m_iStartTime = clock() - m_iStartTime;

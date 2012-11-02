@@ -34,7 +34,7 @@ AnalyserQueue::AnalyserQueue() :
     m_qm(),
     m_qwait() {
     connect(this, SIGNAL(updateProgress()),
-            this, SLOT(slotUpdateProgress()), Qt::BlockingQueuedConnection);
+            this, SLOT(slotUpdateProgress()));
 }
 
 void AnalyserQueue::addAnalyser(Analyser* an) {
@@ -164,8 +164,7 @@ bool AnalyserQueue::doAnalysis(TrackPointer tio, SoundSourceProxy *pSoundSource)
         if (m_progressInfo.track_progress != progress) {
             if (progressUpdateInhibitTimer.elapsed() > 60) {
                 // Inhibit Updates for 60 milliseconds
-                m_progressInfo.track_progress = progress;
-                emit(updateProgress());
+                emitUpdateProgress(progress);
                 progressUpdateInhibitTimer.start();
             }
         }
@@ -263,8 +262,7 @@ void AnalyserQueue::run() {
                 }
                 queueAnalyseTrack(nextTrack);
             } else {
-                m_progressInfo.track_progress = 0;
-                emit(updateProgress());
+                emitUpdateProgress(0);
                 bool completed = doAnalysis(nextTrack, pSoundSource);
 
                 if (!completed) {
@@ -274,8 +272,7 @@ void AnalyserQueue::run() {
                         itf.next()->cleanup(nextTrack);
                     }
                     queueAnalyseTrack(nextTrack);
-                    m_progressInfo.track_progress = 0;
-                    emit(updateProgress());
+                    emitUpdateProgress(0);
                 } else {
                     // 100% - FINALISE_PERCENT finished
                     // This takes around 3 sec on a Atom Netbook
@@ -283,13 +280,11 @@ void AnalyserQueue::run() {
                     while (itf.hasNext()) {
                         itf.next()->finalise(nextTrack);
                     }
-                    m_progressInfo.track_progress = 1000;
-                    emit(updateProgress());
+                    emitUpdateProgress(1000); // 100%
                 }
             }
         } else {
-            m_progressInfo.track_progress = 1000;
-            emit(updateProgress());
+            emitUpdateProgress(1000); // 100%
             qDebug() << "Skipping track analysis because no analyzer initialized.";
         }
 
@@ -305,6 +300,30 @@ void AnalyserQueue::run() {
     emit(queueEmpty()); // emit in case of exit;  
 }
 
+// This is called from the AnalyserQueue thread
+void AnalyserQueue::emitUpdateProgress(int progress) {
+    m_progressInfo.track_progress = progress; 
+    if (!m_exit) {    
+        emit(updateProgress());
+        // Wait for slotUpdateProgress() is finished in the Main Thread
+        // This ensures that the analyther thread is yielded until the Main meassage queue is progressed 
+        // and protects m_progressInfo access   
+        m_progressInfo.sema.acquire();  
+    }
+}
+
+//slot
+void AnalyserQueue::slotUpdateProgress() {
+    if (m_progressInfo.current_track) {
+        m_progressInfo.current_track->setAnalyserProgress(m_progressInfo.track_progress);
+    }
+    emit(trackProgress(m_progressInfo.current_track, m_progressInfo.track_progress/10));
+    if (m_progressInfo.track_progress == 1000) {
+        emit(trackFinished(m_progressInfo.queue_size));
+    }
+    m_progressInfo.sema.release(); 
+}
+
 //slot
 void AnalyserQueue::queueAnalyseTrack(TrackPointer tio) {
     m_qm.lock();
@@ -314,17 +333,6 @@ void AnalyserQueue::queueAnalyseTrack(TrackPointer tio) {
         m_qwait.wakeAll();
     }
     m_qm.unlock();
-}
-
-//slot
-void AnalyserQueue::slotUpdateProgress() {
-    emit(trackProgress(m_progressInfo.current_track, m_progressInfo.track_progress/10));
-    if (m_progressInfo.current_track) {
-        m_progressInfo.current_track->setAnalyserProgress(m_progressInfo.track_progress);
-    }
-    if (m_progressInfo.track_progress == 1000) {
-        emit(trackFinished(m_progressInfo.queue_size));
-    }
 }
 
 // static
@@ -382,6 +390,7 @@ AnalyserQueue* AnalyserQueue::createPrepareViewAnalyserQueue(ConfigObject<Config
 
 AnalyserQueue::~AnalyserQueue() {
     stop();
+    m_progressInfo.sema.release();
     wait(); //Wait until thread has actually stopped before proceeding.
 
     QListIterator<Analyser*> it(m_aq);
