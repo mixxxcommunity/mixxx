@@ -17,7 +17,7 @@ class VSyncThread : public QThread {
     void run();
     void stop();
 
-    bool waitForVideoSync();
+    bool waitForVideoSync(QGLWidget* glw);
     int elapsed();
     int usToNextSync();
     void setUsSyncTime(int usSyncTimer);
@@ -33,7 +33,7 @@ class VSyncThread : public QThread {
         
   private:
     bool doRendering;
-    QGLWidget *glw;
+    QGLWidget *m_glw;
 
 #if defined(__APPLE__)
 

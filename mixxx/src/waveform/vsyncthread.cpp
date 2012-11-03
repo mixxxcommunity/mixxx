@@ -37,8 +37,8 @@ VSyncThread::VSyncThread(QWidget* parent)
     //glFormat.setSwapInterval(1);
     //glw = new QGLWidget(glFormat);
 
-    glw = new QGLWidget(parent);
-    glw->resize(1,1);
+    m_glw = new QGLWidget(parent);
+    m_glw->resize(1,1);
     /*
     qDebug() << parent->size();
     glw->resize(parent->size());
@@ -53,7 +53,7 @@ VSyncThread::VSyncThread(QWidget* parent)
 #elif defined(__WINDOWS__)
 
 #else
-    const QX11Info *xinfo = qt_x11Info(glw);
+    const QX11Info *xinfo = qt_x11Info(m_glw);
     if (glXExtensionSupported(xinfo->display(), xinfo->screen(), "GLX_SGI_video_sync")) {
         glXGetVideoSyncSGI =  (qt_glXGetVideoSyncSGI)glXGetProcAddressARB((const GLubyte *)"glXGetVideoSyncSGI");
         glXWaitVideoSyncSGI = (qt_glXWaitVideoSyncSGI)glXGetProcAddressARB((const GLubyte *)"glXWaitVideoSyncSGI");
@@ -68,7 +68,7 @@ VSyncThread::VSyncThread(QWidget* parent)
 VSyncThread::~VSyncThread() {
     doRendering = false;
     wait();
-    delete glw;
+    delete m_glw;
 }
 
 void VSyncThread::stop()
@@ -80,69 +80,84 @@ void VSyncThread::stop()
 void VSyncThread::run() {
     QThread::currentThread()->setObjectName("VSyncThread");
 
-    glw->makeCurrent();
+    m_glw->makeCurrent();
 
     int usRest;
     int usLast;
-
-    bool inSync;
 
     m_usWait = m_usSyncTime;
     m_timer.start();
 
     while (doRendering) {
-        inSync = false;
         if (m_vSync) {
-            usRest = m_usWait - m_timer.elapsed() / 1000;
-            if (usRest > 100) {
-                inSync = waitForVideoSync();
-            }
-        }
+            // This mode should be used wit vblank_mode = 0
 
-        if (!inSync) {
+            // sleep just before vsync
+            usRest = m_usWait - m_timer.elapsed() / 1000;
+            if (usRest > 1100) {
+                usleep(usRest - 1000); // prepare for start waiting 1 ms before Vsync
+            }
+            emit(vsync2()); // swaps the new waveform to front
+            // This is delayed until vsync the delay is stored in m_swapWait
+            // <- Assume we are VSynced here ->
+            usLast = m_timer.restart() / 1000;
+            if (usRest < 0) {
+                // Swapping was delayed
+                // Assume the real swap happens on the following VSync
+                m_rtErrorCnt++; // Count as Real Time Error
+            }
+            // try to stay in right intervals
+            usRest = m_usWait - usLast;
+            m_usWait = m_usSyncTime + (usRest % m_usSyncTime);
+            // m_swapWait of 1000 µs is desired
+            m_usWait += (m_swapWait - 1000); // shift interval to avoid waiting for swap again
+            emit(vsync1()); // renders the new waveform.
+            qDebug()  << "VSync 1                           " << usLast << m_swapWait;
+        } else {
+            // m_vSync == false
+            // This mode should be used wit vblank_mode = 1
+
             // sync by sleep
             usRest = m_usWait - m_timer.elapsed() / 1000;
             if (usRest > 100) {
                 usleep(usRest);
             }
-        }
-        // <- Assume we are VSynced here ->
-        // now we have one VSync interval time for swap.
-        usLast = m_timer.restart() / 1000;
-        if (usRest < 0) {
-            // Swaping was delayed
-            // Asume the real swap happens on the following VSync
-            m_rtErrorCnt++; // Count as Real Time Error
-        }
-        usRest = m_usWait - usLast;
-        if (usRest < -8333) { // -8.333 ms for up to 120 Hz Displays
-            // Out of syc, start new
-            m_usWait = m_usSyncTime;
-        } else if (!inSync) {
-            // try to stay in right intervals
-            m_usWait = m_usSyncTime + (usRest % m_usSyncTime);
-        } else {
-            // we are synced
-            m_usWait = m_usSyncTime;
-        }
-        emit(vsync1()); // renders the waveform, Possible delayed due to anti tearing
-        m_usWait += m_swapWait; // shift interval to avoid waiting for swap again
 
-        // Sleep to hit the desired interval and avoid a jitter
-        // by swapping to early when using a frame rate smaler then the display refresh rate
-        usRest = m_usWait - m_timer.elapsed() / 1000;
-        usRest -= 8333;  // -8.333 ms for up to 120 Hz Displays
-        if (usRest > 100) {
-            usleep(usRest);
+            // <- Assume we are VSynced here ->
+            // now we have one VSync interval time for swap.
+            usLast = m_timer.restart() / 1000;
+            if (usRest < 0) {
+                // Swapping was delayed
+                // Assume the real swap happens on the following VSync
+                m_rtErrorCnt++; // Count as Real Time Error
+            }
+            usRest = m_usWait - usLast;
+            if (usRest < -8333) { // -8.333 ms for up to 120 Hz Displays
+                // Out of syc, start new
+                m_usWait = m_usSyncTime;
+            } else {
+                // try to stay in right intervals
+                m_usWait = m_usSyncTime + (usRest % m_usSyncTime);
+            }
+
+            emit(vsync1()); // renders the waveform, Possible delayed due to anti tearing
+            m_usWait += m_swapWait; // shift interval to avoid waiting for swap again
+
+            // Sleep to hit the desired interval and avoid a jitter
+            // by swapping to early when using a frame rate smaler then the display refresh rate
+            usRest = m_usWait - m_timer.elapsed() / 1000;
+            usRest -= 8333; // -8.333 ms for up to 120 Hz Displays
+            if (usRest > 100) {
+                usleep(usRest);
+            }
+            emit(vsync2()); // swaps the new waveform to front
+
+            //qDebug()  << "VSync 4                           " << usLast << inSync;
         }
-        emit(vsync2()); // swaps the new waveform to front
-
-
-        //qDebug()  << "VSync 4                           " << usLast << inSync;
     }
 }
 
-bool VSyncThread::waitForVideoSync() {
+bool VSyncThread::waitForVideoSync(QGLWidget* glw) {
     uint counter;
     //uint counter_start;
 
