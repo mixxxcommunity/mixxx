@@ -29,6 +29,7 @@ VSyncThread::VSyncThread(QWidget* parent)
         : QThread(),
           m_usSyncTime(33333),
           m_vSync(false),
+          m_syncOk(false),
           m_rtErrorCnt(0),
           m_swapWait(0) {
     doRendering = true;
@@ -94,9 +95,18 @@ void VSyncThread::run() {
 
             // sleep just before vsync
             usRest = m_usWait - m_timer.elapsed() / 1000;
-            if (usRest > 1100) {
-                usleep(usRest - 1000); // prepare for start waiting 1 ms before Vsync
+            if (m_syncOk) {
+                // prepare for start waiting 1 ms before Vsync by GL
+                if (usRest > 1100) {
+                    usleep(usRest - 1000);
+                }
+            } else {
+                // waiting for interval by sleep
+                if (usRest > 100) {
+                    usleep(usRest);
+                }
             }
+
             emit(vsync2()); // swaps the new waveform to front
             // This is delayed until vsync the delay is stored in m_swapWait
             // <- Assume we are VSynced here ->
@@ -110,9 +120,14 @@ void VSyncThread::run() {
             usRest = m_usWait - usLast;
             m_usWait = m_usSyncTime + (usRest % m_usSyncTime);
             // m_swapWait of 1000 µs is desired
-            m_usWait += (m_swapWait - 1000); // shift interval to avoid waiting for swap again
+            if (m_syncOk) {
+                m_usWait += (m_swapWait - 1000); // shift interval to avoid waiting for swap again
+            } else if (m_swapWait > 1000) {
+                // assume we are hardwares synced now
+                m_usWait = m_usSyncTime;
+            }
             emit(vsync1()); // renders the new waveform.
-            qDebug()  << "VSync 1                           " << usLast << m_swapWait;
+            //qDebug()  << "VSync 1                           " << usLast << m_swapWait << m_syncOk << usRest;
         } else {
             // m_vSync == false
             // This mode should be used wit vblank_mode = 1
@@ -151,7 +166,6 @@ void VSyncThread::run() {
                 usleep(usRest);
             }
             emit(vsync2()); // swaps the new waveform to front
-
             //qDebug()  << "VSync 4                           " << usLast << inSync;
         }
     }
@@ -176,6 +190,7 @@ bool VSyncThread::waitForVideoSync(QGLWidget* glw) {
 #else
     if (glXGetVideoSyncSGI && glXWaitVideoSyncSGI) {
         if (!glXWaitVideoSyncSGI(1, 0, &counter)) {
+            m_syncOk = true;
             return true;
         }
  /*
@@ -203,6 +218,7 @@ bool VSyncThread::waitForVideoSync(QGLWidget* glw) {
         // http://www.inb.uni-luebeck.de/~boehme/xvideo_sync.html
     }
 #endif
+    m_syncOk = false;
     return false;
 }
 

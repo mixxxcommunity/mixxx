@@ -416,7 +416,7 @@ void WaveformWidgetFactory::refresh() {
             // Calculate play position for the new Frame in following run
             m_waveformWidgetHolders[i].m_waveformWidget->preRender(m_vsyncThread);
         }
-        qDebug() << "prerender" << m_vsyncThread->elapsed();
+        //qDebug() << "prerender" << m_vsyncThread->elapsed();
 
         // It may happen that there is an artificially delayed due to
         // anti tearing driver settings
@@ -429,7 +429,7 @@ void WaveformWidgetFactory::refresh() {
             } else {
                 m_waveformWidgetHolders[i].m_waveformWidget->render();
             }
-            qDebug() << "render" << i << m_vsyncThread->elapsed();
+            //qDebug() << "render" << i << m_vsyncThread->elapsed();
         }
 
         // if waveform 1 takes significant longer for render, assume a delay
@@ -440,7 +440,7 @@ void WaveformWidgetFactory::refresh() {
         if (!m_vSync) {
             if (paintersSetupTime1 && paintersSetupTime0 > (paintersSetupTime1 + 1000)) {
                 m_vsyncThread->setSwapWait(paintersSetupTime0 - paintersSetupTime1);
-                qDebug() << "setSwapWait" << paintersSetupTime0 - paintersSetupTime1;
+                //qDebug() << "setSwapWait" << paintersSetupTime0 - paintersSetupTime1;
             } else {
                 m_vsyncThread->setSwapWait(0);
             }
@@ -460,7 +460,7 @@ void WaveformWidgetFactory::refresh() {
     if (m_lastFrameTime && m_lastFrameTime <= 1000) {
         m_actualFrameRate = 1000.0/(double)(m_lastFrameTime);
     }
-    qDebug() << "refresh end" << m_vsyncThread->elapsed();
+    //qDebug() << "refresh end" << m_vsyncThread->elapsed();
 }
 
 void WaveformWidgetFactory::postRefresh() {
@@ -479,27 +479,27 @@ void WaveformWidgetFactory::postRefresh() {
         // Like setting SwapbufferWait = enabled (default) in driver:
         // xorg radeon 1:6.14.99
         // xorg intel 2:2.9.1
-        qDebug() << "postRefresh start" << m_vsyncThread->elapsed();
+        //qDebug() << "postRefresh start" << m_vsyncThread->elapsed();
         for (int i = 0; i < m_waveformWidgetHolders.size(); i++) {
             if (i == 0) {
+                swapTime0 = m_vsyncThread->elapsed();
                 if (m_vSync) {
-                    swapTime0 = m_vsyncThread->elapsed();
                     QGLWidget* glw = dynamic_cast<QGLWidget*>(
-                            m_waveformWidgetHolders[0].m_waveformWidget->getWidget());
+                            m_waveformWidgetHolders[1].m_waveformWidget->getWidget());
                     if (glw) {
                         m_vsyncThread->waitForVideoSync(glw);
                     }
-                    m_waveformWidgetHolders[0].m_waveformWidget->postRender();
-                    swapTime0 = m_vsyncThread->elapsed() - swapTime0;
                 }
+                m_waveformWidgetHolders[1].m_waveformWidget->postRender();
+                swapTime0 = m_vsyncThread->elapsed() - swapTime0;
             } else if (i == 1) {
                 swapTime1 = m_vsyncThread->elapsed();
-                m_waveformWidgetHolders[1].m_waveformWidget->postRender();
+                m_waveformWidgetHolders[0].m_waveformWidget->postRender();
                 swapTime1 = m_vsyncThread->elapsed() - swapTime1;
             } else {
                 m_waveformWidgetHolders[i].m_waveformWidget->postRender();
             }
-            qDebug() << "postRefresh x" << m_vsyncThread->elapsed();
+            //qDebug() << "postRefresh x" << m_vsyncThread->elapsed();
         }
         if (m_vSync) {
             if (swapTime1 && swapTime0 > swapTime1) {
@@ -509,7 +509,7 @@ void WaveformWidgetFactory::postRefresh() {
             }
         }
     }
-    qDebug() << "postRefresh end" << m_vsyncThread->elapsed();
+    //qDebug() << "postRefresh end" << m_vsyncThread->elapsed();
 }
 
 WaveformWidgetType::Type WaveformWidgetFactory::autoChooseWidgetType() const {
