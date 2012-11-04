@@ -121,9 +121,6 @@ DlgPreferences::DlgPreferences(MixxxApp * mixxx, SkinLoader* pSkinLoader,
 
     connect(m_pControllerManager, SIGNAL(devicesChanged()), this, SLOT(rescanControllers()));
 
-    connect(this, SIGNAL(showDlg()), m_wcontrols, SLOT(onShow()));
-    connect(this, SIGNAL(closeDlg()), m_wcontrols, SLOT(onHide()));
-
     connect(this, SIGNAL(showDlg()), m_wsound,     SLOT(slotUpdate()));
     connect(this, SIGNAL(showDlg()), m_wplaylist,  SLOT(slotUpdate()));
     connect(this, SIGNAL(showDlg()), m_wcontrols,  SLOT(slotUpdate()));

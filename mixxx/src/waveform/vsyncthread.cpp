@@ -125,6 +125,7 @@ void VSyncThread::run() {
             } else if (m_swapWait > 1000) {
                 // assume we are hardwares synced now
                 m_usWait = m_usSyncTime;
+                m_rtErrorCnt++; // Count as Real Time Error
             }
             emit(vsync1()); // renders the new waveform.
             //qDebug()  << "VSync 1                           " << usLast << m_swapWait << m_syncOk << usRest;

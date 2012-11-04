@@ -61,7 +61,7 @@ WaveformWidgetFactory::WaveformWidgetFactory() :
         m_openGLAvailable(false),
         m_openGLShaderAvailable(false),
         m_vsyncThread(NULL),
-        m_lastFrameTime(0), 
+        m_crameCnt(0),
         m_actualFrameRate(0),
         m_minimumFrameRate(1000),
         m_maximumlFrameRate(0) {
@@ -131,6 +131,7 @@ WaveformWidgetFactory::WaveformWidgetFactory() :
     }
 
     evaluateWidgets();
+    m_time.start();
 }
 
 WaveformWidgetFactory::~WaveformWidgetFactory() {
@@ -402,11 +403,8 @@ void WaveformWidgetFactory::refresh() {
     int paintersSetupTime0 = 0;
     int paintersSetupTime1 = 0;
 
-    if (m_skipRender)
+    if (m_skipRender) {
         return;
-
-    if (!m_vSync) {
-        m_lastFrameTime = m_time.restart();
     }
 
 
@@ -456,18 +454,16 @@ void WaveformWidgetFactory::refresh() {
     //qDebug() << "emit" << m_vsyncThread->elapsed() - t1;
 
     // m_lastRenderDuration = startTime;
-
-    if (m_lastFrameTime && m_lastFrameTime <= 1000) {
-        m_actualFrameRate = 1000.0/(double)(m_lastFrameTime);
+    m_crameCnt++;
+    if (m_time.elapsed() > 1000) {
+        m_time.start();
+        emit(waveformMeasured(m_crameCnt, m_vsyncThread->rtErrorCnt()));
+        m_crameCnt = 0;
     }
     //qDebug() << "refresh end" << m_vsyncThread->elapsed();
 }
 
 void WaveformWidgetFactory::postRefresh() {
-    if (m_vSync) {
-        m_lastFrameTime = m_time.restart();
-    }
-
     int swapTime0 = 0;
     int swapTime1 = 0;
 
@@ -679,11 +675,4 @@ void WaveformWidgetFactory::startVSync(QWidget *parent) {
     connect(m_vsyncThread, SIGNAL(vsync2()),
             this, SLOT(postRefresh()), Qt::BlockingQueuedConnection);
 
-}
-
-int WaveformWidgetFactory::rtErrorCnt() {
-    if (m_vsyncThread) {
-        return m_vsyncThread->rtErrorCnt();
-    }
-    return 0;
 }

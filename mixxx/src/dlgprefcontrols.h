@@ -74,12 +74,7 @@ public slots:
     void slotSetVisualGainMid(double gain);
     void slotSetVisualGainHigh(double gain);
     void slotSetNormalizeOverview( bool normalize);
-
-    virtual void onShow();
-    virtual void onHide();
-
-protected:
-    void timerEvent(QTimerEvent *);
+    void slotWaveformMeasured(int frameRate, int rtErrorCnt);
 
 private:
     void initWaveformControl();
