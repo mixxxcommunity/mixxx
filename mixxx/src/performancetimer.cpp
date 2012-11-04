@@ -92,6 +92,11 @@ qint64 PerformanceTimer::restart()
     return absoluteToNSecs(t1-start);
 }
 
+qint64 PerformanceTimer::difference(PerformanceTimer* timer)
+{
+    return absoluteToNSecs(t1 - timer->t1);
+}
+
 ////////////////////////////// Symbian //////////////////////////////
 #elif defined(Q_OS_SYMBIAN)
 
@@ -120,6 +125,11 @@ qint64 PerformanceTimer::restart()
     start = t1;
     t1 = User::FastCounter();
     return getTimeFromTick(t1 - start);
+}
+
+qint64 PerformanceTimer::difference(PerformanceTimer* timer)
+{
+    return getTimeFromTick(t1 - timer->t1);
 }
 
 ////////////////////////////// Unix //////////////////////////////
@@ -250,6 +260,11 @@ qint64 PerformanceTimer::restart()
     return getTimeFromTick(t1 - start);
 }
 
+qint64 PerformanceTimer::difference(PerformanceTimer* timer)
+{
+    return getTimeFromTick(t1 - timer->t1);
+}
+
 ////////////////////////////// Default //////////////////////////////
 #else
 
@@ -264,6 +279,11 @@ qint64 PerformanceTimer::elapsed() const
 }
 
 qint64 PerformanceTimer::restart() const
+{
+    return 0;
+}
+
+qint64 PerformanceTimer::difference(PerformanceTimer* timer)
 {
     return 0;
 }
