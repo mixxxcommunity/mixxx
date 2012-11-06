@@ -50,6 +50,7 @@
 #include "waveform/waveformwidgetfactory.h"
 #include "widget/wwaveformviewer.h"
 #include "widget/wwidget.h"
+#include "sharedglcontext.h"
 
 #ifdef __TAGREADER__
 #include "core/tagreaderclient.h"
@@ -391,6 +392,7 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args) {
     WaveformWidgetFactory::create();
     WaveformWidgetFactory::instance()->startVSync(this);
     WaveformWidgetFactory::instance()->setConfig(m_pConfig);
+    SharedGLContext::initShareWidget(this); // This must be done after WaveformWidgetFactory::create();
 
     m_pSkinLoader = new SkinLoader(m_pConfig);
     connect(this, SIGNAL(newSkinLoaded()),

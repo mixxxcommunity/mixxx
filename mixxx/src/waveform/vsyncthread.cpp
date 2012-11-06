@@ -5,13 +5,6 @@
 #include <QTime>
 #include <qdebug.h>
 #include <QTime>
-#if defined(__APPLE__)
-
-#elif defined(__WINDOWS__)
-
-#else
-   #include <GL/glx.h>
-#endif
 
 
 #include "vsyncthread.h"
@@ -28,6 +21,7 @@
 VSyncThread::VSyncThread(QWidget* parent)
         : QThread(),
           m_usSyncTime(33333),
+          m_firstRun(false),
           m_vSync(false),
           m_syncOk(false),
           m_rtErrorCnt(0),
@@ -38,8 +32,8 @@ VSyncThread::VSyncThread(QWidget* parent)
     //glFormat.setSwapInterval(1);
     //glw = new QGLWidget(glFormat);
 
-    m_glw = new QGLWidget(parent);
-    m_glw->resize(1,1);
+ //   m_glw = new QGLWidget(parent);
+ //   m_glw->resize(1,1);
     /*
     qDebug() << parent->size();
     glw->resize(parent->size());
@@ -54,20 +48,13 @@ VSyncThread::VSyncThread(QWidget* parent)
 #elif defined(__WINDOWS__)
 
 #else
-    const QX11Info *xinfo = qt_x11Info(m_glw);
-    if (glXExtensionSupported(xinfo->display(), xinfo->screen(), "GLX_SGI_video_sync")) {
-        glXGetVideoSyncSGI =  (qt_glXGetVideoSyncSGI)glXGetProcAddressARB((const GLubyte *)"glXGetVideoSyncSGI");
-        glXWaitVideoSyncSGI = (qt_glXWaitVideoSyncSGI)glXGetProcAddressARB((const GLubyte *)"glXWaitVideoSyncSGI");
-    }
 
-    if (glXExtensionSupported(xinfo->display(), xinfo->screen(), "GLX_SGI_swap_control")) {
-        glXSwapIntervalSGI =  (qt_glXSwapIntervalSGI)glXGetProcAddressARB((const GLubyte *)"glXSwapIntervalSGI");
-    }
 #endif
 }
 
 VSyncThread::~VSyncThread() {
     doRendering = false;
+    m_sema.release(2); // Two slots
     wait();
     delete m_glw;
 }
@@ -81,7 +68,7 @@ void VSyncThread::stop()
 void VSyncThread::run() {
     QThread::currentThread()->setObjectName("VSyncThread");
 
-    m_glw->makeCurrent();
+ //   m_glw->makeCurrent();
 
     int usRest;
     int usLast;
@@ -97,8 +84,8 @@ void VSyncThread::run() {
             usRest = m_usWait - m_timer.elapsed() / 1000;
             if (m_syncOk) {
                 // prepare for start waiting 1 ms before Vsync by GL
-                if (usRest > 1100) {
-                    usleep(usRest - 1000);
+                if (usRest > 5100) {
+                    usleep(usRest - 5000);
                 }
             } else {
                 // waiting for interval by sleep
@@ -108,6 +95,7 @@ void VSyncThread::run() {
             }
 
             emit(vsync2()); // swaps the new waveform to front
+            m_sema.acquire();
             // This is delayed until vsync the delay is stored in m_swapWait
             // <- Assume we are VSynced here ->
             usLast = m_timer.restart() / 1000;
@@ -121,16 +109,17 @@ void VSyncThread::run() {
             m_usWait = m_usSyncTime + (usRest % m_usSyncTime);
             // m_swapWait of 1000 µs is desired
             if (m_syncOk) {
-                m_usWait += (m_swapWait - 1000); // shift interval to avoid waiting for swap again
+                m_usWait += (m_swapWait - 5000); // shift interval to avoid waiting for swap again
             } else if (m_swapWait > 1000) {
-                // assume we are hardwares synced now
+                // missed swap window, delayed by driver anti tearing
+                // assume we are hardware synced now
                 m_usWait = m_usSyncTime;
                 m_rtErrorCnt++; // Count as Real Time Error
             }
             emit(vsync1()); // renders the new waveform.
-            //qDebug()  << "VSync 1                           " << usLast << m_swapWait << m_syncOk << usRest;
-        } else {
-            // m_vSync == false
+            m_sema.acquire();
+            qDebug()  << "VSync 1                           " << usLast << m_swapWait << m_syncOk << usRest;
+        } else { // m_vSync == false
             // This mode should be used wit vblank_mode = 1
 
             // sync by sleep
@@ -157,6 +146,7 @@ void VSyncThread::run() {
             }
 
             emit(vsync1()); // renders the waveform, Possible delayed due to anti tearing
+            m_sema.acquire();
             m_usWait += m_swapWait; // shift interval to avoid waiting for swap again
 
             // Sleep to hit the desired interval and avoid a jitter
@@ -167,6 +157,7 @@ void VSyncThread::run() {
                 usleep(usRest);
             }
             emit(vsync2()); // swaps the new waveform to front
+            m_sema.acquire();
             //qDebug()  << "VSync 4                           " << usLast << inSync;
         }
     }
@@ -189,8 +180,27 @@ bool VSyncThread::waitForVideoSync(QGLWidget* glw) {
 #elif defined(__WINDOWS__)
 
 #else
+
+    if (!m_firstRun) {
+        initGlxext(glw);
+        m_firstRun = true;
+    }
+
+    if (glXGetMscRateOML) {
+        int32_t numerator;
+        int32_t denominator;
+        const QX11Info *xinfo = qt_x11Info(glw);
+        glXGetMscRateOML(xinfo->display(), glXGetCurrentDrawable(), &numerator, &denominator);
+        qDebug() << "glXGetMscRateOML" << (double)numerator/denominator << "Hz";
+    }
+    else
+    {
+        qDebug() << "glXGetMscRateOML == NULL";
+    }
+
     if (glXGetVideoSyncSGI && glXWaitVideoSyncSGI) {
         if (!glXWaitVideoSyncSGI(1, 0, &counter)) {
+            qDebug() << "counter" << counter;
             m_syncOk = true;
             return true;
         }
@@ -229,6 +239,31 @@ bool VSyncThread::waitForVideoSync(QGLWidget* glw) {
 #elif defined(__WINDOWS__)
 
 #else
+
+void VSyncThread::initGlxext(QGLWidget* glw) {
+    const QX11Info *xinfo = qt_x11Info(glw);
+    if (glXExtensionSupported(xinfo->display(), xinfo->screen(), "GLX_SGI_video_sync")) {
+        glXGetVideoSyncSGI = (PFNGLXGETVIDEOSYNCSGIPROC)glXGetProcAddressARB((const GLubyte *)"glXGetVideoSyncSGI");
+        glXWaitVideoSyncSGI = (PFNGLXWAITVIDEOSYNCSGIPROC)glXGetProcAddressARB((const GLubyte *)"glXWaitVideoSyncSGI");
+    }
+
+    if (glXExtensionSupported(xinfo->display(), xinfo->screen(), "GLX_SGI_swap_control")) {
+        glXSwapIntervalSGI = (PFNGLXSWAPINTERVALSGIPROC)glXGetProcAddressARB((const GLubyte *)"glXSwapIntervalSGI");
+    }
+
+    if (glXExtensionSupported(xinfo->display(), xinfo->screen(), "GLX_EXT_swap_control")) {
+        glXSwapIntervalEXT = (PFNGLXSWAPINTERVALEXTPROC)glXGetProcAddressARB((const GLubyte *)"glXSwapIntervalSGI");
+    }
+
+    if (glXExtensionSupported(xinfo->display(), xinfo->screen(), "GLX_OML_sync_control")) {
+        glXGetSyncValuesOML = (PFNGLXGETSYNCVALUESOMLPROC)glXGetProcAddressARB((const GLubyte *)"glXGetSyncValuesOML");
+        glXGetMscRateOML = (PFNGLXGETMSCRATEOMLPROC)glXGetProcAddressARB((const GLubyte *)"glXGetMscRateOML");
+        glXSwapBuffersMscOML = (PFNGLXSWAPBUFFERSMSCOMLPROC)glXGetProcAddressARB((const GLubyte *)"glXSwapBuffersMscOML");
+        glXWaitForMscOML = (PFNGLXWAITFORMSCOMLPROC)glXGetProcAddressARB((const GLubyte *)"glXWaitForMscOML");
+        glXWaitForSbcOML = (PFNGLXWAITFORSBCOMLPROC)glXGetProcAddressARB((const GLubyte *)"glXWaitForSbcOML");
+    }
+}
+
 // from mesa-demos-8.0.1/src/xdemos/glsync.c (MIT license)
 bool VSyncThread::glXExtensionSupported(Display *dpy, int screen, const char *extension) {
     const char *extensionsString, *pos;
@@ -274,4 +309,8 @@ int VSyncThread::rtErrorCnt() {
 
 void VSyncThread::setSwapWait(int sw) {
     m_swapWait = sw;
+}
+
+void VSyncThread::vsyncSlotFinished() {
+    m_sema.release();
 }

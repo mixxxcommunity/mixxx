@@ -8,12 +8,15 @@
 // static
 QGLWidget* SharedGLContext::s_pShareWidget = NULL;
 
-// static
-const QGLWidget* SharedGLContext::getShareWidget() {
+void SharedGLContext::initShareWidget(QWidget* parent) {
     if (s_pShareWidget == NULL) {
         // defaultFormat is configured in WaveformWidgetFactory::WaveformWidgetFactory();
-        s_pShareWidget = new QGLWidget(QGLFormat::defaultFormat());
-        qDebug() << "swap intervall" << QGLFormat::defaultFormat().swapInterval();
+        s_pShareWidget = new QGLWidget(QGLFormat::defaultFormat(), parent);
+        s_pShareWidget->resize(1, 1);
     }
+}
+
+// static
+const QGLWidget* SharedGLContext::getShareWidget() {
     return s_pShareWidget;
 }

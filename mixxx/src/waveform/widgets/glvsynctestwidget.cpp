@@ -36,6 +36,7 @@ GLVSyncTestWidget::GLVSyncTestWidget( const char* group, QWidget* parent)
         makeCurrent();
     }
     m_initSuccess = init();
+    qDebug() << "GLVSyncTestWidget.isSharing() =" << isSharing();
 }
 
 GLVSyncTestWidget::~GLVSyncTestWidget(){

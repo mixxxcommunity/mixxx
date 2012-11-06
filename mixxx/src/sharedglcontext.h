@@ -6,6 +6,7 @@ class QGLWidget;
 class SharedGLContext 
 {
     public:
+        static void initShareWidget(QWidget* parent);
         static const QGLWidget* getShareWidget();
     private:
         SharedGLContext() { };

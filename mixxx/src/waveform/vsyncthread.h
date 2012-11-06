@@ -3,9 +3,21 @@
 
 #include <QTime>
 #include <QThread>
+#include <QSemaphore>
 
 #include <qx11info_x11.h>
 #include "performancetimer.h"
+
+
+#if defined(__APPLE__)
+
+#elif defined(__WINDOWS__)
+
+#else
+    #include <GL/glx.h>
+    #include "GL/glxext.h"
+#endif
+
 
 class QGLWidget;
 
@@ -25,6 +37,7 @@ class VSyncThread : public QThread {
     int rtErrorCnt();
     void setSwapWait(int sw);
     int usFromTimerToNextSync(PerformanceTimer* timer);
+    void vsyncSlotFinished();
 
 
   signals:
@@ -40,17 +53,22 @@ class VSyncThread : public QThread {
 #elif defined(__WINDOWS__)
 
 #else
+    void initGlxext(QGLWidget* glw);
     bool glXExtensionSupported(Display *dpy, int screen, const char *extension);
 
-    typedef int (*qt_glXGetVideoSyncSGI)(uint *);
-    typedef int (*qt_glXWaitVideoSyncSGI)(int, int, uint *);
-    typedef int (*qt_glXSwapIntervalSGI)(int interval);
+    PFNGLXGETVIDEOSYNCSGIPROC glXGetVideoSyncSGI;
+    PFNGLXWAITVIDEOSYNCSGIPROC glXWaitVideoSyncSGI;
+    PFNGLXSWAPINTERVALSGIPROC glXSwapIntervalSGI;
+    PFNGLXSWAPINTERVALEXTPROC glXSwapIntervalEXT;
 
-    qt_glXGetVideoSyncSGI glXGetVideoSyncSGI;
-    qt_glXWaitVideoSyncSGI glXWaitVideoSyncSGI;
-    qt_glXSwapIntervalSGI glXSwapIntervalSGI;
+    PFNGLXGETSYNCVALUESOMLPROC glXGetSyncValuesOML;
+    PFNGLXGETMSCRATEOMLPROC glXGetMscRateOML;
+    PFNGLXSWAPBUFFERSMSCOMLPROC glXSwapBuffersMscOML;
+    PFNGLXWAITFORMSCOMLPROC glXWaitForMscOML;
+    PFNGLXWAITFORSBCOMLPROC  glXWaitForSbcOML;
 
     uint m_counter;
+    bool m_firstRun;
 #endif
 
     int m_usSyncTime;
@@ -60,6 +78,7 @@ class VSyncThread : public QThread {
     int m_rtErrorCnt;
     int m_swapWait;
     PerformanceTimer m_timer;
+    QSemaphore m_sema;
 };
 
 
