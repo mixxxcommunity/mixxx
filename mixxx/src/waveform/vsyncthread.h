@@ -68,9 +68,9 @@ class VSyncThread : public QThread {
     PFNGLXWAITFORSBCOMLPROC  glXWaitForSbcOML;
 
     uint m_counter;
-    bool m_firstRun;
 #endif
 
+    bool m_firstRun;
     int m_usSyncTime;
     int m_usWait;
     bool m_vSync;
