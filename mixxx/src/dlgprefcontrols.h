@@ -65,7 +65,7 @@ public slots:
     void slotApply();
 
     void slotSetFrameRate(int frameRate);
-    void slotSetVSync(bool checked);
+    void slotSetVSync(int index);
     void slotSetWaveformType(int index);
     void slotSetDefaultZoom(int index);
     void slotSetZoomSynchronization(bool checked);
@@ -74,7 +74,7 @@ public slots:
     void slotSetVisualGainMid(double gain);
     void slotSetVisualGainHigh(double gain);
     void slotSetNormalizeOverview( bool normalize);
-    void slotWaveformMeasured(int frameRate, int rtErrorCnt);
+    void slotWaveformMeasured(float frameRate, int rtErrorCnt);
 
 private:
     void initWaveformControl();

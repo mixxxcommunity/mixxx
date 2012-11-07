@@ -827,12 +827,15 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="2">
-       <widget class="QCheckBox" name="vSyncCheckBox">
+      <item row="2" column="0">
+       <widget class="QLabel" name="vSyncLabel">
         <property name="text">
-         <string>Wait for VSync</string>
+         <string>VSync strategy</string>
         </property>
        </widget>
+      </item>
+      <item row="2" column="2" colspan="4">
+       <widget class="QComboBox" name="vSyncComboBox"/>
       </item>
      </layout>
     </widget>

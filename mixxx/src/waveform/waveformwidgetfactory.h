@@ -65,7 +65,7 @@ class WaveformWidgetFactory : public QObject, public Singleton<WaveformWidgetFac
 
     void setFrameRate( int frameRate);
     int getFrameRate() const { return m_frameRate;}
-    bool getVSync() const { return m_vSync;}
+//    bool getVSync() const { return m_vSyncType;}
 
     bool isOpenGLAvailable() const { return m_openGLAvailable;}
     QString getOpenGLVersion() const { return m_openGLVersion;}
@@ -89,18 +89,20 @@ class WaveformWidgetFactory : public QObject, public Singleton<WaveformWidgetFac
     int isOverviewNormalized() const { return m_overviewNormalized;}
 
     const QVector<WaveformWidgetAbstractHandle> getAvailableTypes() const { return m_waveformWidgetHandles;}
+    void getAvailableVSyncTypes(QList<QPair<int, QString > >* list);
     void destroyWidgets();
 
     void addTimerListener(QWidget* pWidget);
 
     void startVSync(QWidget *parent);
-    void setVSync(bool checked);
+    void setVSyncType(int vsType);
+    int getVSyncType();
 
     void notifyZoomChange(WWaveformViewer *viewer);
 
   signals:
     void waveformUpdateTick();
-    void waveformMeasured(int frameRate, int rtErrorCnt);
+    void waveformMeasured(float frameRate, int rtErrorCnt);
 
   protected:
     WaveformWidgetFactory();
@@ -146,12 +148,12 @@ class WaveformWidgetFactory : public QObject, public Singleton<WaveformWidgetFac
     //Debug
     QTime m_time;
     QTime m_delayTime;
-    int m_crameCnt;
+    float m_crameCnt;
     int m_lastRenderDuration;
     double m_actualFrameRate;
     double m_minimumFrameRate;
     double m_maximumlFrameRate;
-    bool m_vSync;
+    int m_vSyncType;
 };
 
 #endif // WAVEFORMWIDGETFACTORY_H

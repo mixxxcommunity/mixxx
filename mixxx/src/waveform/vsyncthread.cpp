@@ -20,9 +20,9 @@
 
 VSyncThread::VSyncThread(QWidget* parent)
         : QThread(),
-          m_usSyncTime(33333),
           m_firstRun(false),
-          m_vSync(false),
+          m_usSyncTime(33333),
+          m_vSyncMode(ST_TIMER),
           m_syncOk(false),
           m_rtErrorCnt(0),
           m_swapWait(0) {
@@ -56,7 +56,7 @@ VSyncThread::~VSyncThread() {
     doRendering = false;
     m_sema.release(2); // Two slots
     wait();
-    delete m_glw;
+    //delete m_glw;
 }
 
 void VSyncThread::stop()
@@ -77,7 +77,16 @@ void VSyncThread::run() {
     m_timer.start();
 
     while (doRendering) {
-        if (m_vSync) {
+        if (m_vSyncMode == ST_FREE) {
+            // for benchmark only!
+            emit(vsync1()); // renders the waveform, Possible delayed due to anti tearing
+            m_sema.acquire();
+            emit(vsync2()); // swaps the new waveform to front
+            m_sema.acquire();
+            m_timer.restart();
+            m_usWait = 1000;
+            usleep(1000);
+        } else if (m_vSyncMode == ST_SGI_VIDEO_SYNC) {
             // This mode should be used wit vblank_mode = 0
 
             // sleep just before vsync
@@ -118,8 +127,8 @@ void VSyncThread::run() {
             }
             emit(vsync1()); // renders the new waveform.
             m_sema.acquire();
-            qDebug()  << "VSync 1                           " << usLast << m_swapWait << m_syncOk << usRest;
-        } else { // m_vSync == false
+            qDebug()  << "ST_SGI_VIDEO_SYNC                          " << usLast << m_swapWait << m_syncOk << usRest;
+        } else if (m_vSyncMode == ST_MESA_VBLANK_MODE_1) {
             // This mode should be used wit vblank_mode = 1
 
             // sync by sleep
@@ -158,7 +167,31 @@ void VSyncThread::run() {
             }
             emit(vsync2()); // swaps the new waveform to front
             m_sema.acquire();
-            //qDebug()  << "VSync 4                           " << usLast << inSync;
+            //qDebug()  << "ST_MESA_VBLANK_MODE_1                        " << usLast << inSync;
+        } else { // if (m_vSyncMode == ST_TIMER) {
+            // This mode should be used wit vblank_mode = 0
+            usRest = m_usWait - m_timer.elapsed() / 1000;
+            // waiting for interval by sleep
+            if (usRest > 100) {
+                usleep(usRest);
+            }
+
+            emit(vsync2()); // swaps the new waveform to front
+            m_sema.acquire();
+            // This is delayed until vsync the delay is stored in m_swapWait
+            // <- Assume we are VSynced here ->
+            usLast = m_timer.restart() / 1000;
+            if (usRest < 0) {
+                // Swapping was delayed
+                // Assume the real swap happens on the following VSync
+                m_rtErrorCnt++; // Count as Real Time Error
+            }
+            // try to stay in right intervals
+            usRest = m_usWait - usLast;
+            m_usWait = m_usSyncTime + (usRest % m_usSyncTime);
+            emit(vsync1()); // renders the new waveform.
+            m_sema.acquire();
+            qDebug() << "ST_TIMER                      " << usLast << usRest;
         }
     }
 }
@@ -198,35 +231,37 @@ bool VSyncThread::waitForVideoSync(QGLWidget* glw) {
         qDebug() << "glXGetMscRateOML == NULL";
     }
 
-    if (glXGetVideoSyncSGI && glXWaitVideoSyncSGI) {
-        if (!glXWaitVideoSyncSGI(1, 0, &counter)) {
-            qDebug() << "counter" << counter;
-            m_syncOk = true;
-            return true;
+    if (m_vSyncMode == ST_SGI_VIDEO_SYNC) {
+        if (glXGetVideoSyncSGI && glXWaitVideoSyncSGI) {
+            if (!glXWaitVideoSyncSGI(1, 0, &counter)) {
+                qDebug() << "counter" << counter;
+                m_syncOk = true;
+                return true;
+            }
+     /*
+            if (!glXGetVideoSyncSGI(&counter_start)) {
+                counter = counter_start;
+                glXWaitVideoSyncSGI(2, (counter + 1) % 2, &counter);
+                if (counter < counter_start)
+                    fprintf(stderr, "error:  vblank count went backwards: %d -> %d\n", counter_start, counter);
+                if (counter == counter_start)
+                    fprintf(stderr, "error:  count didn't change: %d\n", counter);
+                if (counter > counter_start + 1)
+                    fprintf(stderr, "error:  one counter lost: %d\n", counter);
+                return true;
+            }
+    */
+            //    qDebug() << m_counter;
+            // glXWaitVideoSyncSGI(2, (m_counter + 1) % 2, &m_counter);
+            //glXWaitVideoSyncSGI(1, 0, &m_counter);
+                //qDebug() << m_counter;
+            //    glXWaitVideoSyncSGI(1, 0, &m_counter);
+            //    qDebug() << "waitForVideoSync()" << m_counter;
+            //}
+            // https://code.launchpad.net/~vanvugt/compiz/fix-763005-trunk/+merge/71307
+            // http://www.bitsphere.co.za/gameDev/openGL/vsync.php
+            // http://www.inb.uni-luebeck.de/~boehme/xvideo_sync.html
         }
- /*
-        if (!glXGetVideoSyncSGI(&counter_start)) {
-            counter = counter_start;
-            glXWaitVideoSyncSGI(2, (counter + 1) % 2, &counter);
-            if (counter < counter_start)
-                fprintf(stderr, "error:  vblank count went backwards: %d -> %d\n", counter_start, counter);
-            if (counter == counter_start)
-                fprintf(stderr, "error:  count didn't change: %d\n", counter);
-            if (counter > counter_start + 1)
-                fprintf(stderr, "error:  one counter lost: %d\n", counter);
-            return true;
-        }
-*/
-        //    qDebug() << m_counter;
-        // glXWaitVideoSyncSGI(2, (m_counter + 1) % 2, &m_counter);
-        //glXWaitVideoSyncSGI(1, 0, &m_counter);
-            //qDebug() << m_counter;
-        //    glXWaitVideoSyncSGI(1, 0, &m_counter);
-        //    qDebug() << "waitForVideoSync()" << m_counter;
-        //}
-        // https://code.launchpad.net/~vanvugt/compiz/fix-763005-trunk/+merge/71307
-        // http://www.bitsphere.co.za/gameDev/openGL/vsync.php
-        // http://www.inb.uni-luebeck.de/~boehme/xvideo_sync.html
     }
 #endif
     m_syncOk = false;
@@ -285,8 +320,12 @@ void VSyncThread::setUsSyncTime(int syncTime) {
     m_usSyncTime = syncTime;
 }
 
-void VSyncThread::setVSync(bool checked) {
-    m_vSync = checked;
+void VSyncThread::setVSyncType(int type) {
+    if (type >= (int)VSyncThread::ST_COUNT) {
+        type = VSyncThread::ST_TIMER;
+    }
+    m_vSyncMode = (enum VSyncMode)type;
+    m_rtErrorCnt = 0;
 }
 
 int VSyncThread::usToNextSync() {
@@ -313,4 +352,38 @@ void VSyncThread::setSwapWait(int sw) {
 
 void VSyncThread::vsyncSlotFinished() {
     m_sema.release();
+}
+
+void VSyncThread::getAvailableVSyncTypes(QList<QPair<int, QString > >* pList) {
+    QPair<int, QString > pair;
+
+    for (int i = (int)VSyncThread::ST_TIMER; i < (int)VSyncThread::ST_COUNT; i++) {
+        //if (isAvailable(type))  // TODO
+        {
+            enum VSyncMode mode = (enum VSyncMode)i;
+
+            QString name;
+            switch (mode) {
+            case VSyncThread::ST_TIMER:
+                name = tr("Timer (Fallback)");
+                break;
+            case VSyncThread::ST_MESA_VBLANK_MODE_1:
+                name = tr("MESA vblank_mode = 1");
+                break;
+            case VSyncThread::ST_SGI_VIDEO_SYNC:
+                name = tr("Wait for Video sync");
+                break;
+            case VSyncThread::ST_OML_SYNC_CONTROL:
+                name = tr("Sync Control");
+                break;
+            case VSyncThread::ST_FREE:
+                name = tr("Free + 1 ms (for benchmark only)");
+                break;
+            default:
+                break;
+            }
+            QPair<int, QString > pair = QPair<int, QString >(i, name);
+            pList->append(pair);
+        }
+    }
 }

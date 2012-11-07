@@ -561,8 +561,9 @@ void DlgPrefControls::slotSetFrameRate(int frameRate) {
     WaveformWidgetFactory::instance()->setFrameRate(frameRate);
 }
 
-void DlgPrefControls::slotSetVSync(bool checked) {
-    WaveformWidgetFactory::instance()->setVSync(checked);
+void DlgPrefControls::slotSetVSync(int index) {
+    int type = vSyncComboBox->itemData(index).toInt();
+    WaveformWidgetFactory::instance()->setVSyncType(type);
 }
 
 void DlgPrefControls::slotSetWaveformType(int index) {
@@ -600,15 +601,14 @@ void DlgPrefControls::slotSetNormalizeOverview( bool normalize) {
     WaveformWidgetFactory::instance()->setOverviewNormalized(normalize);
 }
 
-void DlgPrefControls::slotWaveformMeasured(int frameRate, int rtErrorCnt) {
+void DlgPrefControls::slotWaveformMeasured(float frameRate, int rtErrorCnt) {
     frameRateAverage->setText(
-            QString::number(frameRate) +
+            QString::number((double)frameRate, 'f', 2) +
             " e" +
             QString::number(rtErrorCnt));
 }
 
-void DlgPrefControls::initWaveformControl()
-{
+void DlgPrefControls::initWaveformControl() {
     waveformTypeComboBox->clear();
     WaveformWidgetFactory* factory = WaveformWidgetFactory::instance();
 
@@ -623,15 +623,31 @@ void DlgPrefControls::initWaveformControl()
     QVector<WaveformWidgetAbstractHandle> handles = factory->getAvailableTypes();
     for (int i = 0; i < handles.size(); i++) {
         waveformTypeComboBox->addItem(handles[i].getDisplayName());
-        if (handles[i].getType() == currentType)
+        if (handles[i].getType() == currentType) {
             currentIndex = i;
+        }
     }
 
-    if (currentIndex != -1)
+    if (currentIndex != -1) {
         waveformTypeComboBox->setCurrentIndex(currentIndex);
+    }
 
     frameRateSpinBox->setValue(factory->getFrameRate());
-    vSyncCheckBox->setChecked(factory->getVSync());
+
+
+    QList<QPair<int, QString > >* list = new QList<QPair<int, QString > >;
+    factory->getAvailableVSyncTypes(list);
+    int syncType = factory->getVSyncType();
+    currentIndex = -1;
+    for (int i = 0; i < list->size(); i++) {
+        vSyncComboBox->addItem(list->at(i).second, list->at(i).first);
+        if (list->at(i).first == syncType) {
+            currentIndex = i;
+        }
+    }
+    vSyncComboBox->setCurrentIndex(currentIndex);
+
+
 
     synchronizeZoomCheckBox->setChecked( factory->isZoomSync());
     allVisualGain->setValue(factory->getVisualGain(WaveformWidgetFactory::All));
@@ -649,8 +665,8 @@ void DlgPrefControls::initWaveformControl()
 
     connect(frameRateSpinBox, SIGNAL(valueChanged(int)),
             this, SLOT(slotSetFrameRate(int)));
-    connect(vSyncCheckBox,  SIGNAL(clicked(bool)),
-            this, SLOT(slotSetVSync(bool)));
+    connect(vSyncComboBox,  SIGNAL(currentIndexChanged(int)),
+            this, SLOT(slotSetVSync(int)));
     connect(waveformTypeComboBox, SIGNAL(currentIndexChanged(int)),
             this, SLOT(slotSetWaveformType(int)));
     connect(defaultZoomComboBox, SIGNAL(currentIndexChanged(int)),
@@ -668,8 +684,8 @@ void DlgPrefControls::initWaveformControl()
     connect(normalizeOverviewCheckBox,SIGNAL(toggled(bool)),
             this,SLOT(slotSetNormalizeOverview(bool)));
 
-    connect(WaveformWidgetFactory::instance(), SIGNAL(waveformMeasured(int,int)),
-            this, SLOT(slotWaveformMeasured(int,int)));
+    connect(WaveformWidgetFactory::instance(), SIGNAL(waveformMeasured(float,int)),
+            this, SLOT(slotWaveformMeasured(float,int)));
 }
 
 //Returns TRUE if skin fits to screen resolution, FALSE otherwise

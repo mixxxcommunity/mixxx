@@ -4,6 +4,7 @@
 #include <QTime>
 #include <QThread>
 #include <QSemaphore>
+#include <QPair>
 
 #include <qx11info_x11.h>
 #include "performancetimer.h"
@@ -24,6 +25,15 @@ class QGLWidget;
 class VSyncThread : public QThread {
     Q_OBJECT
   public:
+    enum VSyncMode {
+        ST_TIMER = 0,
+        ST_MESA_VBLANK_MODE_1,
+        ST_SGI_VIDEO_SYNC,
+        ST_OML_SYNC_CONTROL,
+        ST_FREE,
+        ST_COUNT // Dummy Type at last, counting possible types
+    };
+
     VSyncThread(QWidget* parent);
     ~VSyncThread();
     void run();
@@ -33,11 +43,12 @@ class VSyncThread : public QThread {
     int elapsed();
     int usToNextSync();
     void setUsSyncTime(int usSyncTimer);
-    void setVSync(bool checked);
+    void setVSyncType(int mode);
     int rtErrorCnt();
     void setSwapWait(int sw);
     int usFromTimerToNextSync(PerformanceTimer* timer);
     void vsyncSlotFinished();
+    void getAvailableVSyncTypes(QList<QPair<int, QString > >* list);
 
 
   signals:
@@ -58,7 +69,9 @@ class VSyncThread : public QThread {
 
     PFNGLXGETVIDEOSYNCSGIPROC glXGetVideoSyncSGI;
     PFNGLXWAITVIDEOSYNCSGIPROC glXWaitVideoSyncSGI;
+
     PFNGLXSWAPINTERVALSGIPROC glXSwapIntervalSGI;
+
     PFNGLXSWAPINTERVALEXTPROC glXSwapIntervalEXT;
 
     PFNGLXGETSYNCVALUESOMLPROC glXGetSyncValuesOML;
@@ -73,7 +86,7 @@ class VSyncThread : public QThread {
     bool m_firstRun;
     int m_usSyncTime;
     int m_usWait;
-    bool m_vSync;
+    enum VSyncMode m_vSyncMode;
     bool m_syncOk;
     int m_rtErrorCnt;
     int m_swapWait;

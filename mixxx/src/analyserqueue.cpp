@@ -284,8 +284,8 @@ void AnalyserQueue::run() {
                 }
             }
         } else {
-            emitUpdateProgress(1000); // 100%
             qDebug() << "Skipping track analysis because no analyzer initialized.";
+            emitUpdateProgress(1000); // 100%
         }
 
         delete pSoundSource;
@@ -314,6 +314,7 @@ void AnalyserQueue::emitUpdateProgress(int progress) {
 
 //slot
 void AnalyserQueue::slotUpdateProgress() {
+    qDebug() << "AnalyserQueue::slotUpdateProgress() 1";
     if (m_progressInfo.current_track) {
         m_progressInfo.current_track->setAnalyserProgress(m_progressInfo.track_progress);
     }
@@ -321,6 +322,7 @@ void AnalyserQueue::slotUpdateProgress() {
     if (m_progressInfo.track_progress == 1000) {
         emit(trackFinished(m_progressInfo.queue_size));
     }
+    qDebug() << "AnalyserQueue::slotUpdateProgress() 2";
     m_progressInfo.sema.release(); 
 }
 

@@ -154,8 +154,8 @@ bool WaveformWidgetFactory::setConfig(ConfigObject<ConfigValue> *config){
         m_config->set(ConfigKey("[Waveform]","FrameRate"), ConfigValue(m_frameRate));
     }
 
-    bool vsync = m_config->getValueString(ConfigKey("[Waveform]","VSync"),"0").toInt();
-    setVSync(vsync);
+    int vsync = m_config->getValueString(ConfigKey("[Waveform]","VSync"),"0").toInt();
+    setVSyncType(vsync);
 
     int defaultZoom = m_config->getValueString(ConfigKey("[Waveform]","DefaultZoom")).toInt(&ok);
     if (ok) {
@@ -256,12 +256,18 @@ void WaveformWidgetFactory::setFrameRate(int frameRate) {
     m_vsyncThread->setUsSyncTime(1000000/m_frameRate);
 }
 
-void WaveformWidgetFactory::setVSync(bool checked) {
+
+void WaveformWidgetFactory::setVSyncType(int type) {
     if (m_config) {
-        m_config->set(ConfigKey("[Waveform]","VSync"), ConfigValue(checked));
+        m_config->set(ConfigKey("[Waveform]","VSync"), ConfigValue((int)type));
     }
-    m_vSync = checked;
-    m_vsyncThread->setVSync(checked);
+
+    m_vSyncType = type;
+    m_vsyncThread->setVSyncType(type);
+}
+
+int WaveformWidgetFactory::getVSyncType() {
+    return m_vSyncType;
 }
 
 bool WaveformWidgetFactory::setWidgetType(WaveformWidgetType::Type type) {
@@ -431,7 +437,7 @@ void WaveformWidgetFactory::refresh() {
             // happens at least in:
             // xorg radeon 1:6.14.99
             // xorg intel 2:2.9.1
-            if (!m_vSync) {
+            if (m_vSyncType == 1) { // ST_MESA_VBLANK_MODE_1
                 if (paintersSetupTime1 && paintersSetupTime0 > (paintersSetupTime1 + 1000)) {
                     m_vsyncThread->setSwapWait(paintersSetupTime0 - paintersSetupTime1);
                     //qDebug() << "setSwapWait" << paintersSetupTime0 - paintersSetupTime1;
@@ -450,15 +456,17 @@ void WaveformWidgetFactory::refresh() {
         //qDebug() << "emit" << m_vsyncThread->elapsed() - t1;
 
         // m_lastRenderDuration = startTime;
-        m_crameCnt++;
-        if (m_time.elapsed() > 1000) {
+        m_crameCnt += 1.0;
+        int timeCnt = m_time.elapsed();
+        if (timeCnt > 1000) {
             m_time.start();
+            m_crameCnt = m_crameCnt * 1000 / timeCnt; // latency correction
             emit(waveformMeasured(m_crameCnt, m_vsyncThread->rtErrorCnt()));
-            m_crameCnt = 0;
+            m_crameCnt = 0.0;
         }
     }
-    m_vsyncThread->vsyncSlotFinished();
     qDebug() << "refresh end" << m_vsyncThread->elapsed();
+    m_vsyncThread->vsyncSlotFinished();
 }
 
 void WaveformWidgetFactory::postRefresh() {
@@ -477,7 +485,7 @@ void WaveformWidgetFactory::postRefresh() {
         for (int i = 0; i < m_waveformWidgetHolders.size(); i++) {
             if (i == 0) {
                 swapTime0 = m_vsyncThread->elapsed();
-                if (m_vSync) {
+                if (m_vSyncType == 2) { // ST_SGI_VIDEO_SYNC
                     QGLWidget* glw = dynamic_cast<QGLWidget*>(
                             m_waveformWidgetHolders[0].m_waveformWidget->getWidget());
                     if (glw) {
@@ -495,7 +503,7 @@ void WaveformWidgetFactory::postRefresh() {
             }
             qDebug() << "postRefresh x" << m_vsyncThread->elapsed();
         }
-        if (m_vSync) {
+        if (m_vSyncType == 2) { // ST_SGI_VIDEO_SYNC
             if (swapTime1 && swapTime0 > swapTime1) {
                 m_vsyncThread->setSwapWait(swapTime0 - swapTime1);
             } else {
@@ -503,8 +511,8 @@ void WaveformWidgetFactory::postRefresh() {
             }
         }
     }
-    m_vsyncThread->vsyncSlotFinished();
     qDebug() << "postRefresh end" << m_vsyncThread->elapsed();
+    m_vsyncThread->vsyncSlotFinished();
 }
 
 WaveformWidgetType::Type WaveformWidgetFactory::autoChooseWidgetType() const {
@@ -675,3 +683,9 @@ void WaveformWidgetFactory::startVSync(QWidget *parent) {
             this, SLOT(postRefresh()));
 
 }
+
+void WaveformWidgetFactory::getAvailableVSyncTypes(QList<QPair<int, QString > >* pList) {
+    m_vsyncThread->getAvailableVSyncTypes(pList);
+}
+
+

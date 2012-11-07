@@ -106,24 +106,6 @@
        </item>
       </layout>
      </item>
-     <item>
-      <layout class="QHBoxLayout" name="underflowHLayout">
-       <item>
-        <widget class="QLabel" name="underflowLabel">
-         <property name="text">
-          <string>Buffer Underflow Count</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="bufferUnderflowCount">
-         <property name="text">
-          <string>0</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
     </layout>
    </item>
    <item>
