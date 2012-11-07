@@ -118,8 +118,6 @@ bool AnalyserWaveform::initialise(TrackPointer tio, int sampleRate, int totalSam
 
     const double summaryWaveformSampleRate = (double)summaryWaveformSamples * (double)sampleRate / (double)totalSamples;
 
-    //qDebug() << summaryWaveformSampleRate;
-
     m_waveform->computeBestVisualSampleRate(sampleRate, mainWaveformSampleRate);
     m_waveformSummary->computeBestVisualSampleRate(sampleRate, summaryWaveformSampleRate);
 
