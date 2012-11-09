@@ -49,7 +49,9 @@ class VSyncThread : public QThread {
     int usFromTimerToNextSync(PerformanceTimer* timer);
     void vsyncSlotFinished();
     void getAvailableVSyncTypes(QList<QPair<int, QString > >* list);
-
+    void setupSync(QGLWidget* glw, int index);
+    void postRender(QGLWidget* glw, int index);
+    void waitUntilSwap(QGLWidget* glw);
 
   signals:
     void vsync1();
@@ -80,7 +82,14 @@ class VSyncThread : public QThread {
     PFNGLXWAITFORMSCOMLPROC glXWaitForMscOML;
     PFNGLXWAITFORSBCOMLPROC  glXWaitForSbcOML;
 
+    PFNGLXSWAPINTERVALSGIPROC glXSwapIntervalMESA;
+
     uint m_counter;
+
+    int64_t m_target_msc;
+    Display* m_dpy;
+    GLXDrawable m_drawable;
+
 #endif
 
     bool m_firstRun;
@@ -92,6 +101,7 @@ class VSyncThread : public QThread {
     int m_swapWait;
     PerformanceTimer m_timer;
     QSemaphore m_sema;
+    double m_displayFrameRate;
 };
 
 

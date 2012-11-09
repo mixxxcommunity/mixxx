@@ -25,7 +25,8 @@ VSyncThread::VSyncThread(QWidget* parent)
           m_vSyncMode(ST_TIMER),
           m_syncOk(false),
           m_rtErrorCnt(0),
-          m_swapWait(0) {
+          m_swapWait(0),
+          m_displayFrameRate(-1.0) {
     doRendering = true;
 
     //QGLFormat glFormat = QGLFormat::defaultFormat();
@@ -48,7 +49,7 @@ VSyncThread::VSyncThread(QWidget* parent)
 #elif defined(__WINDOWS__)
 
 #else
-
+    m_target_msc = 0;
 #endif
 }
 
@@ -168,6 +169,40 @@ void VSyncThread::run() {
             emit(vsync2()); // swaps the new waveform to front
             m_sema.acquire();
             //qDebug()  << "ST_MESA_VBLANK_MODE_1                        " << usLast << inSync;
+
+        } else if (m_vSyncMode == ST_OML_SYNC_CONTROL) {
+            // Probably the best solution
+            // Note: Does not work with vsync_mode = 0
+            emit(vsync1()); // renders the waveform, Possible delayed due to anti tearing
+            m_sema.acquire();
+            emit(vsync2()); // swaps the new waveform to front
+            m_sema.acquire();
+            if (glXWaitForSbcOML && m_drawable) {
+                int64_t ust; // Time when the last Sync happens in µs
+                int64_t msc; // Current display refresh counter
+                int64_t sbc; // Current swap counter
+                int ret;
+
+                //  glXWaitForSbcOML (Display *dpy, GLXDrawable drawable, int64_t target_sbc, int64_t *ust, int64_t *msc, int64_t *sbc);
+                ret = glXGetSyncValuesOML(m_dpy, m_drawable,
+                        &ust, &msc, &sbc);
+                qDebug() << "glXWaitForSbcOML 1" << ust << msc << sbc << ret << m_timer.elapsed();
+
+                // ret = glXSwapBuffersMscOML(m_dpy, m_drawable,
+                //        msc+2, 0, 0);
+
+
+                ret = glXWaitForSbcOML(m_dpy, m_drawable,
+                        0,  &ust, &msc, &sbc);
+                qDebug() << "glXWaitForSbcOML 2" << ust << msc << sbc << ret << m_timer.elapsed();
+                ret = glXGetSyncValuesOML(m_dpy, m_drawable,
+                        &ust, &msc, &sbc);
+                qDebug() << "glXWaitForSbcOML 3" << ust << msc << sbc << ret << m_timer.elapsed();
+            }
+
+            m_timer.restart();
+            m_usWait = 1000;
+            usleep(1000);
         } else { // if (m_vSyncMode == ST_TIMER) {
             // This mode should be used wit vblank_mode = 0
             usRest = m_usWait - m_timer.elapsed() / 1000;
@@ -290,6 +325,10 @@ void VSyncThread::initGlxext(QGLWidget* glw) {
         glXSwapIntervalEXT = (PFNGLXSWAPINTERVALEXTPROC)glXGetProcAddressARB((const GLubyte *)"glXSwapIntervalSGI");
     }
 
+    if (glXExtensionSupported(xinfo->display(), xinfo->screen(), "GLX_MESA_swap_control")) {
+        glXSwapIntervalMESA = (PFNGLXSWAPINTERVALSGIPROC)glXGetProcAddressARB((const GLubyte *)"glXSwapIntervalMESA");
+    }
+
     if (glXExtensionSupported(xinfo->display(), xinfo->screen(), "GLX_OML_sync_control")) {
         glXGetSyncValuesOML = (PFNGLXGETSYNCVALUESOMLPROC)glXGetProcAddressARB((const GLubyte *)"glXGetSyncValuesOML");
         glXGetMscRateOML = (PFNGLXGETMSCRATEOMLPROC)glXGetProcAddressARB((const GLubyte *)"glXGetMscRateOML");
@@ -311,6 +350,114 @@ bool VSyncThread::glXExtensionSupported(Display *dpy, int screen, const char *ex
         (pos[strlen(extension)]==' ' || pos[strlen(extension)]=='\0');
 }
 #endif
+
+void VSyncThread::setupSync(QGLWidget* glw, int index) {
+    if (QGLContext::currentContext() != glw->context()) {
+        glw->makeCurrent();
+    }
+
+#if defined(__APPLE__)
+
+#elif defined(__WINDOWS__)
+
+#else
+
+    if (!m_firstRun) {
+        initGlxext(glw);
+        m_firstRun = true;
+    }
+
+    // The next three lines are required to make glXSwapBuffersMscOML working!
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Reset Buffer
+    if (glXSwapIntervalMESA) {
+        glXSwapIntervalMESA(1);
+    }
+
+    if (index == 0) { // First Waveform
+        if (glXGetMscRateOML) {
+            int32_t numerator;
+            int32_t denominator;
+            const QX11Info *xinfo = qt_x11Info(glw);
+            glXGetMscRateOML(xinfo->display(), glXGetCurrentDrawable(), &numerator, &denominator);
+            m_displayFrameRate = (double)numerator/denominator;
+            qDebug() << "glXGetMscRateOML" << m_displayFrameRate << "Hz";
+        }
+        else
+        {
+            m_displayFrameRate = -1.0;
+            qDebug() << "glXGetMscRateOML == NULL";
+        }
+    }
+#endif
+}
+
+void VSyncThread::postRender(QGLWidget* glw, int index) {
+    // No need for glw->makeCurrent() here.
+    qDebug() << "postRender" << m_timer.elapsed();
+#if defined(__APPLE__)
+    glw->swapBuffers();
+#elif defined(__WINDOWS__)
+    glw->swapBuffers();
+#else
+    const QX11Info *xinfo = qt_x11Info(glw);
+    if (m_vSyncMode == ST_OML_SYNC_CONTROL &&
+            glXSwapBuffersMscOML &&
+            glXGetSyncValuesOML ) {
+        int64_t ust; // Time when the last Sync happens in µs
+        int64_t msc; // Current display refresh counter
+        int64_t sbc; // Current swap counter
+        glXGetSyncValuesOML(xinfo->display(), glw->winId(),
+                &ust, &msc, &sbc);
+        qDebug() << "glXGetSyncValuesOML 17" << ust << msc << sbc << m_timer.elapsed();
+        // "glXSwapBuffersMscOML(Display *dpy, GLXDrawable drawable, int64_t target_msc, int64_t divisor, int64_t remainder);"
+        // Returns the current sbc + 1 if successful, if not, it returns a random value and the swap takes place immediately
+        //     This happens if you set the environment variable vsync_mode = 0
+        // glXSwapBuffersMscOML must be called from GUI Thread
+        int64_t ret = glXSwapBuffersMscOML(xinfo->display(), glw->winId(),
+                msc+2, 0, 0);
+        glXGetSyncValuesOML(xinfo->display(), glw->winId(),
+                &ust, &msc, &sbc);
+        qDebug() << "glXGetSyncValuesOML 17" << ust << msc << sbc << ret;
+        if (index == 0) {
+            m_dpy = xinfo->display();
+            m_drawable = glw->winId();
+        }
+    } else {
+        glXSwapBuffers(xinfo->display(), glw->winId());
+    }
+#endif
+}
+
+void VSyncThread::waitUntilSwap(QGLWidget* glw) {
+    if (QGLContext::currentContext() != glw->context()) {
+        glw->makeCurrent();
+    }
+#if defined(__APPLE__)
+
+#elif defined(__WINDOWS__)
+
+#else
+    /*
+    const QX11Info *xinfo = qt_x11Info(glw);
+    if (glXWaitForSbcOML && m_drawable) {
+        int64_t ust; // Time when the last Sync happens in µs
+        int64_t msc; // Current display refresh counter
+        int64_t sbc; // Current swap counter
+        int ret;
+        //  glXWaitForSbcOML (Display *dpy, GLXDrawable drawable, int64_t target_sbc, int64_t *ust, int64_t *msc, int64_t *sbc);
+        ret = glXGetSyncValuesOML(xinfo->display(), glXGetCurrentDrawable(),
+                &ust, &msc, &sbc);
+        qDebug() << "glXWaitForSbcOML 1" << ust << msc << sbc << ret;
+        ret = glXWaitForSbcOML(xinfo->display(), glXGetCurrentDrawable(),
+                0,  &ust, &msc, &sbc);
+        qDebug() << "glXWaitForSbcOML 2" << ust << msc << sbc << ret;
+        ret = glXGetSyncValuesOML(xinfo->display(), glXGetCurrentDrawable(),
+                &ust, &msc, &sbc);
+        qDebug() << "glXWaitForSbcOML 3" << ust << msc << sbc << ret;
+    }
+    */
+#endif
+}
 
 int VSyncThread::elapsed() {
     return m_timer.elapsed() / 1000;
