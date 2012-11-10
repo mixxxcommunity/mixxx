@@ -102,6 +102,7 @@ class VSyncThread : public QThread {
     PerformanceTimer m_timer;
     QSemaphore m_sema;
     double m_displayFrameRate;
+    int m_interval;
 };
 
 

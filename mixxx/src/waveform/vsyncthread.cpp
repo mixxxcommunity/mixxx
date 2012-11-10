@@ -6,7 +6,7 @@
 #include <qdebug.h>
 #include <QTime>
 
-
+#include "mathstuff.h"
 #include "vsyncthread.h"
 #include "performancetimer.h"
 
@@ -26,7 +26,8 @@ VSyncThread::VSyncThread(QWidget* parent)
           m_syncOk(false),
           m_rtErrorCnt(0),
           m_swapWait(0),
-          m_displayFrameRate(-1.0) {
+          m_displayFrameRate(60.0),
+          m_interval(1) {
     doRendering = true;
 
     //QGLFormat glFormat = QGLFormat::defaultFormat();
@@ -175,8 +176,7 @@ void VSyncThread::run() {
             // Note: Does not work with vsync_mode = 0
             emit(vsync1()); // renders the waveform, Possible delayed due to anti tearing
             m_sema.acquire();
-            emit(vsync2()); // swaps the new waveform to front
-            m_sema.acquire();
+            usleep(1000); // ensure to have at least 1 ms time for other GUI events
             if (glXWaitForSbcOML && m_drawable) {
                 int64_t ust; // Time when the last Sync happens in µs
                 int64_t msc; // Current display refresh counter
@@ -381,11 +381,7 @@ void VSyncThread::setupSync(QGLWidget* glw, int index) {
             glXGetMscRateOML(xinfo->display(), glXGetCurrentDrawable(), &numerator, &denominator);
             m_displayFrameRate = (double)numerator/denominator;
             qDebug() << "glXGetMscRateOML" << m_displayFrameRate << "Hz";
-        }
-        else
-        {
-            m_displayFrameRate = -1.0;
-            qDebug() << "glXGetMscRateOML == NULL";
+            setUsSyncTime(m_usSyncTime);
         }
     }
 #endif
@@ -414,7 +410,7 @@ void VSyncThread::postRender(QGLWidget* glw, int index) {
         //     This happens if you set the environment variable vsync_mode = 0
         // glXSwapBuffersMscOML must be called from GUI Thread
         int64_t ret = glXSwapBuffersMscOML(xinfo->display(), glw->winId(),
-                msc+2, 0, 0);
+                0, m_interval, 0);
         glXGetSyncValuesOML(xinfo->display(), glw->winId(),
                 &ust, &msc, &sbc);
         qDebug() << "glXGetSyncValuesOML 17" << ust << msc << sbc << ret;
@@ -465,6 +461,8 @@ int VSyncThread::elapsed() {
 
 void VSyncThread::setUsSyncTime(int syncTime) {
     m_usSyncTime = syncTime;
+    double frameRate = 60.0;
+    m_interval = round(m_displayFrameRate * m_usSyncTime / 1000);
 }
 
 void VSyncThread::setVSyncType(int type) {
@@ -473,6 +471,7 @@ void VSyncThread::setVSyncType(int type) {
     }
     m_vSyncMode = (enum VSyncMode)type;
     m_rtErrorCnt = 0;
+    m_firstRun = true;
 }
 
 int VSyncThread::usToNextSync() {

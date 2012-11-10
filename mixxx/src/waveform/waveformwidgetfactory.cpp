@@ -433,6 +433,7 @@ void WaveformWidgetFactory::refresh() {
             // all render commands are delayed until the swap from the previous run is executed
             for (int i = 0; i < m_waveformWidgetHolders.size(); i++) {
                 if (i == 0) {
+                    /*
                     if (m_vSyncType == 3) { // ST_OML_SYNC_CONTROL
                         QGLWidget* glw = dynamic_cast<QGLWidget*>(
                                 m_waveformWidgetHolders[0].m_waveformWidget->getWidget());
@@ -440,6 +441,7 @@ void WaveformWidgetFactory::refresh() {
                             m_vsyncThread->waitUntilSwap(glw);
                         }
                     }
+                    */
                     paintersSetupTime0 = m_waveformWidgetHolders[0].m_waveformWidget->render();
                 } else if (i == 1) {
                     paintersSetupTime1 = m_waveformWidgetHolders[1].m_waveformWidget->render();
@@ -483,7 +485,12 @@ void WaveformWidgetFactory::refresh() {
         }
     }
     qDebug() << "refresh end" << m_vsyncThread->elapsed();
-    m_vsyncThread->vsyncSlotFinished();
+
+    if (m_vSyncType == 3) { // ST_OML_SYNC_CONTROL
+        postRefresh();
+    } else {
+        m_vsyncThread->vsyncSlotFinished();
+    }
 }
 
 void WaveformWidgetFactory::postRefresh() {
