@@ -22,7 +22,7 @@ class WTrackTableView : public WLibraryTableView {
     Q_OBJECT
   public:
     WTrackTableView(QWidget* parent, ConfigObject<ConfigValue>* pConfig,
-                    TrackCollection* pTrackCollection);
+                    TrackCollection* pTrackCollection, bool sorting = true);
     virtual ~WTrackTableView();
     void contextMenuEvent(QContextMenuEvent * event);
     void onSearchStarting();
@@ -32,7 +32,6 @@ class WTrackTableView : public WLibraryTableView {
     virtual void keyPressEvent(QKeyEvent* event);
     virtual void loadSelectedTrack();
     virtual void loadSelectedTrackToGroup(QString group);
-    void disableSorting();
 
   protected:
     bool eventFilter(QObject *obj, QEvent *event);
@@ -125,6 +124,8 @@ class WTrackTableView : public WLibraryTableView {
 
     // Clear track beats
     QAction* m_pClearBeatsAction;
+
+    bool m_sorting;
 };
 
 #endif
