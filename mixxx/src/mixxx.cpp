@@ -1104,8 +1104,6 @@ void MixxxApp::initMenuBar()
 
     menuBar()->addSeparator();
     menuBar()->addMenu(m_pHelpMenu);
-
-    m_NativeMenuBarSupport = menuBar()->isNativeMenuBar();
 }
 
 void MixxxApp::slotFileLoadSongPlayer(int deck) {
@@ -1196,15 +1194,29 @@ void MixxxApp::slotViewFullScreen(bool toggle)
         // Fix for "No menu bar with ubuntu unity in full screen mode" Bug #885890
         // Not for Mac OS because the native menu bar will unhide when moving
         // the mouse to the top of screen
-        menuBar()->setNativeMenuBar(false);
+
+        //menuBar()->setNativeMenuBar(false); 
+        // ^ This leaves a broken native Menu Bar with Ubuntu Unity Bug #1076789#
+        // it is only allowed to change this prior initMenuBar()
+
+        m_NativeMenuBarSupport = menuBar()->isNativeMenuBar();
+        if (m_NativeMenuBarSupport) {
+            setMenuBar(new QMenuBar(this));
+            menuBar()->setNativeMenuBar(false);
+            initMenuBar();
+        }
 #endif
         showFullScreen();
     } else {
-        showNormal();
 #ifdef __LINUX__
-        menuBar()->setNativeMenuBar(m_NativeMenuBarSupport);
+        if (m_NativeMenuBarSupport) {
+            setMenuBar(new QMenuBar(this));
+            menuBar()->setNativeMenuBar(m_NativeMenuBarSupport);
+            initMenuBar();
+        }
         //move(m_winpos);
 #endif
+        showNormal();
     }
 }
 
