@@ -80,7 +80,6 @@ bool AnalyserWaveform::initialise(TrackPointer tio, int sampleRate, int totalSam
                     && analysis.version == WaveformFactory::getPreferredWaveformVersion()
                     && missingWaveform) {
                 if (WaveformFactory::updateWaveformFromAnalysis(m_waveform, analysis)) {
-                    tio->waveformNew();
                     missingWaveform = false;
                 } else {
                     m_analysisDao->deleteAnalysis(analysis.analysisId);
@@ -102,51 +101,51 @@ bool AnalyserWaveform::initialise(TrackPointer tio, int sampleRate, int totalSam
     if (!missingWaveform && !missingWavesummary) {
         qDebug() << "AnalyserWaveform::initialise - Stored waveform loaded";
         m_skipProcessing = true;
-        return false;
+    } else {
+        // Now actually initalise the AnalyserWaveform:
+        QMutexLocker waveformLocker(m_waveform->getMutex());
+        QMutexLocker waveformSummaryLocker(m_waveformSummary->getMutex());
+
+        destroyFilters();
+        resetFilters(tio, sampleRate);
+
+        //TODO (vrince) Do we want to expose this as settings or whatever ?
+        const double mainWaveformSampleRate = 441;
+        //two visual sample per pixel in full width overview in full hd
+        int summaryWaveformSamples = 2*1920;
+
+        const double summaryWaveformSampleRate = (double)summaryWaveformSamples * (double)sampleRate / (double)totalSamples;
+
+        m_waveform->computeBestVisualSampleRate(sampleRate, mainWaveformSampleRate);
+        m_waveformSummary->computeBestVisualSampleRate(sampleRate, summaryWaveformSampleRate);
+
+        // getDataSize() of both waveform and waveformSummary are now totalSamples
+        m_waveform->allocateForAudioSamples(totalSamples);
+        m_waveformSummary->allocateForAudioSamples(totalSamples);
+        m_waveformDataSize = m_waveform->getDataSize();
+        m_waveformSummaryDataSize = m_waveformSummary->getDataSize();
+        m_waveformData = &m_waveform->at(0);
+        m_waveformSummaryData = &m_waveformSummary->at(0);
+
+        m_stride.init(m_waveform->getAudioSamplesPerVisualSample());
+        const double mainSummaryRatio = m_waveform->getVisualSampleRate() / m_waveformSummary->getVisualSampleRate();
+        const int summaryStrideLength = ceil(mainSummaryRatio);
+        m_strideSummary.init(summaryStrideLength);
+        m_strideSummary.m_conversionFactor /= (double)mainSummaryRatio;
+
+        m_currentStride = 0;
+        m_currentSummaryStride = 0;
+
+        //debug
+        //m_waveform->dump();
+        //m_waveformSummary->dump();
+
+    #ifdef TEST_HEAT_MAP
+        test_heatMap = new QImage(256,256,QImage::Format_RGB32);
+        test_heatMap->fill(0xFFFFFFFF);
+    #endif
     }
-
-    QMutexLocker waveformLocker(m_waveform->getMutex());
-    QMutexLocker waveformSummaryLocker(m_waveformSummary->getMutex());
-
-    destroyFilters();
-    resetFilters(tio, sampleRate);
-
-    //TODO (vrince) Do we want to expose this as settings or whatever ?
-    const double mainWaveformSampleRate = 441;
-    //two visual sample per pixel in full width overview in full hd
-    int summaryWaveformSamples = 2*1920;
-
-    const double summaryWaveformSampleRate = (double)summaryWaveformSamples * (double)sampleRate / (double)totalSamples;
-
-    m_waveform->computeBestVisualSampleRate(sampleRate, mainWaveformSampleRate);
-    m_waveformSummary->computeBestVisualSampleRate(sampleRate, summaryWaveformSampleRate);
-
-    // getDataSize() of both waveform and waveformSummary are now totalSamples
-    m_waveform->allocateForAudioSamples(totalSamples);
-    m_waveformSummary->allocateForAudioSamples(totalSamples);
-    m_waveformDataSize = m_waveform->getDataSize();
-    m_waveformSummaryDataSize = m_waveformSummary->getDataSize();
-    m_waveformData = &m_waveform->at(0);
-    m_waveformSummaryData = &m_waveformSummary->at(0);
-
-    m_stride.init(m_waveform->getAudioSamplesPerVisualSample());
-    const double mainSummaryRatio = m_waveform->getVisualSampleRate() / m_waveformSummary->getVisualSampleRate();
-    const int summaryStrideLength = ceil(mainSummaryRatio);
-    m_strideSummary.init(summaryStrideLength);
-    m_strideSummary.m_conversionFactor /= (double)mainSummaryRatio;
-
-    m_currentStride = 0;
-    m_currentSummaryStride = 0;
-
-    //debug
-    //m_waveform->dump();
-    //m_waveformSummary->dump();
-
-#ifdef TEST_HEAT_MAP
-    test_heatMap = new QImage(256,256,QImage::Format_RGB32);
-    test_heatMap->fill(0xFFFFFFFF);
-#endif
-    return true;
+    return !m_skipProcessing;
 }
 
 void AnalyserWaveform::resetFilters(TrackPointer tio, int sampleRate) {

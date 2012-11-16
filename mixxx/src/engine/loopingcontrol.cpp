@@ -133,7 +133,7 @@ void LoopingControl::slotLoopScale(double scale) {
 
     // Abandon loops that are too short of extend beyond the end of the file.
     if (loop_length < MINIMUM_AUDIBLE_LOOP_SIZE ||
-        m_iLoopStartSample + loop_length > m_pTrackSamples->get()) {
+        m_iLoopStartSample + loop_length > samples) {
         return;
     }
 
@@ -209,6 +209,9 @@ double LoopingControl::process(const double dRate,
                                const double currentSample,
                                const double totalSamples,
                                const int iBufferSize) {
+    Q_UNUSED(totalSamples);
+    Q_UNUSED(iBufferSize);
+
     m_iCurrentSample = currentSample;
     if (!even(m_iCurrentSample))
         m_iCurrentSample--;
@@ -552,7 +555,8 @@ void LoopingControl::clearActiveBeatLoop() {
 }
 
 void LoopingControl::slotBeatLoop(double beats, bool keepStartPoint) {
-    if (!m_pTrack) {
+    int samples = m_pTrackSamples->get();
+    if (!m_pTrack || samples == 0) {
         return;
     }
 
@@ -572,7 +576,6 @@ void LoopingControl::slotBeatLoop(double beats, bool keepStartPoint) {
     // give loop_in and loop_out defaults so we can detect problems
     int loop_in = -1;
     int loop_out = -1;
-    int samples = m_pTrackSamples->get();
 
     if (!m_pBeats) {
         clearActiveBeatLoop();

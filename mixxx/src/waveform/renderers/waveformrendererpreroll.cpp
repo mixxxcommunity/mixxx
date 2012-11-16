@@ -41,28 +41,34 @@ void WaveformRendererPreroll::draw(QPainter* painter, QPaintEvent* event) {
     // Some of the pre-roll is on screen. Draw little triangles to indicate
     // where the pre-roll is located.
     if (currentPosition < numberOfSamples) {
+        int index = static_cast<int>((numberOfSamples - currentPosition) / 2.0);
+        const int polyWidth = static_cast<int>(40.0 / samplesPerPixel);
+        const float halfHeight = m_waveformRenderer->getHeight()/2.0;
+        const float halfPolyHeight = m_waveformRenderer->getHeight()/5.0;
+
         painter->save();
         painter->setRenderHint(QPainter::Antialiasing);
         //painter->setRenderHint(QPainter::HighQualityAntialiasing);
         //painter->setBackgroundMode(Qt::TransparentMode);
         painter->setWorldMatrixEnabled(false);
         painter->setPen(QPen(QBrush(m_color), 1));
-        double start_index = 0;
-        int end_index = static_cast<int>((numberOfSamples - currentPosition) / 2.0);
         QPolygonF polygon;
-        const int polyWidth = static_cast<int>(40.0 / samplesPerPixel);
-        const float halfHeight = m_waveformRenderer->getHeight()/2.0;
-        const float halfPolyHeight = m_waveformRenderer->getHeight()/5.0;
         polygon << QPointF(0, halfHeight)
                 << QPointF(-polyWidth, halfHeight - halfPolyHeight)
                 << QPointF(-polyWidth, halfHeight + halfPolyHeight);
-        polygon.translate(((qreal)end_index)/samplesPerPixel, 0);
 
-        int index = end_index;
-        while (index > start_index) {
+        // Draw at most one not or halve visible polygon at the widget borders
+        if (index > (numberOfSamples + ((polyWidth + 1) * samplesPerPixel))) {
+            int rest = index - numberOfSamples;
+            rest %= (int)((polyWidth + 1) * samplesPerPixel);
+            index = numberOfSamples + rest;
+        }
+
+        polygon.translate(((qreal)index)/samplesPerPixel, 0);
+        while (index > 0) {
             painter->drawPolygon(polygon);
             polygon.translate(-(polyWidth+1), 0);
-            index -= (polyWidth+1);
+            index -= (polyWidth+1) * samplesPerPixel;
         }
         painter->restore();
     }

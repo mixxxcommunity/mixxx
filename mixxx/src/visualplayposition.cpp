@@ -15,7 +15,8 @@ const PaStreamCallbackTimeInfo* VisualPlayPosition::m_timeInfo;
 PerformanceTimer VisualPlayPosition::m_timeInfoTime;
 
 VisualPlayPosition::VisualPlayPosition() :
-    m_playPos(-1) {
+        m_playPos(-1),
+        m_valid(false) {
 
     m_audioBufferSize = new ControlObjectThreadMain(
         ControlObject::getControl(ConfigKey("[Master]","audio_buffer_size")));
@@ -36,6 +37,7 @@ bool VisualPlayPosition::trySet(double playPos, double rate,
         m_rate = rate;
         m_positionStep = positionStep;
         m_pSlipPosition = pSlipPosition;
+        m_valid = true;
         m_mutex.unlock();
         return true;
     }
@@ -51,7 +53,7 @@ double VisualPlayPosition::getAt(VSyncThread* vsyncThread) {
 
     double playPos;
 
-    if (m_playPos != -1) {
+    if (m_valid) {
         int usRefToVSync = vsyncThread->usFromTimerToNextSync(&m_referenceTime);
         int offset = usRefToVSync - m_timeDac;
         playPos = m_playPos;  // load playPos for the first sample in Buffer
@@ -60,7 +62,7 @@ double VisualPlayPosition::getAt(VSyncThread* vsyncThread) {
         m_playPosOld = playPos;
         return playPos;
     }
-    return 0;
+    return -1;
 }
 
 void VisualPlayPosition::getPlaySlipAt(int usFromNow, double* playPosition, double* slipPosition) {
@@ -72,7 +74,7 @@ void VisualPlayPosition::getPlaySlipAt(int usFromNow, double* playPosition, doub
 
     double playPos;
 
-    if (m_playPos != -1) {
+    if (m_valid) {
         int usElapsed = m_referenceTime.elapsed() / 1000;
         int dacFromNow = usElapsed - m_timeDac;
         int offset = dacFromNow - usFromNow;
@@ -81,16 +83,16 @@ void VisualPlayPosition::getPlaySlipAt(int usFromNow, double* playPosition, doub
         m_playPosOld = playPos;
         *playPosition = playPos;
     } else {
-        *playPosition = 0;
+        *playPosition = -1;
     }
     *slipPosition = m_pSlipPosition;
 }
 
 double VisualPlayPosition::getEnginePlayPos() {
-    if (m_playPos != -1) {
+    if (m_valid) {
         return m_playPos;
     } else {
-        return 0.0;
+        return -1;
     }
 }
 

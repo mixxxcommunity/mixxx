@@ -23,9 +23,11 @@ class VisualPlayPosition
     double getEnginePlayPos();
     static VisualPlayPosition* getVisualPlayPosition(QString group);
     static void setTimeInfo(const PaStreamCallbackTimeInfo *timeInfo);
+    void setInvalid() { m_valid = false; };
 
 
   private:
+    bool m_valid;
     double m_playPos;
     double m_playPosOld;
     double m_rate;

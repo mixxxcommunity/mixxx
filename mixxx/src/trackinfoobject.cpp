@@ -691,14 +691,11 @@ Waveform* TrackInfoObject::getWaveform() {
     return m_waveform;
 }
 
-void TrackInfoObject::waveformNew() {
-    emit(waveformUpdated());
-}
-
 Waveform* TrackInfoObject::getWaveformSummary() {
     return m_waveformSummary;
 }
 
+// called from the AnalyserQueue Thread
 void TrackInfoObject::waveformSummaryNew() {
     emit(waveformSummaryUpdated());
 }

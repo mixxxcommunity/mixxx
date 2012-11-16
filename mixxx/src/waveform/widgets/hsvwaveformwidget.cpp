@@ -41,6 +41,5 @@ void HSVWaveformWidget::paintEvent( QPaintEvent* event) {
 }
 
 void HSVWaveformWidget::updateVisualSamplingPerPixel() {
-    m_visualSamplePerPixel = m_zoomFactor;
-    m_visualSamplePerPixel = math_max( 1.0, m_visualSamplePerPixel);
+    m_visualSamplePerPixel = math_max( 1.0, m_zoomFactor);
 }

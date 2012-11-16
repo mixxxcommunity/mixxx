@@ -267,7 +267,6 @@ public:
     void slotCueUpdated();
 
 signals:
-    void waveformUpdated();
     void waveformSummaryUpdated();
     void analyserProgress(int progress);
     void bpmUpdated(double bpm);

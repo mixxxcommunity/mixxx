@@ -49,6 +49,7 @@ class EngineBufferScaleST;
 class EngineWorkerScheduler;
 class VisualPlayPosition;
 class EngineMaster;
+class CueControl;
 
 struct Hint;
 
@@ -98,6 +99,7 @@ public:
 
     // Add an engine control to the EngineBuffer
     void addControl(EngineControl* pControl);
+    void addCueControl(CueControl* pControl);
 
     /** Return the current rate (not thread-safe) */
     double getRate();
@@ -199,7 +201,7 @@ private:
     int file_srate_old;
     /** Mutex controlling weather the process function is in pause mode. This happens
       * during seek and loading of a new track */
-    QMutex pause;
+    QMutex m_pause;
     /** Used in update of playpos slider */
     int m_iSamplesCalculated;
     int m_iUiSlowTick;
@@ -215,7 +217,7 @@ private:
     ControlObject* m_pTrackSampleRate;
 
     ControlPushButton *playButton, *buttonBeatSync, *playStartButton, *stopStartButton, *stopButton;
-    ControlObjectThreadMain *playButtonCOT, *playStartButtonCOT, *stopStartButtonCOT, *m_pTrackEndCOT, *stopButtonCOT;
+    ControlObjectThreadMain *playButtonCOT, *playStartButtonCOT, *stopStartButtonCOT, *stopButtonCOT;
     ControlObject *fwdButton, *backButton;
     ControlPushButton* m_pSlipButton;
 
@@ -227,9 +229,6 @@ private:
     ControlPushButton *m_pKeylock;
 
     ControlPushButton *m_pEject;
-
-    /** Control used to signal when at end of file */
-    ControlObject *m_pTrackEnd;
 
     // Whether or not to repeat the track when at the end
     ControlPushButton* m_pRepeat;
@@ -254,6 +253,7 @@ private:
     float m_fLastSampleValue[2];
     /** Is true if the previous buffer was silent due to pausing */
     bool m_bLastBufferPaused;
+    bool m_bBufferPause;
     float m_fRampValue;
     int m_iRampState;
     //int m_iRampIter;
@@ -270,6 +270,7 @@ private:
     int m_iLastBufferSize;
 
     VisualPlayPosition* m_visualPlayPos;
+    CueControl* m_cueControl;
 };
 
 #endif

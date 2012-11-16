@@ -306,7 +306,7 @@ void AnalyserQueue::emitUpdateProgress(int progress) {
     if (!m_exit) {    
         emit(updateProgress());
         // Wait for slotUpdateProgress() is finished in the Main Thread
-        // This ensures that the analyther thread is yielded until the Main meassage queue is progressed 
+        // This ensures that the analyser thread is yielded until the Main meassage queue is progressed
         // and protects m_progressInfo access   
         m_progressInfo.sema.acquire();  
     }
