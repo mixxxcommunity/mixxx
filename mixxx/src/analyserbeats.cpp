@@ -82,9 +82,6 @@ bool AnalyserBeats::initialise(TrackPointer tio, int sampleRate, int totalSample
         return false;
     }
 
-    // If we got here, we think we may want to analyze this track.
-    m_bShouldAnalyze = true;
-
     // At first start config for QM and Vamp does not exist --> set default
     if (library.isEmpty() || library.isNull())
         library = "libmixxxminimal";
@@ -139,7 +136,11 @@ bool AnalyserBeats::initialise(TrackPointer tio, int sampleRate, int totalSample
             qDebug() << "Beat sub-version has not changed since previous analysis so not analyzing.";
             m_bShouldAnalyze = false;
         }
+    } else {
+        // If we got here, we think we may want to analyze this track.
+        m_bShouldAnalyze = true;
     }
+
 
     if (!m_bShouldAnalyze) {
         qDebug() << "Beat calculation will not start";
@@ -154,7 +155,7 @@ bool AnalyserBeats::initialise(TrackPointer tio, int sampleRate, int totalSample
         delete m_pVamp;
         m_pVamp = NULL;
     }
-    return m_bShouldAnalyze;;
+    return m_bShouldAnalyze;
 }
 
 void AnalyserBeats::process(const CSAMPLE *pIn, const int iLen) {
