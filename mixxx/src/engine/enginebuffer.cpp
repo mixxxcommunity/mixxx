@@ -416,8 +416,9 @@ void EngineBuffer::ejectTrack() {
         return;
 
     m_pause.lock();
-    m_visualPlayPos->setInvalid();
-    m_bBufferPause = true; 
+    m_bBufferPause = true;
+    m_pTrackSamples->set(0);
+    m_pTrackSampleRate->set(0); 
     TrackPointer pTrack = m_pCurrentTrack;
     m_pCurrentTrack.clear();
     file_srate_old = 0;
@@ -425,8 +426,6 @@ void EngineBuffer::ejectTrack() {
     playButton->set(0.0);
     visualBpm->set(0.0);
     slotControlSeek(0.);
-    m_pTrackSamples->set(0);
-    m_pTrackSampleRate->set(0);
     m_pause.unlock();
 
     emit(trackUnloaded(pTrack));
@@ -756,7 +755,7 @@ void EngineBuffer::process(const CSAMPLE *, const CSAMPLE * pOut, const int iBuf
 
         // release the pauselock
         m_pause.unlock();
-    } else { // if (!!m_bBufferPause && m_pause.tryLock()) {
+    } else { // if (!m_bBufferPause && m_pause.tryLock()) {
         // If we can't get the pause lock then this buffer will be silence.
         bCurBufferPaused = true;
     }

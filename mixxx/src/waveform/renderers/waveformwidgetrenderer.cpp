@@ -110,7 +110,6 @@ void WaveformWidgetRenderer::onPreRender(VSyncThread* vsyncThread) {
     }
 
     //Fetch parameters before rendering in order the display all sub-renderers with the same values
-
     m_rate = m_rateControlObject->get();
     m_rateDir = m_rateDirControlObject->get();
     m_rateRange = m_rateRangeControlObject->get();
@@ -276,7 +275,7 @@ double WaveformWidgetRenderer::transformPositionInRendererWorld( double position
 void WaveformWidgetRenderer::setTrack(TrackPointer track) {
     m_trackInfoObject = track;
     //used to postpone first display until track sample is actually available
-    m_trackSamples = 0.0;
+    m_trackSamples = -1.0;
 
     for( int i = 0; i < m_rendererStack.size(); ++i) {
         m_rendererStack[i]->onSetTrack();

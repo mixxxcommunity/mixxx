@@ -94,7 +94,7 @@ LibraryFeatures::LibraryFeatures(QObject* parent, ConfigObject<ConfigValue>* pCo
     if (ITunesFeature::isSupported() &&
         pConfig->getValueString(ConfigKey("[Library]","ShowITunesLibrary"),"1").toInt()) {
         addFeature(new ITunesFeature(this, m_pTrackCollection));
-	}
+    }
 #ifdef __IPOD__
     if (IPodFeature::isSupported() && 
         pConfig->getValueString(ConfigKey("[Library]","ShowIpod"),"1").toInt()) {

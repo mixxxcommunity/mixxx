@@ -1012,11 +1012,11 @@ void WTrackTableView::loadSelectedTrackToGroup(QString group) {
 
 void WTrackTableView::slotSendToAutoDJ() {
     // append to auto DJ
-    sendToAutoDJ(false);  // bTop = false
+    sendToAutoDJ(false); // bTop = false
 }
 
 void WTrackTableView::slotSendToAutoDJTop() {
-    sendToAutoDJ(true);  // bTop = true
+    sendToAutoDJ(true); // bTop = true
 }
 
 void WTrackTableView::sendToAutoDJ(bool bTop) {

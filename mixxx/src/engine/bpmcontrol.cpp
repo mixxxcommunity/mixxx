@@ -320,7 +320,6 @@ bool BpmControl::syncPhase(EngineBuffer* pOtherEngineBuffer) {
             VisualPlayPosition::getVisualPlayPosition(pOtherEngineBuffer->getGroup())->getEnginePlayPos();
     double dOtherPosition = dOtherLength * dOtherEnginePlayPos;
 
-
     double dThisPrevBeat = m_pBeats->findPrevBeat(dThisPosition);
     double dThisNextBeat = m_pBeats->findNextBeat(dThisPosition);
 

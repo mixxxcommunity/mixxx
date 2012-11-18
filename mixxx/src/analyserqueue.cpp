@@ -327,6 +327,16 @@ void AnalyserQueue::slotUpdateProgress() {
 }
 
 //slot
+void AnalyserQueue::slotAnalyseTrack(TrackPointer tio) {
+    // This slot is called from the decks and and Samplers when the track was loaded.
+    // Don't waste Time, if we have analysis in the database
+
+
+
+    queueAnalyseTrack(tio);
+}
+
+// This is called from the GUI and from the AnalyserQueue thread
 void AnalyserQueue::queueAnalyseTrack(TrackPointer tio) {
     m_qm.lock();
     m_aiCheckPriorities = true;

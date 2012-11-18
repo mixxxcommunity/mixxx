@@ -64,11 +64,11 @@ void WaveformRendererPreroll::draw(QPainter* painter, QPaintEvent* event) {
             index = numberOfSamples + rest;
         }
 
-        polygon.translate(((qreal)index)/samplesPerPixel, 0);
+        polygon.translate(((qreal)index) / samplesPerPixel, 0);
         while (index > 0) {
             painter->drawPolygon(polygon);
-            polygon.translate(-(polyWidth+1), 0);
-            index -= (polyWidth+1) * samplesPerPixel;
+            polygon.translate(-(polyWidth + 1), 0);
+            index -= (polyWidth + 1) * samplesPerPixel;
         }
         painter->restore();
     }

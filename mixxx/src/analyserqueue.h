@@ -20,13 +20,14 @@ class AnalyserQueue : public QThread {
     AnalyserQueue();
     virtual ~AnalyserQueue();
     void stop();
+    void queueAnalyseTrack(TrackPointer tio);
 
     static AnalyserQueue* createDefaultAnalyserQueue(ConfigObject<ConfigValue> *_config);
     static AnalyserQueue* createPrepareViewAnalyserQueue(ConfigObject<ConfigValue> *_config);
     static AnalyserQueue* createAnalyserQueue(QList<Analyser*> analysers);
 
   public slots:
-    void queueAnalyseTrack(TrackPointer tio);
+    void slotAnalyseTrack(TrackPointer tio);
     void slotUpdateProgress();
 
   signals:
