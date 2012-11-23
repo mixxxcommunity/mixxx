@@ -426,7 +426,7 @@ void WaveformWidgetFactory::refresh() {
                 // Calculate play position for the new Frame in following run
                 m_waveformWidgetHolders[i].m_waveformWidget->preRender(m_vsyncThread);
             }
-            qDebug() << "prerender" << m_vsyncThread->elapsed();
+     //       qDebug() << "prerender" << m_vsyncThread->elapsed();
 
             // It may happen that there is an artificially delayed due to
             // anti tearing driver settings
@@ -448,7 +448,7 @@ void WaveformWidgetFactory::refresh() {
                 } else {
                     m_waveformWidgetHolders[i].m_waveformWidget->render();
                 }
-                qDebug() << "render" << i << m_vsyncThread->elapsed();
+       //         qDebug() << "render" << i << m_vsyncThread->elapsed();
             }
 
             // if waveform 1 takes significant longer for render, assume a delay
@@ -484,7 +484,7 @@ void WaveformWidgetFactory::refresh() {
             m_crameCnt = 0.0;
         }
     }
-    qDebug() << "refresh end" << m_vsyncThread->elapsed();
+    //qDebug() << "refresh end" << m_vsyncThread->elapsed();
 
     if (m_vSyncType == 3) { // ST_OML_SYNC_CONTROL
         postRefresh();
@@ -505,7 +505,7 @@ void WaveformWidgetFactory::postRefresh() {
         // Like setting SwapbufferWait = enabled (default) in driver:
         // xorg radeon 1:6.14.99
         // xorg intel 2:2.9.1
-        qDebug() << "postRefresh start" << m_vsyncThread->elapsed();
+   //     qDebug() << "postRefresh start" << m_vsyncThread->elapsed();
         for (int i = 0; i < m_waveformWidgetHolders.size(); i++) {
             QGLWidget* glw = dynamic_cast<QGLWidget*>(
                     m_waveformWidgetHolders[i].m_waveformWidget->getWidget());
@@ -525,7 +525,7 @@ void WaveformWidgetFactory::postRefresh() {
                     m_vsyncThread->postRender(glw, i);
                 }
             }
-            qDebug() << "postRefresh x" << m_vsyncThread->elapsed();
+  //          qDebug() << "postRefresh x" << m_vsyncThread->elapsed();
         }
 
         if (m_vSyncType == 2) { // ST_SGI_VIDEO_SYNC
@@ -536,7 +536,7 @@ void WaveformWidgetFactory::postRefresh() {
             }
         }
     }
-    qDebug() << "postRefresh end" << m_vsyncThread->elapsed();
+ //   qDebug() << "postRefresh end" << m_vsyncThread->elapsed();
     m_vsyncThread->vsyncSlotFinished();
 }
 

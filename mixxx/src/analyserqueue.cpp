@@ -29,7 +29,7 @@
 AnalyserQueue::AnalyserQueue() :
     m_aq(),
     m_exit(false),
-    m_aiCheckPriorities(false),
+    m_checkPriorities(false),
     m_analyserTpQ(),
     m_loadedTpQ(),
     m_qm(),
@@ -43,19 +43,47 @@ void AnalyserQueue::addAnalyser(Analyser* an) {
 }
 
 // This is called from the AnalyserQueue thread
-bool AnalyserQueue::isLoadedTrackWaiting() {
+bool AnalyserQueue::isLoadedTrackWaiting(TrackPointer tio) {
     QMutexLocker queueLocker(&m_qm);
 
     const PlayerInfo& info = PlayerInfo::Instance();
     TrackPointer pTrack;
-    QMutableListIterator<TrackPointer> it(m_analyserTpQ);
-    while (it.hasNext()) {
-        TrackPointer& pTrack = it.next();
-        if (info.isTrackLoaded(pTrack)) {
-            return true;
+    bool trackWaiting = false;
+    QMutableListIterator<TrackPointer> itl(m_loadedTpQ);
+    while (itl.hasNext()) {
+        TrackPointer& pTrack = itl.next();
+        if (!pTrack) {
+            itl.remove();
+            continue;
+        }
+        if (!trackWaiting) {
+            trackWaiting = info.isTrackLoaded(pTrack);
+        }
+        // Initialize waveforms for all other new tracks
+        // and remove them from queue if already analysed
+        // This avoids waiting for a running analysis for those tracks.
+        if (pTrack->getAnalyserProgress() == -1) {
+            // Load stored analysis
+            QListIterator<Analyser*> ita(m_aq);
+            bool processTrack = false;
+            while (ita.hasNext()) {
+                // Make sure not to short-circuit initialise(...)
+                if (ita.next()->loadStored(pTrack)) {
+                    processTrack = true;
+                }
+            }
+            if (!processTrack) {
+                emitUpdateProgress(pTrack, 1000);
+                itl.remove();
+            } else {
+                emitUpdateProgress(pTrack, 0);
+            }
         }
     }
-    return false;
+    if (info.isTrackLoaded(tio)) {
+        return false;
+    }
+    return trackWaiting;
 }
 
 // This is called from the AnalyserQueue thread
@@ -70,46 +98,10 @@ TrackPointer AnalyserQueue::dequeueNextBlocking() {
         }
     }
 
-    const PlayerInfo& info = PlayerInfo::Instance();
     TrackPointer pLoadTrack;
-    QMutableListIterator<TrackPointer> itl(m_loadedTpQ);
-    while (itl.hasNext()) {
-        TrackPointer& pTrack = itl.next();
-        if (!pTrack) {
-            itl.remove();
-            continue;
-        }
-        // Dequeue fist track
-        if (!pLoadTrack) {
-            // Prioritize tracks that are loaded.
-            if (info.isTrackLoaded(pTrack)) {
-                qDebug() << "Prioritizing" << pTrack->getTitle() << pTrack->getLocation();
-                pLoadTrack = pTrack;
-                itl.remove();
-            }
-        } else {
-            // Initialize waveforms for all other new tracks
-            if (pTrack->getAnalyserProgress() == -1) {
-                // Load stored analysis
-                QListIterator<Analyser*> ita(m_aq);
-                bool processTrack = false;
-                while (ita.hasNext()) {
-                    // Make sure not to short-circuit initialise(...)
-                    if (ita.next()->loadStored(pTrack)) {
-                        processTrack = true;
-                    }
-                }
-                if (!processTrack) {
-                    emitUpdateProgress(1000);
-                    itl.remove();
-                } else {
-                    emitUpdateProgress(0);
-                }
-            }
-        }
-    }
-
-    if (!pLoadTrack && m_analyserTpQ.size() > 0) {
+    if (!m_loadedTpQ.isEmpty()) {
+        pLoadTrack = m_loadedTpQ.dequeue();
+    } else if (!m_analyserTpQ.isEmpty()) {
         pLoadTrack = m_analyserTpQ.dequeue();
     }
 
@@ -186,7 +178,7 @@ bool AnalyserQueue::doAnalysis(TrackPointer tio, SoundSourceProxy *pSoundSource)
         if (m_progressInfo.track_progress != progress) {
             if (progressUpdateInhibitTimer.elapsed() > 60) {
                 // Inhibit Updates for 60 milliseconds
-                emitUpdateProgress(progress);
+                emitUpdateProgress(tio, progress);
                 progressUpdateInhibitTimer.start();
             }
         }
@@ -199,9 +191,9 @@ bool AnalyserQueue::doAnalysis(TrackPointer tio, SoundSourceProxy *pSoundSource)
         //QThread::usleep(10);
 
         //has something new entered the queue?
-        if (m_aiCheckPriorities) {
-            m_aiCheckPriorities = false;
-            if (!PlayerInfo::Instance().isTrackLoaded(tio) && isLoadedTrackWaiting()) {
+        if (m_checkPriorities) {
+            m_checkPriorities = false;
+            if (isLoadedTrackWaiting(tio)) {
                 qDebug() << "Interrupting analysis to give preference to a loaded track.";
                 dieflag = true;
                 cancelled = true;
@@ -228,8 +220,7 @@ void AnalyserQueue::stop() {
 }
 
 void AnalyserQueue::run() {
-
-    unsigned static id = 0; //the id of this thread, for debugging purposes //XXX copypasta (should factor this out somehow), -kousu 2/2009
+    unsigned static id = 0; //the id of this thread, for debugging purposes
     QThread::currentThread()->setObjectName(QString("AnalyserQueue %1").arg(++id));
 
     // If there are no analyzers, don't waste time running.
@@ -270,44 +261,33 @@ void AnalyserQueue::run() {
             }
         }
 
-        m_progressInfo.current_track = nextTrack;
         m_qm.lock();
         m_progressInfo.queue_size = m_analyserTpQ.size();
         m_qm.unlock();
 
         if (processTrack) {
-            if (!PlayerInfo::Instance().isTrackLoaded(nextTrack) && isLoadedTrackWaiting()) {
-                qDebug() << "Delaying track analysis because track is not loaded -- requeuing";
+            emitUpdateProgress(nextTrack, 0);
+            bool completed = doAnalysis(nextTrack, pSoundSource);
+            if (!completed) {
+                //This track was cancelled
                 QListIterator<Analyser*> itf(m_aq);
                 while (itf.hasNext()) {
                     itf.next()->cleanup(nextTrack);
                 }
                 queueAnalyseTrack(nextTrack);
+                emitUpdateProgress(nextTrack, 0);
             } else {
-                emitUpdateProgress(0);
-                bool completed = doAnalysis(nextTrack, pSoundSource);
-
-                if (!completed) {
-                    //This track was cancelled
-                    QListIterator<Analyser*> itf(m_aq);
-                    while (itf.hasNext()) {
-                        itf.next()->cleanup(nextTrack);
-                    }
-                    queueAnalyseTrack(nextTrack);
-                    emitUpdateProgress(0);
-                } else {
-                    // 100% - FINALISE_PERCENT finished
-                    // This takes around 3 sec on a Atom Netbook
-                    QListIterator<Analyser*> itf(m_aq);
-                    while (itf.hasNext()) {
-                        itf.next()->finalise(nextTrack);
-                    }
-                    emitUpdateProgress(1000); // 100%
+                // 100% - FINALISE_PERCENT finished
+                // This takes around 3 sec on a Atom Netbook
+                QListIterator<Analyser*> itf(m_aq);
+                while (itf.hasNext()) {
+                    itf.next()->finalise(nextTrack);
                 }
+                emitUpdateProgress(nextTrack, 1000); // 100%
             }
         } else {
             qDebug() << "Skipping track analysis because no analyzer initialized.";
-            emitUpdateProgress(1000); // 100%
+            emitUpdateProgress(nextTrack, 1000); // 100%
         }
 
         delete pSoundSource;
@@ -323,8 +303,10 @@ void AnalyserQueue::run() {
 }
 
 // This is called from the AnalyserQueue thread
-void AnalyserQueue::emitUpdateProgress(int progress) {
+void AnalyserQueue::emitUpdateProgress(TrackPointer tio, int progress) {
+    m_progressInfo.current_track = tio;
     m_progressInfo.track_progress = progress; 
+    qDebug() << "AnalyserQueue::emitUpdateProgress" << tio.data() << progress;
     if (!m_exit) {    
         emit(updateProgress());
         // Wait for slotUpdateProgress() is finished in the Main Thread
@@ -353,7 +335,7 @@ void AnalyserQueue::slotAnalyseTrack(TrackPointer tio) {
     // This slot is called from the decks and and samplers when the track was loaded.
     // Don't waste Time, if we have analysis in the database
     m_qm.lock();
-    m_aiCheckPriorities = true;
+    m_checkPriorities = true;
     if (!m_loadedTpQ.contains(tio)) {
         m_loadedTpQ.enqueue(tio);
         m_qwait.wakeAll();

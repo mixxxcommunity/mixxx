@@ -20,7 +20,7 @@ public:
         Q_UNUSED(tio); Q_UNUSED(sampleRate); Q_UNUSED(totalSamples); // silence warnings
         return false;
     }
-    virtual bool loadStored(TrackPointer tio) {
+    virtual bool loadStored(TrackPointer tio) const {
         Q_UNUSED(tio); // silence warnings
         return false;
     }

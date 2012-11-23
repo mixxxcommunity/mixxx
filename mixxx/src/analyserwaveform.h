@@ -85,7 +85,7 @@ class AnalyserWaveform : public Analyser {
     virtual ~AnalyserWaveform();
 
     bool initialise(TrackPointer tio, int sampleRate, int totalSamples);
-
+    bool loadStored(TrackPointer tio);
     void process(const CSAMPLE *buffer, const int bufferLength);
     void cleanup(TrackPointer tio);
     void finalise(TrackPointer tio);

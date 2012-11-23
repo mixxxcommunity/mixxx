@@ -4,13 +4,13 @@
 #include "configobject.h"
 #include "trackinfoobject.h"
 #include "baseplayer.h"
-#include "analyserqueue.h"
 #include "engine/enginechannel.h"
 
 class EngineMaster;
 class ControlObject;
 class ControlPotmeter;
 class ControlObjectThreadMain;
+class AnalyserQueue;
 
 class BaseTrackPlayer : public BasePlayer {
     Q_OBJECT

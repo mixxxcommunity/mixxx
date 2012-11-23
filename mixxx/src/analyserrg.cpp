@@ -34,6 +34,10 @@ bool AnalyserGain::initialise(TrackPointer tio, int sampleRate, int totalSamples
     return true;
 }
 
+bool AnalyserGain::loadStored(TrackPointer tio) {
+
+}
+
 void AnalyserGain::cleanup(TrackPointer tio) {
     m_bStepControl = false;
     Q_UNUSED(tio);

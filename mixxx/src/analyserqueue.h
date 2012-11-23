@@ -52,13 +52,13 @@ class AnalyserQueue : public QThread {
 
     QList<Analyser*> m_aq;
 
-    bool isLoadedTrackWaiting();
+    bool isLoadedTrackWaiting(TrackPointer tio);
     TrackPointer dequeueNextBlocking();
     bool doAnalysis(TrackPointer tio, SoundSourceProxy *pSoundSource);
-    void emitUpdateProgress(int progress);
+    void emitUpdateProgress(TrackPointer tio, int progress);
 
     bool m_exit;
-    QAtomicInt m_aiCheckPriorities;
+    bool m_checkPriorities;
 
     // The processing queue and associated mutex
     QQueue<TrackPointer> m_analyserTpQ;

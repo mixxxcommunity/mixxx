@@ -186,7 +186,7 @@ void VSyncThread::run() {
                 //  glXWaitForSbcOML (Display *dpy, GLXDrawable drawable, int64_t target_sbc, int64_t *ust, int64_t *msc, int64_t *sbc);
                 ret = glXGetSyncValuesOML(m_dpy, m_drawable,
                         &ust, &msc, &sbc);
-                qDebug() << "glXWaitForSbcOML 1" << ust << msc << sbc << ret << m_timer.elapsed();
+            //    qDebug() << "glXWaitForSbcOML 1" << ust << msc << sbc << ret << m_timer.elapsed();
 
                 // ret = glXSwapBuffersMscOML(m_dpy, m_drawable,
                 //        msc+2, 0, 0);
@@ -194,7 +194,7 @@ void VSyncThread::run() {
 
                 ret = glXWaitForSbcOML(m_dpy, m_drawable,
                         0,  &ust, &msc, &sbc);
-                qDebug() << "glXWaitForSbcOML 2" << ust << msc << sbc << ret << m_timer.elapsed();
+            //    qDebug() << "glXWaitForSbcOML 2" << ust << msc << sbc << ret << m_timer.elapsed();
                 ret = glXGetSyncValuesOML(m_dpy, m_drawable,
                         &ust, &msc, &sbc);
                 qDebug() << "glXWaitForSbcOML 3" << ust << msc << sbc << ret << m_timer.elapsed();
@@ -226,7 +226,7 @@ void VSyncThread::run() {
             m_usWait = m_usSyncTime + (usRest % m_usSyncTime);
             emit(vsync1()); // renders the new waveform.
             m_sema.acquire();
-            qDebug() << "ST_TIMER                      " << usLast << usRest;
+ //           qDebug() << "ST_TIMER                      " << usLast << usRest;
         }
     }
 }
@@ -380,7 +380,7 @@ void VSyncThread::setupSync(QGLWidget* glw, int index) {
             const QX11Info *xinfo = qt_x11Info(glw);
             glXGetMscRateOML(xinfo->display(), glXGetCurrentDrawable(), &numerator, &denominator);
             m_displayFrameRate = (double)numerator/denominator;
-            qDebug() << "glXGetMscRateOML" << m_displayFrameRate << "Hz";
+     //       qDebug() << "glXGetMscRateOML" << m_displayFrameRate << "Hz";
             setUsSyncTime(m_usSyncTime);
         }
     }
@@ -389,7 +389,7 @@ void VSyncThread::setupSync(QGLWidget* glw, int index) {
 
 void VSyncThread::postRender(QGLWidget* glw, int index) {
     // No need for glw->makeCurrent() here.
-    qDebug() << "postRender" << m_timer.elapsed();
+//    qDebug() << "postRender" << m_timer.elapsed();
 #if defined(__APPLE__)
     glw->swapBuffers();
 #elif defined(__WINDOWS__)
@@ -404,7 +404,7 @@ void VSyncThread::postRender(QGLWidget* glw, int index) {
         int64_t sbc; // Current swap counter
         glXGetSyncValuesOML(xinfo->display(), glw->winId(),
                 &ust, &msc, &sbc);
-        qDebug() << "glXGetSyncValuesOML 17" << ust << msc << sbc << m_timer.elapsed();
+ //       qDebug() << "glXGetSyncValuesOML 17" << ust << msc << sbc << m_timer.elapsed();
         // "glXSwapBuffersMscOML(Display *dpy, GLXDrawable drawable, int64_t target_msc, int64_t divisor, int64_t remainder);"
         // Returns the current sbc + 1 if successful, if not, it returns a random value and the swap takes place immediately
         //     This happens if you set the environment variable vsync_mode = 0
@@ -413,7 +413,7 @@ void VSyncThread::postRender(QGLWidget* glw, int index) {
                 0, m_interval, 0);
         glXGetSyncValuesOML(xinfo->display(), glw->winId(),
                 &ust, &msc, &sbc);
-        qDebug() << "glXGetSyncValuesOML 17" << ust << msc << sbc << ret;
+ //       qDebug() << "glXGetSyncValuesOML 17" << ust << msc << sbc << ret;
         if (index == 0) {
             m_dpy = xinfo->display();
             m_drawable = glw->winId();

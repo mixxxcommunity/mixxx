@@ -16,7 +16,6 @@ class AnalyserBeats: public Analyser {
   public:
     AnalyserBeats(ConfigObject<ConfigValue> *_config);
     virtual ~AnalyserBeats();
-
     bool initialise(TrackPointer tio, int sampleRate, int totalSamples);
     void process(const CSAMPLE *pIn, const int iLen);
     void cleanup(TrackPointer tio);
