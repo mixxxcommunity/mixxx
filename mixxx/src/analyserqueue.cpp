@@ -21,7 +21,7 @@
 
 #include <typeinfo>
 
-#define FINALISE_PERCENT 0 // in 0.1%,
+#define FINALISE_PERCENT 100 // in 0.1%,
                            // 0 for no progress during finalize
                            // 100 for 10% step after finalise
 
@@ -62,13 +62,14 @@ bool AnalyserQueue::isLoadedTrackWaiting(TrackPointer tio) {
         // Initialize waveforms for all other new tracks
         // and remove them from queue if already analysed
         // This avoids waiting for a running analysis for those tracks.
-        if (pTrack->getAnalyserProgress() == -1) {
+        int progress = pTrack->getAnalyserProgress();
+        if (progress < 0) {
             // Load stored analysis
             QListIterator<Analyser*> ita(m_aq);
             bool processTrack = false;
             while (ita.hasNext()) {
                 // Make sure not to short-circuit initialise(...)
-                if (ita.next()->loadStored(pTrack)) {
+                if (!ita.next()->loadStored(pTrack)) {
                     processTrack = true;
                 }
             }
@@ -78,6 +79,8 @@ bool AnalyserQueue::isLoadedTrackWaiting(TrackPointer tio) {
             } else {
                 emitUpdateProgress(pTrack, 0);
             }
+        } else if (progress == 1000) {
+            itl.remove();
         }
     }
     if (info.isTrackLoaded(tio)) {
@@ -256,8 +259,12 @@ void AnalyserQueue::run() {
         bool processTrack = false;
         while (it.hasNext()) {
             // Make sure not to short-circuit initialise(...)
-            if (it.next()->initialise(nextTrack, iSampleRate, iNumSamples)) {
+            Analyser* a = it.next();
+            if (a->initialise(nextTrack, iSampleRate, iNumSamples)) {
+                qDebug() << &a << "initialise() == true";
                 processTrack = true;
+            } else {
+                qDebug() << &a << "initialise() == false";
             }
         }
 

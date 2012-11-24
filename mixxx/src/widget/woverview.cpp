@@ -33,7 +33,7 @@ WOverview::WOverview(const char *pGroup, ConfigObject<ConfigValue>* pConfig, QWi
     : WWidget(parent),
       m_pGroup(pGroup),
       m_pConfig(pConfig),
-      m_analyserProgress(0) {
+      m_analyserProgress(-1) {
     m_iPos = 0;
     m_bDrag = false;
 
@@ -254,10 +254,14 @@ void WOverview::onMarkRangeChange(double /*v*/) {
 bool WOverview::drawNextPixmapPart() {
     //qDebug() << "WOverview::drawNextPixmapPart() - m_waveform" << m_waveform;
 
+    if (!m_waveform) {
+        return false;
+    }
+
     m_visualSamplesByPixel = static_cast<double>(m_waveform->getDataSize()) /
             static_cast<double>(width());
 
-    if (!m_waveform || m_visualSamplesByPixel < 0.0001) {
+    if (m_visualSamplesByPixel < 0.0001) {
         return false;
     }
 
@@ -345,8 +349,8 @@ bool WOverview::drawNextPixmapPart() {
     //evaluate waveform ratio peak
     currentCompletion = m_actualCompletion;
     for( ; currentCompletion < nextCompletion; currentCompletion += 2) {
-        m_waveformPeak = math_max( m_waveformPeak, (float)m_waveform->getAll(currentCompletion+1));
-        m_waveformPeak = math_max( m_waveformPeak, (float)m_waveform->getAll(currentCompletion));
+        m_waveformPeak = math_max(m_waveformPeak, (float)m_waveform->getAll(currentCompletion+1));
+        m_waveformPeak = math_max(m_waveformPeak, (float)m_waveform->getAll(currentCompletion));
     }
 
     m_actualCompletion = nextCompletion;
@@ -363,7 +367,7 @@ bool WOverview::drawNextPixmapPart() {
 
 void WOverview::mouseMoveEvent(QMouseEvent * e)
 {
-    m_iPos = e->x()-m_iStartMousePos;
+    m_iPos = e->x();
     m_iPos = math_max(1,math_min(m_iPos,width()-1));
 
     //qDebug() << "WOverview::mouseMoveEvent" << e->pos() << m_iPos;
@@ -390,8 +394,6 @@ void WOverview::mouseReleaseEvent(QMouseEvent * e)
 void WOverview::mousePressEvent(QMouseEvent * e)
 {
     //qDebug() << "WOverview::mousePressEvent" << e->pos();
-
-    m_iStartMousePos = 0;
     mouseMoveEvent(e);
     m_bDrag = true;
 }
@@ -401,8 +403,9 @@ void WOverview::paintEvent(QPaintEvent *)
     QPainter painter(this);
     painter.resetTransform();
     // Fill with transparent pixels
-    if( !m_backgroundPixmap.isNull())
+    if (!m_backgroundPixmap.isNull()) {
         painter.drawPixmap(rect(), m_backgroundPixmap);
+    }
 
     //Display viewer contour if end of track
     if (m_endOfTrack) {
@@ -418,6 +421,14 @@ void WOverview::paintEvent(QPaintEvent *)
     //Draw waveform pixmap
     WaveformWidgetFactory* widgetFactory = WaveformWidgetFactory::instance();
     if (m_waveform) {
+        if (m_analyserProgress <= 50) { // remove text after progress by wf is recognizable (5%)
+            // We have a valid m_waveform, so here we have a track in analysis queue
+            QColor lowColor = m_signalColors.getLowColor();
+            lowColor.setAlphaF(0.5);
+            QPen lowColorPen( QBrush(lowColor), 1.25, Qt::SolidLine, Qt::RoundCap);
+            painter.setPen(lowColorPen);
+            painter.drawText(1, 12, tr("Loading track .."));
+        }
         painter.setOpacity(1.0);
 
         bool normalize = widgetFactory->isOverviewNormalized();
