@@ -323,8 +323,16 @@ bool WOverview::drawNextPixmapPart() {
     float pixelPosition = pixelStartPosition;
     for( ; currentCompletion < nextCompletion; currentCompletion += 2) {
         painter.setPen( lowColorPen);
-        painter.drawLine( QPointF(pixelPosition, - m_waveform->getLow(currentCompletion+1)),
-                          QPointF(pixelPosition, m_waveform->getLow(currentCompletion)));
+        unsigned char lowPos = m_waveform->getLow(currentCompletion);
+        unsigned char lowNeg = m_waveform->getLow(currentCompletion+1);
+        if (lowPos || lowNeg) {
+            painter.drawLine(QPointF(pixelPosition, -lowNeg),
+                             QPointF(pixelPosition, lowPos));
+        } else {
+            // Draw flat line when silence
+            painter.drawLine(QPointF(pixelPosition, 0),
+                             QPointF(pixelPosition, 1));
+        }
         pixelPosition += 2.0*pixelByVisualSamples;
     }
 
