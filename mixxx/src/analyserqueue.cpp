@@ -30,8 +30,7 @@ AnalyserQueue::AnalyserQueue() :
     m_aq(),
     m_exit(false),
     m_checkPriorities(false),
-    m_analyserTpQ(),
-    m_loadedTpQ(),
+    m_tioq(),
     m_qm(),
     m_qwait() {
     connect(this, SIGNAL(updateProgress()),
@@ -49,17 +48,17 @@ bool AnalyserQueue::isLoadedTrackWaiting(TrackPointer tio) {
     const PlayerInfo& info = PlayerInfo::Instance();
     TrackPointer pTrack;
     bool trackWaiting = false;
-    QMutableListIterator<TrackPointer> itl(m_loadedTpQ);
-    while (itl.hasNext()) {
-        TrackPointer& pTrack = itl.next();
+    QMutableListIterator<TrackPointer> it(m_tioq);
+    while (it.hasNext()) {
+        TrackPointer& pTrack = it.next();
         if (!pTrack) {
-            itl.remove();
+            it.remove();
             continue;
         }
         if (!trackWaiting) {
             trackWaiting = info.isTrackLoaded(pTrack);
         }
-        // Initialize waveforms for all other new tracks
+        // try to load waveforms for all new tracks first
         // and remove them from queue if already analysed
         // This avoids waiting for a running analysis for those tracks.
         int progress = pTrack->getAnalyserProgress();
@@ -68,19 +67,18 @@ bool AnalyserQueue::isLoadedTrackWaiting(TrackPointer tio) {
             QListIterator<Analyser*> ita(m_aq);
             bool processTrack = false;
             while (ita.hasNext()) {
-                // Make sure not to short-circuit initialise(...)
                 if (!ita.next()->loadStored(pTrack)) {
                     processTrack = true;
                 }
             }
             if (!processTrack) {
                 emitUpdateProgress(pTrack, 1000);
-                itl.remove();
+                it.remove();
             } else {
                 emitUpdateProgress(pTrack, 0);
             }
         } else if (progress == 1000) {
-            itl.remove();
+            it.remove();
         }
     }
     if (info.isTrackLoaded(tio)) {
@@ -89,10 +87,14 @@ bool AnalyserQueue::isLoadedTrackWaiting(TrackPointer tio) {
     return trackWaiting;
 }
 
+
+
+
+
 // This is called from the AnalyserQueue thread
 TrackPointer AnalyserQueue::dequeueNextBlocking() {
     m_qm.lock();
-    if (m_analyserTpQ.isEmpty() && m_loadedTpQ.isEmpty()) {
+    if (m_tioq.isEmpty()) {
         m_qwait.wait(&m_qm);
 
         if (m_exit) {
@@ -101,11 +103,26 @@ TrackPointer AnalyserQueue::dequeueNextBlocking() {
         }
     }
 
+    const PlayerInfo& info = PlayerInfo::Instance();
     TrackPointer pLoadTrack;
-    if (!m_loadedTpQ.isEmpty()) {
-        pLoadTrack = m_loadedTpQ.dequeue();
-    } else if (!m_analyserTpQ.isEmpty()) {
-        pLoadTrack = m_analyserTpQ.dequeue();
+    QMutableListIterator<TrackPointer> it(m_tioq);
+    while (it.hasNext()) {
+        TrackPointer& pTrack = it.next();
+        if (!pTrack) {
+            it.remove();
+            continue;
+        }
+        // Prioritize tracks that are loaded.
+        if (info.isTrackLoaded(pTrack)) {
+            qDebug() << "Prioritizing" << pTrack->getTitle() << pTrack->getLocation();
+            pLoadTrack = pTrack;
+            it.remove();
+            break;
+        }
+    }
+
+    if (!pLoadTrack && !m_tioq.isEmpty()) {
+        pLoadTrack = m_tioq.dequeue();
     }
 
     m_qm.unlock();
@@ -259,17 +276,13 @@ void AnalyserQueue::run() {
         bool processTrack = false;
         while (it.hasNext()) {
             // Make sure not to short-circuit initialise(...)
-            Analyser* a = it.next();
-            if (a->initialise(nextTrack, iSampleRate, iNumSamples)) {
-                qDebug() << &a << "initialise() == true";
+            if (it.next()->initialise(nextTrack, iSampleRate, iNumSamples)) {
                 processTrack = true;
-            } else {
-                qDebug() << &a << "initialise() == false";
             }
         }
 
         m_qm.lock();
-        m_progressInfo.queue_size = m_analyserTpQ.size();
+        m_progressInfo.queue_size = m_tioq.size();
         m_qm.unlock();
 
         if (processTrack) {
@@ -300,13 +313,13 @@ void AnalyserQueue::run() {
         delete pSoundSource;
 
         m_qm.lock();
-        m_progressInfo.queue_size = m_analyserTpQ.size();
+        m_progressInfo.queue_size = m_tioq.size();
         m_qm.unlock();
         if (m_progressInfo.queue_size == 0) {
             emit(queueEmpty()); // emit asynchrony for no deadlock
         }
     }
-    emit(queueEmpty()); // emit in case of exit;  
+    emit(queueEmpty()); // emit in case of exit;
 }
 
 // This is called from the AnalyserQueue thread
@@ -340,21 +353,15 @@ void AnalyserQueue::slotUpdateProgress() {
 //slot
 void AnalyserQueue::slotAnalyseTrack(TrackPointer tio) {
     // This slot is called from the decks and and samplers when the track was loaded.
-    // Don't waste Time, if we have analysis in the database
-    m_qm.lock();
     m_checkPriorities = true;
-    if (!m_loadedTpQ.contains(tio)) {
-        m_loadedTpQ.enqueue(tio);
-        m_qwait.wakeAll();
-    }
-    m_qm.unlock();
+    queueAnalyseTrack(tio);
 }
 
 // This is called from the GUI and from the AnalyserQueue thread
 void AnalyserQueue::queueAnalyseTrack(TrackPointer tio) {
     m_qm.lock();
-    if (!m_analyserTpQ.contains(tio)) {
-        m_analyserTpQ.enqueue(tio);
+    if (!m_tioq.contains(tio)) {
+        m_tioq.enqueue(tio);
         m_qwait.wakeAll();
     }
     m_qm.unlock();

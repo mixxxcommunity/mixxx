@@ -61,8 +61,7 @@ class AnalyserQueue : public QThread {
     bool m_checkPriorities;
 
     // The processing queue and associated mutex
-    QQueue<TrackPointer> m_analyserTpQ;
-    QQueue<TrackPointer> m_loadedTpQ;
+    QQueue<TrackPointer> m_tioq;
     QMutex m_qm;
     QWaitCondition m_qwait;
     struct progress_info m_progressInfo;

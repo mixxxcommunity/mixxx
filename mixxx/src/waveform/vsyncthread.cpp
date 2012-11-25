@@ -51,6 +51,21 @@ VSyncThread::VSyncThread(QWidget* parent)
 
 #else
     m_target_msc = 0;
+
+    glXGetVideoSyncSGI = NULL;
+    glXWaitVideoSyncSGI = NULL;
+    glXSwapIntervalSGI = NULL;
+
+    glXSwapIntervalEXT = NULL;
+
+    glXGetSyncValuesOML = NULL;
+    glXGetMscRateOML = NULL;
+    glXSwapBuffersMscOML = NULL;
+    glXWaitForMscOML = NULL;
+    glXWaitForSbcOML = NULL;
+
+    glXSwapIntervalMESA = NULL;
+
 #endif
 }
 

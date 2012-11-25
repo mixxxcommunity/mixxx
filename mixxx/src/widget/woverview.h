@@ -52,8 +52,8 @@ protected:
 
 public slots:
     void setValue(double);
-
     void slotLoadNewTrack(TrackPointer pTrack);
+    void slotTrackLoaded(TrackPointer pTrack);
     void slotUnloadTrack(TrackPointer pTrack);
 
 signals:
@@ -125,6 +125,7 @@ private slots:
     float m_b;
 
     int m_analyserProgress; // in 0.1%
+    bool m_trackLoaded;
 };
 
 #endif

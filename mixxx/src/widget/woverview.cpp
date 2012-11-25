@@ -33,9 +33,10 @@ WOverview::WOverview(const char *pGroup, ConfigObject<ConfigValue>* pConfig, QWi
     : WWidget(parent),
       m_pGroup(pGroup),
       m_pConfig(pConfig),
-      m_analyserProgress(-1) {
-    m_iPos = 0;
-    m_bDrag = false;
+      m_bDrag(false),
+      m_iPos(0),
+      m_analyserProgress(-1),
+      m_trackLoaded(false) {
 
     m_totalGainControl = new ControlObjectThreadMain(
                 ControlObject::getControl( ConfigKey(m_pGroup,"total_gain")));
@@ -194,6 +195,7 @@ void WOverview::slotLoadNewTrack(TrackPointer pTrack) {
     m_waveformPixmap.fill(QColor(0, 0, 0, 0));
     m_waveformPeak = -1.0;
     m_pixmapDone = false;
+    m_trackLoaded = false;
 
     if (pTrack) {
         m_pCurrentTrack = pTrack;
@@ -212,6 +214,13 @@ void WOverview::slotLoadNewTrack(TrackPointer pTrack) {
     update();
 }
 
+void WOverview::slotTrackLoaded(TrackPointer pTrack) {
+    if (m_pCurrentTrack == pTrack) {
+        m_trackLoaded = true;
+        update();
+    }
+}
+
 void WOverview::slotUnloadTrack(TrackPointer /*pTrack*/) {
     if (m_pCurrentTrack) {
         disconnect(m_pCurrentTrack.data(), SIGNAL(waveformSummaryUpdated()),
@@ -225,6 +234,7 @@ void WOverview::slotUnloadTrack(TrackPointer /*pTrack*/) {
     m_visualSamplesByPixel = 0.0;
     m_waveformPeak = -1.0;
     m_pixmapDone = false;
+    m_trackLoaded = false;
 
     update();
 }
@@ -435,7 +445,11 @@ void WOverview::paintEvent(QPaintEvent *)
             lowColor.setAlphaF(0.5);
             QPen lowColorPen( QBrush(lowColor), 1.25, Qt::SolidLine, Qt::RoundCap);
             painter.setPen(lowColorPen);
-            painter.drawText(1, 12, tr("Loading track .."));
+            if (m_trackLoaded) {
+                painter.drawText(1, 12, tr("Ready to play, analyzing .."));
+            } else {
+                painter.drawText(1, 12, tr("Loading track .."));
+            }
         }
         painter.setOpacity(1.0);
 
