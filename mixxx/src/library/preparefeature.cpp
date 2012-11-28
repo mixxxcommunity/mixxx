@@ -41,6 +41,7 @@ QIcon PrepareFeature::getIcon() {
 void PrepareFeature::bindWidget(WLibrarySidebar* sidebarWidget,
                                 WLibrary* libraryWidget,
                                 MixxxKeyboard* keyboard) {
+    Q_UNUSED(sidebarWidget);
     m_pPrepareView = new DlgPrepare(libraryWidget,
                                               m_pConfig,
                                               m_pTrackCollection);
@@ -162,7 +163,7 @@ void PrepareFeature::slotTrackAnalysisProgress(TrackPointer pTrack, int progress
 }
 
 void PrepareFeature::slotTrackAnalysisFinished(int size) {
-    //qDebug() << this << "trackAnalysisFinished" << pTrack->getInfo();
+    //qDebug() << this << "trackAnalysisFinished";
     emit(trackAnalysisFinished(size));
 }
 
@@ -179,7 +180,7 @@ void PrepareFeature::cleanupAnalyser() {
         m_pAnalyserQueue->stop();
         m_pAnalyserQueue->deleteLater();
         m_pAnalyserQueue = NULL;
-        //Restore old BPM detection setting for preferences...
+        // Restore old BPM detection setting for preferences...
         m_pConfig->set(ConfigKey("[BPM]","BPMDetectionEnabled"), ConfigValue(m_iOldBpmEnabled));
     }
 }

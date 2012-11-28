@@ -57,7 +57,7 @@ class DlgPrepare : public QWidget, public Ui::DlgPrepare, public virtual Abstrac
     WPrepareLibraryTableView* m_pPrepareLibraryTableView;
     PrepareLibraryTableModel* m_pPrepareLibraryTableModel;
     WPrepareCratesTableView* m_pPrepareCratesTableView;
-    int m_tracksInCueue;
+    int m_tracksInQueue;
     int m_currentTrack;
 };
 

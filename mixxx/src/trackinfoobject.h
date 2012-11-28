@@ -18,6 +18,7 @@
 #ifndef TRACKINFOOBJECT_H
 #define TRACKINFOOBJECT_H
 
+#include <QAtomicInt>
 #include <QList>
 #include <QDateTime>
 #include <QObject>
@@ -68,7 +69,7 @@ public:
     TrackInfoObject(const QString& file="", bool parseHeader=true);
     // Initialize track with a QFileInfo class
     TrackInfoObject(const QFileInfo& fileInfo, bool parseHeader=true);
-    // Creates a new track given information from the xml file. 
+    // Creates a new track given information from the xml file.
     TrackInfoObject(const QDomNode &);
     virtual ~TrackInfoObject();
 
@@ -223,10 +224,11 @@ public:
     Waveform* getWaveformSummary();
     const Waveform* getWaveformSummary() const;
     void waveformSummaryNew();
+
     void setAnalyserProgress(int progress);
     int getAnalyserProgress() const;
 
-    // Save the cue point (in samples... I think) 
+    /** Save the cue point (in samples... I think) */
     void setCuePoint(float cue);
     // Get saved the cue point 
     float getCuePoint();

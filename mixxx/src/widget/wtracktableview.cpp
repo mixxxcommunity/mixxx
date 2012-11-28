@@ -684,7 +684,7 @@ void WTrackTableView::onShow() {
 
 void WTrackTableView::mouseMoveEvent(QMouseEvent* pEvent) {
     // Only use this for drag and drop if the LeftButton is pressed we need to
-    // check for this because mousetracking is activated and this function is 
+    // check for this because mousetracking is activated and this function is
     // called everytime the mouse is moved -- kain88 May 2012
     if (pEvent->buttons() != Qt::LeftButton) {
         // Needed for mouse-tracking to fire entered() events. If we call this
@@ -725,7 +725,6 @@ void WTrackTableView::mouseMoveEvent(QMouseEvent* pEvent) {
     drag->setPixmap(QPixmap(":images/library/ic_library_drag_and_drop.png"));
     drag->exec(Qt::CopyAction);
 }
-
 
 /** Drag enter event, happens when a dragged item hovers over the track table view*/
 void WTrackTableView::dragEnterEvent(QDragEnterEvent * event)
@@ -1064,15 +1063,6 @@ void WTrackTableView::slotReloadTrackMetadata() {
     if (!modelHasCapabilities(TrackModel::TRACKMODELCAPS_RELOADMETADATA)) {
         return;
     }
-
-    // This is not require since replay gain is not adopted on playing tracks
-    //if (QMessageBox::warning(
-    //    NULL, tr("Reload Track Metadata"),
-    //    tr("Reloading track metadata on a loaded track may cause abrupt volume changes. Are you sure?"),
-    //    QMessageBox::Yes | QMessageBox::No,
-    //    QMessageBox::No) == QMessageBox::No) {
-    //    return;
-    //}
 
     QModelIndexList indices = selectionModel()->selectedRows();
 

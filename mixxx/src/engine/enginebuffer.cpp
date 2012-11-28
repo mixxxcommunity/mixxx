@@ -79,7 +79,7 @@ EngineBuffer::EngineBuffer(const char * _group, ConfigObject<ConfigValue> * _con
     m_pScaleST(NULL),
     m_bScalerChanged(false),
     m_bLastBufferPaused(true),
-    m_bBufferPause(true), 
+    m_bBufferPause(true),
     m_fRampValue(0.0),
     m_iRampState(ENGINE_RAMP_NONE),
     m_pDitherBuffer(new CSAMPLE[MAX_BUFFER_LEN]),
@@ -563,7 +563,7 @@ void EngineBuffer::process(const CSAMPLE *, const CSAMPLE * pOut, const int iBuf
         // Update the slipped position
         if (m_bSlipEnabled) {
             m_dSlipPosition += static_cast<double>(iBufferSize) * m_dSlipRate;
-         }
+        }
 
         // Scratching always disables keylock because keylock sounds terrible
         // when not going at a constant rate.

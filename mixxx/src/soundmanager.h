@@ -91,7 +91,7 @@ class SoundManager : public QObject {
     // Requests a buffer in the proper format, if we're prepared to give one.
     QHash<AudioOutput, const CSAMPLE*> requestBuffer(
         QList<AudioOutput> outputs, unsigned long iFramesPerBuffer,
-        SoundDevice *device);
+        SoundDevice *device, double streamTime = 0);
 
     // Used by SoundDevices to "push" any audio from their inputs that they have
     // into the mixing engine.

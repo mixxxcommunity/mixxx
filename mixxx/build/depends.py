@@ -281,7 +281,7 @@ class Qt(Dependence):
             framework_path = os.path.join(qtdir, 'lib')
             if os.path.isdir(framework_path):
                 build.env.Append(LINKFLAGS = "-Wl,-rpath," + framework_path)
-                build.env.Append(LINKFLAGS = "-L," + framework_path)
+                build.env.Append(LINKFLAGS = "-L" + framework_path)
 
         #QtSQLite DLL
         if build.platform_is_windows:
@@ -567,19 +567,14 @@ class MixxxCore(Feature):
 
                    # External Library Features
                    "library/baseexternallibraryfeature.cpp",
+                   "library/baseexternaltrackmodel.cpp",
+                   "library/baseexternalplaylistmodel.cpp",
                    "library/rhythmbox/rhythmboxfeature.cpp",
-                   "library/rhythmbox/rhythmboxtrackmodel.cpp",
-                   "library/rhythmbox/rhythmboxplaylistmodel.cpp",
                    "library/banshee/bansheefeature.cpp",
                    "library/banshee/bansheeplaylistmodel.cpp",
 				   "library/banshee/bansheedbconnection.cpp",
                    "library/itunes/itunesfeature.cpp",
-                   "library/itunes/itunestrackmodel.cpp",
-                   "library/itunes/itunesplaylistmodel.cpp",
                    "library/traktor/traktorfeature.cpp",
-                   "library/traktor/traktortablemodel.cpp",
-                   "library/traktor/traktorplaylistmodel.cpp",
-
 
                    "library/cratefeature.cpp",
                    "library/sidebarmodel.cpp",

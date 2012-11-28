@@ -15,7 +15,9 @@ DlgPrepare::DlgPrepare(QWidget* parent,
         : QWidget(parent),
           m_pConfig(pConfig),
           m_pTrackCollection(pTrackCollection),
-          m_bAnalysisActive(false) {
+          m_bAnalysisActive(false),
+          m_tracksInQueue(0),
+          m_currentTrack(0) {
     setupUi(this);
     m_songsButtonGroup.addButton(radioButtonRecentlyAdded);
     m_songsButtonGroup.addButton(radioButtonAllSongs);
@@ -97,7 +99,7 @@ void DlgPrepare::onShow()
 
 void DlgPrepare::setup(QDomNode node)
 {
-
+    Q_UNUSED(node);
 }
 
 void DlgPrepare::onSearchStarting()
@@ -127,6 +129,7 @@ void DlgPrepare::moveSelection(int delta) {
 
 void DlgPrepare::tableSelectionChanged(const QItemSelection& selected, const QItemSelection& deselected)
 {
+    Q_UNUSED(deselected);
     if (selected == QItemSelection()) //Empty selection
         pushButtonAnalyze->setEnabled(false);
     else
@@ -154,7 +157,7 @@ void DlgPrepare::analyze() {
                 trackIds.append(trackId);
             }
         }
-        m_tracksInCueue = trackIds.count();
+        m_tracksInQueue = trackIds.count();
         m_currentTrack = 1;
         emit(analyzeTracks(trackIds));
     }
@@ -176,7 +179,7 @@ void DlgPrepare::analysisActive(bool bActive) {
 void DlgPrepare::trackAnalysisFinished(int size) {
     qDebug() << "Analysis finished" << size << "tracks left";
     if (size > 0) {
-        m_currentTrack = m_tracksInCueue - size + 1;
+        m_currentTrack = m_tracksInQueue - size + 1;
     }
 }
 
@@ -186,7 +189,7 @@ void DlgPrepare::trackAnalysisProgress(TrackPointer tio, int progress) {
     if (m_bAnalysisActive) {
         QString text = tr("Analyzing %1/%2 %3%").arg(
                 QString::number(m_currentTrack),
-                QString::number(m_tracksInCueue),
+                QString::number(m_tracksInQueue),
                 QString::number(progress));
         labelProgress->setText(text);
     }

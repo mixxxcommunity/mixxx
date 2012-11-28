@@ -87,10 +87,6 @@ bool AnalyserQueue::isLoadedTrackWaiting(TrackPointer tio) {
     return trackWaiting;
 }
 
-
-
-
-
 // This is called from the AnalyserQueue thread
 TrackPointer AnalyserQueue::dequeueNextBlocking() {
     m_qm.lock();
@@ -192,8 +188,8 @@ bool AnalyserQueue::doAnalysis(TrackPointer tio, SoundSourceProxy *pSoundSource)
         // because the finalise functions will take also some time
         processedSamples += read;
         //fp div here prevents insano signed overflow
-        progress = (int)(((float)processedSamples)/totalSamples
-                * (1000 - FINALISE_PERCENT));
+        progress = (int)(((float)processedSamples)/totalSamples *
+                         (1000 - FINALISE_PERCENT));
 
         if (m_progressInfo.track_progress != progress) {
             if (progressUpdateInhibitTimer.elapsed() > 60) {
@@ -254,6 +250,11 @@ void AnalyserQueue::run() {
     while (!m_exit) {
         TrackPointer nextTrack = dequeueNextBlocking();
 
+        // It's important to check for m_exit here in case we decided to exit
+        // while blocking for a new track.
+        if (m_exit)
+            return;
+
         // If the track is NULL, try to get the next one.
         // Could happen if the track was queued but then deleted.
         // Or if dequeueNextBlocking is unblocked by exit == true
@@ -306,8 +307,8 @@ void AnalyserQueue::run() {
                 emitUpdateProgress(nextTrack, 1000); // 100%
             }
         } else {
-            qDebug() << "Skipping track analysis because no analyzer initialized.";
             emitUpdateProgress(nextTrack, 1000); // 100%
+            qDebug() << "Skipping track analysis because no analyzer initialized.";
         }
 
         delete pSoundSource;

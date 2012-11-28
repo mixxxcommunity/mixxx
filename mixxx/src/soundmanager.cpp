@@ -427,11 +427,10 @@ void SoundManager::checkConfig() {
     // latency checks itself for validity on SMConfig::setLatency()
 }
 
-//Requests a buffer in the proper format, if we're prepared to give one.
-QHash<AudioOutput, const CSAMPLE*>
-SoundManager::requestBuffer(QList<AudioOutput> outputs,
-    unsigned long iFramesPerBuffer, SoundDevice* device)
-{
+QHash<AudioOutput, const CSAMPLE*> SoundManager::requestBuffer(
+    QList<AudioOutput> outputs, unsigned long iFramesPerBuffer,
+    SoundDevice* device, double streamTime /* = 0 */) {
+    Q_UNUSED(streamTime);
     Q_UNUSED(outputs); // unused, we just give the caller the full hash -bkgood
     //qDebug() << "SoundManager::requestBuffer()";
 

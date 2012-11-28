@@ -308,6 +308,7 @@ QString SoundDevicePortAudio::getError() const {
 int SoundDevicePortAudio::callbackProcess(unsigned long framesPerBuffer,
         float *output, short *in, const PaStreamCallbackTimeInfo *timeInfo,
         PaStreamCallbackFlags statusFlags) {
+    Q_UNUSED(timeInfo);
 
     //qDebug() << "SoundDevicePortAudio::callbackProcess:" << getInternalName();
 
@@ -429,4 +430,3 @@ int paV19Callback(const void *inputBuffer, void *outputBuffer,
     return ((SoundDevicePortAudio*) soundDevice)->callbackProcess(framesPerBuffer,
             (float*) outputBuffer, (short*) inputBuffer, timeInfo, statusFlags);
 }
-

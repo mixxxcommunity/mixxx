@@ -383,7 +383,8 @@ void DlgPrefSound::updateAudioBufferSizes(int sampleRateIndex) {
     // find the first that gives us a buffer size >= 1 ms -- bkgood
     // no div-by-0 in the next line because we don't allow srates of 0 in our
     // srate list when we construct it in the ctor -- bkgood
-    for (; framesPerBuffer / sampleRate * 1000 < 1.0; framesPerBuffer *= 2);
+    for (; framesPerBuffer / sampleRate * 1000 < 1.0; framesPerBuffer *= 2) {
+    }    
     audioBufferComboBox->clear();
     for (unsigned int i = 0; i < SoundManagerConfig::kMaxAudioBufferSizeIndex; ++i) {
         float latency = framesPerBuffer / sampleRate * 1000;
