@@ -20,6 +20,8 @@
 
 #include <qapplication.h>
 #include <QMutex>
+#include <QAtomicInt>
+
 #include "defs.h"
 #include "engine/engineobject.h"
 #include "trackinfoobject.h"
@@ -49,7 +51,6 @@ class EngineBufferScaleST;
 class EngineWorkerScheduler;
 class VisualPlayPosition;
 class EngineMaster;
-class CueControl;
 
 struct Hint;
 
@@ -99,7 +100,6 @@ public:
 
     // Add an engine control to the EngineBuffer
     void addControl(EngineControl* pControl);
-    void addCueControl(CueControl* pControl);
 
     /** Return the current rate (not thread-safe) */
     double getRate();
@@ -253,7 +253,7 @@ private:
     float m_fLastSampleValue[2];
     /** Is true if the previous buffer was silent due to pausing */
     bool m_bLastBufferPaused;
-    bool m_bBufferPause;
+    QAtomicInt m_iTrackLoading;
     float m_fRampValue;
     int m_iRampState;
     //int m_iRampIter;
@@ -270,7 +270,6 @@ private:
     int m_iLastBufferSize;
 
     VisualPlayPosition* m_visualPlayPos;
-    CueControl* m_cueControl;
 };
 
 #endif
