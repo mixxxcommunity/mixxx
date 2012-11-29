@@ -145,6 +145,7 @@ public:
     void trackUnloaded(TrackPointer pTrack);
 
   private slots:
+    void slotTrackLoading();
     void slotTrackLoaded(TrackPointer pTrack,
                          int iSampleRate, int iNumSamples);
     void slotTrackLoadFailed(TrackPointer pTrack,

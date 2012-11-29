@@ -99,6 +99,9 @@ EngineBuffer::EngineBuffer(const char * _group, ConfigObject<ConfigValue> * _con
     m_fLastSampleValue[1] = 0;
 
     m_pReader = new CachingReader(_group, _config);
+    connect(m_pReader, SIGNAL(trackLoading()),
+            this, SLOT(slotTrackLoading()),
+            Qt::DirectConnection);
     connect(m_pReader, SIGNAL(trackLoaded(TrackPointer, int, int)),
             this, SLOT(slotTrackLoaded(TrackPointer, int, int)),
             Qt::DirectConnection);
@@ -372,6 +375,19 @@ double EngineBuffer::getRate()
 }
 
 // WARNING: Always called from the EngineWorker thread pool
+void EngineBuffer::slotTrackLoading() {
+    // Pause EngineBuffer from processing frames
+    m_pause.lock();
+    // Setting m_iTrackLoading inside a m_pause.lock ensures that
+    // track buffer is not processed when starting to load a new one
+    m_iTrackLoading = 1;
+    m_pause.unlock();
+
+    playButtonCOT->slotSet(0.0); //Stop playback
+    m_pTrackSamples->set(0); // stop renderer
+}
+
+// WARNING: Always called from the EngineWorker thread pool
 void EngineBuffer::slotTrackLoaded(TrackPointer pTrack,
                                    int iTrackSampleRate,
                                    int iTrackNumSamples) {
@@ -394,6 +410,7 @@ void EngineBuffer::slotTrackLoaded(TrackPointer pTrack,
 // WARNING: Always called from the EngineWorker thread pool
 void EngineBuffer::slotTrackLoadFailed(TrackPointer pTrack,
                                        QString reason) {
+    playButton->set(0.0f);
     ejectTrack();
     emit(trackLoadFailed(pTrack, reason));
 }
@@ -872,7 +889,7 @@ void EngineBuffer::hintReader(const double dRate,
     m_engineLock.lock();
 
     m_hintList.clear();
-    m_pReadAheadManager->hintReader(dRate, m_hintList, iSourceSamples);
+    m_pReadAheadManager->hintReader(dRate, m_hintList);
 
     //if slipping, hint about virtual position so we're ready for it
     if (m_bSlipEnabled) {
@@ -895,18 +912,8 @@ void EngineBuffer::hintReader(const double dRate,
 
 // WARNING: This method runs in the GUI thread
 void EngineBuffer::slotLoadTrack(TrackPointer pTrack) {
-    // Pause EngineBuffer from processing frames
-    m_pause.lock();
-    // Setting m_iTrackLoading inside a m_pause.lock ensures that 
-    // track buffer is not processed when starting to load a new one  
-    m_iTrackLoading = 1;
-    m_pause.unlock();     
-    
-    playButtonCOT->slotSet(0.0); //Stop playback
-    m_pTrackSamples->set(0); // stop renderer    
-
     // Signal to the reader to load the track. The reader will respond with
-    // either trackLoaded or trackLoadFailed signals.
+    // trackLoading and then either with trackLoaded or trackLoadFailed signals.
     m_pReader->newTrack(pTrack);
     m_pReader->wake();
 }
@@ -952,6 +959,9 @@ void EngineBuffer::setReader(CachingReader* pReader) {
     delete m_pReader;
     m_pReader = pReader;
     m_pReadAheadManager->setReader(pReader);
+    connect(m_pReader, SIGNAL(trackLoading()),
+            this, SLOT(slotTrackLoading()),
+            Qt::DirectConnection);
     connect(m_pReader, SIGNAL(trackLoaded(TrackPointer, int, int)),
             this, SLOT(slotTrackLoaded(TrackPointer, int, int)),
             Qt::DirectConnection);

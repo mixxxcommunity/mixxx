@@ -17,11 +17,11 @@ CueControl::CueControl(const char * _group,
         EngineControl(_group, _config),
         m_bPreviewing(false),
         m_bPreviewingHotcue(false),
+        m_bHotcueCancel(false),
         m_pPlayButton(ControlObject::getControl(ConfigKey(_group, "play"))),
         m_iCurrentlyPreviewingHotcues(0),
         m_iNumHotCues(NUM_HOT_CUES),
         m_pLoadedTrack(),
-        m_bHotcueCancel(false),
         m_mutex(QMutex::Recursive) {
     createControls();
 

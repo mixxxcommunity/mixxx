@@ -58,7 +58,7 @@ class AnalyserQueue : public QThread {
     void emitUpdateProgress(TrackPointer tio, int progress);
 
     bool m_exit;
-    bool m_checkPriorities;
+    QAtomicInt m_aiCheckPriorities;
 
     // The processing queue and associated mutex
     QQueue<TrackPointer> m_tioq;

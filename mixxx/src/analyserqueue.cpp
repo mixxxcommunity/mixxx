@@ -29,7 +29,7 @@
 AnalyserQueue::AnalyserQueue() :
     m_aq(),
     m_exit(false),
-    m_checkPriorities(false),
+    m_aiCheckPriorities(false),
     m_tioq(),
     m_qm(),
     m_qwait() {
@@ -207,8 +207,8 @@ bool AnalyserQueue::doAnalysis(TrackPointer tio, SoundSourceProxy *pSoundSource)
         //QThread::usleep(10);
 
         //has something new entered the queue?
-        if (m_checkPriorities) {
-            m_checkPriorities = false;
+        if (m_aiCheckPriorities) {
+            m_aiCheckPriorities = false;
             if (isLoadedTrackWaiting(tio)) {
                 qDebug() << "Interrupting analysis to give preference to a loaded track.";
                 dieflag = true;
@@ -327,7 +327,6 @@ void AnalyserQueue::run() {
 void AnalyserQueue::emitUpdateProgress(TrackPointer tio, int progress) {
     m_progressInfo.current_track = tio;
     m_progressInfo.track_progress = progress; 
-    qDebug() << "AnalyserQueue::emitUpdateProgress" << tio.data() << progress;
     if (!m_exit) {    
         emit(updateProgress());
         // Wait for slotUpdateProgress() is finished in the Main Thread
@@ -339,7 +338,6 @@ void AnalyserQueue::emitUpdateProgress(TrackPointer tio, int progress) {
 
 //slot
 void AnalyserQueue::slotUpdateProgress() {
-    qDebug() << "AnalyserQueue::slotUpdateProgress() 1";
     if (m_progressInfo.current_track) {
         m_progressInfo.current_track->setAnalyserProgress(m_progressInfo.track_progress);
     }
@@ -347,14 +345,13 @@ void AnalyserQueue::slotUpdateProgress() {
     if (m_progressInfo.track_progress == 1000) {
         emit(trackFinished(m_progressInfo.queue_size));
     }
-    qDebug() << "AnalyserQueue::slotUpdateProgress() 2";
     m_progressInfo.sema.release(); 
 }
 
 //slot
 void AnalyserQueue::slotAnalyseTrack(TrackPointer tio) {
     // This slot is called from the decks and and samplers when the track was loaded.
-    m_checkPriorities = true;
+    m_aiCheckPriorities = true;
     queueAnalyseTrack(tio);
 }
 
