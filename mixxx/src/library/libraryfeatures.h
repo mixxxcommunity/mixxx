@@ -40,9 +40,10 @@ public:
             bool firstRun, RecordingManager* pRecordingManager);
     virtual ~LibraryFeatures();
 
-    void bindWidget(WLibrarySidebar* sidebarWidget,
-                    WLibrary* libraryWidget,
+    void bindWidget(WLibrary* libraryWidget,
                     MixxxKeyboard* pKeyboard);
+    void bindSidebarWidget(WLibrarySidebar* sidebarWidget);
+
     void addFeature(LibraryFeature* feature);
     QList<TrackPointer> getTracksToAutoLoad();
 
@@ -56,7 +57,7 @@ public:
 
     //static Library* buildDefaultLibrary();
 
-public slots:
+  public slots:
     void slotShowTrackModel(QAbstractItemModel* model);
     void slotSwitchToView(const QString& view);
     void slotLoadTrack(TrackPointer pTrack);
@@ -74,7 +75,7 @@ signals:
     void restoreSearch(const QString&);
     void coverChanged(QString);
 
-private:
+  private:
     ConfigObject<ConfigValue>* m_pConfig;
     SidebarModel* m_pSidebarModel;
     TrackCollection* m_pTrackCollection;

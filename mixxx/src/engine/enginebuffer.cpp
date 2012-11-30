@@ -316,6 +316,10 @@ double EngineBuffer::getBpm()
     return m_pBpmControl->getBpm();
 }
 
+double EngineBuffer::getFileBpm() {
+    return m_pBpmControl->getFileBpm();
+}
+
 void EngineBuffer::setEngineMaster(EngineMaster * pEngineMaster)
 {
     m_pBpmControl->setEngineMaster(pEngineMaster);
@@ -547,7 +551,6 @@ void EngineBuffer::process(const CSAMPLE *, const CSAMPLE * pOut, const int iBuf
     double rate = 0;
 
     bool bTrackLoading = m_iTrackLoading != 0;
-
     if (!bTrackLoading && m_pause.tryLock()) {
         float sr = m_pSampleRate->get();
 
@@ -595,7 +598,6 @@ void EngineBuffer::process(const CSAMPLE *, const CSAMPLE * pOut, const int iBuf
                 }
             }
 
-            m_rate_old = rate;
             if (baserate > 0) //Prevent division by 0
                 rate = baserate*m_pScale->setTempo(rate/baserate);
             m_pScale->setBaseRate(baserate);

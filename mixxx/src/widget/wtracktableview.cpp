@@ -15,6 +15,7 @@
 #include "widget/wtracktableview.h"
 #include "dlgtrackinfo.h"
 #include "soundsourceproxy.h"
+#include "playermanager.h"
 
 WTrackTableView::WTrackTableView(QWidget * parent,
                                  ConfigObject<ConfigValue> * pConfig,
@@ -46,6 +47,8 @@ WTrackTableView::WTrackTableView(QWidget * parent,
         ControlObject::getControl(ConfigKey("[Master]", "num_samplers")));
     m_pNumDecks = new ControlObjectThreadMain(
         ControlObject::getControl(ConfigKey("[Master]", "num_decks")));
+    m_pNumPreviewDecks = new ControlObjectThreadMain(
+        ControlObject::getControl(ConfigKey("[Master]", "num_preview_decks")));
 
     m_pMenu = new QMenu(this);
 
@@ -84,6 +87,7 @@ WTrackTableView::~WTrackTableView()
     }
 
     delete m_pReloadMetadataAct;
+    delete m_pAddToPreviewDeck;
     delete m_pAutoDJAct;
     delete m_pAutoDJTopAct;
     delete m_pRemoveAct;
@@ -98,6 +102,7 @@ WTrackTableView::~WTrackTableView()
     delete m_pTrackInfo;
     delete m_pNumSamplers;
     delete m_pNumDecks;
+    delete m_pNumPreviewDecks;
     delete m_pBpmLockAction;
     delete m_pBpmUnlockAction;
 }
@@ -301,6 +306,13 @@ void WTrackTableView::createActions() {
     connect(m_pReloadMetadataAct, SIGNAL(triggered()),
             this, SLOT(slotReloadTrackMetadata()));
 
+    m_pAddToPreviewDeck = new QAction(tr("Load to Preview Deck"), this);
+    // currently there is only one preview deck so just map it here.
+    QString previewDeckGroup = PlayerManager::groupForPreviewDeck(0);
+    m_deckMapper.setMapping(m_pAddToPreviewDeck, previewDeckGroup);
+    connect(m_pAddToPreviewDeck, SIGNAL(triggered()),
+            &m_deckMapper, SLOT(map()));
+
     m_pResetPlayedAct = new QAction(tr("Reset Play Count"), this);
     connect(m_pResetPlayedAct, SIGNAL(triggered()),
             this, SLOT(slotResetPlayed()));
@@ -358,8 +370,9 @@ void WTrackTableView::loadSelectionToGroup(QString group) {
             bool groupPlaying = ControlObject::getControl(
                 ConfigKey(group, "play"))->get() == 1.0f;
 
-            if (groupPlaying)
+            if (groupPlaying){
                 return;
+            }
         }
 
         QModelIndex index = indices.at(0);
@@ -514,7 +527,7 @@ void WTrackTableView::contextMenuEvent(QContextMenuEvent* event) {
                 bool deckPlaying = ControlObject::getControl(
                     ConfigKey(deckGroup, "play"))->get() == 1.0f;
                 bool loadTrackIntoPlayingDeck = m_pConfig->getValueString(
-                	ConfigKey("[Controls]","AllowTrackLoadToPlayingDeck")).toInt();
+                    ConfigKey("[Controls]","AllowTrackLoadToPlayingDeck")).toInt();
                 bool deckEnabled = (!deckPlaying  || loadTrackIntoPlayingDeck)  && oneSongSelected;
                 QAction* pAction = new QAction(tr("Load to Deck %1").arg(i), m_pMenu);
                 pAction->setEnabled(deckEnabled);
@@ -542,6 +555,11 @@ void WTrackTableView::contextMenuEvent(QContextMenuEvent* event) {
             }
             m_pMenu->addMenu(m_pSamplerMenu);
         }
+    }
+
+    if (modelHasCapabilities(TrackModel::TRACKMODELCAPS_LOADTOPREVIEWDECK) &&
+        m_pNumPreviewDecks->get() > 0.0) {
+        m_pMenu->addAction(m_pAddToPreviewDeck);
     }
 
     m_pMenu->addSeparator();

@@ -101,10 +101,12 @@ public:
     // Add an engine control to the EngineBuffer
     void addControl(EngineControl* pControl);
 
-    /** Return the current rate (not thread-safe) */
+    // Return the current rate (not thread-safe)
     double getRate();
-    /** Returns current bpm value (not thread-safe) */
+    // Returns current bpm value (not thread-safe)
     double getBpm();
+    // Returns the BPM of the loaded track (not thread-safe)
+    double getFileBpm();
     /** Sets pointer to other engine buffer/channel */
     void setEngineMaster(EngineMaster*);
 
@@ -229,27 +231,27 @@ private:
     ControlObject* m_visualBpm;
     ControlObject* m_pMasterRate;
     ControlPotmeter* m_playposSlider;
-    ControlObject *m_pSampleRate;
-    ControlPushButton *m_pKeylock;
+    ControlObject* m_pSampleRate;
+    ControlPushButton* m_pKeylock;
 
-    ControlPushButton *m_pEject;
+    ControlPushButton* m_pEject;
 
     // Whether or not to repeat the track when at the end
     ControlPushButton* m_pRepeat;
 
-    ControlObject *m_pVinylStatus;  //Status of vinyl control
-    ControlObject *m_pVinylSeek;
+    ControlObject* m_pVinylStatus;  //Status of vinyl control
+    ControlObject* m_pVinylSeek;
 
     /** Fwd and back controls, start and end of track control */
     ControlPushButton* m_startButton;
     ControlPushButton* m_endButton;
 
     /** Object used to perform waveform scaling (sample rate conversion) */
-    EngineBufferScale *m_pScale;
+    EngineBufferScale* m_pScale;
     /** Object used for linear interpolation scaling of the audio */
-    EngineBufferScaleLinear *m_pScaleLinear;
+    EngineBufferScaleLinear* m_pScaleLinear;
     /** Object used for pitch-indep time stretch (key lock) scaling of the audio */
-    EngineBufferScaleST *m_pScaleST;
+    EngineBufferScaleST* m_pScaleST;
     // Indicates whether the scaler has changed since the last process()
     bool m_bScalerChanged;
 
