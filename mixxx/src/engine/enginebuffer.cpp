@@ -247,12 +247,16 @@ EngineBuffer::~EngineBuffer()
 
     delete m_playButton;
     delete m_playStartButton;
+    delete m_stopStartButton;
+
     delete m_startButton;
     delete m_endButton;
     delete m_stopButton;
     delete m_rateEngine;
     delete m_playposSlider;
+    delete m_visualBpm;
 
+    delete m_pSlipButton;
     delete m_pRepeat;
 
     delete m_pTrackSamples;
@@ -442,7 +446,7 @@ void EngineBuffer::slotControlSeek(double change)
     }
 
     // Find new playpos, restrict to valid ranges.
-    double new_playpos = round(change*m_file_length_old);
+    double new_playpos = round(change * m_file_length_old);
 
     // TODO(XXX) currently not limiting seeks file_length_old instead of
     // kMaxPlayposRange.
@@ -459,7 +463,7 @@ void EngineBuffer::slotControlSeek(double change)
 // WARNING: This method runs from SyncWorker and Engine Worker
 void EngineBuffer::slotControlSeekAbs(double abs)
 {
-    slotControlSeek(abs/m_file_length_old);
+    slotControlSeek(abs / m_file_length_old);
 }
 
 void EngineBuffer::slotControlPlay(double v)
@@ -555,7 +559,7 @@ void EngineBuffer::process(const CSAMPLE *, const CSAMPLE * pOut, const int iBuf
 
         double baserate = 0.0f;
         if (sr > 0)
-            baserate = ((double)m_file_srate_old/sr);
+            baserate = ((double)m_file_srate_old / sr);
 
         bool paused = m_playButton->get() != 0.0f ? false : true;
 

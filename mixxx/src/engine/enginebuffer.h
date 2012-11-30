@@ -40,6 +40,7 @@ class LoopingControl;
 class ReadAheadManager;
 class ControlObject;
 class ControlPushButton;
+class ControlObjectThreadMain;
 class ControlBeat;
 class ControlTTRotary;
 class ControlPotmeter;
