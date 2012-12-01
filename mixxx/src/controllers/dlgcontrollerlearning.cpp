@@ -8,6 +8,8 @@
 
 #include "controllers/dlgcontrollerlearning.h"
 
+#include "engine/cuecontrol.h"
+
 DlgControllerLearning::DlgControllerLearning(QWidget * parent,
                                              Controller* controller)
         : QDialog(parent),
@@ -61,15 +63,16 @@ DlgControllerLearning::DlgControllerLearning(QWidget * parent,
     addDeckAndSamplerControl("repeat", tr("Toggle repeat mode"), transportMenu);
     addDeckAndSamplerControl("eject", tr("Eject track"), transportMenu);
     addSamplerControl("orientation", tr("Mix orientation (e.g. left, right, center)"), transportMenu);
+    addDeckAndSamplerControl("slip_enabled", tr("Toggle slip mode"), transportMenu);
 
     // BPM & Sync
     QMenu* bpmMenu = addSubmenu(tr("BPM and Sync"));
     addDeckAndSamplerControl("bpm_tap", tr("BPM tap button"), bpmMenu);
     addDeckControl("beats_translate_curpos", tr("Adjust beatgrid"), bpmMenu);
-    addDeckControl("quantize", tr("Toggle quantize mode"), bpmMenu);
-    addDeckControl("beatsync", tr("Beat sync (tempo and phase)"), bpmMenu);
-    addDeckControl("beatsync_tempo", tr("Beat sync (tempo only)"), bpmMenu);
-    addDeckControl("beatsync_phase", tr("Beat sync (phase only)"), bpmMenu);
+    addDeckAndSamplerControl("quantize", tr("Toggle quantize mode"), bpmMenu);
+    addDeckAndSamplerControl("beatsync", tr("Beat sync (tempo and phase)"), bpmMenu);
+    addDeckAndSamplerControl("beatsync_tempo", tr("Beat sync (tempo only)"), bpmMenu);
+    addDeckAndSamplerControl("beatsync_phase", tr("Beat sync (phase only)"), bpmMenu);
 
     // Rate
     QMenu* rateMenu = addSubmenu(tr("Pitch and Rate"));
@@ -98,28 +101,30 @@ DlgControllerLearning::DlgControllerLearning(QWidget * parent,
     addDeckControl("vinylcontrol_enabled", tr("Toggle vinyl-control (ON/OFF)"), vinylControlMenu);
     addDeckControl("vinylcontrol_cueing", tr("Toggle vinyl-control cueing mode (OFF/ONE/HOT)"), vinylControlMenu);
     addDeckControl("vinylcontrol_mode", tr("Toggle vinyl-control mode (ABS/REL/CONST)"), vinylControlMenu);
+    addControl("[VinylControl]", "Toggle", tr("Single deck mode - Toggle vinyl control to next deck"), vinylControlMenu);
 
     // Cues
-    QMenu* cueMenu = addSubmenu(tr("Cues / Hotcues"));
+    QMenu* cueMenu = addSubmenu(tr("Cues"));
     addDeckControl("cue_default", tr("Cue button"), cueMenu);
     addDeckControl("cue_set", tr("Set cue point"), cueMenu);
     addDeckControl("cue_gotoandstop", tr("Go to cue point and stop"), cueMenu);
 
     // Hotcues
-
+    QMenu* hotcueMenu = addSubmenu(tr("Hotcues"));
     QString hotcueActivate = tr("Set or jump to hotcue %1");
     QString hotcueClear = tr("Clear hotcue %1");
     QString hotcueGoto = tr("Jump to hotcue %1");
     QString hotcueGotoAndStop = tr("Jump to hotcue %1 and stop");
-    for (int i = 1; i <= 4; ++i) {
+    for (int i = 1; i <= NUM_HOT_CUES; ++i) {
+        QMenu* hotcueSubMenu = addSubmenu(tr("Hotcue %1").arg(QString::number(i)), hotcueMenu);
         addDeckAndSamplerControl(QString("hotcue_%1_activate").arg(i),
-                                 hotcueActivate.arg(QString::number(i)), cueMenu);
+                                 hotcueActivate.arg(QString::number(i)), hotcueSubMenu);
         addDeckAndSamplerControl(QString("hotcue_%1_clear").arg(i),
-                                 hotcueClear.arg(QString::number(i)), cueMenu);
+                                 hotcueClear.arg(QString::number(i)), hotcueSubMenu);
         addDeckAndSamplerControl(QString("hotcue_%1_goto").arg(i),
-                                 hotcueGoto.arg(QString::number(i)), cueMenu);
+                                 hotcueGoto.arg(QString::number(i)), hotcueSubMenu);
         addDeckAndSamplerControl(QString("hotcue_%1_gotoandstop").arg(i),
-                                 hotcueGotoAndStop.arg(QString::number(i)), cueMenu);
+                                 hotcueGotoAndStop.arg(QString::number(i)), hotcueSubMenu);
     }
 
     // Loops
@@ -133,15 +138,31 @@ DlgControllerLearning::DlgControllerLearning(QWidget * parent,
     // Beatloops
     QMenu* beatLoopMenu = addSubmenu(tr("Beat-Looping"));
     QString beatLoop = tr("Create %1-beat loop");
-    addDeckControl("beatloop_0.0625",  beatLoop.arg("1/16th"), beatLoopMenu);
-    addDeckControl("beatloop_0.125", beatLoop.arg("1/8th"), beatLoopMenu);
-    addDeckControl("beatloop_0.25", beatLoop.arg("1/4th"), beatLoopMenu);
-    addDeckControl("beatloop_0.5", beatLoop.arg("1/2"), beatLoopMenu);
-    addDeckControl("beatloop_1", beatLoop.arg("1"), beatLoopMenu);
-    addDeckControl("beatloop_2", beatLoop.arg("2"), beatLoopMenu);
-    addDeckControl("beatloop_4", beatLoop.arg("4"), beatLoopMenu);
-    addDeckControl("beatloop_8", beatLoop.arg("8"), beatLoopMenu);
-    addDeckControl("beatloop_16", beatLoop.arg("16"), beatLoopMenu);
+    QString beatLoopRoll = tr("Create temporary %1-beat loop roll");
+    addDeckControl("beatloop_0.03125_toggle",  beatLoop.arg(tr("1/32th")), beatLoopMenu);
+    addDeckControl("beatloop_0.0625_toggle",  beatLoop.arg(tr("1/16th")), beatLoopMenu);
+    addDeckControl("beatloop_0.125_toggle", beatLoop.arg(tr("1/8th")), beatLoopMenu);
+    addDeckControl("beatloop_0.25_toggle", beatLoop.arg(tr("1/4th")), beatLoopMenu);
+    addDeckControl("beatloop_0.5_toggle", beatLoop.arg("1/2"), beatLoopMenu);
+    addDeckControl("beatloop_1_toggle", beatLoop.arg("1"), beatLoopMenu);
+    addDeckControl("beatloop_2_toggle", beatLoop.arg("2"), beatLoopMenu);
+    addDeckControl("beatloop_4_toggle", beatLoop.arg("4"), beatLoopMenu);
+    addDeckControl("beatloop_8_toggle", beatLoop.arg("8"), beatLoopMenu);
+    addDeckControl("beatloop_16_toggle", beatLoop.arg("16"), beatLoopMenu);
+    addDeckControl("beatloop_32_toggle", beatLoop.arg("32"), beatLoopMenu);
+    addDeckControl("beatloop_64_toggle", beatLoop.arg("64"), beatLoopMenu);
+    addDeckControl("beatlooproll_0.03125_activate",  beatLoopRoll.arg(tr("1/32th")), beatLoopMenu);
+    addDeckControl("beatlooproll_0.0625_activate",  beatLoopRoll.arg(tr("1/16th")), beatLoopMenu);
+    addDeckControl("beatlooproll_0.125_activate", beatLoopRoll.arg(tr("1/8th")), beatLoopMenu);
+    addDeckControl("beatlooproll_0.25_activate", beatLoopRoll.arg(tr("1/4th")), beatLoopMenu);
+    addDeckControl("beatlooproll_0.5_activate", beatLoopRoll.arg("1/2"), beatLoopMenu);
+    addDeckControl("beatlooproll_1_activate", beatLoopRoll.arg("1"), beatLoopMenu);
+    addDeckControl("beatlooproll_2_activate", beatLoopRoll.arg("2"), beatLoopMenu);
+    addDeckControl("beatlooproll_4_activate", beatLoopRoll.arg("4"), beatLoopMenu);
+    addDeckControl("beatlooproll_8_activate", beatLoopRoll.arg("8"), beatLoopMenu);
+    addDeckControl("beatlooproll_16_activate", beatLoopRoll.arg("16"), beatLoopMenu);
+    addDeckControl("beatlooproll_32_activate", beatLoopRoll.arg("32"), beatLoopMenu);
+    addDeckControl("beatlooproll_64_activate", beatLoopRoll.arg("64"), beatLoopMenu);
 
     // Library Controls
     QMenu* libraryMenu = addSubmenu(tr("Library"));
@@ -170,6 +191,13 @@ DlgControllerLearning::DlgControllerLearning(QWidget * parent,
     addControl("[Microphone]", "volume", tr("Microphone volume"), microphoneMenu, true);
     addControl("[Microphone]", "orientation", tr("Microphone channel orientation (e.g. left, right, center)"), microphoneMenu);
 
+    // AutoDJ Controls
+    QMenu* autodjMenu = addSubmenu(tr("Auto DJ"));
+    addControl("[AutoDJ]", "shuffle_playlist", tr("Shuffle the content of the Auto DJ playlist"), autodjMenu);
+    addControl("[AutoDJ]", "skip_next", tr("Skip the next track in the Auto DJ playlist"), autodjMenu);
+    addControl("[AutoDJ]", "fade_now", tr("Trigger the transition to the next track"), autodjMenu);
+    addControl("[AutoDJ]", "toggle_autodj", tr("Toggle Auto DJ (ON/OFF)"), autodjMenu);
+
     // Skin Controls
     QMenu* guiMenu = addSubmenu(tr("User Interface"));
     addControl("[Samplers]", "show_samplers", tr("Show/hide the sampler section"), guiMenu);
@@ -182,6 +210,7 @@ DlgControllerLearning::DlgControllerLearning(QWidget * parent,
     for (int i = 1; i <= iNumDecks; ++i) {
         addControl(QString("[Spinny%1]").arg(i), "show_spinny",
                    QString("%1: %2").arg(m_deckStr.arg(i), spinnyText), guiMenu);
+
     }
 
     emit(listenForClicks());
@@ -326,9 +355,12 @@ void DlgControllerLearning::controlMapped(QString message) {
     labelNextHelp->show();
 }
 
-QMenu* DlgControllerLearning::addSubmenu(QString title) {
-    QMenu* subMenu = new QMenu(title, &m_controlPickerMenu);
-    m_controlPickerMenu.addMenu(subMenu);
+QMenu* DlgControllerLearning::addSubmenu(QString title, QMenu* pParent) {
+    if (pParent == NULL) {
+        pParent = &m_controlPickerMenu;
+    }
+    QMenu* subMenu = new QMenu(title, pParent);
+    pParent->addMenu(subMenu);
     return subMenu;
 }
 

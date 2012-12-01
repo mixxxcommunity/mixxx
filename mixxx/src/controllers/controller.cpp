@@ -21,7 +21,8 @@ Controller::Controller()
           m_bLearning(false) {
     // Get --controllerDebug command line option
     QStringList commandLineArgs = QApplication::arguments();
-    m_bDebug = commandLineArgs.contains("--controllerDebug", Qt::CaseInsensitive);
+    m_bDebug = commandLineArgs.contains("--controllerDebug", Qt::CaseInsensitive) ||
+            commandLineArgs.contains("--midiDebug", Qt::CaseInsensitive);
     m_type=CONTROLLER_TYPE_GENERIC;
 }
 
@@ -47,8 +48,7 @@ void Controller::startEngine()
     m_pEngine = new ControllerEngine(this);
 }
 
-void Controller::stopEngine()
-{
+void Controller::stopEngine() {
     if (debugging()) {
         qDebug() << "  Shutting down engine";
     }

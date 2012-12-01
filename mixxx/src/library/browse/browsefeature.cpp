@@ -17,7 +17,6 @@
 #include "library/dao/trackdao.h"
 #include "widget/wlibrarytextbrowser.h"
 #include "widget/wlibrary.h"
-#include "widget/wlibrarysidebar.h"
 #include "mixxxkeyboard.h"
 
 const QString kQuickLinksSeparator = "-+-";
@@ -173,10 +172,8 @@ bool BrowseFeature::dragMoveAcceptChild(const QModelIndex& index, QUrl url) {
     return false;
 }
 
-void BrowseFeature::bindWidget(WLibrarySidebar* sidebarWidget,
-                               WLibrary* libraryWidget,
+void BrowseFeature::bindWidget(WLibrary* libraryWidget,
                                MixxxKeyboard* keyboard) {
-    Q_UNUSED(sidebarWidget);
     Q_UNUSED(keyboard);
     WLibraryTextBrowser* edit = new WLibraryTextBrowser(libraryWidget);
     edit->setHtml(getRootViewHtml());
@@ -276,7 +273,8 @@ void BrowseFeature::onLazyChildExpandation(const QModelIndex &index){
                 item);
             folders << driveLetter;
         }
-    } else {  // we assume that the path refers to a folder in the file system
+    } else {
+        // we assume that the path refers to a folder in the file system
         // populate childs
         QDir dir(path);
         QFileInfoList all = dir.entryInfoList(
@@ -294,7 +292,7 @@ void BrowseFeature::onLazyChildExpandation(const QModelIndex &index){
             // the models takes ownership of them and ensures their deletion
             TreeItem* folder = new TreeItem(
                 one.fileName(),
-                one.absoluteFilePath() +"/",
+                one.absoluteFilePath() + "/",
                 this, item);
             folders << folder;
         }
@@ -303,7 +301,7 @@ void BrowseFeature::onLazyChildExpandation(const QModelIndex &index){
     // On Ubuntu 10.04, otherwise, this will draw an icon although the folder
     // has no subfolders
     if (!folders.isEmpty()) {
-        m_childModel.insertRows(folders, 0, folders.size() , index);
+        m_childModel.insertRows(folders, 0, folders.size(), index);
     }
 }
 
@@ -356,7 +354,7 @@ QStringList BrowseFeature::getDefaultQuickLinks() const {
     result << mixxx_music_dir+"/";
 
     if (mixxx_music_dir != os_music_folder_dir) {
-        result << os_music_folder_dir;
+        result << os_music_folder_dir + "/";
     }
 
     // TODO(XXX) i18n -- no good way to get the download path. We could tr() it

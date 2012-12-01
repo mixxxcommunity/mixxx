@@ -3,19 +3,14 @@
 
 #include "waveform/renderers/waveformrendererabstract.h"
 #include "waveformmarkset.h"
-
-#include <QPixmap>
-#include <vector>
-
 #include "util.h"
 
-class ControlObject;
+class ControlObjectThreadMain;
 
 class WaveformRenderMark : public WaveformRendererAbstract {
-public:
+  public:
     explicit WaveformRenderMark(WaveformWidgetRenderer* waveformWidgetRenderer);
 
-    virtual void init();
     virtual void setup(const QDomNode& node);
     virtual void draw(QPainter* painter, QPaintEvent* event);
 

@@ -31,8 +31,7 @@ class PrepareFeature : public LibraryFeature {
     bool dragMoveAccept(QUrl url);
     bool dragMoveAcceptChild(const QModelIndex& index, QUrl url);
 
-    void bindWidget(WLibrarySidebar* sidebarWidget,
-                    WLibrary* libraryWidget,
+    void bindWidget(WLibrary* libraryWidget,
                     MixxxKeyboard* keyboard);
 
     TreeItemModel* getChildModel();
@@ -40,7 +39,7 @@ class PrepareFeature : public LibraryFeature {
 
   signals:
     void trackAnalysisProgress(TrackPointer pTrack, int progress);
-    void trackAnalysisFinished(TrackPointer pTrack);
+    void trackAnalysisFinished(TrackPointer pTrack, int queue_size);
     void analysisActive(bool bActive);
 
   public slots:
@@ -53,11 +52,11 @@ class PrepareFeature : public LibraryFeature {
   private slots:
     void analyzeTracks(QList<int> trackIds);
     void stopAnalysis();
+    void cleanupAnalyser();
     void slotTrackAnalysisProgress(TrackPointer pTrack, int progress);
-    void slotTrackAnalysisFinished(TrackPointer pTrack);
+    void slotTrackAnalysisFinished(TrackPointer pTrack, int queue_size);
 
   private:
-    void cleanupAnalyser();
     ConfigObject<ConfigValue>* m_pConfig;
     TrackCollection* m_pTrackCollection;
     AnalyserQueue* m_pAnalyserQueue;

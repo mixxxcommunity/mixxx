@@ -34,20 +34,21 @@
 #include "mixxxutils.cpp"
 
 TrackInfoObject::TrackInfoObject(const QString sLocation, bool parseHeader)
-        : m_qMutex(QMutex::Recursive) {
+        : m_qMutex(QMutex::Recursive),
+          m_analyserProgress(-1) {
     QFileInfo fileInfo(sLocation);
     populateLocation(fileInfo);
     initialize(parseHeader);
-    m_waveform = new Waveform;
-    m_waveformSummary = new Waveform;
+    m_waveform = new Waveform(QByteArray());
+    m_waveformSummary = new Waveform(QByteArray());
 }
 
 TrackInfoObject::TrackInfoObject(const QFileInfo& fileInfo, bool parseHeader)
         : m_qMutex(QMutex::Recursive) {
     populateLocation(fileInfo);
     initialize(parseHeader);
-    m_waveform = new Waveform;
-    m_waveformSummary = new Waveform;
+    m_waveform = new Waveform(QByteArray());
+    m_waveformSummary = new Waveform(QByteArray());
 }
 
 TrackInfoObject::TrackInfoObject(const QDomNode &nodeHeader)
@@ -98,8 +99,8 @@ TrackInfoObject::TrackInfoObject(const QDomNode &nodeHeader)
     m_bDirty = false;
     m_bLocationChanged = false;
 
-    m_waveform = new Waveform;
-    m_waveformSummary = new Waveform;
+    m_waveform = new Waveform(QByteArray());
+    m_waveformSummary = new Waveform(QByteArray());
 }
 
 void TrackInfoObject::populateLocation(const QFileInfo& fileInfo) {
@@ -279,8 +280,8 @@ QDateTime TrackInfoObject::getCreateDate() const
 bool TrackInfoObject::exists()  const
 {
     QMutexLocker lock(&m_qMutex);
-    // return here a fresh calculated value to be sure 
-    // the file is not deleted or gone with an USB-Stick 
+    // return here a fresh calculated value to be sure
+    // the file is not deleted or gone with an USB-Stick
     // because it will probably stop the Auto-DJ
     return QFile::exists(m_sLocation);
 }
@@ -370,7 +371,6 @@ void TrackInfoObject::setBeats(BeatsPointer pBeats) {
     if (m_pBeats) {
         bpm = m_pBeats->getBpm();
         pObject = dynamic_cast<QObject*>(m_pBeats.data());
-        Q_ASSERT(pObject);
         if (pObject) {
             connect(pObject, SIGNAL(updated()),
                     this, SLOT(slotBeatsUpdated()));
@@ -591,7 +591,7 @@ void TrackInfoObject::setPlayedAndUpdatePlaycount(bool bPlayed)
         setDirty(true);
     }
     else if (m_bPlayed && !bPlayed) {
-        --m_iTimesPlayed;
+        m_iTimesPlayed = math_max(0, m_iTimesPlayed - 1);
         setDirty(true);
     }
     m_bPlayed = bPlayed;
@@ -777,6 +777,19 @@ void TrackInfoObject::setWaveformSummary(Waveform* pWaveformSummary) {
     emit(waveformSummaryUpdated());
 }
 
+void TrackInfoObject::setAnalyserProgress(int progress) {
+    // progress in 0 .. 1000. QAtomicInt so no need for lock.
+    if (progress != m_analyserProgress) {
+        m_analyserProgress = progress;
+        emit(analyserProgress(progress));
+    }
+}
+
+int TrackInfoObject::getAnalyserProgress() const {
+    // QAtomicInt so no need for lock.
+    return m_analyserProgress;
+}
+
 void TrackInfoObject::setCuePoint(float cue)
 {
     QMutexLocker lock(&m_qMutex);
@@ -870,8 +883,9 @@ void TrackInfoObject::setDirty(bool bDirty) {
             emit(clean(this));
     }
     // Emit a changed signal regardless if this attempted to set us dirty.
-    if (bDirty)
+    if (bDirty) {
         emit(changed(this));
+    }
 
     //qDebug() << QString("TrackInfoObject %1 %2 set to %3").arg(QString::number(m_iId), m_sLocation, m_bDirty ? "dirty" : "clean");
 }

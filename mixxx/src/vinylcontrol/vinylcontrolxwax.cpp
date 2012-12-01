@@ -66,22 +66,37 @@ VinylControlXwax::VinylControlXwax(ConfigObject<ConfigValue> * pConfig, QString 
 
     //this is all needed because libxwax indexes by C-strings
     //so we go and pass libxwax a pointer into our local stack...
-    if (strVinylType == MIXXX_VINYL_SERATOCV02VINYLSIDEA)
+    if (strVinylType == MIXXX_VINYL_SERATOCV02VINYLSIDEA) {
         timecode = (char*)"serato_2a";
-    else if (strVinylType == MIXXX_VINYL_SERATOCV02VINYLSIDEB)
+    }
+    else if (strVinylType == MIXXX_VINYL_SERATOCV02VINYLSIDEB) {
         timecode = (char*)"serato_2b";
+    }
     else if (strVinylType == MIXXX_VINYL_SERATOCD) {
         timecode = (char*)"serato_cd";
         m_bNeedleSkipPrevention = false;
         m_bCDControl = true;
     }
-    else if (strVinylType == MIXXX_VINYL_TRAKTORSCRATCHSIDEA)
+    else if (strVinylType == MIXXX_VINYL_TRAKTORSCRATCHSIDEA) {
         timecode = (char*)"traktor_a";
-    else if (strVinylType == MIXXX_VINYL_TRAKTORSCRATCHSIDEB)
+    }
+    else if (strVinylType == MIXXX_VINYL_TRAKTORSCRATCHSIDEB) {
         timecode = (char*)"traktor_b";
+    }
+    else if (strVinylType == MIXXX_VINYL_MIXVIBESDVS) {
+    	timecode = (char*)"mixvibes_v2";
+   	}
     else {
         qDebug() << "Unknown vinyl type, defaulting to serato_2a";
         timecode = (char*)"serato_2a";
+    }
+    
+    timecode_def *tc_def = timecoder_find_definition(timecode);
+    if (tc_def == NULL)
+    {
+        qDebug() << "Error finding timecode definition for " << timecode << ", defaulting to serato_2a";
+        timecode = (char*)"serato_2a";
+        tc_def = timecoder_find_definition(timecode);
     }
 
     double speed = 1.0f;
@@ -95,7 +110,7 @@ VinylControlXwax::VinylControlXwax(ConfigObject<ConfigValue> * pConfig, QString 
     //Initialize the timecoder structure.
     s_xwaxLUTMutex.lock(); //Static mutex! We don't want two threads doing this!
 
-    timecoder_init(&timecoder, timecode, speed, iSampleRate);
+    timecoder_init(&timecoder, tc_def, speed, iSampleRate);
     timecoder_monitor_init(&timecoder, MIXXX_VINYL_SCOPE_SIZE);
     //Note that timecoder_init will not double-malloc the LUTs, and after this we are guaranteed
     //that the LUT has been generated unless we ran out of memory.
@@ -120,6 +135,7 @@ VinylControlXwax::~VinylControlXwax()
     delete m_pSteadyGross;
 
     //Cleanup xwax nicely
+    timecoder_monitor_clear(&timecoder);
     timecoder_clear(&timecoder);
     m_bLUTInitialized = false;
 
@@ -188,7 +204,7 @@ void VinylControlXwax::run()
     bool reportedPlayButton = 0;
     tSinceSteadyPitch.start();
 
-    float when; //unused, needed for calling xwax
+    double when; //unused, needed for calling xwax
 
     bShouldClose = false;
 
@@ -240,7 +256,7 @@ void VinylControlXwax::run()
             }
             continue;
         }
-        //qDebug() << m_group << id << iPosition << dVinylPitch;
+        //qDebug() << m_group << id << iPosition << when << dVinylPitch;
 
         cur_duration = duration->get();
 
@@ -878,7 +894,7 @@ void VinylControlXwax::establishQuality(bool quality_sample)
 
 float VinylControlXwax::getAngle()
 {
-    float when;
+    double when;
     float pos = timecoder_get_position(&timecoder, &when);
 
     if (pos == -1)

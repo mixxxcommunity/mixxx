@@ -1,8 +1,9 @@
 #ifndef CRATEFEATURE_H
 #define CRATEFEATURE_H
 
-#include <QSqlTableModel>
 #include <QModelIndex>
+#include <QList>
+#include <QPair>
 #include <QAction>
 
 #include "library/libraryfeature.h"
@@ -27,8 +28,7 @@ class CrateFeature : public LibraryFeature {
     bool dragMoveAccept(QUrl url);
     bool dragMoveAcceptChild(const QModelIndex& index, QUrl url);
 
-    void bindWidget(WLibrarySidebar* sidebarWidget,
-                    WLibrary* libraryWidget,
+    void bindWidget(WLibrary* libraryWidget,
                     MixxxKeyboard* keyboard);
 
     TreeItemModel* getChildModel();
@@ -53,6 +53,7 @@ class CrateFeature : public LibraryFeature {
     QString getRootViewHtml() const;
     QModelIndex constructChildModel(int selected_id);
     void clearChildModel();
+    void buildCrateList();
 
     TrackCollection* m_pTrackCollection;
     CrateDAO& m_crateDao;
@@ -62,7 +63,7 @@ class CrateFeature : public LibraryFeature {
     QAction *m_pLockCrateAction;
     QAction *m_pImportPlaylistAction;
     QAction *m_pExportPlaylistAction;
-    QSqlTableModel m_crateListTableModel;
+    QList<QPair<int, QString> > m_crateList;
     CrateTableModel m_crateTableModel;
     QModelIndex m_lastRightClickedIndex;
     TreeItemModel m_childModel;
