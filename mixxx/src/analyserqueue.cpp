@@ -341,7 +341,7 @@ void AnalyserQueue::slotUpdateProgress() {
     if (m_progressInfo.current_track) {
         m_progressInfo.current_track->setAnalyserProgress(m_progressInfo.track_progress);
     }
-    emit(trackProgress(m_progressInfo.current_track, m_progressInfo.track_progress/10));
+    emit(trackProgress(m_progressInfo.track_progress/10));
     if (m_progressInfo.track_progress == 1000) {
         emit(trackFinished(m_progressInfo.queue_size));
     }

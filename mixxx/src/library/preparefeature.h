@@ -38,7 +38,7 @@ class PrepareFeature : public LibraryFeature {
     void refreshLibraryModels();
 
   signals:
-    void trackAnalysisProgress(TrackPointer pTrack, int progress);
+    void trackAnalysisProgress(int progress);
     void trackAnalysisFinished(int size);
     void analysisActive(bool bActive);
 
@@ -53,7 +53,7 @@ class PrepareFeature : public LibraryFeature {
     void analyzeTracks(QList<int> trackIds);
     void stopAnalysis();
     void cleanupAnalyser();
-    void slotTrackAnalysisProgress(TrackPointer pTrack, int progress);
+    void slotTrackAnalysisProgress(int progress);
     void slotTrackAnalysisFinished(int size);
 
   private:

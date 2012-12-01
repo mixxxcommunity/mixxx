@@ -36,7 +36,7 @@ class DlgPrepare : public QWidget, public Ui::DlgPrepare, public virtual Abstrac
     void selectAll();
     void analyze();
     void trackAnalysisFinished(int size);
-    void trackAnalysisProgress(TrackPointer tio, int progress);
+    void trackAnalysisProgress(int progress);
     void showRecentSongs();
     void showAllSongs();
     void installEventFilter(QObject* pFilter);

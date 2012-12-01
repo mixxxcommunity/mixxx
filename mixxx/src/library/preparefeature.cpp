@@ -53,8 +53,8 @@ void PrepareFeature::bindWidget(WLibrary* libraryWidget,
 
     connect(this, SIGNAL(analysisActive(bool)),
             m_pPrepareView, SLOT(analysisActive(bool)));
-    connect(this, SIGNAL(trackAnalysisProgress(TrackPointer, int)),
-            m_pPrepareView, SLOT(trackAnalysisProgress(TrackPointer, int)));
+    connect(this, SIGNAL(trackAnalysisProgress(int)),
+            m_pPrepareView, SLOT(trackAnalysisProgress(int)));
     connect(this, SIGNAL(trackAnalysisFinished(int)),
             m_pPrepareView, SLOT(trackAnalysisFinished(int)));
 
@@ -138,8 +138,8 @@ void PrepareFeature::analyzeTracks(QList<int> trackIds) {
 
         m_pAnalyserQueue = AnalyserQueue::createPrepareViewAnalyserQueue(m_pConfig);
 
-        connect(m_pAnalyserQueue, SIGNAL(trackProgress(TrackPointer, int)),
-                this, SLOT(slotTrackAnalysisProgress(TrackPointer, int)));
+        connect(m_pAnalyserQueue, SIGNAL(trackProgress(int)),
+                this, SLOT(slotTrackAnalysisProgress(int)));
         connect(m_pAnalyserQueue, SIGNAL(trackFinished(int)),
                 this, SLOT(slotTrackAnalysisFinished(int)));
         connect(m_pAnalyserQueue, SIGNAL(queueEmpty()),
@@ -156,9 +156,9 @@ void PrepareFeature::analyzeTracks(QList<int> trackIds) {
     }
 }
 
-void PrepareFeature::slotTrackAnalysisProgress(TrackPointer pTrack, int progress) {
-    //qDebug() << this << "trackAnalysisProgress" << pTrack->getInfo() << progress;
-    emit(trackAnalysisProgress(pTrack, progress));
+void PrepareFeature::slotTrackAnalysisProgress(int progress) {
+    //qDebug() << this << progress;
+    emit(trackAnalysisProgress(progress));
 }
 
 void PrepareFeature::slotTrackAnalysisFinished(int size) {

@@ -382,7 +382,7 @@ private:
     Waveform* m_waveform;
     Waveform* m_waveformSummary;
 
-    int m_analyserProgress; // in 0.1%
+    QAtomicInt m_analyserProgress; // in 0.1%
 
     friend class TrackDAO;
 };
