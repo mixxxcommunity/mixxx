@@ -32,7 +32,8 @@ AnalyserQueue::AnalyserQueue() :
     m_aiCheckPriorities(false),
     m_tioq(),
     m_qm(),
-    m_qwait() {
+    m_qwait(),
+    m_queue_size(0) {
     connect(this, SIGNAL(updateProgress()),
             this, SLOT(slotUpdateProgress()));
 }
@@ -246,6 +247,7 @@ void AnalyserQueue::run() {
     m_progressInfo.current_track = TrackPointer();
     m_progressInfo.track_progress = 0;
     m_progressInfo.queue_size = 0;
+    m_progressInfo.sema.release(); // Initalise with one
 
     while (!m_exit) {
         TrackPointer nextTrack = dequeueNextBlocking();
@@ -283,7 +285,7 @@ void AnalyserQueue::run() {
         }
 
         m_qm.lock();
-        m_progressInfo.queue_size = m_tioq.size();
+        m_queue_size = m_tioq.size();
         m_qm.unlock();
 
         if (processTrack) {
@@ -314,9 +316,9 @@ void AnalyserQueue::run() {
         delete pSoundSource;
 
         m_qm.lock();
-        m_progressInfo.queue_size = m_tioq.size();
+        m_queue_size = m_tioq.size();
         m_qm.unlock();
-        if (m_progressInfo.queue_size == 0) {
+        if (m_queue_size == 0) {
             emit(queueEmpty()); // emit asynchrony for no deadlock
         }
     }
@@ -325,14 +327,23 @@ void AnalyserQueue::run() {
 
 // This is called from the AnalyserQueue thread
 void AnalyserQueue::emitUpdateProgress(TrackPointer tio, int progress) {
-    m_progressInfo.current_track = tio;
-    m_progressInfo.track_progress = progress; 
     if (!m_exit) {    
+        // First tryAcqire will have always success because sema is initalised with on
+        // The following tries will success if the previous signal was processed in the GUI Thread
+        // This prevent the AnalysisQueue from filling up the GUI Thread event Queue
+        // 100 % is emitted in any case
+        if (progress < 1000 && progress > 0 ) {
+            // Signals during processing are not required in any case
+            if (!m_progressInfo.sema.tryAcquire()) {
+               return;
+            }
+        } else {
+            m_progressInfo.sema.acquire();
+        }
+        m_progressInfo.current_track = tio;
+        m_progressInfo.track_progress = progress;
+        m_progressInfo.queue_size = m_queue_size;
         emit(updateProgress());
-        // Wait for slotUpdateProgress() is finished in the Main Thread
-        // This ensures that the analyser thread is yielded until the Main meassage queue is progressed
-        // and protects m_progressInfo access   
-        m_progressInfo.sema.acquire();  
     }
 }
 
@@ -345,7 +356,7 @@ void AnalyserQueue::slotUpdateProgress() {
     if (m_progressInfo.track_progress == 1000) {
         emit(trackFinished(m_progressInfo.queue_size));
     }
-    m_progressInfo.sema.release(); 
+    m_progressInfo.sema.release();
 }
 
 //slot

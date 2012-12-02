@@ -66,6 +66,7 @@ class AnalyserQueue : public QThread {
     QMutex m_qm;
     QWaitCondition m_qwait;
     struct progress_info m_progressInfo;
+    int m_queue_size;
 };
 
 #endif
