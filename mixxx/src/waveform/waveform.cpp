@@ -11,9 +11,8 @@ Waveform::Waveform(const QByteArray data)
           m_bDirty(true),
           m_numChannels(2),
           m_dataSize(0),
-          m_audioSamplesPerVisualSample(0),
           m_visualSampleRate(0),
-          m_audioVisualRatio(0),
+          m_audioVisualRatio(0.),
           m_textureStride(1024),
           m_completion(-1),
           m_mutex(new QMutex()) {
@@ -154,7 +153,6 @@ void Waveform::reset() {
     m_dataSize = 0;
     m_textureStride = 1024;
     m_completion = -1;
-    m_audioSamplesPerVisualSample = 0;
     m_visualSampleRate = 0;
     m_audioVisualRatio = 0;
     m_data.clear();
@@ -162,16 +160,13 @@ void Waveform::reset() {
 }
 
 void Waveform::computeBestVisualSampleRate(int audioSampleRate, double desiredVisualSampleRate) {
-    m_audioSamplesPerVisualSample = std::floor((double)audioSampleRate / desiredVisualSampleRate);
-    const double actualVisualSamplingRate = (double)audioSampleRate /
-            (double)(m_audioSamplesPerVisualSample);
-    m_visualSampleRate = actualVisualSamplingRate;
-    m_audioVisualRatio = (double)audioSampleRate / (double)m_visualSampleRate;
+    m_audioVisualRatio = std::floor((double)audioSampleRate / desiredVisualSampleRate);
+    m_visualSampleRate = (double)audioSampleRate / m_audioVisualRatio;
 }
 
 void Waveform::allocateForAudioSamples(int audioSamples) {
-    double actualSize = m_audioSamplesPerVisualSample > 0 ?
-            audioSamples / m_audioSamplesPerVisualSample : 0;
+    double actualSize = m_audioVisualRatio > 0 ?
+            audioSamples / m_audioVisualRatio : 0;
     int numberOfVisualSamples = static_cast<int>(actualSize) + 1;
     numberOfVisualSamples += numberOfVisualSamples%2;
     assign(numberOfVisualSamples, 0);
@@ -225,7 +220,6 @@ void Waveform::dump() const {
              << "size("+QString::number(m_dataSize)+")"
              << "textureStride("+QString::number(m_textureStride)+")"
              << "completion("+QString::number(m_completion)+")"
-             << "audioSamplesPerVisualSample("+QString::number(m_audioSamplesPerVisualSample)+")"
              << "visualSampleRate("+QString::number(m_visualSampleRate)+")"
              << "audioVisualRatio("+QString::number(m_audioVisualRatio)+")";
 }

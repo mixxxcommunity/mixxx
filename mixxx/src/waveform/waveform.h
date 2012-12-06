@@ -59,7 +59,6 @@ class Waveform {
 
     double getVisualSampleRate() const { return m_visualSampleRate; }
     double getAudioVisualRatio() const { return m_audioVisualRatio; }
-    int getAudioSamplesPerVisualSample() const { return m_audioSamplesPerVisualSample; }
 
     // Atomically lookup the completion of the waveform. Represents the number
     // of data elements that have been processed out of dataSize.
@@ -115,7 +114,6 @@ class Waveform {
     const QAtomicInt m_numChannels;
     QAtomicInt m_dataSize; //m_data allocated size
     std::vector<WaveformData> m_data;
-    int m_audioSamplesPerVisualSample;
     double m_visualSampleRate;
     double m_audioVisualRatio;
 
