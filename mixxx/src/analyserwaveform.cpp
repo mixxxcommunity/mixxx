@@ -153,17 +153,17 @@ bool AnalyserWaveform::loadStored(TrackPointer tio) const {
         while (it.hasNext()) {
             const AnalysisDao::AnalysisInfo& analysis = it.next();
 
-            if (analysis.type == AnalysisDao::TYPE_WAVEFORM
-                    && analysis.version == WaveformFactory::getPreferredWaveformVersion()
-                    && missingWaveform) {
+            if (analysis.type == AnalysisDao::TYPE_WAVEFORM &&
+                    analysis.version == WaveformFactory::getPreferredWaveformVersion() &&
+                    missingWaveform) {
                 if (WaveformFactory::updateWaveformFromAnalysis(waveform, analysis)) {
                     missingWaveform = false;
                 } else {
                     m_analysisDao->deleteAnalysis(analysis.analysisId);
                 }
-            } else if (analysis.type == AnalysisDao::TYPE_WAVESUMMARY
-                    && analysis.version == WaveformFactory::getPreferredWaveformSummaryVersion()
-                    && missingWavesummary) {
+            } else if (analysis.type == AnalysisDao::TYPE_WAVESUMMARY &&
+                    analysis.version == WaveformFactory::getPreferredWaveformSummaryVersion() &&
+                    missingWavesummary) {
                 if (WaveformFactory::updateWaveformFromAnalysis(waveformSummary, analysis)) {
                     tio->waveformSummaryNew();
                     missingWavesummary = false;

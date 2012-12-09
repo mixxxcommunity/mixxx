@@ -195,7 +195,7 @@ void LibraryFeatures::addFeature(LibraryFeature* feature) {
 }
 
 void LibraryFeatures::slotShowTrackModel(QAbstractItemModel* model) {
-    //qDebug() << "Library::slotShowTrackModel" << model;
+    //qDebug() << "LibraryFeatures::slotShowTrackModel" << model;
     TrackModel* trackModel = dynamic_cast<TrackModel*>(model);
     Q_ASSERT(trackModel);
     emit(showTrackModel(model));
@@ -204,12 +204,24 @@ void LibraryFeatures::slotShowTrackModel(QAbstractItemModel* model) {
 }
 
 void LibraryFeatures::slotSwitchToView(const QString& view) {
-    //qDebug() << "Library::slotSwitchToView" << view;
+    //qDebug() << "LibraryFeatures::slotSwitchToView" << view;
     emit(switchToView(view));
 }
 
 void LibraryFeatures::slotLoadTrack(TrackPointer pTrack) {
     emit(loadTrack(pTrack));
+}
+
+void LibraryFeatures::slotLoadLocationToPlayer(QString location, QString group) {
+    TrackDAO& trackDao = m_pTrackCollection->getTrackDAO();
+    // Try to get TrackPointer from library, identified by location.
+    TrackPointer pTrack = trackDao.getTrack(trackDao.getTrackId(location));
+
+    // If not, create a new TrackPointer
+    if (!pTrack) {
+        pTrack = TrackPointer(new TrackInfoObject(location));
+    }
+    emit(loadTrackToPlayer(pTrack, group));
 }
 
 void LibraryFeatures::slotLoadTrackToPlayer(TrackPointer pTrack, QString group) {
@@ -234,6 +246,11 @@ void LibraryFeatures::slotCreatePlaylist()
 void LibraryFeatures::slotCreateCrate()
 {
     m_pCrateFeature->slotCreateCrate();
+}
+
+void LibraryFeatures::onSkinLoadFinished() {
+    // Enable the default selection when a new skin is loaded.
+    m_pSidebarModel->activateDefaultSelection();
 }
 
 void LibraryFeatures::slotLoadCover(QString img) {
