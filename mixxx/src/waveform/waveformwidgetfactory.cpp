@@ -24,6 +24,7 @@
 #include "waveform/vsyncthread.h"
 
 #include "util/performancetimer.h"
+#include "util/timer.h"
 
 ///////////////////////////////////////////
 
@@ -416,6 +417,9 @@ void WaveformWidgetFactory::notifyZoomChange(WWaveformViewer* viewer) {
 }
 
 void WaveformWidgetFactory::refresh() {
+    ScopedTimer t(QString("WaveformWidgetFactory::refresh() %1waveforms")
+            .arg(m_waveformWidgetHolders.size()));    
+
     int paintersSetupTime0 = 0;
     int paintersSetupTime1 = 0;
 
