@@ -25,6 +25,7 @@
 #include "wskincolor.h"
 #include "trackinfoobject.h"
 #include "mathstuff.h"
+#include "util/timer.h"
 
 #include "waveform/waveform.h"
 #include "waveform/waveformwidgetfactory.h"
@@ -37,13 +38,6 @@ WOverview::WOverview(const char *pGroup, ConfigObject<ConfigValue>* pConfig, QWi
       m_iPos(0),
       m_analyserProgress(-1),
       m_trackLoaded(false) {
-
-    m_totalGainControl = new ControlObjectThreadMain(
-                ControlObject::getControl( ConfigKey(m_pGroup,"total_gain")));
-    connect(m_totalGainControl, SIGNAL(valueChanged(double)),
-             this, SLOT(onTotalGainChange(double)));
-    m_totalGain = 1.0;
-
     m_endOfTrackControl = new ControlObjectThreadMain(
                 ControlObject::getControl( ConfigKey(m_pGroup,"end_of_track")));
     connect(m_endOfTrackControl, SIGNAL(valueChanged(double)),
@@ -71,7 +65,6 @@ WOverview::WOverview(const char *pGroup, ConfigObject<ConfigValue>* pConfig, QWi
 }
 
 WOverview::~WOverview() {
-    delete m_totalGainControl;
     delete m_endOfTrackControl;
     delete m_trackSamplesControl;
     delete m_playControl;
@@ -112,6 +105,12 @@ void WOverview::setup(QDomNode node) {
     //setup hotcues and cue and loop(s)
     m_marks.setup(m_pGroup,node);
 
+    for (int i = 0; i < m_marks.size(); ++i) {
+        WaveformMark& mark = m_marks[i];
+        connect(mark.m_pointControl, SIGNAL(valueChanged(double)),
+                this, SLOT(onMarkChanged(double)));
+    }
+
     QDomNode child = node.firstChild();
     while (!child.isNull()) {
         if (child.nodeName() == "MarkRange") {
@@ -136,7 +135,7 @@ void WOverview::setup(QDomNode node) {
     //waveform pixmap twice the heigth of the viewport to be scalable by total_gain
     //NOTE: vrince we keep full vertical range waveform data to scale it on paint
     m_waveformPixmap = QPixmap(width(),2*255);
-    m_waveformPixmap.fill( QColor(0,0,0,0));
+    m_waveformPixmap.fill(QColor(0,0,0,0));
 }
 
 void WOverview::setValue(double fValue) {
@@ -235,12 +234,6 @@ void WOverview::slotUnloadTrack(TrackPointer /*pTrack*/) {
     update();
 }
 
-void WOverview::onTotalGainChange(double v) {
-    //qDebug() << "WOverview::onTotalGainChange()" << v;
-    m_totalGain = v;
-    update();
-}
-
 void WOverview::onEndOfTrackChange(double v) {
     //qDebug() << "WOverview::onEndOfTrackChange()" << v;
     m_endOfTrack = v > 0.5;
@@ -258,6 +251,8 @@ void WOverview::onMarkRangeChange(double /*v*/) {
 }
 
 bool WOverview::drawNextPixmapPart() {
+    ScopedTimer t("WOverview::drawNextPixmapPart");
+
     //qDebug() << "WOverview::drawNextPixmapPart() - m_waveform" << m_waveform;
 
     int currentCompletion;
@@ -383,18 +378,14 @@ bool WOverview::drawNextPixmapPart() {
     return true;
 }
 
-void WOverview::mouseMoveEvent(QMouseEvent * e)
-{
+void WOverview::mouseMoveEvent(QMouseEvent* e) {
     m_iPos = e->x();
     m_iPos = math_max(1,math_min(m_iPos,width()-1));
-
     //qDebug() << "WOverview::mouseMoveEvent" << e->pos() << m_iPos;
-
     update();
 }
 
-void WOverview::mouseReleaseEvent(QMouseEvent * e)
-{
+void WOverview::mouseReleaseEvent(QMouseEvent* e) {
     mouseMoveEvent(e);
 
     float fValue = positionToValue(m_iPos);
@@ -409,15 +400,15 @@ void WOverview::mouseReleaseEvent(QMouseEvent * e)
     m_bDrag = false;
 }
 
-void WOverview::mousePressEvent(QMouseEvent * e)
-{
+void WOverview::mousePressEvent(QMouseEvent* e) {
     //qDebug() << "WOverview::mousePressEvent" << e->pos();
     mouseMoveEvent(e);
     m_bDrag = true;
 }
 
-void WOverview::paintEvent(QPaintEvent *)
-{
+void WOverview::paintEvent(QPaintEvent *) {
+    ScopedTimer t("WOverview::paintEvent");
+
     QPainter painter(this);
     painter.resetTransform();
     // Fill with transparent pixels
@@ -446,8 +437,10 @@ void WOverview::paintEvent(QPaintEvent *)
             QPen lowColorPen( QBrush(lowColor), 1.25, Qt::SolidLine, Qt::RoundCap);
             painter.setPen(lowColorPen);
             if (m_trackLoaded) {
+                //: Text on waveform overview when file is cached from source                
                 painter.drawText(1, 12, tr("Ready to play, analyzing .."));
             } else {
+                //: Text on waveform overview when file is playable but no waveform is visible
                 painter.drawText(1, 12, tr("Loading track .."));
             }
         }

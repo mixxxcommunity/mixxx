@@ -9,7 +9,7 @@
 #include "visualplayposition.h"
 #include "mathstuff.h"
 
-#include "performancetimer.h"
+#include "util/performancetimer.h"
 
 #include <QPainter>
 

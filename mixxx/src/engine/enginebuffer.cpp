@@ -37,6 +37,7 @@
 #include "engine/bpmcontrol.h"
 #include "engine/quantizecontrol.h"
 #include "visualplayposition.h"
+#include "util/timer.h"
 
 #ifdef __VINYLCONTROL__
 #include "engine/vinylcontrolcontrol.h"
@@ -555,6 +556,7 @@ void EngineBuffer::process(const CSAMPLE *, const CSAMPLE * pOut, const int iBuf
 
     bool bTrackLoading = m_iTrackLoading != 0;
     if (!bTrackLoading && m_pause.tryLock()) {
+        ScopedTimer t("EngineBuffer::process_pauselock");
         float sr = m_pSampleRate->get();
 
         double baserate = 0.0f;

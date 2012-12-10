@@ -38,8 +38,6 @@ class PrepareFeature : public LibraryFeature {
     void refreshLibraryModels();
 
   signals:
-    void trackAnalysisProgress(int progress);
-    void trackAnalysisFinished(int size);
     void analysisActive(bool bActive);
 
   public slots:
@@ -53,8 +51,6 @@ class PrepareFeature : public LibraryFeature {
     void analyzeTracks(QList<int> trackIds);
     void stopAnalysis();
     void cleanupAnalyser();
-    void slotTrackAnalysisProgress(int progress);
-    void slotTrackAnalysisFinished(int size);
 
   private:
     ConfigObject<ConfigValue>* m_pConfig;

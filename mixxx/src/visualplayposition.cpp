@@ -80,7 +80,6 @@ void VisualPlayPosition::getPlaySlipAt(int usFromNow, double* playPosition, doub
         int offset = dacFromNow - usFromNow;
         playPos = m_playPos;  // load playPos for the first sample in Buffer
         playPos += m_positionStep * offset * m_rate / m_audioBufferSize->get() / 1000;
-        m_playPosOld = playPos;
         *playPosition = playPos;
     } else {
         *playPosition = -1;

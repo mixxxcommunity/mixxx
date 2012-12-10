@@ -53,10 +53,6 @@ void PrepareFeature::bindWidget(WLibrary* libraryWidget,
 
     connect(this, SIGNAL(analysisActive(bool)),
             m_pPrepareView, SLOT(analysisActive(bool)));
-    connect(this, SIGNAL(trackAnalysisProgress(int)),
-            m_pPrepareView, SLOT(trackAnalysisProgress(int)));
-    connect(this, SIGNAL(trackAnalysisFinished(int)),
-            m_pPrepareView, SLOT(trackAnalysisFinished(int)));
 
     m_pPrepareView->installEventFilter(keyboard);
 
@@ -139,9 +135,10 @@ void PrepareFeature::analyzeTracks(QList<int> trackIds) {
         m_pAnalyserQueue = AnalyserQueue::createPrepareViewAnalyserQueue(m_pConfig);
 
         connect(m_pAnalyserQueue, SIGNAL(trackProgress(int)),
-                this, SLOT(slotTrackAnalysisProgress(int)));
+                m_pPrepareView, SLOT(trackAnalysisProgress(int)));
         connect(m_pAnalyserQueue, SIGNAL(trackFinished(int)),
-                this, SLOT(slotTrackAnalysisFinished(int)));
+                m_pPrepareView, SLOT(trackAnalysisFinished(int)));
+
         connect(m_pAnalyserQueue, SIGNAL(queueEmpty()),
                 this, SLOT(cleanupAnalyser()));
         emit(analysisActive(true));
@@ -154,16 +151,6 @@ void PrepareFeature::analyzeTracks(QList<int> trackIds) {
             m_pAnalyserQueue->queueAnalyseTrack(pTrack);
         }
     }
-}
-
-void PrepareFeature::slotTrackAnalysisProgress(int progress) {
-    //qDebug() << this << progress;
-    emit(trackAnalysisProgress(progress));
-}
-
-void PrepareFeature::slotTrackAnalysisFinished(int size) {
-    //qDebug() << this << "trackAnalysisFinished";
-    emit(trackAnalysisFinished(size));
 }
 
 void PrepareFeature::stopAnalysis() {

@@ -115,6 +115,7 @@ class MixxxApp : public QMainWindow {
     void slotViewShowSamplers(bool);
     void slotViewShowVinylControl(bool);
     void slotViewShowMicrophone(bool);
+    void slotViewShowPreviewDeck(bool);
     /** toogle full screen mode */
     void slotViewFullScreen(bool toggle);
     // Reload the skin.
@@ -204,6 +205,7 @@ class MixxxApp : public QMainWindow {
     QAction *m_pViewShowSamplers;
     QAction *m_pViewVinylControl;
     QAction *m_pViewShowMicrophone;
+    QAction *m_pViewShowPreviewDeck;
     QAction *m_pViewFullScreen;
     QAction *m_pHelpAboutApp;
     QAction *m_pHelpSupport;

@@ -1,22 +1,36 @@
-#include <QGLWidget>
+#include <QtDebug>
+#include <QGLContext>
 #include <QGLFormat>
-#include "sharedglcontext.h"
-#include <qdebug.h>
+#include <QGLWidget>
 
-// Singleton wrapper around QGLWidget
+#include "sharedglcontext.h"
+
+const QGLWidget* SharedGLContext::s_pSharedGLWidget = NULL;
 
 // static
-QGLWidget* SharedGLContext::s_pShareWidget = NULL;
-
-void SharedGLContext::initShareWidget(QWidget* parent) {
-    if (s_pShareWidget == NULL) {
-        // defaultFormat is configured in WaveformWidgetFactory::WaveformWidgetFactory();
-        s_pShareWidget = new QGLWidget(QGLFormat::defaultFormat(), parent);
-        s_pShareWidget->resize(1, 1);
+void SharedGLContext::setWidget(const QGLWidget* pWidget) {
+    s_pSharedGLWidget = pWidget;
+    qDebug() << "Set root GL Context widget valid:"
+             << pWidget << (pWidget && pWidget->isValid());
+    const QGLContext* pContext = pWidget->context();
+    qDebug() << "Created root GL Context valid:" << pContext
+             << (pContext && pContext->isValid());
+    if (pWidget) {
+        QGLFormat format = pWidget->format();
+        qDebug() << "Root GL Context format:";
+        qDebug() << "Double Buffering:" << format.doubleBuffer();
+        qDebug() << "Swap interval:" << format.swapInterval();
+        qDebug() << "Depth buffer:" << format.depth();
+        qDebug() << "Direct rendering:" << format.directRendering();
+        qDebug() << "Has overlay:" << format.hasOverlay();
+        qDebug() << "RGBA:" << format.rgba();
+        qDebug() << "Sample buffers:" << format.sampleBuffers();
+        qDebug() << "Stencil buffers:" << format.stencil();
+        qDebug() << "Stereo:" << format.stereo();
     }
 }
 
 // static
-const QGLWidget* SharedGLContext::getShareWidget() {
-    return s_pShareWidget;
+const QGLWidget* SharedGLContext::getWidget() {
+    return s_pSharedGLWidget;
 }

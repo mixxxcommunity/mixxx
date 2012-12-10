@@ -78,7 +78,10 @@ class WSpinny : public QGLWidget {
     int m_iTimerId;
     int m_iSignalUpdateTick;
     QString m_group;
-    float m_fGhostAngle; //Degrees
+    float m_fAngle; //Degrees
+    double m_dAngleLastPlaypos;
+    float m_fGhostAngle;
+    double m_dGhostAngleLastPlaypos;
     int m_iStartMouseX;
     int m_iStartMouseY;
     int m_iFullRotations;
@@ -86,6 +89,7 @@ class WSpinny : public QGLWidget {
     double m_dTheta;
     /** Speed of the vinyl rotation. */
     double m_dRotationsPerSecond;
+    bool m_bClampFailedWarning;
 };
 
 #endif //_WSPINNY_H

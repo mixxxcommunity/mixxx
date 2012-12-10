@@ -22,7 +22,6 @@
 #include "engine/engineobject.h"
 #include "controlobject.h"
 
-
 class ControlLogpotmeter;
 class ControlPotmeter;
 class ControlObject;
@@ -45,7 +44,6 @@ private:
     float m_fCurrentReplayGain;
     float m_fadeOffset;
     QTime m_fadeStart;
-
 };
 
 #endif

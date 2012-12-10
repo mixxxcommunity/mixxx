@@ -2,7 +2,7 @@
 #define VISUALPLAYPOSITION_H
 
 #include <portaudio.h>
-#include "performancetimer.h"
+#include "util/performancetimer.h"
 
 #include <QMutex>
 #include <QTime>

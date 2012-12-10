@@ -13,10 +13,10 @@
 #include "waveform/renderers/waveformrendererendoftrack.h"
 #include "waveform/renderers/waveformrenderbeat.h"
 
-#include "performancetimer.h"
+#include "util/performancetimer.h"
 
 GLVSyncTestWidget::GLVSyncTestWidget( const char* group, QWidget* parent)
-    : QGLWidget(parent, SharedGLContext::getShareWidget()),
+    : QGLWidget(parent, SharedGLContext::getWidget()),
       WaveformWidgetAbstract(group) {
 
 //    addRenderer<WaveformRenderBackground>(); // 172 µs

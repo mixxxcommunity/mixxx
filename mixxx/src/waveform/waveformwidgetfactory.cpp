@@ -23,7 +23,7 @@
 #include "widget/wwaveformviewer.h"
 #include "waveform/vsyncthread.h"
 
-#include "performancetimer.h"
+#include "util/performancetimer.h"
 
 ///////////////////////////////////////////
 

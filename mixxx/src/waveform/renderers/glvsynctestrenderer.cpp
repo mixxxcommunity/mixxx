@@ -5,7 +5,7 @@
 
 #include "waveform/waveformwidgetfactory.h"
 
-#include "performancetimer.h"
+#include "util/performancetimer.h"
 
 #include <qgl.h>
 

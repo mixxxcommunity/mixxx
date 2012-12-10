@@ -7,7 +7,7 @@
 #include <QPair>
 
 #include <qx11info_x11.h>
-#include "performancetimer.h"
+#include "util/performancetimer.h"
 
 
 #if defined(__APPLE__)

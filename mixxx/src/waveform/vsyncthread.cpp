@@ -8,7 +8,7 @@
 
 #include "mathstuff.h"
 #include "vsyncthread.h"
-#include "performancetimer.h"
+#include "util/performancetimer.h"
 
 #if defined(__APPLE__)
 

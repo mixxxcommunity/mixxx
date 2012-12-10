@@ -1,5 +1,8 @@
 #include "wspinny.h"
 #include <math.h>
+
+#include <QtDebug>
+
 #include "mathstuff.h"
 #include "wpixmapstore.h"
 #include "controlobject.h"
@@ -8,7 +11,7 @@
 #include "visualplayposition.h"
 
 WSpinny::WSpinny(QWidget* parent, VinylControlManager* pVCMan)
-        : QGLWidget(parent, SharedGLContext::getShareWidget()),
+        : QGLWidget(parent, SharedGLContext::getWidget()),
           m_pBG(NULL),
           m_pFG(NULL),
           m_pGhost(NULL),
@@ -26,17 +29,24 @@ WSpinny::WSpinny(QWidget* parent, VinylControlManager* pVCMan)
           m_bSignalActive(true),
           m_iSize(0),
           m_iSignalUpdateTick(0),
+          m_fAngle(0.0f),
+          m_dAngleLastPlaypos(-1),
           m_fGhostAngle(0.0f),
+          m_dGhostAngleLastPlaypos(-1),
           m_iStartMouseX(-1),
           m_iStartMouseY(-1),
           m_iFullRotations(0),
-          m_dPrevTheta(0.) {
+          m_dPrevTheta(0.),
+          m_bClampFailedWarning(false) {
 #ifdef __VINYLCONTROL__
     m_pVCManager = pVCMan;
     m_pVinylControl = NULL;
 #endif
     //Drag and drop
     setAcceptDrops(true);
+    qDebug() << "Created QGLWidget. Context"
+             << "Valid:" << context()->isValid()
+             << "Sharing:" << context()->isSharing();
 }
 
 WSpinny::~WSpinny()
@@ -214,16 +224,26 @@ void WSpinny::paintEvent(QPaintEvent *e) {
     double slipPosition;
     m_pVisualPlayPos->getPlaySlipAt(0, &playPosition, &slipPosition);
 
+    if (playPosition != m_dAngleLastPlaypos) {
+        m_fAngle = calculateAngle(playPosition);
+        m_dAngleLastPlaypos = playPosition;
+    }
+
+    if (slipPosition != m_dGhostAngleLastPlaypos) {
+        m_fGhostAngle = calculateAngle(slipPosition);
+        m_dGhostAngleLastPlaypos = slipPosition;
+    }
+
     if (m_pFG && !m_pFG->isNull()) {
         // Now rotate the pixmap and draw it on the screen.
-        p.rotate(calculateAngle(playPosition));
+        p.rotate(m_fAngle);
         p.drawImage(-(width() / 2), -(height() / 2), m_pFGImage);
     }
 
     if (bGhostPlayback && m_pGhost && !m_pGhost->isNull()) {
         p.restore();
         p.save();
-        p.rotate(calculateAngle(slipPosition));
+        p.rotate(m_fGhostAngle);
         p.drawImage(-(width() / 2), -(height() / 2), m_pGhostImage);
 
         //Rotate back to the playback position (not the ghost positon),
@@ -269,8 +289,13 @@ double WSpinny::calculateAngle(double playpos) {
     }
 
     if (angle <= -180 || angle > 180) {
-        qDebug() << "Angle clamping failed!" << t << originalAngle << "->" << angle
-                 << "Please file a bug or email mixxx-devel@lists.sourceforge.net";
+        // Only warn once per session. This can tank performance since it prints
+        // like crazy.
+        if (!m_bClampFailedWarning) {
+            qDebug() << "Angle clamping failed!" << t << originalAngle << "->" << angle
+                     << "Please file a bug or email mixxx-devel@lists.sourceforge.net";
+            m_bClampFailedWarning = true;
+        }
         return 0.0;
     }
     return angle;
@@ -358,9 +383,7 @@ void WSpinny::invalidateVinylControl() {
 #endif
 }
 
-
-void WSpinny::mouseMoveEvent(QMouseEvent * e)
-{
+void WSpinny::mouseMoveEvent(QMouseEvent * e) {
     int y = e->y();
     int x = e->x();
 
