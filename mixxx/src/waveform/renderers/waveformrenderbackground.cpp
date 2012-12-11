@@ -24,71 +24,57 @@ void WaveformRenderBackground::setup(const QDomNode& node) {
 void WaveformRenderBackground::draw(QPainter* painter,
                                     QPaintEvent* /*event*/) {
     if (isDirty()) {
-        generatePixmap();
+        generateImage();
     }
 
     // since we use opaque widget we need to draw the background !
-
-    //58 µs (QWidget Intel Qt 4.6)
-    //151 µs (QGlWidget Intel Qt 4.6)
-    //painter->fillRect(m_backgroundImage.rect(), m_backgroundColor);
-
-    // 731 µs (QWidget Intel Qt 4.6)
-    // 166 µs (QGlWidget Intel Qt 4.6)
-    // 170 µs (QGlWidget Radeon Qt 4.8)
-    // 161 µs (QWidget Radeon Qt 4.8)
     painter->drawImage(QPoint(0, 0), m_backgroundImage);
 
-    // This produces a white back ground with Linux QT 4.6 QGlWidget and Intel i915 driver
-    // time for such a setup:
-    // 38 µs (broken QGlWidget Intel Qt 4.6)
-    // 549 µs (QWidget Intel Qt 4.6)
-    // 355 µs (QGlWidget Radeon Qt 4.8)
-    // 174 µs (QWidget Radeon Qt 4.8)
+    // This produces a white back ground with Linux QT 4.6 QGlWidget and
+    // Intel i915 driver and has peroformance issues on other setups. See lp:981210
     //painter->drawPixmap(QPoint(0, 0), m_backgroundPixmap);
-
-    // 9089 µs (QGlWidget Intel Qt 4.6)
-    //painter->drawImage(QPoint(0, 0), m_backgroundPixmap.toImage());
 }
 
-void WaveformRenderBackground::generatePixmap() {
+void WaveformRenderBackground::generateImage() {
     if (m_backgroundPixmapPath != "") {
-        QPixmap backgroundPixmap(WWidget::getPath(m_backgroundPixmapPath));
+        QImage backgroundImage(WWidget::getPath(m_backgroundPixmapPath));
 
-        if (!backgroundPixmap.isNull()){
-            if (backgroundPixmap.width() == m_waveformRenderer->getWidth() &&
-                    backgroundPixmap.height() == m_waveformRenderer->getHeight()) {
-                m_backgroundPixmap = backgroundPixmap;
+        if (!backgroundImage.isNull()){
+            if (backgroundImage.width() == m_waveformRenderer->getWidth() &&
+                    backgroundImage.height() == m_waveformRenderer->getHeight()) {
+                m_backgroundImage = backgroundImage.convertToFormat(QImage::Format_RGB32);
             } else {
-                qWarning() << "WaveformRenderBackground::generatePixmap - file("
+                qWarning() << "WaveformRenderBackground::generateImage() - file("
                            << WWidget::getPath(m_backgroundPixmapPath)
-                           << ")" << backgroundPixmap.width()
-                           << "x" << backgroundPixmap.height()
+                           << ")" << backgroundImage.width()
+                           << "x" << backgroundImage.height()
                            << "do not fit the waveform widget size"
                            << m_waveformRenderer->getWidth()
                            << "x" << m_waveformRenderer->getHeight();
 
-                m_backgroundPixmap = QPixmap(m_waveformRenderer->getWidth(),
-                                             m_waveformRenderer->getHeight());
-                QPainter painter(&m_backgroundPixmap);
+                m_backgroundImage = QImage(m_waveformRenderer->getWidth(),
+                                             m_waveformRenderer->getHeight(),
+                                             QImage::Format_RGB32);
+                QPainter painter(&m_backgroundImage);
                 painter.setRenderHint(QPainter::SmoothPixmapTransform);
-                painter.drawPixmap(m_backgroundPixmap.rect(),
-                                   backgroundPixmap, backgroundPixmap.rect());
+                painter.drawImage(m_backgroundImage.rect(),
+                                   backgroundImage, backgroundImage.rect());
             }
         } else {
             qWarning() << "WaveformRenderBackground::generatePixmap - file("
                        << WWidget::getPath(m_backgroundPixmapPath)
                        << ") is not valid ...";
-            m_backgroundPixmap = QPixmap(m_waveformRenderer->getWidth(),
-                                         m_waveformRenderer->getHeight());
-            m_backgroundPixmap.fill(m_backgroundColor);
+            m_backgroundImage = QImage(m_waveformRenderer->getWidth(),
+                                         m_waveformRenderer->getHeight(),
+                                         QImage::Format_RGB32);
+            m_backgroundImage.fill(m_backgroundColor.rgb());
         }
     } else {
         qWarning() << "WaveformRenderBackground::generatePixmap - no background file";
-        m_backgroundPixmap = QPixmap(m_waveformRenderer->getWidth(),
-                                     m_waveformRenderer->getHeight());
-        m_backgroundPixmap.fill(m_backgroundColor);
+        m_backgroundImage = QImage(m_waveformRenderer->getWidth(),
+                                     m_waveformRenderer->getHeight(),
+                                     QImage::Format_RGB32);
+        m_backgroundImage.fill(m_backgroundColor.rgb());
     }
-    m_backgroundImage = m_backgroundPixmap.toImage();
     setDirty(false);
 }
