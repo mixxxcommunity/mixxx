@@ -105,6 +105,10 @@ WTrackTableView::~WTrackTableView()
     delete m_pNumPreviewDecks;
     delete m_pBpmLockAction;
     delete m_pBpmUnlockAction;
+    delete m_pPurgeAct;
+    delete m_pFileBrowserAct;
+    delete m_pResetPlayedAct;
+    delete m_pSamplerMenu;
 }
 
 // slot

@@ -32,7 +32,6 @@ void WaveformWidgetAbstract::preRender(VSyncThread* vsyncThread) {
 
 int WaveformWidgetAbstract::render() {
     if (m_widget) {
-        //m_widget->update();
         m_widget->repaint(); // Repaints the widget directly by calling paintEvent()
     }
     return 0; // Time for Painter setup, unknown in this case
