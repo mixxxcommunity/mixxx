@@ -20,11 +20,9 @@ class HSVWaveformWidget : public QWidget, public WaveformWidgetAbstract {
     virtual void castToQWidget();
     virtual void paintEvent(QPaintEvent* event);
 
-    virtual void updateVisualSamplingPerPixel();
-
   private:
     HSVWaveformWidget(const char* group, QWidget* parent);
     friend class WaveformWidgetFactory;
 };
 
-#endif // SOFTWAREWAVEFORMWIDGET_H
+#endif // HSVWAVEFORMWIDGET_H

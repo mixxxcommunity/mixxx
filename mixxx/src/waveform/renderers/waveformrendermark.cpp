@@ -107,9 +107,6 @@ void WaveformRenderMark::generateMarkImage( WaveformMark& mark) {
         labelRectWidth = wordRect.width() + 2*marginX + 4;
         labelRectHeight = wordRect.height() + 2*marginY + 4 ;
 
-        //vRince all the 0.5 stuff produce nicer rounded rectangle ... I don't know why !
-        //QRectF labelRect(0.5, 0.5,
-        //        (float)labelRectWidth - 0.5f, (float)labelRectHeight - 0.5f);
         QRectF labelRect(0, 0,
                 (float)labelRectWidth, (float)labelRectHeight);
 
@@ -136,6 +133,7 @@ void WaveformRenderMark::generateMarkImage( WaveformMark& mark) {
         painter.setPen(mark.m_color);
         painter.setBrush(QBrush(rectColor));
         painter.drawRoundedRect(labelRect, 2.0, 2.0);
+        //painter.drawRect(labelRect);
 
         //draw text
         painter.setBrush(QBrush(QColor(0,0,0,0)));

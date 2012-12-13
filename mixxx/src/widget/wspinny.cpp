@@ -4,17 +4,18 @@
 #include <QtDebug>
 
 #include "mathstuff.h"
-#include "wpixmapstore.h"
+#include "wimagestore.h"
 #include "controlobject.h"
 #include "controlobjectthreadmain.h"
 #include "sharedglcontext.h"
 #include "visualplayposition.h"
 
+
 WSpinny::WSpinny(QWidget* parent, VinylControlManager* pVCMan)
         : QGLWidget(parent, SharedGLContext::getWidget()),
-          m_pBG(NULL),
-          m_pFG(NULL),
-          m_pGhost(NULL),
+          m_pBgImage(NULL),
+          m_pFgImage(NULL),
+          m_pGhostImage(NULL),
           m_pPlay(NULL),
           m_pPlayPos(NULL),
           m_pDuration(NULL),
@@ -51,13 +52,13 @@ WSpinny::WSpinny(QWidget* parent, VinylControlManager* pVCMan)
 
 WSpinny::~WSpinny()
 {
-    //Don't delete these because the pixmap store takes care of them.
-    //delete m_pBG;
-    //delete m_pFG;
-    //delete m_pGhost;
-    WPixmapStore::deletePixmap(m_pBG);
-    WPixmapStore::deletePixmap(m_pFG);
-    WPixmapStore::deletePixmap(m_pGhost);
+    //Don't delete these because the image store takes care of them.
+    //delete m_pBgImage;
+    //delete m_pFgImage;
+    //delete m_pGhostImage;
+    WImageStore::deleteImage(m_pBgImage);
+    WImageStore::deleteImage(m_pFgImage);
+    WImageStore::deleteImage(m_pGhostImage);
     delete m_pPlay;
     delete m_pPlayPos;
     delete m_pDuration;
@@ -79,18 +80,15 @@ void WSpinny::setup(QDomNode node, QString group)
 {
     m_group = group;
 
-    // Set pixmaps
-    m_pBG = WPixmapStore::getPixmap(WWidget::getPath(WWidget::selectNodeQString(node,
+    // Set images
+    m_pBgImage = WImageStore::getImage(WWidget::getPath(WWidget::selectNodeQString(node,
                                                     "PathBackground")));
-    m_pBGImage = m_pBG->toImage();
-    m_pFG = WPixmapStore::getPixmap(WWidget::getPath(WWidget::selectNodeQString(node,
+    m_pFgImage = WImageStore::getImage(WWidget::getPath(WWidget::selectNodeQString(node,
                                                     "PathForeground")));
-    m_pFGImage = m_pFG->toImage();
-    m_pGhost = WPixmapStore::getPixmap(WWidget::getPath(WWidget::selectNodeQString(node,
+    m_pGhostImage = WImageStore::getImage(WWidget::getPath(WWidget::selectNodeQString(node,
                                                     "PathGhost")));
-    m_pGhostImage = m_pGhost->toImage();
-    if (m_pBG && !m_pBG->isNull()) {
-        setFixedSize(m_pBG->size());
+    if (m_pBgImage && !m_pBgImage->isNull()) {
+        setFixedSize(m_pBgImage->size());
     }
 
 #ifdef __VINYLCONTROL__
@@ -160,16 +158,15 @@ void WSpinny::paintEvent(QPaintEvent *e) {
     QPainter p(this);
     p.setRenderHint(QPainter::SmoothPixmapTransform);
 
-    if (m_pBG) {
-        //p.drawPixmap(0, 0, *m_pBG);
-        p.drawImage(0, 0, m_pBGImage);
+    if (m_pBgImage) {
+        p.drawImage(0, 0, *m_pBgImage);
     }
 
 #ifdef __VINYLCONTROL__
     // Overlay the signal quality drawing if vinyl is active
     if (m_bVinylActive && m_bSignalActive)
     {
-        //reduce cpu load by only updating every 3 times
+        // reduce cpu load by only updating every 3 times
         m_iSignalUpdateTick = (m_iSignalUpdateTick + 1) % 3;
         if (m_iSignalUpdateTick == 0)
         {
@@ -179,10 +176,10 @@ void WSpinny::paintEvent(QPaintEvent *e) {
                 QColor qual_color = QColor();
                 float signalQuality = m_pVinylControl->getTimecodeQuality();
 
-                //color is related to signal quality
-                //hsv:  s=1, v=1
-                //h is the only variable.
-                //h=0 is red, h=120 is green
+                // color is related to signal quality
+                // hsv:  s=1, v=1
+                // h is the only variable.
+                // h=0 is red, h=120 is green
                 qual_color.setHsv((int)(120.0 * signalQuality), 255, 255);
                 qual_color.getRgb(&r, &g, &b);
 
@@ -202,16 +199,16 @@ void WSpinny::paintEvent(QPaintEvent *e) {
         }
         else
         {
-            //draw the last good image
+            // draw the last good image
             p.drawImage(this->rect(), m_qImage);
         }
     }
 #endif
 
-    //To rotate the foreground pixmap around the center of the image,
-    //we use the classic trick of translating the coordinate system such that
-    //the origin is at the center of the image. We then rotate the coordinate system,
-    //and draw the pixmap at the corner.
+    // To rotate the foreground Image around the center of the image,
+    // we use the classic trick of translating the coordinate system such that
+    // the origin is at the center of the image. We then rotate the coordinate system,
+    // and draw the Image at the corner.
     p.translate(width() / 2, height() / 2);
 
     bool bGhostPlayback = m_pSlipEnabled->get();
@@ -234,17 +231,17 @@ void WSpinny::paintEvent(QPaintEvent *e) {
         m_dGhostAngleLastPlaypos = slipPosition;
     }
 
-    if (m_pFG && !m_pFG->isNull()) {
-        // Now rotate the pixmap and draw it on the screen.
+    if (m_pFgImage && !m_pFgImage->isNull()) {
+        // Now rotate the image and draw it on the screen.
         p.rotate(m_fAngle);
-        p.drawImage(-(width() / 2), -(height() / 2), m_pFGImage);
+        p.drawImage(-(width() / 2), -(height() / 2), *m_pFgImage);
     }
 
-    if (bGhostPlayback && m_pGhost && !m_pGhost->isNull()) {
+    if (bGhostPlayback && m_pGhostImage && !m_pGhostImage->isNull()) {
         p.restore();
         p.save();
         p.rotate(m_fGhostAngle);
-        p.drawImage(-(width() / 2), -(height() / 2), m_pGhostImage);
+        p.drawImage(-(width() / 2), -(height() / 2), *m_pGhostImage);
 
         //Rotate back to the playback position (not the ghost positon),
         //and draw the beat marks from there.

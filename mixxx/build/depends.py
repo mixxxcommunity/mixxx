@@ -521,6 +521,7 @@ class MixxxCore(Feature):
                    "widget/wsearchlineedit.cpp",
                    "widget/wcoverart.cpp",
                    "widget/wpixmapstore.cpp",
+                   "widget/wimagestore.cpp",
                    "widget/hexspinbox.cpp",
                    "widget/wtrackproperty.cpp",
                    "widget/wtime.cpp",
