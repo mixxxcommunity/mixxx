@@ -133,7 +133,7 @@ void WOverview::setup(QDomNode node) {
     //init waveform pixmap
     //waveform pixmap twice the heigth of the viewport to be scalable by total_gain
     //NOTE: vrince we keep full vertical range waveform data to scale it on paint
-    m_waveformPixmap = QPixmap(1,2*255);
+    m_waveformPixmap = QPixmap(1920,2*255);
     m_waveformPixmap.fill(QColor(0,0,0,0));
 }
 
@@ -263,9 +263,9 @@ bool WOverview::drawNextPixmapPart() {
         return false;
     }
 
-    if (m_waveformPixmap.width() != dataSize/2) {
-        m_waveformPixmap.scaledToWidth(dataSize/2);
-    }
+//    if (m_waveformPixmap.width() != dataSize/2) {
+//        m_waveformPixmap.scaledToWidth(dataSize/2);
+//    }
 
     const int analyserCompletion = (int)((float)(dataSize/2) * m_analyserProgress / 1000) * 2;
     const int waveformCompletion = m_waveform->getCompletion(); // always multiple of 2
@@ -278,7 +278,9 @@ bool WOverview::drawNextPixmapPart() {
     } else {
         completionIncrement = waveformCompletion - m_actualCompletion;
     }
-    if (completionIncrement < 2) {
+
+    int visiblePixelIncrement = completionIncrement * width() / dataSize; 
+    if (completionIncrement < 2 || visiblePixelIncrement == 0) {
         return false;
     }
 
@@ -294,67 +296,55 @@ bool WOverview::drawNextPixmapPart() {
     const int nextCompletion = m_actualCompletion + completionIncrement;
 
     QPainter painter(&m_waveformPixmap);
-    painter.setRenderHint(QPainter::Antialiasing);
-    painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
     painter.translate(0.0,(double)m_waveformPixmap.height()/2.0);
 
-    //draw only the new part
-    const float pixelStartPosition = 1.0 + (float)m_actualCompletion / (float)dataSize * (float)(width()-2);
-
-    const float alpha = 0.5;
-
     QColor lowColor = m_signalColors.getLowColor();
-    lowColor.setAlphaF(alpha);
-    QPen lowColorPen(QBrush(lowColor), 1.25, Qt::SolidLine, Qt::RoundCap);
+    QPen lowColorPen(QBrush(lowColor), 1);
 
     QColor midColor = m_signalColors.getMidColor();
-    midColor.setAlphaF(alpha);
-    QPen midColorPen(QBrush(midColor), 1.25, Qt::SolidLine, Qt::RoundCap);
+    QPen midColorPen(QBrush(midColor), 1);
 
     QColor highColor = m_signalColors.getHighColor();
-    highColor.setAlphaF(alpha);
-    QPen highColorPen(QBrush(highColor), 1.25, Qt::SolidLine, Qt::RoundCap);
+    QPen highColorPen(QBrush(highColor), 1);
 
     QColor axesColor = m_signalColors.getAxesColor();
-    axesColor.setAlphaF(alpha);
-    QPen axesColorPen(QBrush(axesColor), 1.25, Qt::SolidLine, Qt::RoundCap);
+    QPen axesColorPen(QBrush(axesColor), 1);
 
-    float pixelPosition = pixelStartPosition;
-    for(currentCompletion = m_actualCompletion;
+    for (currentCompletion = m_actualCompletion;
             currentCompletion < nextCompletion; currentCompletion += 2) {
         unsigned char lowNeg = m_waveform->getLow(currentCompletion);
         unsigned char lowPos = m_waveform->getLow(currentCompletion+1);
         if (lowPos || lowNeg) {
             painter.setPen(lowColorPen);
-            painter.drawLine(QPointF(pixelPosition, -lowNeg),
-                             QPointF(pixelPosition, lowPos));
+            painter.drawLine(QPoint(currentCompletion, -lowNeg),
+                             QPoint(currentCompletion, lowPos));
         } else {
             // Draw flat axes for progress when silence
             painter.setPen(axesColorPen);
-            painter.drawPoint(QPointF(pixelPosition, 0));
+            painter.drawPoint(QPoint(currentCompletion, 0));
         }
-        pixelPosition += 2.0;
     }
 
-    pixelPosition = pixelStartPosition;
-    for(currentCompletion = m_actualCompletion; currentCompletion < nextCompletion; currentCompletion += 2) {
+    for (currentCompletion = m_actualCompletion; 
+            currentCompletion < nextCompletion; currentCompletion += 2) {
         painter.setPen(midColorPen);
-        painter.drawLine(QPointF(pixelPosition, - m_waveform->getMid(currentCompletion)),
-                         QPointF(pixelPosition, m_waveform->getMid(currentCompletion+1)));
+        painter.drawLine(QPoint(currentCompletion, - m_waveform->getMid(currentCompletion)),
+                         QPoint(currentCompletion, m_waveform->getMid(currentCompletion+1)));
         pixelPosition += 2.0;
     }
 
-    pixelPosition = pixelStartPosition;
-    for(currentCompletion = m_actualCompletion; currentCompletion < nextCompletion; currentCompletion += 2) {
+    for (currentCompletion = m_actualCompletion;
+            currentCompletion < nextCompletion; currentCompletion += 2) {
         painter.setPen(highColorPen);
-        painter.drawLine(QPointF(pixelPosition, - m_waveform->getHigh(currentCompletion)),
-                         QPointF(pixelPosition, m_waveform->getHigh(currentCompletion+1)));
+        painter.drawLine(QPoint(currentCompletion, - m_waveform->getHigh(currentCompletion)),
+                         QPoint(currentCompletion, m_waveform->getHigh(currentCompletion+1)));
         pixelPosition += 2.0;
     }
 
     //evaluate waveform ratio peak
 
-    for(currentCompletion = m_actualCompletion; currentCompletion < nextCompletion; currentCompletion += 2) {
+    for (currentCompletion = m_actualCompletion;
+            currentCompletion < nextCompletion; currentCompletion += 2) {
         m_waveformPeak = math_max(m_waveformPeak, (float)m_waveform->getAll(currentCompletion));
         m_waveformPeak = math_max(m_waveformPeak, (float)m_waveform->getAll(currentCompletion+1));
     }
@@ -362,7 +352,7 @@ bool WOverview::drawNextPixmapPart() {
     m_actualCompletion = nextCompletion;
 
     //test if the complete waveform is done
-    if( m_actualCompletion >= dataSize - 2) {
+    if (m_actualCompletion >= dataSize - 2) {
         m_pixmapDone = true;
         //qDebug() << "m_waveformPeakRatio" << m_waveformPeak;
     }
@@ -373,7 +363,7 @@ bool WOverview::drawNextPixmapPart() {
 
 void WOverview::mouseMoveEvent(QMouseEvent* e) {
     m_iPos = e->x();
-    m_iPos = math_max(1,math_min(m_iPos,width()-1));
+    m_iPos = math_max(1, math_min(m_iPos, width() - 1));
     //qDebug() << "WOverview::mouseMoveEvent" << e->pos() << m_iPos;
     update();
 }
@@ -385,11 +375,11 @@ void WOverview::mouseReleaseEvent(QMouseEvent* e) {
 
     //qDebug() << "WOverview::mouseReleaseEvent" << e->pos() << m_iPos << ">>" << fValue;
 
-    if (e->button()==Qt::RightButton)
+    if (e->button() == Qt::RightButton) { 
         emit(valueChangedRightUp(fValue));
-    else
+    } else {
         emit(valueChangedLeftUp(fValue));
-
+    }
     m_bDrag = false;
 }
 
@@ -453,19 +443,17 @@ void WOverview::paintEvent(QPaintEvent *) {
         }
         painter.setOpacity(1.0);
 
+        int diffGain; 
         bool normalize = widgetFactory->isOverviewNormalized();
-        if( normalize && m_pixmapDone && m_waveformPeak > 1) {
-            int diffPeak = 255 - m_waveformPeak - 1;
-            QRect sourceRect( 0, diffPeak,
-                              m_waveformPixmap.width(), m_waveformPixmap.height()-2*diffPeak);
-            painter.drawPixmap(rect(), m_waveformPixmap, sourceRect);
+        if (normalize && m_pixmapDone && m_waveformPeak > 1) {
+            diffGain = 255 - m_waveformPeak - 1;
         } else {
             const double visualGain = widgetFactory->getVisualGain(WaveformWidgetFactory::All);
-            const int diffGain = 255.0 - 255.0/visualGain;
-            QRect sourceRect( 0, diffGain,
-                              m_waveformPixmap.width(), m_waveformPixmap.height()-2*diffGain);
-            painter.drawPixmap(rect(), m_waveformPixmap, sourceRect);
+            diffGain = 255.0 - 255.0 / visualGain;
         }
+        QRect sourceRect( 0, diffGain, m_waveformPixmap.width(), 
+            m_waveformPixmap.height() - 2 * diffGain);
+        painter.drawPixmap(rect(), m_waveformPixmap, sourceRect);
     }
 
     double trackSamples = m_trackSamplesControl->get();

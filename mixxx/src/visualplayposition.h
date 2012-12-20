@@ -27,8 +27,8 @@ class VisualPlayPosition
 
 
   private:
-    bool m_valid;
     double m_playPos;
+    bool m_valid;
     double m_playPosOld;
     double m_rate;
     double m_positionStep;

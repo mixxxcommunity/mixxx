@@ -159,16 +159,33 @@ void Waveform::reset() {
     m_bDirty = true;
 }
 
-void Waveform::computeBestVisualSampleRate(int audioSampleRate, double desiredVisualSampleRate) {
-    m_audioVisualRatio = std::floor((double)audioSampleRate / desiredVisualSampleRate);
-    m_visualSampleRate = (double)audioSampleRate / m_audioVisualRatio;
-}
+void Waveform::initalise(int audioSampleRate, int audioSamples,
+        int desiredVisualSampleRate, int maxVisualSamples) {
+    int numberOfVisualSamples;
 
-void Waveform::allocateForAudioSamples(int audioSamples) {
-    double actualSize = m_audioVisualRatio > 0 ?
-            audioSamples / m_audioVisualRatio : 0;
-    int numberOfVisualSamples = static_cast<int>(actualSize) + 1;
-    numberOfVisualSamples += numberOfVisualSamples%2;
+    if (audioSampleRate) {
+        if (maxVisualSamples == -1) {
+            // Waveform
+            if (desiredVisualSampleRate < audioSampleRate) {
+                m_visualSampleRate = (double)desiredVisualSampleRate;
+            } else {
+                m_visualSampleRate = (double)audioSampleRate;
+            }
+        } else {
+            // Waveform Summary (Overview)
+            if (audioSamples > maxVisualSamples) {
+                m_visualSampleRate = (double)maxVisualSamples *
+                        (double)audioSampleRate / (double)audioSamples;
+            } else {
+                m_visualSampleRate = audioSampleRate;
+            }
+        }
+        m_audioVisualRatio = (double)audioSampleRate / (double)m_visualSampleRate;
+        numberOfVisualSamples = (audioSamples / m_audioVisualRatio) + 1;
+        numberOfVisualSamples += numberOfVisualSamples%2;
+    } else {
+        numberOfVisualSamples = 0;
+    }
     assign(numberOfVisualSamples, 0);
     setCompletion(0);
     m_bDirty = true;

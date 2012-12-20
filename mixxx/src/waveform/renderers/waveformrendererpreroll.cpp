@@ -29,7 +29,6 @@ void WaveformRendererPreroll::draw(QPainter* painter, QPaintEvent* event) {
     if (!track) {
         return;
     }
-    const Waveform* waveform = track->getWaveform();
     double samplesPerPixel = m_waveformRenderer->getVisualSamplePerPixel();
     double numberOfSamples = m_waveformRenderer->getWidth() * samplesPerPixel;
 

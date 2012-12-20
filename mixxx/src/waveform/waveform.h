@@ -92,9 +92,8 @@ class Waveform {
     void resize(int size);
     void assign(int size, int value = 0);
 
-    void computeBestVisualSampleRate(int audioSampleRate,
-                                     double desiredVisualSampleRate);
-    void allocateForAudioSamples(int audioSamples);
+    void initalise(int audioSampleRate, int audioSamples,
+            int desiredVisualSampleRate, int maxVisualSamples = -1);
 
     inline WaveformData& at(int i) { return m_data[i];}
     inline unsigned char& low(int i) { return m_data[i].filtered.low;}

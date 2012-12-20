@@ -19,11 +19,11 @@ AnalyserWaveform::AnalyserWaveform(ConfigObject<ConfigValue>* pConfig) :
         m_waveform(NULL),
         m_waveformSummary(NULL),
         m_waveformDataSize(0),
-        m_currentSummaryStride(0),
-        m_currentStride(0),
+        m_waveformSummaryDataSize(0),
         m_waveformData(NULL),
         m_waveformSummaryData(NULL),
-        m_waveformSummaryDataSize(0) {
+        m_currentStride(0),
+        m_currentSummaryStride(0) {
     qDebug() << "AnalyserWaveform::AnalyserWaveform()";
 
     m_filter[0] = 0;
@@ -81,46 +81,20 @@ bool AnalyserWaveform::initialise(TrackPointer tio, int sampleRate, int totalSam
         resetFilters(tio, sampleRate);
 
         //TODO (vrince) Do we want to expose this as settings or whatever ?
-        const double mainWaveformSampleRate = 441;
-        m_waveform->computeBestVisualSampleRate(sampleRate, mainWaveformSampleRate);
-
+        const int mainWaveformSampleRate = 441;
         //two visual sample per pixel in full width overview in full hd
-        int summaryWaveformSamples = 2*1920;
-        double summaryWaveformSampleRate = (double)summaryWaveformSamples * (double)sampleRate / (double)totalSamples;
-        double summaryMainRatio = summaryWaveformSampleRate / m_waveform->getVisualSampleRate();
- //       if (summaryWaveformSampleRate > m_waveform->getVisualSampleRate()) {
- //           double summaryMainRatio = ceil(summaryWaveformSampleRate / m_waveform->getVisualSampleRate());
- //       } else {
+        const int summaryWaveformSamples = 2*1920;
+        m_waveform->initalise(sampleRate, totalSamples, mainWaveformSampleRate);
+        m_waveformSummary->initalise(sampleRate, totalSamples,
+                mainWaveformSampleRate, summaryWaveformSamples);
 
- //       }
-
-        summaryWaveformSampleRate = summaryMainRatio * m_waveform->getVisualSampleRate();
-        m_waveformSummary->computeBestVisualSampleRate(sampleRate, summaryWaveformSampleRate);
-
-        // getDataSize() of both waveform and waveformSummary are now totalSamples
-        m_waveform->allocateForAudioSamples(totalSamples);
-        m_waveformSummary->allocateForAudioSamples(totalSamples);
         m_waveformDataSize = m_waveform->getDataSize();
         m_waveformSummaryDataSize = m_waveformSummary->getDataSize();
 
         m_waveformData = &m_waveform->at(0);
         m_waveformSummaryData = &m_waveformSummary->at(0);
 
-        m_stride.reset();
-        m_strideSummary.reset();
-
-        const double mainSummaryRatio = m_waveform->getVisualSampleRate() / m_waveformSummary->getVisualSampleRate();
-        if (mainSummaryRatio < 1) {
-            const int summaryStrideLength = (int)(1.0/mainSummaryRatio);
-            m_strideSummary.init(m_waveformSummary->getAudioVisualRatio());
-            m_stride.init(summaryStrideLength);
-            m_stride.m_conversionFactor = (double)mainSummaryRatio; // required, because sumary is the everage of maxes
-        } else {
-            const int summaryStrideLength = ceil(mainSummaryRatio);
-            m_stride.init((int)m_waveform->getAudioVisualRatio());
-            m_strideSummary.init(summaryStrideLength);
-            m_strideSummary.m_conversionFactor = 1.0 / (double)mainSummaryRatio; // required, because sumary is the everage of maxes
-        }
+        m_stride.init(m_waveform->getAudioVisualRatio(), m_waveformSummary->getAudioVisualRatio());
 
         m_currentStride = 0;
         m_currentSummaryStride = 0;
@@ -157,22 +131,27 @@ bool AnalyserWaveform::loadStored(TrackPointer tio) const {
         QListIterator<AnalysisDao::AnalysisInfo> it(analyses);
         while (it.hasNext()) {
             const AnalysisDao::AnalysisInfo& analysis = it.next();
+            WaveformFactory::VersionClass vc;
 
-            if (analysis.type == AnalysisDao::TYPE_WAVEFORM &&
-                    analysis.version == WaveformFactory::getPreferredWaveformVersion() &&
-                    missingWaveform) {
-                if (WaveformFactory::updateWaveformFromAnalysis(waveform, analysis)) {
-                    missingWaveform = false;
-                } else {
+            if (analysis.type == AnalysisDao::TYPE_WAVEFORM) {
+                vc = WaveformFactory::waveformVersionToVersionClass(analysis.version);
+                if (missingWaveform && vc == WaveformFactory::VC_USE) {
+                    if (WaveformFactory::updateWaveformFromAnalysis(waveform, analysis)) {
+                        missingWaveform = false;
+                    }
+                } else if (vc != WaveformFactory::VC_KEEP) {
+                    // remove all other Analysis except that one we should keep
                     m_analysisDao->deleteAnalysis(analysis.analysisId);
                 }
-            } else if (analysis.type == AnalysisDao::TYPE_WAVESUMMARY &&
-                    analysis.version == WaveformFactory::getPreferredWaveformSummaryVersion() &&
-                    missingWavesummary) {
-                if (WaveformFactory::updateWaveformFromAnalysis(waveformSummary, analysis)) {
-                    tio->waveformSummaryNew();
-                    missingWavesummary = false;
-                } else {
+            } if (analysis.type == AnalysisDao::TYPE_WAVESUMMARY) {
+                vc = WaveformFactory::waveformSummaryVersionToVersionClass(analysis.version);
+                if (missingWavesummary && vc == WaveformFactory::VC_USE) {
+                    if (WaveformFactory::updateWaveformFromAnalysis(waveformSummary, analysis)) {
+                        tio->waveformSummaryNew();
+                        missingWavesummary = false;
+                    }
+                } else if (vc != WaveformFactory::VC_KEEP) {
+                    // remove all other Analysis except that one we should keep
                     m_analysisDao->deleteAnalysis(analysis.analysisId);
                 }
             }
@@ -213,7 +192,7 @@ void AnalyserWaveform::process(const CSAMPLE *buffer, const int bufferLength) {
         return;
 
     //this should only append once if bufferLength is constant
-    if( bufferLength > (int)m_buffers[0].size()) {
+    if (bufferLength > (int)m_buffers[0].size()) {
         m_buffers[Low].resize(bufferLength);
         m_buffers[Mid].resize(bufferLength);
         m_buffers[High].resize(bufferLength);
@@ -242,150 +221,49 @@ void AnalyserWaveform::process(const CSAMPLE *buffer, const int bufferLength) {
         // m_stride.m_filteredData[Right][High] += m_buffers[High][i  ]*m_buffers[High][i];
         // m_stride.m_filteredData[ Left][High] += m_buffers[High][i+1]*m_buffers[High][i+1];
 
+        // Record the max across this stride.
+        storeIfGreater(&m_stride.m_overallData[Left], cover[Left]);
+        storeIfGreater(&m_stride.m_overallData[Right], cover[Right]);
+        storeIfGreater(&m_stride.m_filteredData[ Left][ Low], clow[Left]);
+        storeIfGreater(&m_stride.m_filteredData[Right][ Low], clow[Right]);
+        storeIfGreater(&m_stride.m_filteredData[ Left][ Mid], cmid[Left]);
+        storeIfGreater(&m_stride.m_filteredData[Right][ Mid], cmid[Right]);
+        storeIfGreater(&m_stride.m_filteredData[ Left][High], chigh[Left]);
+        storeIfGreater(&m_stride.m_filteredData[Right][High], chigh[Right]);
 
-        const double mainSummaryRatio = m_waveform->getVisualSampleRate() / m_waveformSummary->getVisualSampleRate();
-        if (mainSummaryRatio < 1) {
-            // Record the max across this stride.
-             storeIfGreater(&m_strideSummary.m_overallData[Left], cover[Left]);
-             storeIfGreater(&m_strideSummary.m_overallData[Right], cover[Right]);
-             storeIfGreater(&m_strideSummary.m_filteredData[ Left][ Low], clow[Left]);
-             storeIfGreater(&m_strideSummary.m_filteredData[Right][ Low], clow[Right]);
-             storeIfGreater(&m_strideSummary.m_filteredData[ Left][ Mid], cmid[Left]);
-             storeIfGreater(&m_strideSummary.m_filteredData[Right][ Mid], cmid[Right]);
-             storeIfGreater(&m_strideSummary.m_filteredData[ Left][High], chigh[Left]);
-             storeIfGreater(&m_strideSummary.m_filteredData[Right][High], chigh[Right]);
+        m_stride.m_position++;
 
-             if( m_strideSummary.m_position >= m_strideSummary.m_length) {
-                 if (m_currentSummaryStride + ChannelCount > m_waveformSummaryDataSize) {
-                     qWarning() << "AnalyserWaveform::process - currentStrideSummary >= waveform summary size";
-                     return;
-                 }
-
-                 m_strideSummary.store(m_waveformSummaryData + m_currentSummaryStride);
-
-                 // summary is an average of the maxes
-                 m_stride.m_overallData[Left] += m_strideSummary.m_overallData[ Left];
-                 m_stride.m_overallData[Right] += m_strideSummary.m_overallData[ Right];
-                 m_stride.m_filteredData[ Left][ Low] += m_strideSummary.m_filteredData[ Left][ Low];
-                 m_stride.m_filteredData[Right][ Low] += m_strideSummary.m_filteredData[Right][ Low];
-                 m_stride.m_filteredData[ Left][ Mid] += m_strideSummary.m_filteredData[ Left][ Mid];
-                 m_stride.m_filteredData[Right][ Mid] += m_strideSummary.m_filteredData[Right][ Mid];
-                 m_stride.m_filteredData[ Left][High] += m_strideSummary.m_filteredData[ Left][High];
-                 m_stride.m_filteredData[Right][High] += m_strideSummary.m_filteredData[Right][High];
-
-                 if( m_stride.m_position >= m_stride.m_length) {
-                     if (m_currentStride + ChannelCount > m_waveformDataSize) {
-                         qWarning() << "AnalyserWaveform::process - current stride >= waveform size";
-                         return;
-                     }
-
-                     m_stride.store(m_waveformData + m_currentStride);
-                     m_stride.reset();
-                     m_currentStride += 2;
-                 }
-                 m_stride.m_position += 2;
-                 m_strideSummary.reset();
-                 m_currentSummaryStride += 2;
-             }
-             m_strideSummary.m_position += 2;
-        } else {
-            // Record the max across this stride.
-            storeIfGreater(&m_stride.m_overallData[Left], cover[Left]);
-            storeIfGreater(&m_stride.m_overallData[Right], cover[Right]);
-            storeIfGreater(&m_stride.m_filteredData[ Left][ Low], clow[Left]);
-            storeIfGreater(&m_stride.m_filteredData[Right][ Low], clow[Right]);
-            storeIfGreater(&m_stride.m_filteredData[ Left][ Mid], cmid[Left]);
-            storeIfGreater(&m_stride.m_filteredData[Right][ Mid], cmid[Right]);
-            storeIfGreater(&m_stride.m_filteredData[ Left][High], chigh[Left]);
-            storeIfGreater(&m_stride.m_filteredData[Right][High], chigh[Right]);
-
-            if( m_stride.m_position >= m_stride.m_length) {
-                if (m_currentStride + ChannelCount > m_waveformDataSize) {
-                    qWarning() << "AnalyserWaveform::process - currentStride >= waveform size";
-                    return;
-                }
-
-                m_stride.store(m_waveformData + m_currentStride);
-
-                // summary is an average of the maxes
-                m_strideSummary.m_overallData[Left] += m_stride.m_overallData[ Left];
-                m_strideSummary.m_overallData[Right] += m_stride.m_overallData[ Right];
-                m_strideSummary.m_filteredData[ Left][ Low] += m_stride.m_filteredData[ Left][ Low];
-                m_strideSummary.m_filteredData[Right][ Low] += m_stride.m_filteredData[Right][ Low];
-                m_strideSummary.m_filteredData[ Left][ Mid] += m_stride.m_filteredData[ Left][ Mid];
-                m_strideSummary.m_filteredData[Right][ Mid] += m_stride.m_filteredData[Right][ Mid];
-                m_strideSummary.m_filteredData[ Left][High] += m_stride.m_filteredData[ Left][High];
-                m_strideSummary.m_filteredData[Right][High] += m_stride.m_filteredData[Right][High];
-
-                //NOTE: (vrince) test save main max in summary
-                /*
-                m_strideSummary.m_overallData[Right] = math_max(
-                            m_strideSummary.m_overallData[Right],
-                            m_stride.m_overallData[Right]);
-                m_strideSummary.m_overallData[ Left] = math_max(
-                            m_strideSummary.m_overallData[ Left],
-                            m_stride.m_overallData[ Left]);
-                m_strideSummary.m_filteredData[Right][ Low] = math_max(
-                            m_strideSummary.m_filteredData[Right][ Low],
-                            m_stride.m_filteredData[Right][ Low]);
-                m_strideSummary.m_filteredData[ Left][ Low] = math_max(
-                            m_strideSummary.m_filteredData[ Left][ Low],
-                            m_stride.m_filteredData[ Left][ Low]);
-                m_strideSummary.m_filteredData[Right][ Mid] = math_max(
-                            m_strideSummary.m_filteredData[Right][ Mid],
-                            m_stride.m_filteredData[Right][ Mid]);
-                m_strideSummary.m_filteredData[ Left][ Mid] = math_max(
-                            m_strideSummary.m_filteredData[ Left][ Mid],
-                            m_stride.m_filteredData[ Left][ Mid]);
-                m_strideSummary.m_filteredData[Right][High] = math_max(
-                            m_strideSummary.m_filteredData[Right][High],
-                            m_stride.m_filteredData[Right][High]);
-                m_strideSummary.m_filteredData[ Left][High] = math_max(
-                            m_strideSummary.m_filteredData[ Left][High],
-                            m_stride.m_filteredData[ Left][High]);
-                            */
-
-
-                if( m_strideSummary.m_position >= m_strideSummary.m_length) {
-                    if (m_currentSummaryStride + ChannelCount > m_waveformSummaryDataSize) {
-                        qWarning() << "AnalyserWaveform::process - current summary stride >= waveform summary size";
-                        return;
-                    }
-
-    #ifdef TEST_HEAT_MAP
-                    QPointF point(float(m_strideSummary.m_filteredData[Right][High]),
-                                  float(m_strideSummary.m_filteredData[Right][ Mid]));
-
-                    float norm = sqrt(point.x()*point.x() + point.y()*point.y());
-                    point /= norm;
-
-                    point *= m_strideSummary.m_filteredData[Right][ Low];
-                    test_heatMap->setPixel(point.toPoint(),0xFF0000FF);
-    #endif
-
-                    m_strideSummary.store(m_waveformSummaryData + m_currentSummaryStride);
-                    m_strideSummary.reset();
-
-
-    /*                qDebug() << "m_strideSummary"
-                             << (m_waveformSummaryData + m_currentSummaryStride)->filtered.all
-                             << (m_waveformSummaryData + m_currentSummaryStride)->filtered.low
-                             << (m_waveformSummaryData + m_currentSummaryStride)->filtered.mid
-                             << (m_waveformSummaryData + m_currentSummaryStride)->filtered.high;*/
-
-
-                    m_currentSummaryStride += 2;
-                }
-                m_strideSummary.m_position += 2;
-                m_stride.reset();
-                m_currentStride += 2;
+        if (fmod(m_stride.m_position, m_stride.m_length) < 1) {
+            if (m_currentStride + ChannelCount > m_waveformDataSize) {
+                qWarning() << "AnalyserWaveform::process - currentStride >= waveform size";
+                return;
             }
-            m_stride.m_position += 2;
+            m_stride.store(m_waveformData + m_currentStride);
+            m_currentStride += 2;
+            m_waveform->setCompletion(m_currentStride);
+        }
+
+        if (fmod(m_stride.m_position, m_stride.m_averageLength) < 1) {
+            if (m_currentSummaryStride + ChannelCount > m_waveformSummaryDataSize) {
+                qWarning() << "AnalyserWaveform::process - current summary stride >= waveform summary size";
+                return;
+            }
+            m_stride.averageStore(m_waveformSummaryData + m_currentSummaryStride);
+            m_currentSummaryStride += 2;
+            m_waveformSummary->setCompletion(m_currentSummaryStride);
+
+#ifdef TEST_HEAT_MAP
+                QPointF point(float(m_strideSummary.m_filteredData[Right][High]),
+                              float(m_strideSummary.m_filteredData[Right][ Mid]));
+
+                float norm = sqrt(point.x()*point.x() + point.y()*point.y());
+                point /= norm;
+
+                point *= m_strideSummary.m_filteredData[Right][ Low];
+                test_heatMap->setPixel(point.toPoint(),0xFF0000FF);
+#endif
         }
     }
-
-    m_waveform->setCompletion(m_currentStride);
-    m_waveformSummary->setCompletion(m_currentSummaryStride);
 
     //qDebug() << "AnalyserWaveform::process - m_waveform->getCompletion()" << m_waveform->getCompletion() << "off" << m_waveform->getDataSize();
     //qDebug() << "AnalyserWaveform::process - m_waveformSummary->getCompletion()" << m_waveformSummary->getCompletion() << "off" << m_waveformSummary->getDataSize();
@@ -414,14 +292,14 @@ void AnalyserWaveform::finalise(TrackPointer tio) {
     QMutexLocker waveformLocker(m_waveform->getMutex());
     // Force completion to waveform size
     m_waveform->setCompletion(m_waveform->getDataSize());
-    m_waveform->setVersion(WaveformFactory::getPreferredWaveformVersion());
-    m_waveform->setDescription(WaveformFactory::getPreferredWaveformDescription());
+    m_waveform->setVersion(WaveformFactory::currentWaveformVersion());
+    m_waveform->setDescription(WaveformFactory::currentWaveformDescription());
 
     QMutexLocker waveformSummaryLocker(m_waveformSummary->getMutex());
     // Force completion to waveform size
     m_waveformSummary->setCompletion(m_waveformSummary->getDataSize());
-    m_waveformSummary->setVersion(WaveformFactory::getPreferredWaveformSummaryVersion());
-    m_waveformSummary->setDescription(WaveformFactory::getPreferredWaveformSummaryDescription());
+    m_waveformSummary->setVersion(WaveformFactory::currentWaveformSummaryVersion());
+    m_waveformSummary->setDescription(WaveformFactory::currentWaveformSummaryDescription());
 
 
 #ifdef TEST_HEAT_MAP
