@@ -97,7 +97,6 @@ private slots:
 
     /** Hold the last visual sample processed to generate the pixmap*/
     int m_actualCompletion;
-    double m_visualSamplesByPixel;
     int m_renderSampleLimit;
 
     // Current active track

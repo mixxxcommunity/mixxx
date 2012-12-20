@@ -54,7 +54,6 @@ WOverview::WOverview(const char *pGroup, ConfigObject<ConfigValue>* pConfig, QWi
     m_waveform = NULL;
     m_waveformPixmap = QPixmap();
     m_actualCompletion = 0;
-    m_visualSamplesByPixel = 0.0;
     m_waveformPeak = -1.0;
     m_pixmapDone = false;
 
@@ -134,7 +133,7 @@ void WOverview::setup(QDomNode node) {
     //init waveform pixmap
     //waveform pixmap twice the heigth of the viewport to be scalable by total_gain
     //NOTE: vrince we keep full vertical range waveform data to scale it on paint
-    m_waveformPixmap = QPixmap(width(),2*255);
+    m_waveformPixmap = QPixmap(1,2*255);
     m_waveformPixmap.fill(QColor(0,0,0,0));
 }
 
@@ -186,7 +185,6 @@ void WOverview::slotLoadNewTrack(TrackPointer pTrack) {
     }
 
     m_actualCompletion = 0;
-    m_visualSamplesByPixel = 0.0;
     m_waveformPixmap.fill(QColor(0, 0, 0, 0));
     m_waveformPeak = -1.0;
     m_pixmapDone = false;
@@ -226,7 +224,6 @@ void WOverview::slotUnloadTrack(TrackPointer /*pTrack*/) {
     m_pCurrentTrack.clear();
     m_waveform = NULL;
     m_actualCompletion = 0;
-    m_visualSamplesByPixel = 0.0;
     m_waveformPeak = -1.0;
     m_pixmapDone = false;
     m_trackLoaded = false;
@@ -261,14 +258,15 @@ bool WOverview::drawNextPixmapPart() {
         return false;
     }
 
-    m_visualSamplesByPixel = static_cast<double>(m_waveform->getDataSize()) /
-            static_cast<double>(width());
-
-    if (m_visualSamplesByPixel < 0.0001) {
+    const int dataSize = m_waveform->getDataSize();
+    if (dataSize == 0 ) {
         return false;
     }
 
-    const int dataSize = m_waveform->getDataSize();
+    if (m_waveformPixmap.width() != dataSize/2) {
+        m_waveformPixmap.scaledToWidth(dataSize/2);
+    }
+
     const int analyserCompletion = (int)((float)(dataSize/2) * m_analyserProgress / 1000) * 2;
     const int waveformCompletion = m_waveform->getCompletion(); // always multiple of 2
 
@@ -280,7 +278,7 @@ bool WOverview::drawNextPixmapPart() {
     } else {
         completionIncrement = waveformCompletion - m_actualCompletion;
     }
-    if (dataSize == 0 || completionIncrement < m_visualSamplesByPixel) {
+    if (completionIncrement < 2) {
         return false;
     }
 
@@ -298,15 +296,12 @@ bool WOverview::drawNextPixmapPart() {
     QPainter painter(&m_waveformPixmap);
     painter.setRenderHint(QPainter::Antialiasing);
     painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-
     painter.translate(0.0,(double)m_waveformPixmap.height()/2.0);
-    //painter.scale(1.0,(double)(m_waveformPixmap.height())/(2*255.0));
 
     //draw only the new part
     const float pixelStartPosition = 1.0 + (float)m_actualCompletion / (float)dataSize * (float)(width()-2);
-    const float pixelByVisualSamples = 1.0 / m_visualSamplesByPixel;
 
-    const float alpha = 0.5; /*= math_min( 1.0, 3.0*math_max( 0.1, pixelByVisualSamples));*/
+    const float alpha = 0.5;
 
     QColor lowColor = m_signalColors.getLowColor();
     lowColor.setAlphaF(alpha);
@@ -338,7 +333,7 @@ bool WOverview::drawNextPixmapPart() {
             painter.setPen(axesColorPen);
             painter.drawPoint(QPointF(pixelPosition, 0));
         }
-        pixelPosition += 2.0*pixelByVisualSamples;
+        pixelPosition += 2.0;
     }
 
     pixelPosition = pixelStartPosition;
@@ -346,7 +341,7 @@ bool WOverview::drawNextPixmapPart() {
         painter.setPen(midColorPen);
         painter.drawLine(QPointF(pixelPosition, - m_waveform->getMid(currentCompletion)),
                          QPointF(pixelPosition, m_waveform->getMid(currentCompletion+1)));
-        pixelPosition += 2.0*pixelByVisualSamples;
+        pixelPosition += 2.0;
     }
 
     pixelPosition = pixelStartPosition;
@@ -354,7 +349,7 @@ bool WOverview::drawNextPixmapPart() {
         painter.setPen(highColorPen);
         painter.drawLine(QPointF(pixelPosition, - m_waveform->getHigh(currentCompletion)),
                          QPointF(pixelPosition, m_waveform->getHigh(currentCompletion+1)));
-        pixelPosition += 2.0*pixelByVisualSamples;
+        pixelPosition += 2.0;
     }
 
     //evaluate waveform ratio peak
