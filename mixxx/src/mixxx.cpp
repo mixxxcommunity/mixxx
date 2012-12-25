@@ -56,6 +56,7 @@
 #include "core/tagreaderclient.h"
 #endif
 #include "util/statsmanager.h"
+#include "util/timer.h"
 
 #ifdef __VINYLCONTROL__
 #include "vinylcontrol/vinylcontrol.h"
@@ -93,7 +94,10 @@ bool loadTranslations(const QLocale& systemLocale, QString userLocale,
 }
 
 MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
-        : m_cmdLineArgs(args) {
+        : m_runtime_timer("MixxxApp::runtime"),
+          m_cmdLineArgs(args) {
+    ScopedTimer t("MixxxApp::MixxxApp");
+    m_runtime_timer.start();
 
     QString buildBranch, buildRevision, buildFlags;
 #ifdef BUILD_BRANCH
@@ -147,7 +151,7 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
     //Reset pointer to players
     m_pSoundManager = NULL;
     m_pPrefDlg = NULL;
-    m_pControllerManager = 0;
+    m_pControllerManager = NULL;
     m_pRecordingManager = NULL;
 
     // Check to see if this is the first time this version of Mixxx is run
@@ -347,7 +351,7 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
     m_pPlayerManager->addSampler();
     m_pPlayerManager->addPreviewDeck();
 
-#ifdef __VINYLCONTROL__    
+#ifdef __VINYLCONTROL__
     m_pVCManager->init();
 #endif
 
@@ -382,13 +386,12 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
         m_pConfig->set(ConfigKey("[BPM]", "AnalyzeEntireSong"),ConfigValue(1));
     }
 
-    //ControlObject::getControl(ConfigKey("[Channel1]","TrackEndMode"))->queueFromThread(m_pConfig->getValueString(ConfigKey("[Controls]","TrackEndModeCh1")).toDouble());
-    //ControlObject::getControl(ConfigKey("[Channel2]","TrackEndMode"))->queueFromThread(m_pConfig->getValueString(ConfigKey("[Controls]","TrackEndModeCh2")).toDouble());
-
     // Initialize controller sub-system,
     //  but do not set up controllers until the end of the application startup
     qDebug() << "Creating ControllerManager";
     m_pControllerManager = new ControllerManager(m_pConfig);
+    connect(m_pControllerManager, SIGNAL(syncControlSystem()),
+            this, SLOT(slotSyncControlSystem()));
 
     WaveformWidgetFactory::create();
     WaveformWidgetFactory::instance()->startVSync(this);
@@ -550,17 +553,16 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
 
 MixxxApp::~MixxxApp()
 {
+    // TODO(rryan): Get rid of QTime here.
     QTime qTime;
     qTime.start();
+    Timer t("MixxxApp::~MixxxApp");
+    t.start();
 
     qDebug() << "Destroying MixxxApp";
 
     qDebug() << "save config " << qTime.elapsed();
     m_pConfig->Save();
-
-    // Save state of End of track controls in config database
-    //m_pConfig->set(ConfigKey("[Controls]","TrackEndModeCh1"), ConfigValue((int)ControlObject::getControl(ConfigKey("[Channel1]","TrackEndMode"))->get()));
-    //m_pConfig->set(ConfigKey("[Controls]","TrackEndModeCh2"), ConfigValue((int)ControlObject::getControl(ConfigKey("[Channel2]","TrackEndMode"))->get()));
 
     // SoundManager depend on Engine and Config
     qDebug() << "delete soundmanager " << qTime.elapsed();
@@ -644,9 +646,13 @@ MixxxApp::~MixxxApp()
    qDebug() << "~MixxxApp: All leaking controls deleted.";
 
    delete m_pKeyboard;
+   delete m_pKbdConfig;
    delete m_pKbdConfigEmpty;
 
    WaveformWidgetFactory::destroy();
+   t.elapsed(true);
+   // Report the total time we have been running.
+   m_runtime_timer.elapsed(true);
    StatsManager::destroy();
 }
 
@@ -1127,6 +1133,7 @@ void MixxxApp::initMenuBar()
 #ifdef __SHOUTCAST__
     m_pOptionsMenu->addAction(m_pOptionsShoutcast);
 #endif
+    m_pOptionsMenu->addSeparator();
     m_pOptionsMenu->addAction(m_pOptionsKeyboard);
     m_pOptionsMenu->addSeparator();
     m_pOptionsMenu->addAction(m_pOptionsPreferences);
@@ -1396,10 +1403,8 @@ void MixxxApp::slotHelpAbout() {
 
     QString credits = QString("<p align=\"center\"><b>%1</b></p>"
 "<p align=\"center\">"
-"Adam Davison<br>"
 "Albert Santoni<br>"
 "RJ Ryan<br>"
-"Garth Dahlstrom<br>"
 "Sean Pappalardo<br>"
 "Phillip Whelan<br>"
 "Tobias Rafreider<br>"
@@ -1409,6 +1414,8 @@ void MixxxApp::slotHelpAbout() {
 "Vittorio Colao<br>"
 "Daniel Sch&uuml;rmann<br>"
 "Thomas Vincent<br>"
+"Ilkka Tuohela<br>"
+"Max Linke<br>"
 
 "</p>"
 "<p align=\"center\"><b>%2</b></p>"
@@ -1463,12 +1470,11 @@ void MixxxApp::slotHelpAbout() {
 "Pascal Bleser<br>"
 "Florian Mahlknecht<br>"
 "Ben Clark<br>"
-"Ilkka Tuohela<br>"
 "Tom Gascoigne<br>"
-"Max Linke<br>"
 "Neale Pickett<br>"
 "Aaron Mavrinac<br>"
 "Markus H&auml;rer<br>"
+"Andrey Smelov<br>"
 
 "</p>"
 "<p align=\"center\"><b>%3</b></p>"
@@ -1505,8 +1511,8 @@ void MixxxApp::slotHelpAbout() {
 "Tom Care<br>"
 "Pawel Bartkiewicz<br>"
 "Nick Guenther<br>"
-"Bruno Buccolo<br>"
-"Ryan Baker<br>"
+"Adam Davison<br>"
+"Garth Dahlstrom<br>"
 "</p>"
 
 "<p align=\"center\"><b>%5</b></p>"
@@ -1543,6 +1549,8 @@ void MixxxApp::slotHelpAbout() {
 "Michael Pujos<br>"
 "Claudio Bantaloukas<br>"
 "Pavol Rusnak<br>"
+"Bruno Buccolo<br>"
+"Ryan Baker<br>"
     "</p>").arg(s_devTeam,s_contributions,s_specialThanks,s_pastDevs,s_pastContribs);
 
     about->textBrowser->setHtml(credits);
@@ -1679,14 +1687,14 @@ bool MixxxApp::eventFilter(QObject *obj, QEvent *event)
 {
     if (event->type() == QEvent::ToolTip) {
         // return true for no tool tips
-        if (m_tooltips == 1) {
+        if (m_tooltips == 2) {
             // ON (only in Library)
             WWidget* pWidget = dynamic_cast<WWidget*>(obj);
             WWaveformViewer* pWfViewer = dynamic_cast<WWaveformViewer*>(obj);
             WSpinny* pSpinny = dynamic_cast<WSpinny*>(obj);
             QLabel* pLabel = dynamic_cast<QLabel*>(obj);
             return (pWidget || pWfViewer || pSpinny || pLabel);
-        } else if (m_tooltips == 0) {
+        } else if (m_tooltips == 1) {
             // ON
             return false;
         } else {
@@ -1858,4 +1866,9 @@ void MixxxApp::MoveToThread(QObject* object, QThread* thread) {
   object->setParent(NULL);
   object->moveToThread(thread);
   // objects_in_threads_ << object;
+}
+
+void MixxxApp::slotSyncControlSystem() {
+    ScopedTimer t("MixxxApp::slotSyncControlSystem");
+    ControlObject::sync();
 }

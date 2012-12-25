@@ -43,6 +43,7 @@ class SoundManager;
 
 #include "configobject.h"
 #include "util/cmdlineargs.h"
+#include "util/timer.h"
 
 
 #ifdef __TAGREADER__
@@ -124,6 +125,7 @@ class MixxxApp : public QMainWindow {
     void slotToCenterOfPrimaryScreen();
 
     void onNewSkinLoaded();
+    void slotSyncControlSystem();
 
   signals:
     void newSkinLoaded();
@@ -231,9 +233,12 @@ class MixxxApp : public QMainWindow {
 #ifdef __TAGREADER__
     TagReaderClient* m_tag_reader_client;
 #endif
-    int m_tooltips; //0=ON, 1=ON (only in Library), 2=OFF
+    int m_tooltips; //0=OFF, 1=ON, 2=ON (only in Library)
+    // Timer that tracks how long Mixxx has been running.
+    Timer m_runtime_timer;
 
     const CmdlineArgs& m_cmdLineArgs;
 };
 
 #endif
+

@@ -379,8 +379,8 @@ private:
     BeatsPointer m_pBeats;
 
     //Visual waveform data
-    Waveform* m_waveform;
-    Waveform* m_waveformSummary;
+    Waveform* const m_waveform;
+    Waveform* const m_waveformSummary;
 
     QAtomicInt m_analyserProgress; // in 0.1%
 

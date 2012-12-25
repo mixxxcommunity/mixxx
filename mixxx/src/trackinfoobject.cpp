@@ -42,23 +42,27 @@ TrackInfoObject::TrackInfoObject(const QString& file, bool parseHeader)
         : m_fileInfo(file),
           m_dateAdded(QDateTime::currentDateTime()),
           m_qMutex(QMutex::Recursive),
+          m_waveform(new Waveform()),
+          m_waveformSummary(new Waveform()),
           m_analyserProgress(-1) {
     initialize(parseHeader);
-    m_waveform = new Waveform(QByteArray());
-    m_waveformSummary = new Waveform(QByteArray());
 }
 
 TrackInfoObject::TrackInfoObject(const QFileInfo& fileInfo, bool parseHeader)
         : m_fileInfo(fileInfo),
           m_dateAdded(QDateTime::currentDateTime()),
-          m_qMutex(QMutex::Recursive) {    
+          m_qMutex(QMutex::Recursive),
+          m_waveform(new Waveform()),
+          m_waveformSummary(new Waveform()),
+          m_analyserProgress(-1) {    
     initialize(parseHeader);
-    m_waveform = new Waveform(QByteArray());
-    m_waveformSummary = new Waveform(QByteArray());
 }
 
 TrackInfoObject::TrackInfoObject(const QDomNode &nodeHeader)
-        : m_qMutex(QMutex::Recursive) {
+        : m_qMutex(QMutex::Recursive), 
+          m_waveform(new Waveform()),
+          m_waveformSummary(new Waveform()),
+          m_analyserProgress(-1) {
     QString filename = XmlParse::selectNodeQString(nodeHeader, "Filename");
     QString location = XmlParse::selectNodeQString(nodeHeader, "Filepath") + "/" +  filename;    
 	m_fileInfo = QFileInfo(location);
@@ -102,9 +106,6 @@ TrackInfoObject::TrackInfoObject(const QDomNode &nodeHeader)
 
     m_bDirty = false;
     m_bLocationChanged = false;
-
-    m_waveform = new Waveform(QByteArray());
-    m_waveformSummary = new Waveform(QByteArray());
 }
 
 void TrackInfoObject::initialize(bool parseHeader) {

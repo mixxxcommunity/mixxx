@@ -205,10 +205,10 @@ void WSpinny::paintEvent(QPaintEvent *e) {
     }
 #endif
 
-    // To rotate the foreground Image around the center of the image,
+    // To rotate the foreground image around the center of the image,
     // we use the classic trick of translating the coordinate system such that
     // the origin is at the center of the image. We then rotate the coordinate system,
-    // and draw the Image at the corner.
+    // and draw the image at the corner.
     p.translate(width() / 2, height() / 2);
 
     bool bGhostPlayback = m_pSlipEnabled->get();
