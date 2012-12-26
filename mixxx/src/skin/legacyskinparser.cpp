@@ -306,7 +306,7 @@ QWidget* LegacySkinParser::parseNode(QDomElement node, QWidget *pGrandparent) {
 
     // Root of the document
     if (nodeName == "skin") {
-        // Descend chilren, should only happen for the root node
+        // Descend children, should only happen for the root node
         QDomNodeList children = node.childNodes();
 
         for (int i = 0; i < children.count(); ++i) {
