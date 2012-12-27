@@ -47,7 +47,6 @@ class DlgAutoDJ : public QWidget, public Ui::DlgAutoDJ, public virtual AbstractL
     void player1PlayChanged(double value);
     void player2PlayChanged(double value);
     void transitionValueChanged(int value);
-    void setReQueue(int value);
 
   signals:
     void loadTrack(TrackPointer tio);
@@ -73,7 +72,6 @@ class DlgAutoDJ : public QWidget, public Ui::DlgAutoDJ, public virtual AbstractL
     TrackPointer getNextTrackFromQueue();
     bool loadNextTrackFromQueue();
     bool removePlayingTrackFromQueue(QString group);
-    bool appendTrack(int trackId);
 
     ConfigObject<ConfigValue>* m_pConfig;
     TrackCollection* m_pTrackCollection;

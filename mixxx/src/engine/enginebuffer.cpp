@@ -335,11 +335,8 @@ void EngineBuffer::setNewPlaypos(double newpos)
     //qDebug() << "engine new pos " << newpos;
 
     // Before seeking, read extra buffer for crossfading
-    CSAMPLE* fadeout = m_pScale->scale(0,
-                                       m_iLastBufferSize,
-                                       0,
-                                       0);
-    m_iCrossFadeSamples = m_iLastBufferSize;
+    CSAMPLE* fadeout = m_pScale->getScaled(m_iLastBufferSize);
+    m_iCrossFadeSamples = m_pScale->getSamplesRead();
     SampleUtil::copyWithGain(m_pCrossFadeBuffer, fadeout, 1.0, m_iLastBufferSize);
 
     m_filepos_play = newpos;
@@ -639,11 +636,8 @@ void EngineBuffer::process(const CSAMPLE *, const CSAMPLE * pOut, const int iBuf
             }
 
             // Perform scaling of Reader buffer into buffer.
-            CSAMPLE* output = m_pScale->scale(0,
-                                     iBufferSize,
-                                     0,
-                                     0);
-            double samplesRead = m_pScale->getNewPlaypos();
+            CSAMPLE* output = m_pScale->getScaled(iBufferSize);
+            double samplesRead = m_pScale->getSamplesRead();
 
             // qDebug() << "sourceSamples used " << iSourceSamples
             //          <<" samplesRead " << samplesRead
