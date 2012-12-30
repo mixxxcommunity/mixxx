@@ -66,6 +66,7 @@ EngineBuffer::EngineBuffer(const char * _group, ConfigObject<ConfigValue> * _con
     m_pReadAheadManager(NULL),
     m_pReader(NULL),
     m_filepos_play(0.),
+    m_filepos_seek(-1),
     m_rate_old(0.),
     m_file_length_old(-1),
     m_file_srate_old(0),
@@ -330,33 +331,36 @@ void EngineBuffer::setEngineMaster(EngineMaster * pEngineMaster)
     m_pBpmControl->setEngineMaster(pEngineMaster);
 }
 
-void EngineBuffer::setNewPlaypos(double newpos)
-{
-    //qDebug() << "engine new pos " << newpos;
+void EngineBuffer::setNewPlaypos(double newpos) {
+    m_filepos_seek = newpos;
+}
 
-    // Before seeking, read extra buffer for crossfading
-    CSAMPLE* fadeout = m_pScale->getScaled(m_iLastBufferSize);
-    m_iCrossFadeSamples = m_pScale->getSamplesRead();
-    SampleUtil::copyWithGain(m_pCrossFadeBuffer, fadeout, 1.0, m_iLastBufferSize);
+void EngineBuffer::processSeek() {
+    if (m_filepos_seek >= 0) {
+        // Before seeking, read extra buffer for crossfading
+        CSAMPLE* fadeout = m_pScale->getScaled(m_iLastBufferSize);
+        m_iCrossFadeSamples = m_pScale->getSamplesRead();
+        SampleUtil::copyWithGain(m_pCrossFadeBuffer, fadeout, 1.0, m_iLastBufferSize);
 
-    m_filepos_play = newpos;
+        m_filepos_play = m_filepos_seek;
 
-    // Ensures that the playpos slider gets updated in next process call
-    m_iSamplesCalculated = 1000000;
+        // Ensures that the playpos slider gets updated in next process call
+        m_iSamplesCalculated = 1000000;
 
-    // The right place to do this?
-    if (m_pScale)
+        // The right place to do this?
         m_pScale->clear();
-    m_pReadAheadManager->notifySeek(m_filepos_play);
+        m_pReadAheadManager->setNewPlaypos(m_filepos_play);
 
-    // Must hold the engineLock while using m_engineControls
-    m_engineLock.lock();
-    for (QList<EngineControl*>::iterator it = m_engineControls.begin();
-         it != m_engineControls.end(); it++) {
-        EngineControl *pControl = *it;
-        pControl->notifySeek(m_filepos_play);
+        // Must hold the engineLock while using m_engineControls
+        m_engineLock.lock();
+        for (QList<EngineControl*>::iterator it = m_engineControls.begin();
+             it != m_engineControls.end(); it++) {
+            EngineControl *pControl = *it;
+            pControl->notifySeek(m_filepos_play);
+        }
+        m_engineLock.unlock();
+        m_filepos_seek = -1;
     }
-    m_engineLock.unlock();
 }
 
 const char * EngineBuffer::getGroup()
@@ -536,6 +540,8 @@ void EngineBuffer::slotControlSlip(double v)
 
 void EngineBuffer::process(const CSAMPLE *, const CSAMPLE * pOut, const int iBufferSize)
 {
+    processSeek();
+
     Q_ASSERT(even(iBufferSize));
     m_pReader->process();
     // Steps:
@@ -558,8 +564,9 @@ void EngineBuffer::process(const CSAMPLE *, const CSAMPLE * pOut, const int iBuf
         float sr = m_pSampleRate->get();
 
         double baserate = 0.0f;
-        if (sr > 0)
+        if (sr > 0) {
             baserate = ((double)m_file_srate_old / sr);
+        }
 
         bool paused = m_playButton->get() != 0.0f ? false : true;
 
@@ -601,8 +608,9 @@ void EngineBuffer::process(const CSAMPLE *, const CSAMPLE * pOut, const int iBuf
                 }
             }
 
-            if (baserate > 0) //Prevent division by 0
+            if (baserate > 0) { //Prevent division by 0
                 rate = baserate*m_pScale->setTempo(rate/baserate);
+            }
             m_pScale->setBaseRate(baserate);
             m_rate_old = rate;
             // Scaler is up to date now.
@@ -615,9 +623,7 @@ void EngineBuffer::process(const CSAMPLE *, const CSAMPLE * pOut, const int iBuf
 
         // If we're playing past the end, playing before the start, or standing
         // still then by definition the buffer is paused.
-        bCurBufferPaused = rate == 0 ||
-            //(at_start && backwards) ||
-            (at_end && !backwards);
+        bCurBufferPaused = (rate == 0 || (at_end && !backwards));
 
         // If the buffer is not paused, then scale the audio.
         if (!bCurBufferPaused) {
@@ -653,7 +659,7 @@ void EngineBuffer::process(const CSAMPLE *, const CSAMPLE * pOut, const int iBuf
             m_filepos_play =
                     m_pReadAheadManager->getEffectiveVirtualPlaypositionFromLog(
                         static_cast<int>(m_filepos_play), samplesRead);
-        } // else (bCurBufferPaused)
+        }
 
         //Crossfade if we just did a seek
         if (m_iCrossFadeSamples > 0) {
@@ -668,7 +674,6 @@ void EngineBuffer::process(const CSAMPLE *, const CSAMPLE * pOut, const int iBuf
 
             double cross_mix = 0.0;
             double cross_inc = 1.0 / cross_len;
-
             // Do crossfade from old fadeout buffer to this new data
             for (int j = 0; j + 1 < iBufferSize && i + 1 < m_iCrossFadeSamples; i += 2, j += 2) {
                 pOutput[j] = pOutput[j] * cross_mix + m_pCrossFadeBuffer[i] * (1.0 - cross_mix);
@@ -724,7 +729,7 @@ void EngineBuffer::process(const CSAMPLE *, const CSAMPLE * pOut, const int iBuf
                 // the engine and RAMAN can get out of sync.
 
                 //setNewPlaypos(filepos_play);
-                m_pReadAheadManager->notifySeek(m_filepos_play);
+                m_pReadAheadManager->setNewPlaypos(m_filepos_play);
                 // Notify seek the rate control since it needs to track things
                 // like looping. Hacky, I know, but this helps prevent things
                 // like the scratch controller from flipping out.
@@ -799,9 +804,10 @@ void EngineBuffer::process(const CSAMPLE *, const CSAMPLE * pOut, const int iBuf
     float ramp_inc = 0;
     if (m_iRampState == ENGINE_RAMP_UP ||
         m_iRampState == ENGINE_RAMP_DOWN) {
+        // Ramp of 3.33 ms
         ramp_inc = m_iRampState * 300 / m_pSampleRate->get();
 
-        for (int i=0; i<iBufferSize; i+=2) {
+        for (int i=0; i < iBufferSize; i += 2) {
             if (bCurBufferPaused) {
                 float dither = m_pDitherBuffer[m_iDitherBufferReadIndex];
                 m_iDitherBufferReadIndex = (m_iDitherBufferReadIndex + 1) % MAX_BUFFER_LEN;
@@ -816,8 +822,7 @@ void EngineBuffer::process(const CSAMPLE *, const CSAMPLE * pOut, const int iBuf
             if (m_fRampValue >= 1.0) {
                 m_iRampState = ENGINE_RAMP_NONE;
                 m_fRampValue = 1.0;
-            }
-            if (m_fRampValue <= 0.0) {
+            } else if (m_fRampValue <= 0.0) {
                 m_iRampState = ENGINE_RAMP_NONE;
                 m_fRampValue = 0.0;
             }
@@ -879,7 +884,7 @@ void EngineBuffer::hintReader(const double dRate) {
     m_engineLock.lock();
 
     m_hintList.clear();
-    m_pReadAheadManager->hintReader(dRate, m_hintList);
+    m_pReadAheadManager->hintReader(dRate, &m_hintList);
 
     //if slipping, hint about virtual position so we're ready for it
     if (m_bSlipEnabled) {

@@ -52,6 +52,7 @@
 #include "widget/wskincolor.h"
 #include "widget/wpixmapstore.h"
 #include "widget/wwidgetstack.h"
+#include "widget/wwidgetgroup.h"
 
 using mixxx::skin::SkinManifest;
 
@@ -441,27 +442,10 @@ QWidget* LegacySkinParser::parseSplitter(QDomElement node) {
 }
 
 QWidget* LegacySkinParser::parseWidgetGroup(QDomElement node) {
-    QWidget* pGroup = new QGroupBox(m_pParent);
-    pGroup->setObjectName("WidgetGroup");
-    pGroup->setContentsMargins(0, 0, 0, 0);
+    WWidgetGroup* pGroup = new WWidgetGroup(m_pParent);
     setupWidget(node, pGroup);
+    pGroup->setup(node);
     setupConnections(node, pGroup);
-
-    QBoxLayout* pLayout = NULL;
-    if (!XmlParse::selectNode(node, "Layout").isNull()) {
-        QString layout = XmlParse::selectNodeQString(node, "Layout");
-        if (layout == "vertical") {
-            pLayout = new QVBoxLayout();
-            pLayout->setSpacing(0);
-            pLayout->setContentsMargins(0, 0, 0, 0);
-            pLayout->setAlignment(Qt::AlignCenter);
-        } else if (layout == "horizontal") {
-            pLayout = new QHBoxLayout();
-            pLayout->setSpacing(0);
-            pLayout->setContentsMargins(0, 0, 0, 0);
-            pLayout->setAlignment(Qt::AlignCenter);
-        }
-    }
 
     QDomNode childrenNode = XmlParse::selectNode(node, "Children");
 
@@ -469,30 +453,17 @@ QWidget* LegacySkinParser::parseWidgetGroup(QDomElement node) {
     m_pParent = pGroup;
 
     if (!childrenNode.isNull()) {
-        // Descend chilren
+        // Descend children
         QDomNodeList children = childrenNode.childNodes();
-
         for (int i = 0; i < children.count(); ++i) {
             QDomNode node = children.at(i);
-
             if (node.isElement()) {
                 QWidget* pChild = parseNode(node.toElement(), pGroup);
-
-                if (pChild == NULL)
-                    continue;
-
-                if (pLayout) {
-                    pLayout->addWidget(pChild);
-                }
+                pGroup->addWidget(pChild);
             }
         }
     }
     m_pParent = pOldParent;
-
-    if (pLayout) {
-        pGroup->setLayout(pLayout);
-    }
-
     return pGroup;
 }
 

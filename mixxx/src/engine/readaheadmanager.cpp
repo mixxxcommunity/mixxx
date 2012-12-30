@@ -178,13 +178,13 @@ void ReadAheadManager::notifySeek(int iSeekPosition) {
     // }
 }
 
-void ReadAheadManager::hintReader(double dRate, QList<Hint>& hintList) {
-    bool in_reverse = dRate < 0;
+void ReadAheadManager::hintReader(double dRate, QList<Hint>* pHintList) {
+    const bool in_reverse = dRate < 0;
     Hint current_position;
 
     // SoundTouch can read up to 2 chunks ahead. Always keep 2 chunks ahead in
     // cache.
-    int length_to_cache = 2*CachingReader::kSamplesPerChunk;
+    const int length_to_cache = 2 * CachingReader::kSamplesPerChunk;
 
     current_position.length = length_to_cache;
     current_position.sample = in_reverse ?
@@ -199,7 +199,7 @@ void ReadAheadManager::hintReader(double dRate, QList<Hint>& hintList) {
 
     // top priority, we need to read this data immediately
     current_position.priority = 1;
-    hintList.append(current_position);
+    pHintList->append(current_position);
 }
 
 void ReadAheadManager::addReadLogEntry(double virtualPlaypositionStart,

@@ -164,6 +164,8 @@ private:
 
     double fractionalPlayposFromAbsolute(double absolutePlaypos);
 
+    void processSeek();
+
     // Lock for modifying local engine variables that are not thread safe, such
     // as m_engineControls and m_hintList
     QMutex m_engineLock;
@@ -195,6 +197,8 @@ private:
 
     /** The current sample to play in the file. */
     double m_filepos_play;
+    /** The current sample to play in the file. */
+    double m_filepos_seek;
     /** Copy of rate_exchange, used to check if rate needs to be updated */
     double m_rate_old;
     /** Copy of length of file */
