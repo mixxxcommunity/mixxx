@@ -193,7 +193,12 @@ void WaveformWidgetRenderer::draw( QPainter* painter, QPaintEvent* event) {
         }
 
         painter->setPen(m_axesColor);
+        painter->setOpacity(0.9);
         painter->drawLine(m_width/2,0,m_width/2,m_height);
+        painter->setOpacity(0.5);
+        painter->setPen(m_axesColor.darker(400));
+        painter->drawLine(m_width/2 + 1,0,m_width/2 + 1,m_height);
+        painter->drawLine(m_width/2 - 1,0,m_width/2 - 1,m_height);
     }
 
 #ifdef WAVEFORMWIDGETRENDERER_DEBUG
@@ -245,11 +250,12 @@ void WaveformWidgetRenderer::setup( const QDomNode& node) {
 
     m_axesColor.setNamedColor(WWidget::selectNodeQString(node, "AxesColor"));
 
-    if( !m_axesColor.isValid())
+    if (!m_axesColor.isValid())
         m_axesColor = QColor(245,245,245,200);
 
-    for( int i = 0; i < m_rendererStack.size(); ++i)
+    for (int i = 0; i < m_rendererStack.size(); ++i) {
         m_rendererStack[i]->setup(node);
+    }
 }
 
 void WaveformWidgetRenderer::setZoom(int zoom) {
