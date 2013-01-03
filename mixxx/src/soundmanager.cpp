@@ -115,8 +115,8 @@ QList<SoundDevice*> SoundManager::getDeviceList(
         // we want input devices, or don't have output channels when we want
         // output devices.
         if (device->getHostAPI() != filterAPI ||
-            (bOutputDevices && device->getNumOutputChannels() <= 0) ||
-            (bInputDevices && device->getNumInputChannels() <= 0)) {
+                (bOutputDevices && device->getNumOutputChannels() <= 0) ||
+                (bInputDevices && device->getNumInputChannels() <= 0)) {
             continue;
         }
         filteredDeviceList.push_back(device);
@@ -418,7 +418,7 @@ void SoundManager::checkConfig() {
         m_config.loadDefaults(this, SoundManagerConfig::API | SoundManagerConfig::DEVICES);
     }
     if (!m_config.checkSampleRate(*this)) {
-        m_config.setSampleRate(SoundManagerConfig::kDefaultSampleRate);
+        m_config.setSampleRate(SoundManagerConfig::kFallbackSampleRate);
         m_config.loadDefaults(this, SoundManagerConfig::OTHER);
     }
     // latency checks itself for validity on SMConfig::setLatency()

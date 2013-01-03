@@ -7,6 +7,7 @@
 WWidgetGroup::WWidgetGroup(QWidget * parent) :
         QGroupBox(parent),
         m_pPixmapBack(NULL) {
+    setObjectName("WidgetGroup");
 }
 
 WWidgetGroup::~WWidgetGroup() {
@@ -14,7 +15,6 @@ WWidgetGroup::~WWidgetGroup() {
 }
 
 void WWidgetGroup::setup(QDomNode node) {
-    setObjectName("WidgetGroup");
     setContentsMargins(0, 0, 0, 0);
 
     // Set background pixmap if available
@@ -60,10 +60,18 @@ void WWidgetGroup::addWidget(QWidget* pChild) {
 
 void WWidgetGroup::paintEvent(QPaintEvent* pe) {
     if(m_pPixmapBack) {
+        if (m_pixmapBackScaled.isNull()) {
+            m_pixmapBackScaled = m_pPixmapBack->scaled(size());
+        }
         QPainter p(this);
-        p.drawPixmap(0, 0, *m_pPixmapBack);
+        p.drawPixmap(0, 0, m_pixmapBackScaled);
     }
     // Paint things styled by style sheet
     QGroupBox::paintEvent(pe);
 }
 
+void WWidgetGroup::resizeEvent(QResizeEvent* re) {
+    m_pixmapBackScaled = QPixmap();
+    // Paint things styled by style sheet
+    QGroupBox::resizeEvent(re);
+}

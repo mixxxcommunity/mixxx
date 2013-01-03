@@ -37,7 +37,7 @@ public:
     };
     static const unsigned int kMaxAudioBufferSizeIndex;
     static const QString kDefaultAPI;
-    static const unsigned int kDefaultSampleRate;
+    static const unsigned int kFallbackSampleRate;
     static const int kDefaultAudioBufferSizeIndex;
 
     SoundManagerConfig();

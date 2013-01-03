@@ -196,7 +196,7 @@ void WaveformWidgetRenderer::draw( QPainter* painter, QPaintEvent* event) {
         painter->setOpacity(0.9);
         painter->drawLine(m_width/2,0,m_width/2,m_height);
         painter->setOpacity(0.5);
-        painter->setPen(m_axesColor.darker(400));
+        painter->setPen(QColor(0,0,0));
         painter->drawLine(m_width/2 + 1,0,m_width/2 + 1,m_height);
         painter->drawLine(m_width/2 - 1,0,m_width/2 - 1,m_height);
     }
