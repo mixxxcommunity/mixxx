@@ -264,10 +264,6 @@ void WaveformWidgetRenderer::setZoom(int zoom) {
     m_zoomFactor = math_max( s_waveformMinZoom, math_min( m_zoomFactor, s_waveformMaxZoom));
 }
 
-double WaveformWidgetRenderer::getVisualSamplePerPixel() const {
-    return m_visualSamplePerPixel;
-}
-
 void WaveformWidgetRenderer::regulateVisualSample( int& sampleIndex) const {
     if( m_visualSamplePerPixel < 1.0)
         return;

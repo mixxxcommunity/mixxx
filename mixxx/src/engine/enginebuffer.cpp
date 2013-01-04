@@ -853,6 +853,9 @@ void EngineBuffer::updateIndicators(double rate, int iBufferSize) {
     m_iSamplesCalculated += iBufferSize;
 
     double fFractionalPlaypos = fractionalPlayposFromAbsolute(m_filepos_play);
+    if(rate > 0 && fFractionalPlaypos == 1.0) {
+        rate = 0;
+    }
 
     // Update indicators that are only updated after every
     // sampleRate/kiUpdateRate samples processed.  (e.g. playposSlider,
