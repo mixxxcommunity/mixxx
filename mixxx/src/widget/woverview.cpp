@@ -350,6 +350,7 @@ bool WOverview::drawNextPixmapPart() {
 
     m_actualCompletion = nextCompletion;
     m_waveformImageScaled = QImage();
+    m_diffGain = 0;
 
     //test if the complete waveform is done
     if (m_actualCompletion >= dataSize - 2) {
@@ -458,6 +459,7 @@ void WOverview::paintEvent(QPaintEvent *) {
                     m_pWaveformSourceImage->height() - 2 * diffGain);
                 m_waveformImageScaled = m_pWaveformSourceImage->copy(
                     sourceRect).scaled(size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+                m_diffGain = diffGain;
             }
 
             painter.drawImage(rect(), m_waveformImageScaled);
@@ -554,8 +556,13 @@ void WOverview::paintEvent(QPaintEvent *) {
         }
 
         //draw current position
-        painter.setPen(m_qColorMarker);
-        painter.setOpacity(0.9);
+        painter.setPen(m_qColorBackground);
+        painter.setOpacity(0.5);
+        painter.drawLine(m_iPos + 1, 0, m_iPos + 1, height());
+        painter.drawLine(m_iPos - 1, 0, m_iPos - 1, height());
+
+        painter.setPen(m_signalColors.getAxesColor());
+        painter.setOpacity(1.0);
         painter.drawLine(m_iPos, 0, m_iPos, height());
 
         painter.drawLine(m_iPos - 2, 0, m_iPos, 2);
@@ -565,11 +572,6 @@ void WOverview::paintEvent(QPaintEvent *) {
         painter.drawLine(m_iPos - 2, height() - 1, m_iPos, height() - 3);
         painter.drawLine(m_iPos, height() - 3, m_iPos + 2, height() - 1);
         painter.drawLine(m_iPos - 2, height() - 1, m_iPos + 2, height() - 1);
-
-        painter.setPen(m_qColorBackground);
-        painter.setOpacity(0.5);
-        painter.drawLine(m_iPos + 1, 0, m_iPos + 1, height());
-        painter.drawLine(m_iPos - 1, 0, m_iPos - 1, height());
     }
     painter.end();
 }
@@ -579,6 +581,7 @@ void WOverview::resizeEvent(QResizeEvent *) {
     m_a = (float)((width()-1))/( 114.f - 14.f);
     m_b = 14.f * m_a;
     m_waveformImageScaled = QImage();
+    m_diffGain = 0;
 }
 
 QColor WOverview::getMarkerColor() {
