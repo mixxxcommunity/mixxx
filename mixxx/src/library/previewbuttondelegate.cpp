@@ -90,7 +90,7 @@ void PreviewButtonDelegate::paint(QPainter *painter,
         painter->fillRect(option.rect, option.palette.base());
     }
 
-    QPixmap map = QPixmap::grabWidget(m_pButton);
+   // QPixmap map = QPixmap::grabWidget(m_pButton);
 
     painter->save();
     painter->translate(option.rect.topLeft());
