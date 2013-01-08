@@ -90,9 +90,8 @@ void PreviewButtonDelegate::paint(QPainter *painter,
         painter->fillRect(option.rect, option.palette.base());
     }
 
-   // QPixmap map = QPixmap::grabWidget(m_pButton);
-
     painter->save();
+    // Render button at the desired position
     painter->translate(option.rect.topLeft());
     m_pButton->render(painter);
     painter->restore();
