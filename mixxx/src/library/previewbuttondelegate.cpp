@@ -8,7 +8,6 @@
 #include "trackinfoobject.h"
 #include "controlobjectthreadmain.h"
 #include "controlobject.h"
-#include "widget/wpixmapstore.h"
 
 PreviewButtonDelegate::PreviewButtonDelegate(QObject *parent, int column)
         : QStyledItemDelegate(parent),
@@ -25,17 +24,14 @@ PreviewButtonDelegate::PreviewButtonDelegate(QObject *parent, int column)
 
     if (QTableView *tableView = qobject_cast<QTableView*>(parent)) {
         m_pTableView = tableView;
-        m_pButton = new QPushButton(); //"", m_pTableView->parentWidget());
+        m_pButton = new QPushButton("", m_pTableView);
         m_pButton->setObjectName("LibraryPreviewButton");
         m_pButton->setCheckable(true);
         m_pButton->setChecked(false);
-        //m_pButton->hide();
+        m_pButton->hide();
         connect(m_pTableView, SIGNAL(entered(QModelIndex)),
                 this, SLOT(cellEntered(QModelIndex)));
     }
-
-    m_pPlay = WPixmapStore::getPixmap("/home/daniel/workspace/1.11/mixxx/res/skins/Deere1280x1024-SXGA/style/style_library_preview_play.png");
-    m_pPause = WPixmapStore::getPixmap("/home/daniel/workspace/1.11/mixxx/res/skins/Deere1280x1024-SXGA/style/style_library_preview_pause.png");
 }
 
 PreviewButtonDelegate::~PreviewButtonDelegate() {
@@ -83,48 +79,23 @@ void PreviewButtonDelegate::paint(QPainter *painter,
     if (!m_pButton) {
         return;
     }
-/*
-    QString styleSheet = "QPushButton#LibraryPreviewButton { width: 23px; height: 12px; background: transparent; border: 0; }"
-                         "QPushButton#LibraryPreviewButton:!checked{ image: url(skin:/style/style_library_preview_play.png); }"
-                         "QPushButton#LibraryPreviewButton:checked{ image: url(skin:/style/style_library_preview_pause.png); }";
-
-    m_pButton->setStyleSheet(styleSheet);
-
-*/
-    if (option.state == QStyle::State_Selected) {
-        painter->fillRect(option.rect, option.palette.base());
-    }
-/*
-    //m_pButton->setStyle();
-    m_pButton->setPalette(option.palette);
-    //m_pButton->setBackgroundRole();
-    //m_pButton->setAutoFillBackground();
 
     m_pButton->setGeometry(option.rect);
-    */
     bool playing = m_pPreviewDeckPlay->get() > 0.0;
-    /*
     // Check-state is whether the track is loaded (index.data()) and whether
     // it's playing.
     m_pButton->setChecked(index.data().toBool() && playing);
-    m_pButton->repaint();
 
+    if (option.state == QStyle::State_Selected) {
+        painter->fillRect(option.rect, option.palette.base());
+    }
 
     QPixmap map = QPixmap::grabWidget(m_pButton);
-  */
-    if (index.data().toBool() && playing) {
-        painter->drawPixmap(option.rect.x(), option.rect.y(), *m_pPlay);
-    } else {
-        painter->drawPixmap(option.rect.x(), option.rect.y(), *m_pPause);
-    }
-    /*
-    QPixmap* m_pPause = WPixmapStore::getPixmap("/style/style_library_preview_pause.png");
 
-    QPixmap* m_pPlay = WPixmapStore::getPixmap("/style/style_library_preview_play.png");
-    QPixmap* m_pPause = WPixmapStore::getPixmap("/style/style_library_preview_pause.png");
-
-    //painter->drawPixmap(option.rect.x(), option.rect.y(), map);
-*/
+    painter->save();
+    painter->translate(option.rect.topLeft());
+    m_pButton->render(painter);
+    painter->restore();
 }
 
 void PreviewButtonDelegate::updateEditorGeometry(QWidget *editor,

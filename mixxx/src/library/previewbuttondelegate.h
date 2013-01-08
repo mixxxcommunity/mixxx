@@ -8,7 +8,6 @@
 #include "trackinfoobject.h"
 
 class ControlObjectThreadMain;
-class QPixmap;
 
 class PreviewButtonDelegate : public QStyledItemDelegate {
   Q_OBJECT
@@ -45,9 +44,6 @@ class PreviewButtonDelegate : public QStyledItemDelegate {
     bool m_isOneCellInEditMode;
     QPersistentModelIndex m_currentEditedCellIndex;
     int m_column;
-    QPixmap* m_pPlay;
-    QPixmap* m_pPause;
-
 };
 
 #endif // PREVIEWBUTTONDELEGATE_H
