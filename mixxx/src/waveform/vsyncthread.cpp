@@ -187,6 +187,11 @@ void VSyncThread::run() {
             //qDebug()  << "ST_MESA_VBLANK_MODE_1                        " << usLast << inSync;
 
         } else if (m_vSyncMode == ST_OML_SYNC_CONTROL) {
+#if defined(__APPLE__)
+
+#elif defined(__WINDOWS__)
+
+#else
             // Probably the best solution
             // Note: Does not work with vsync_mode = 0
             emit(vsync1()); // renders the waveform, Possible delayed due to anti tearing
@@ -218,6 +223,7 @@ void VSyncThread::run() {
             m_timer.restart();
             m_usWait = 1000;
             usleep(1000);
+#endif
         } else { // if (m_vSyncMode == ST_TIMER) {
             // This mode should be used wit vblank_mode = 0
             usRest = m_usWait - m_timer.elapsed() / 1000;
