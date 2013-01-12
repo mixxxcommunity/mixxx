@@ -206,10 +206,10 @@ VMS2.Deck.prototype.jogMove = function(lsbValue) {
 VMS2.Deck.prototype.vinylButtonHandler = function(value) {
     if(value == ButtonState.pressed) {
         this.vinylButton=true;
-        this.Buttons.Vinyl.setLed(LedState.on);
+//        this.Buttons.Vinyl.setLed(LedState.on);
     } else {
         this.vinylButton=false;
-        this.Buttons.Vinyl.setLed(LedState.off);
+//        this.Buttons.Vinyl.setLed(LedState.off);
         // Force keylock up too since they're they same physical button
         //  (This prevents keylock getting stuck down if shift is released first)
         this.keylockButton=false;
