@@ -6,7 +6,7 @@ PreviewDeck::PreviewDeck(QObject* pParent,
                          EngineChannel::ChannelOrientation defaultOrientation,
                          QString group)
         : BaseTrackPlayer(pParent, pConfig, pMixingEngine, defaultOrientation,
-                          NULL, group, false, true) {
+                          group, false, true) {
 }
 
 PreviewDeck::~PreviewDeck() {

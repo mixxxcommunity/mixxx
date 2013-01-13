@@ -28,6 +28,7 @@ PlayerManager::PlayerManager(ConfigObject<ConfigValue> *pConfig,
           m_pVCManager(pVCManager),
           // NOTE(XXX) LegacySkinParser relies on these controls being COs and
           // not COTMs listening to a CO.
+          m_pAnalyserQueue(NULL),
           m_pCONumDecks(new ControlObject(ConfigKey("[Master]", "num_decks"), true, true)),
           m_pCONumSamplers(new ControlObject(ConfigKey("[Master]", "num_samplers"), true, true)),
           m_pCONumPreviewDecks(new ControlObject(ConfigKey("[Master]", "num_preview_decks"), true, true)) {
@@ -39,8 +40,6 @@ PlayerManager::PlayerManager(ConfigObject<ConfigValue> *pConfig,
             this, SLOT(slotNumSamplersControlChanged(double)));
     connect(m_pCONumPreviewDecks, SIGNAL(valueChanged(double)),
             this, SLOT(slotNumPreviewDecksControlChanged(double)));
-
-    m_pAnalyserQueue = AnalyserQueue::createDefaultAnalyserQueue(m_pConfig);
 
     // This is parented to the PlayerManager so does not need to be deleted
     SamplerBank* pSamplerBank = new SamplerBank(this);
@@ -68,7 +67,9 @@ PlayerManager::~PlayerManager() {
     delete m_pCONumSamplers;
     delete m_pCONumDecks;
     delete m_pCONumPreviewDecks;
-    delete m_pAnalyserQueue;
+    if (m_pAnalyserQueue) {
+        delete m_pAnalyserQueue;
+    }
 }
 
 void PlayerManager::bindToLibrary(LibraryFeatures* pLibrary) {
@@ -78,6 +79,33 @@ void PlayerManager::bindToLibrary(LibraryFeatures* pLibrary) {
             this, SLOT(slotLoadTrackIntoNextAvailableDeck(TrackPointer)));
     connect(this, SIGNAL(loadLocationToPlayer(QString, QString)),
             pLibrary, SLOT(slotLoadLocationToPlayer(QString, QString)));
+
+    m_pAnalyserQueue = AnalyserQueue::createDefaultAnalyserQueue(m_pConfig,
+            pLibrary->getTrackCollection());
+
+    // Connect the player to the analyser queue so that loaded tracks are
+    // analysed.
+    Deck* pDeck;
+    foreach(pDeck, m_decks) {
+        connect(pDeck, SIGNAL(newTrackLoaded(TrackPointer)),
+                m_pAnalyserQueue, SLOT(slotAnalyseTrack(TrackPointer)));
+    }
+
+    // Connect the player to the analyser queue so that loaded tracks are
+    // analysed.
+    Sampler* pSampler;
+    foreach(pSampler, m_samplers) {
+        connect(pSampler, SIGNAL(newTrackLoaded(TrackPointer)),
+                m_pAnalyserQueue, SLOT(slotAnalyseTrack(TrackPointer)));
+    }
+
+    // Connect the player to the analyser queue so that loaded tracks are
+    // analysed.
+    PreviewDeck* pPreviewDeck;
+    foreach(pPreviewDeck, m_preview_decks) {
+        connect(pPreviewDeck, SIGNAL(newTrackLoaded(TrackPointer)),
+                m_pAnalyserQueue, SLOT(slotAnalyseTrack(TrackPointer)));
+    }
 }
 
 // static
@@ -169,12 +197,7 @@ Deck* PlayerManager::addDeck() {
     if (number % 2 == 0)
         orientation = EngineChannel::RIGHT;
 
-    Deck* pDeck = new Deck(this, m_pConfig, m_pEngine, orientation, m_pAnalyserQueue, group);
-
-    // Connect the player to the analyser queue so that loaded tracks are
-    // analysed.
-    connect(pDeck, SIGNAL(newTrackLoaded(TrackPointer)),
-            m_pAnalyserQueue, SLOT(slotAnalyseTrack(TrackPointer)));
+    Deck* pDeck = new Deck(this, m_pConfig, m_pEngine, orientation, group);
 
     Q_ASSERT(!m_players.contains(group));
     m_players[group] = pDeck;
@@ -203,11 +226,6 @@ Sampler* PlayerManager::addSampler() {
 
     Sampler* pSampler = new Sampler(this, m_pConfig, m_pEngine, orientation, group);
 
-    // Connect the player to the analyser queue so that loaded tracks are
-    // analysed.
-    connect(pSampler, SIGNAL(newTrackLoaded(TrackPointer)),
-            m_pAnalyserQueue, SLOT(slotAnalyseTrack(TrackPointer)));
-
     Q_ASSERT(!m_players.contains(group));
     m_players[group] = pSampler;
     m_samplers.append(pSampler);
@@ -224,10 +242,6 @@ PreviewDeck* PlayerManager::addPreviewDeck() {
 
     PreviewDeck* pPreviewDeck = new PreviewDeck(this, m_pConfig, m_pEngine, orientation, group);
 
-    // Connect the player to the analyser queue so that loaded tracks are
-    // analysed.
-    connect(pPreviewDeck, SIGNAL(newTrackLoaded(TrackPointer)),
-            m_pAnalyserQueue, SLOT(slotAnalyseTrack(TrackPointer)));
     Q_ASSERT(!m_players.contains(group));
     m_players[group] = pPreviewDeck;
     m_preview_decks.append(pPreviewDeck);

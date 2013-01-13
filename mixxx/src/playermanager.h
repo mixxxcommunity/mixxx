@@ -20,6 +20,7 @@ class EngineMaster;
 class AnalyserQueue;
 class SoundManager;
 class VinylControlManager;
+class TrackCollection;
 
 class PlayerManager : public QObject {
     Q_OBJECT

@@ -7,6 +7,7 @@
 #include "soundsourceproxy.h"
 #include "playerinfo.h"
 #include "util/timer.h"
+#include "library/trackcollection.h"
 
 #ifdef __TONAL__
 #include "tonal/tonalanalyser.h"
@@ -27,7 +28,7 @@
                            // 100 for 10% step after finalise
 
 
-AnalyserQueue::AnalyserQueue() :
+AnalyserQueue::AnalyserQueue(TrackCollection* pTrackCollection) :
     m_aq(),
     m_exit(false),
     m_aiCheckPriorities(false),
@@ -37,6 +38,8 @@ AnalyserQueue::AnalyserQueue() :
     m_queue_size(0) {
     connect(this, SIGNAL(updateProgress()),
             this, SLOT(slotUpdateProgress()));
+    connect(this, SIGNAL(trackDone(TrackPointer)),
+            &pTrackCollection->getTrackDAO(), SLOT(saveTrack(TrackPointer)));
 }
 
 void AnalyserQueue::addAnalyser(Analyser* an) {
@@ -197,7 +200,7 @@ bool AnalyserQueue::doAnalysis(TrackPointer tio, SoundSourceProxy *pSoundSource)
         // During the doAnalysis function it goes only to 100% - FINALISE_PERCENT
         // because the finalise functions will take also some time
         processedSamples += read;
-        //fp div here prevents insano signed overflow
+        //fp div here prevents insane signed overflow
         progress = (int)(((float)processedSamples)/totalSamples *
                          (1000 - FINALISE_PERCENT));
 
@@ -320,6 +323,7 @@ void AnalyserQueue::run() {
                 while (itf.hasNext()) {
                     itf.next()->finalise(nextTrack);
                 }
+                trackDone(nextTrack);
                 emitUpdateProgress(nextTrack, 1000); // 100%
             }
         } else {
@@ -391,21 +395,9 @@ void AnalyserQueue::queueAnalyseTrack(TrackPointer tio) {
 }
 
 // static
-AnalyserQueue* AnalyserQueue::createAnalyserQueue(QList<Analyser*> analysers) {
-    AnalyserQueue* ret = new AnalyserQueue();
-
-    QListIterator<Analyser*> it(analysers);
-    while(it.hasNext()) {
-        ret->addAnalyser(it.next());
-    }
-
-    ret->start(QThread::IdlePriority);
-    return ret;
-}
-
-// static
-AnalyserQueue* AnalyserQueue::createDefaultAnalyserQueue(ConfigObject<ConfigValue> *_config) {
-    AnalyserQueue* ret = new AnalyserQueue();
+AnalyserQueue* AnalyserQueue::createDefaultAnalyserQueue(
+        ConfigObject<ConfigValue> *_config, TrackCollection* pTrackCollection) {
+    AnalyserQueue* ret = new AnalyserQueue(pTrackCollection);
 
 #ifdef __TONAL__
     ret->addAnalyser(new TonalAnalyser());
@@ -426,8 +418,9 @@ AnalyserQueue* AnalyserQueue::createDefaultAnalyserQueue(ConfigObject<ConfigValu
 }
 
 // static
-AnalyserQueue* AnalyserQueue::createPrepareViewAnalyserQueue(ConfigObject<ConfigValue> *_config) {
-    AnalyserQueue* ret = new AnalyserQueue();
+AnalyserQueue* AnalyserQueue::createPrepareViewAnalyserQueue(
+        ConfigObject<ConfigValue> *_config, TrackCollection* pTrackCollection) {
+    AnalyserQueue* ret = new AnalyserQueue(pTrackCollection);
 
     ret->addAnalyser(new AnalyserWaveform(_config));
     ret->addAnalyser(new AnalyserGain(_config));
