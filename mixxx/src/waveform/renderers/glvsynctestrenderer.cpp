@@ -75,7 +75,7 @@ void GLVSyncTestRenderer::draw(QPainter* painter, QPaintEvent* /*event*/) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    const QColor& color = m_colors.getSignalColor();
+    const QColor& color = m_pColors->getSignalColor();
 
     //t7 = timer.restart(); // 5,770
 

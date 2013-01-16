@@ -42,7 +42,7 @@ void WLabel::setup(QDomNode node)
     // Colors
     QPalette palette = m_pLabel->palette(); //we have to copy out the palette to edit it since it's const (probably for threadsafety)
     bool paletteChanged = false;
-    if(!WWidget::selectNode(node, "BgColor").isNull()) {
+    if (!WWidget::selectNode(node, "BgColor").isNull()) {
         m_qBgColor.setNamedColor(WWidget::selectNodeQString(node, "BgColor"));
         palette.setColor(this->backgroundRole(), WSkinColor::getCorrectColor(m_qBgColor));
         m_pLabel->setAutoFillBackground(true);

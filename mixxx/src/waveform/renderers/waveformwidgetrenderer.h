@@ -9,8 +9,9 @@
 #include "trackinfoobject.h"
 #include "util.h"
 #include "waveform/renderers/waveformrendererabstract.h"
+#include "waveform/renderers/waveformsignalcolors.h"
 
-// #define WAVEFORMWIDGETRENDERER_DEBUG
+//#define WAVEFORMWIDGETRENDERER_DEBUG
 
 class TrackInfoObject;
 class ControlObjectThreadMain;
@@ -66,6 +67,7 @@ public:
     void resize(int width, int height);
     int getHeight() const { return m_height;}
     int getWidth() const { return m_width;}
+    const WaveformSignalColors* getWaveformSignalColors() const { return &m_colors; };
 
     template< class T_Renderer>
     inline T_Renderer* addRenderer() {
@@ -82,7 +84,7 @@ protected:
     QList<WaveformRendererAbstract*> m_rendererStack;
     int m_height;
     int m_width;
-    QColor m_axesColor;
+    WaveformSignalColors m_colors;
 
     double m_firstDisplayedPosition;
     double m_lastDisplayedPosition;
