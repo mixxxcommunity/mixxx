@@ -97,11 +97,8 @@ void WOverview::setup(QDomNode node) {
     palette.setColor(this->backgroundRole(), m_qColorBackground);
     setPalette(palette);
 
-    m_qColorMarker.setNamedColor(selectNodeQString(node, "MarkerColor"));
-    m_qColorMarker = WSkinColor::getCorrectColor(m_qColorMarker);
-
     //setup hotcues and cue and loop(s)
-    m_marks.setup(m_pGroup,node);
+    m_marks.setup(m_pGroup, node, m_signalColors);
 
     for (int i = 0; i < m_marks.size(); ++i) {
         WaveformMark& mark = m_marks[i];
@@ -114,7 +111,7 @@ void WOverview::setup(QDomNode node) {
         if (child.nodeName() == "MarkRange") {
             m_markRanges.push_back(WaveformMarkRange());
             WaveformMarkRange& markRange = m_markRanges.back();
-            markRange.setup(m_pGroup, child);
+            markRange.setup(m_pGroup, child, m_signalColors);
 
             connect(markRange.m_markEnabledControl, SIGNAL(valueChanged(double)),
                      this, SLOT(onMarkRangeChange(double)));
@@ -575,10 +572,6 @@ void WOverview::resizeEvent(QResizeEvent *) {
     m_b = 14.f * m_a;
     m_waveformImageScaled = QImage();
     m_diffGain = 0;
-}
-
-QColor WOverview::getMarkerColor() {
-    return m_qColorMarker;
 }
 
 void WOverview::dragEnterEvent(QDragEnterEvent* event) {

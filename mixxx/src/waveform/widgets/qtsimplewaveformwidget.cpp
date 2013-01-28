@@ -50,7 +50,7 @@ void QtSimpleWaveformWidget::castToQWidget() {
     m_widget = static_cast<QWidget*>(static_cast<QGLWidget*>(this));
 }
 
-void QtSimpleWaveformWidget::paintEvent( QPaintEvent* event) {
+void QtSimpleWaveformWidget::paintEvent(QPaintEvent* event) {
     Q_UNUSED(event);
 }
 

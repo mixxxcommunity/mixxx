@@ -393,7 +393,6 @@
 		<SignalMidColor>#0099FF</SignalMidColor>
 		<SignalLowColor>#FF0035</SignalLowColor>
 		<SignalColor>#FF8000</SignalColor>
-		<MarkerColor>#00FF00</MarkerColor>
 		<EndOfTrackColor>#EA0000</EndOfTrackColor>
 		<DefaultMark>
 			<Align>bottom</Align>
@@ -431,7 +430,6 @@
 		<SignalMidColor>#0099FF</SignalMidColor>
 		<SignalLowColor>#FF0035</SignalLowColor>
 		<SignalColor>#FF8000</SignalColor>
-		<MarkerColor>#00FF00</MarkerColor>
 		<EndOfTrackColor>#EA0000</EndOfTrackColor>
 		<DefaultMark>
 			<Align>bottom</Align>
@@ -609,7 +607,6 @@
 						<SignalColor>#19ABFB</SignalColor>
 						<BeatColor>#191919</BeatColor>
 						<BeatHighlightColor>#000000</BeatHighlightColor>
-						<MarkerColor>#00FF00</MarkerColor>
 						<CueColor>#00FF00</CueColor>
 						<Align></Align>
 						<AxesColor>#00FF00</AxesColor>
@@ -668,7 +665,6 @@
 						<SignalColor>#FF0000</SignalColor>
 						<BeatColor>#191919</BeatColor>
 						<BeatHighlightColor>#000000</BeatHighlightColor>
-						<MarkerColor>#00FF00</MarkerColor>
 						<CueColor>#00FF00</CueColor>
 						<Align></Align>
 						<AxesColor>#00FF00</AxesColor>
@@ -964,7 +960,6 @@
 								<SignalMidColor>#0099FF</SignalMidColor>
 								<SignalLowColor>#FF0035</SignalLowColor>
 								<SignalColor>#FF8000</SignalColor>
-								<MarkerColor>#00FF00</MarkerColor>
 								<EndOfTrackColor>#EA0000</EndOfTrackColor>
 								<DefaultMark>
 									<Align>bottom</Align>
@@ -1475,7 +1470,6 @@
 								<SignalMidColor>#0099FF</SignalMidColor>
 								<SignalLowColor>#FF0035</SignalLowColor>
 								<SignalColor>#FF8000</SignalColor>
-								<MarkerColor>#00FF00</MarkerColor>
 								<EndOfTrackColor>#EA0000</EndOfTrackColor>
 								<DefaultMark>
 									<Align>bottom</Align>
@@ -1986,7 +1980,6 @@
 								<SignalMidColor>#0099FF</SignalMidColor>
 								<SignalLowColor>#FF0035</SignalLowColor>
 								<SignalColor>#FF8000</SignalColor>
-								<MarkerColor>#00FF00</MarkerColor>
 								<EndOfTrackColor>#EA0000</EndOfTrackColor>
 								<DefaultMark>
 									<Align>bottom</Align>
@@ -2499,7 +2492,6 @@
 								<SignalMidColor>#0099FF</SignalMidColor>
 								<SignalLowColor>#FF0035</SignalLowColor>
 								<SignalColor>#FF8000</SignalColor>
-								<MarkerColor>#00FF00</MarkerColor>
 								<EndOfTrackColor>#EA0000</EndOfTrackColor>
 								<DefaultMark>
 									<Align>bottom</Align>

@@ -323,7 +323,7 @@ void AnalyserQueue::run() {
                 while (itf.hasNext()) {
                     itf.next()->finalise(nextTrack);
                 }
-                trackDone(nextTrack);
+                emit(trackDone(nextTrack));
                 emitUpdateProgress(nextTrack, 1000); // 100%
             }
         } else {
