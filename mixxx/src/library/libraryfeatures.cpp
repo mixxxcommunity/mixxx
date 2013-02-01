@@ -41,16 +41,16 @@
 const QString LibraryFeatures::m_sTrackViewName = QString("WTrackTableView");
 
 LibraryFeatures::LibraryFeatures(QObject* parent, ConfigObject<ConfigValue>* pConfig, bool firstRun,
-                 RecordingManager* pRecordingManager)
-    : m_pConfig(pConfig),
-      m_pRecordingManager(pRecordingManager) {
-    m_pTrackCollection = new TrackCollection(pConfig);
-    m_pSidebarModel = new SidebarModel(parent);
-    m_pLibraryControl = new LibraryControl(this);
+                 RecordingManager* pRecordingManager) :
+        m_pConfig(pConfig),
+        m_pSidebarModel(new SidebarModel(parent)),
+        m_pTrackCollection(new TrackCollection(pConfig)),
+        m_pLibraryControl(new LibraryControl),
+        m_pRecordingManager(pRecordingManager) {
 
     // TODO(rryan) -- turn this construction / adding of features into a static
     // method or something -- CreateDefaultLibrary
-    m_pMixxxLibraryFeature = new MixxxLibraryFeature(this, m_pTrackCollection);
+    m_pMixxxLibraryFeature = new MixxxLibraryFeature(this, m_pTrackCollection,m_pConfig);
     addFeature(m_pMixxxLibraryFeature);
     if (PromoTracksFeature::isSupported(m_pConfig)) {
         m_pPromoTracksFeature = new PromoTracksFeature(this, pConfig,

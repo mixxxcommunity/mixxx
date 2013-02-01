@@ -4,18 +4,18 @@
 #ifndef WLIBRARY_H
 #define WLIBRARY_H
 
-#include <QDomNode>
 #include <QMap>
 #include <QMutex>
 #include <QStackedWidget>
 #include <QString>
+#include <QDomNode>
 
 class MixxxKeyboard;
 class AbstractLibraryView;
 
 class WLibrary : public QStackedWidget {
     Q_OBJECT
-public:
+  public:
     WLibrary(QWidget* parent);
     virtual ~WLibrary();
 
@@ -34,18 +34,14 @@ public:
 
     AbstractLibraryView* getActiveView() const;
 
-public slots:
+  public slots:
     // Show the view registered with the given name. Does nothing if the current
     // view is the specified view, or if the name does not specify any
     // registered view.
     void switchToView(const QString& name);
 
     void search(const QString&);
-    void searchStarting();
-    void searchCleared();
-  signals:
-    void searchActivated(const QString&);
-private:
+  private:
     QMutex m_mutex;
     QMap<QString, QWidget*> m_viewMap;
 };

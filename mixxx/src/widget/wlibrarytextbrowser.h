@@ -14,15 +14,7 @@ class WLibraryTextBrowser : public QTextBrowser, public virtual AbstractLibraryV
     WLibraryTextBrowser(QWidget* parent = NULL);
     virtual ~WLibraryTextBrowser();
 
-    virtual void setup(QDomNode node);
-    virtual void onSearchStarting();
-    virtual void onSearchCleared();
-    virtual void onSearch(const QString& text);
-    virtual void onShow();
-    virtual void loadSelectedTrack();
-    virtual void loadSelectedTrackToGroup(QString group);
-    virtual void moveSelection(int delta);
+    virtual void onShow() {};
 };
-
 
 #endif /* WLIBRARYTEXTBROWSER_H */

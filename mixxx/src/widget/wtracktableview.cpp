@@ -449,6 +449,7 @@ void WTrackTableView::slotHide()
     }
 }
 
+/*
 void WTrackTableView::slotRelocate()
 {
     QModelIndexList indices = selectionModel()->selectedRows();
@@ -460,6 +461,7 @@ void WTrackTableView::slotRelocate()
         }
     }
 }
+*/
 
 void WTrackTableView::slotUnhide()
 {

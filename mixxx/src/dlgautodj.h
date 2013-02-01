@@ -24,14 +24,11 @@ class DlgAutoDJ : public QWidget, public Ui::DlgAutoDJ, public virtual AbstractL
               TrackCollection* pTrackCollection, MixxxKeyboard* pKeyboard);
     virtual ~DlgAutoDJ();
 
-    virtual void setup(QDomNode node);
-    virtual void onSearchStarting();
-    virtual void onSearchCleared();
-    virtual void onSearch(const QString& text);
-    virtual void onShow();
-    virtual void loadSelectedTrack();
-    virtual void loadSelectedTrackToGroup(QString group);
-    virtual void moveSelection(int delta);
+    void onShow();
+    void loadSelectedTrack();
+    void onSearch(const QString& text);
+    void loadSelectedTrackToGroup(QString group);
+    void moveSelection(int delta);
 
   public slots:
     void shufflePlaylistButton(bool buttonChecked);
@@ -110,7 +107,7 @@ class DlgAutoDJ : public QWidget, public Ui::DlgAutoDJ, public virtual AbstractL
     ControlPushButton* m_pCOToggleAutoDJ;
 };
 
-#endif //DLGTRIAGE_H
+#endif //DLGAUTODJ_H
 
 
 
