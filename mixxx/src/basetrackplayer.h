@@ -27,7 +27,7 @@ class BaseTrackPlayer : public BasePlayer {
     TrackPointer getLoadedTrack() const;
 
   public slots:
-    void slotLoadTrack(TrackPointer track, bool bStartFromEndPos=false);
+    void slotLoadTrack(TrackPointer track, bool bPlay=false);
     void slotFinishLoading(TrackPointer pTrackInfoObject);
     void slotLoadFailed(TrackPointer pTrackInfoObject, QString reason);
     void slotUnloadTrack(TrackPointer track);
@@ -58,4 +58,4 @@ class BaseTrackPlayer : public BasePlayer {
 };
 
 
-#endif /* BASETRACKPLAYER_H */
+#endif // BASETRACKPLAYER_H

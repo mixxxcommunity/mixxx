@@ -18,21 +18,20 @@
 #include "vinylcontrol/vinylcontrolmanager.h"
 #include "util/stat.h"
 
-PlayerManager::PlayerManager(ConfigObject<ConfigValue> *pConfig,
+PlayerManager::PlayerManager(ConfigObject<ConfigValue>* pConfig,
                              SoundManager* pSoundManager,
                              EngineMaster* pEngine,
-                             VinylControlManager* pVCManager)
-        : m_pConfig(pConfig),
-          m_pSoundManager(pSoundManager),
-          m_pEngine(pEngine),
-          m_pVCManager(pVCManager),
-          // NOTE(XXX) LegacySkinParser relies on these controls being COs and
-          // not COTMs listening to a CO.
-          m_pAnalyserQueue(NULL),
-          m_pCONumDecks(new ControlObject(ConfigKey("[Master]", "num_decks"), true, true)),
-          m_pCONumSamplers(new ControlObject(ConfigKey("[Master]", "num_samplers"), true, true)),
-          m_pCONumPreviewDecks(new ControlObject(ConfigKey("[Master]", "num_preview_decks"), true, true)) {
-
+                             VinylControlManager* pVCManager) :
+        m_pConfig(pConfig),
+        m_pSoundManager(pSoundManager),
+        m_pEngine(pEngine),
+        m_pVCManager(pVCManager),
+        // NOTE(XXX) LegacySkinParser relies on these controls being COs and
+        // not COTMs listening to a CO.
+        m_pAnalyserQueue(NULL),
+        m_pCONumDecks(new ControlObject(ConfigKey("[Master]", "num_decks"), true, true)),
+        m_pCONumSamplers(new ControlObject(ConfigKey("[Master]", "num_samplers"), true, true)),
+        m_pCONumPreviewDecks(new ControlObject(ConfigKey("[Master]", "num_preview_decks"), true, true)) {
 
     connect(m_pCONumDecks, SIGNAL(valueChanged(double)),
             this, SLOT(slotNumDecksControlChanged(double)));
@@ -52,9 +51,9 @@ PlayerManager::PlayerManager(ConfigObject<ConfigValue> *pConfig,
 
     // register the engine's outputs
     m_pSoundManager->registerOutput(AudioOutput(AudioOutput::MASTER),
-        m_pEngine);
+            m_pEngine);
     m_pSoundManager->registerOutput(AudioOutput(AudioOutput::HEADPHONES),
-        m_pEngine);
+            m_pEngine);
 }
 
 PlayerManager::~PlayerManager() {

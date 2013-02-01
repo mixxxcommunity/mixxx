@@ -138,11 +138,11 @@ void LibraryControl::slotLoadSelectedTrackToGroup(QString group) {
 }
 
 void LibraryControl::slotLoadSelectedIntoFirstStopped(double v) {
-    if (m_pLibraryWidget == NULL)
+    if (m_pLibraryWidget == NULL) {
         return;
+    }
 
-    if (v > 0)
-    {
+    if (v > 0) {
         AbstractLibraryView* activeView = m_pLibraryWidget->getActiveView();
         if (!activeView) {
             return;

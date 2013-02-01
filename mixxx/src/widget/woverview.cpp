@@ -397,9 +397,9 @@ void WOverview::paintEvent(QPaintEvent *) {
     if (m_pWaveform) {
         // Draw Axis
         painter.setPen(QPen(m_signalColors.getAxesColor(), 1));
-        painter.drawLine(0, height()/2, m_analyserProgress, height()/2);
+        painter.drawLine(0, height()/2, width(), height()/2);
 
-        if (m_analyserProgress <= 10) { // remove text after progress by wf is recognizable (10 pixel)
+        if (m_analyserProgress <= 50) { // remove text after progress by wf is recognizable (10 pixel)
             // We have a valid m_waveform, so here we have a track in analysis queue
             QColor lowColor = m_signalColors.getLowColor();
             lowColor.setAlphaF(0.5);

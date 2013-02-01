@@ -29,13 +29,13 @@
 
 
 AnalyserQueue::AnalyserQueue(TrackCollection* pTrackCollection) :
-    m_aq(),
-    m_exit(false),
-    m_aiCheckPriorities(false),
-    m_tioq(),
-    m_qm(),
-    m_qwait(),
-    m_queue_size(0) {
+        m_aq(),
+        m_exit(false),
+        m_aiCheckPriorities(false),
+        m_tioq(),
+        m_qm(),
+        m_qwait(),
+        m_queue_size(0) {
     connect(this, SIGNAL(updateProgress()),
             this, SLOT(slotUpdateProgress()));
     connect(this, SIGNAL(trackDone(TrackPointer)),
@@ -136,7 +136,7 @@ TrackPointer AnalyserQueue::dequeueNextBlocking() {
 }
 
 // This is called from the AnalyserQueue thread
-bool AnalyserQueue::doAnalysis(TrackPointer tio, SoundSourceProxy *pSoundSource) {
+bool AnalyserQueue::doAnalysis(TrackPointer tio, SoundSourceProxy* pSoundSource) {
     // TonalAnalyser requires a block size of 65536. Using a different value
     // breaks the tonal analyser. We need to use a smaller block size becuase on
     // Linux, the AnalyserQueue can starve the CPU of its resources, resulting
@@ -147,8 +147,8 @@ bool AnalyserQueue::doAnalysis(TrackPointer tio, SoundSourceProxy *pSoundSource)
     //qDebug() << tio->getFilename() << " has " << totalSamples << " samples.";
     int processedSamples = 0;
 
-    SAMPLE *data16 = new SAMPLE[ANALYSISBLOCKSIZE];
-    CSAMPLE *samples = new CSAMPLE[ANALYSISBLOCKSIZE];
+    SAMPLE* data16 = new SAMPLE[ANALYSISBLOCKSIZE];
+    CSAMPLE* samples = new CSAMPLE[ANALYSISBLOCKSIZE];
 
     QTime progressUpdateInhibitTimer;
     progressUpdateInhibitTimer.start(); // Inhibit Updates for 60 milliseconds
@@ -282,7 +282,7 @@ void AnalyserQueue::run() {
         }
 
         // Get the audio
-        SoundSourceProxy * pSoundSource = new SoundSourceProxy(nextTrack);
+        SoundSourceProxy* pSoundSource = new SoundSourceProxy(nextTrack);
         pSoundSource->open(); //Open the file for reading
         int iNumSamples = pSoundSource->length();
         int iSampleRate = pSoundSource->getSampleRate();
@@ -396,7 +396,7 @@ void AnalyserQueue::queueAnalyseTrack(TrackPointer tio) {
 
 // static
 AnalyserQueue* AnalyserQueue::createDefaultAnalyserQueue(
-        ConfigObject<ConfigValue> *_config, TrackCollection* pTrackCollection) {
+        ConfigObject<ConfigValue>* _config, TrackCollection* pTrackCollection) {
     AnalyserQueue* ret = new AnalyserQueue(pTrackCollection);
 
 #ifdef __TONAL__
@@ -419,7 +419,7 @@ AnalyserQueue* AnalyserQueue::createDefaultAnalyserQueue(
 
 // static
 AnalyserQueue* AnalyserQueue::createPrepareViewAnalyserQueue(
-        ConfigObject<ConfigValue> *_config, TrackCollection* pTrackCollection) {
+        ConfigObject<ConfigValue>* _config, TrackCollection* pTrackCollection) {
     AnalyserQueue* ret = new AnalyserQueue(pTrackCollection);
 
     ret->addAnalyser(new AnalyserWaveform(_config));

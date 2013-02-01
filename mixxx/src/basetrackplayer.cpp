@@ -20,15 +20,15 @@
 #include "analyserqueue.h"
 
 BaseTrackPlayer::BaseTrackPlayer(QObject* pParent,
-                                 ConfigObject<ConfigValue> *pConfig,
+                                 ConfigObject<ConfigValue>* pConfig,
                                  EngineMaster* pMixingEngine,
                                  EngineChannel::ChannelOrientation defaultOrientation,
                                  QString group,
                                  bool defaultMaster,
-                                 bool defaultHeadphones)
-        : BasePlayer(pParent, group),
-          m_pConfig(pConfig),
-          m_pLoadedTrack() {
+                                 bool defaultHeadphones) :
+        BasePlayer(pParent, group),
+        m_pConfig(pConfig),
+        m_pLoadedTrack() {
 
     // Need to strdup the string because EngineChannel will save the pointer,
     // but we might get deleted before the EngineChannel. TODO(XXX)
@@ -126,8 +126,7 @@ BaseTrackPlayer::~BaseTrackPlayer()
     delete m_pDuration;
 }
 
-void BaseTrackPlayer::slotLoadTrack(TrackPointer track, bool bStartFromEndPos) {
-    Q_UNUSED(bStartFromEndPos);
+void BaseTrackPlayer::slotLoadTrack(TrackPointer track, bool bPlay) {
 
     //Disconnect the old track's signals.
     if (m_pLoadedTrack) {

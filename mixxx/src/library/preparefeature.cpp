@@ -16,11 +16,11 @@ const QString PrepareFeature::m_sPrepareViewName = QString("Prepare");
 
 PrepareFeature::PrepareFeature(QObject* parent,
                                ConfigObject<ConfigValue>* pConfig,
-                               TrackCollection* pTrackCollection)
-        : LibraryFeature(parent),
-          m_pConfig(pConfig),
-          m_pTrackCollection(pTrackCollection),
-          m_pAnalyserQueue(NULL) {
+                               TrackCollection* pTrackCollection) :
+        LibraryFeature(parent),
+        m_pConfig(pConfig),
+        m_pTrackCollection(pTrackCollection),
+        m_pAnalyserQueue(NULL) {
 }
 
 PrepareFeature::~PrepareFeature() {
@@ -67,8 +67,7 @@ TreeItemModel* PrepareFeature::getChildModel() {
     return &m_childModel;
 }
 
-void PrepareFeature::refreshLibraryModels()
-{
+void PrepareFeature::refreshLibraryModels() {
     if (m_pPrepareView) {
         m_pPrepareView->onShow();
     }
