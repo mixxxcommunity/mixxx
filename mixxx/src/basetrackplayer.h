@@ -34,7 +34,7 @@ class BaseTrackPlayer : public BasePlayer {
     void slotSetReplayGain(double replayGain);
 
   signals:
-    void loadTrack(TrackPointer pTrack);
+    void loadTrack(TrackPointer pTrack, bool bPlay=false);
     void loadTrackFailed(TrackPointer pTrack);
     void newTrackLoaded(TrackPointer pLoadedTrack);
     void unloadingTrack(TrackPointer pAboutToBeUnloaded);

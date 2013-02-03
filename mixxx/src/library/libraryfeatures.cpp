@@ -162,8 +162,8 @@ void LibraryFeatures::bindWidget(WLibrary* pLibraryWidget,
             pTrackTableView, SLOT(loadTrackModel(QAbstractItemModel*)));
     connect(pTrackTableView, SIGNAL(loadTrack(TrackPointer)),
             this, SLOT(slotLoadTrack(TrackPointer)));
-    connect(pTrackTableView, SIGNAL(loadTrackToPlayer(TrackPointer, QString)),
-            this, SLOT(slotLoadTrackToPlayer(TrackPointer, QString)));
+    connect(pTrackTableView, SIGNAL(loadTrackToPlayer(TrackPointer, QString, bool)),
+            this, SLOT(slotLoadTrackToPlayer(TrackPointer, QString, bool)));
     pLibraryWidget->registerView(m_sTrackViewName, pTrackTableView);
 
     connect(this, SIGNAL(switchToView(const QString&)),
@@ -188,8 +188,8 @@ void LibraryFeatures::addFeature(LibraryFeature* feature) {
             this, SLOT(slotSwitchToView(const QString&)));
     connect(feature, SIGNAL(loadTrack(TrackPointer)),
             this, SLOT(slotLoadTrack(TrackPointer)));
-    connect(feature, SIGNAL(loadTrackToPlayer(TrackPointer, QString)),
-            this, SLOT(slotLoadTrackToPlayer(TrackPointer, QString)));
+    connect(feature, SIGNAL(loadTrackToPlayer(TrackPointer, QString, bool)),
+            this, SLOT(slotLoadTrackToPlayer(TrackPointer, QString, bool)));
     connect(feature, SIGNAL(restoreSearch(const QString&)),
             this, SLOT(slotRestoreSearch(const QString&)));
 }
@@ -230,8 +230,8 @@ void LibraryFeatures::slotLoadLocationToPlayer(QString location, QString group) 
     emit(loadTrackToPlayer(pTrack, group));
 }
 
-void LibraryFeatures::slotLoadTrackToPlayer(TrackPointer pTrack, QString group) {
-    emit(loadTrackToPlayer(pTrack, group));
+void LibraryFeatures::slotLoadTrackToPlayer(TrackPointer pTrack, QString group, bool play) {
+    emit(loadTrackToPlayer(pTrack, group, play));
 }
 
 void LibraryFeatures::slotRestoreSearch(const QString& text) {

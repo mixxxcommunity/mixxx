@@ -31,7 +31,7 @@ class WTrackTableView : public WLibraryTableView {
     void onShow();
     virtual void keyPressEvent(QKeyEvent* event);
     virtual void loadSelectedTrack();
-    virtual void loadSelectedTrackToGroup(QString group);
+    virtual void loadSelectedTrackToGroup(QString group, bool play);
 
   protected:
     bool eventFilter(QObject *obj, QEvent *event);
@@ -55,7 +55,7 @@ class WTrackTableView : public WLibraryTableView {
     void slotResetPlayed();
     void addSelectionToPlaylist(int iPlaylistId);
     void addSelectionToCrate(int iCrateId);
-    void loadSelectionToGroup(QString group);
+    void loadSelectionToGroup(QString group, bool play = false);
     void doSortByColumn(int headerSection);
     void slotLockBpm();
     void slotUnlockBpm();

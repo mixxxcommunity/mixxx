@@ -55,10 +55,6 @@ public:
     // track. Does nothing otherwise.
     void loadSelectedTrack() {};
 
-    // If applicable, requests that the LibraryView load the selected track to
-    // the specified group. Does nothing otherwise.
-    void loadSelectedTrackToGroup(QString group) {};
-
     // If a selePlaylistSequencection is applicable for this view, request that the selection be
     // increased or decreased by the provided delta. For example, for a value of
     // 1, the view should move to the next selection in the list.

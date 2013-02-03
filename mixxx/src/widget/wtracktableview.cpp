@@ -365,7 +365,7 @@ void WTrackTableView::slotMouseDoubleClicked(const QModelIndex &index) {
     }
 }
 
-void WTrackTableView::loadSelectionToGroup(QString group) {
+void WTrackTableView::loadSelectionToGroup(QString group, bool play) {
     QModelIndexList indices = selectionModel()->selectedRows();
     if (indices.size() > 0) {
         // If the track load override is disabled, check to see if a track is
@@ -382,8 +382,8 @@ void WTrackTableView::loadSelectionToGroup(QString group) {
         TrackModel* trackModel = getTrackModel();
         TrackPointer pTrack;
         if (trackModel &&
-            (pTrack = trackModel->getTrack(index))) {
-            emit(loadTrackToPlayer(pTrack, group));
+                (pTrack = trackModel->getTrack(index))) {
+            emit(loadTrackToPlayer(pTrack, group, play));
         }
     }
 }
@@ -1028,8 +1028,8 @@ void WTrackTableView::loadSelectedTrack() {
     }
 }
 
-void WTrackTableView::loadSelectedTrackToGroup(QString group) {
-    loadSelectionToGroup(group);
+void WTrackTableView::loadSelectedTrackToGroup(QString group, bool play) {
+    loadSelectionToGroup(group, play);
 }
 
 void WTrackTableView::slotSendToAutoDJ() {

@@ -187,8 +187,8 @@ void ClementineFeature::bindWidget(WLibrarySidebar* /*sidebarWidget*/,
 
     connect(m_view, SIGNAL(loadTrack(TrackPointer)),
             this, SIGNAL(loadTrack(TrackPointer)));
-    connect(m_view, SIGNAL(loadTrackToPlayer(TrackPointer, QString)),
-            this, SIGNAL(loadTrackToPlayer(TrackPointer, QString)));
+    connect(m_view, SIGNAL(loadTrackToPlayer(TrackPointer, QString, bool)),
+            this, SIGNAL(loadTrackToPlayer(TrackPointer, QString, bool)));
 }
 
 void ClementineFeature::activateChild(const QModelIndex& index) {

@@ -62,8 +62,8 @@ BaseTrackPlayer::BaseTrackPlayer(QObject* pParent,
     // Connect our signals and slots with the EngineBuffer's signals and
     // slots. This will let us know when the reader is done loading a track, and
     // let us request that the reader load a track.
-    connect(this, SIGNAL(loadTrack(TrackPointer)),
-            pEngineBuffer, SLOT(slotLoadTrack(TrackPointer)));
+    connect(this, SIGNAL(loadTrack(TrackPointer, bool)),
+            pEngineBuffer, SLOT(slotLoadTrack(TrackPointer, bool)));
     connect(pEngineBuffer, SIGNAL(trackLoaded(TrackPointer)),
             this, SLOT(slotFinishLoading(TrackPointer)));
     connect(pEngineBuffer, SIGNAL(trackLoadFailed(TrackPointer, QString)),
@@ -177,7 +177,7 @@ void BaseTrackPlayer::slotLoadTrack(TrackPointer track, bool bPlay) {
             this, SLOT(slotSetReplayGain(double)));
 
     //Request a new track from the reader
-    emit(loadTrack(track));
+    emit(loadTrack(track, bPlay));
 }
 
 void BaseTrackPlayer::slotLoadFailed(TrackPointer track, QString reason) {

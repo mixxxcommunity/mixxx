@@ -61,7 +61,7 @@ public:
     void slotShowTrackModel(QAbstractItemModel* model);
     void slotSwitchToView(const QString& view);
     void slotLoadTrack(TrackPointer pTrack);
-    void slotLoadTrackToPlayer(TrackPointer pTrack, QString group);
+    void slotLoadTrackToPlayer(TrackPointer pTrack, QString group, bool play);
     void slotLoadLocationToPlayer(QString location, QString group);
     void slotRestoreSearch(const QString& text);
     void slotRefreshLibraryModels();
@@ -69,11 +69,12 @@ public:
     void slotCreateCrate();
     void onSkinLoadFinished();
     void slotLoadCover(QString img);
-signals:
+
+  signals:
     void showTrackModel(QAbstractItemModel* model);
     void switchToView(const QString& view);
     void loadTrack(TrackPointer pTrack);
-    void loadTrackToPlayer(TrackPointer pTrack, QString group);
+    void loadTrackToPlayer(TrackPointer pTrack, QString group, bool play = false);
     void restoreSearch(const QString&);
     void search(const QString& text);
     void searchCleared();
