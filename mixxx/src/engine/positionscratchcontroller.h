@@ -27,11 +27,12 @@ class PositionScratchController : public QObject {
     ControlObject* m_pScratchControllerI;
     ControlObject* m_pScratchControllerD;
     VelocityController* m_pVelocityController;
+    bool m_bScratchingEnabled;
     bool m_bScratching;
     bool m_bEnableInertia;
-    double m_dLastPlaypos;
-    double m_dPositionDeltaSum;
-    double m_dScratchTime;
+    bool m_bIgnoreNextSeek;
+    double m_dStartSample;
+    double m_dStartScratchPosition;
     double m_dRate;
 };
 

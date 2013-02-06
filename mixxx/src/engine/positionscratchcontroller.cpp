@@ -10,15 +10,13 @@
 
 class VelocityController {
   public:
-    VelocityController() {
-        m_p = 0.0;
-        m_i = 0.0;
-        m_d = 0.0;
-        m_target_position = 0;
-        m_last_error = 0.0;
-        m_last_time = 0.0;
-        m_error_sum = 0.0;
-        m_last_velocity = 0.0;
+    VelocityController() :
+        m_last_error(0.0),
+        m_error_sum(0.0),
+        m_p(0.0),
+        m_i(0.0),
+        m_d(0.0)
+    {
     }
 
     void setPID(double p, double i, double d) {
@@ -27,39 +25,35 @@ class VelocityController {
         m_d = d;
     }
 
-    void reset(double position, double time, double target_position) {
-        m_target_position = target_position;
-        m_last_error = m_target_position - position;
-        m_last_time = time;
+    void reset() {
+        m_last_error = 0;
         m_error_sum = 0.0;
-        m_last_velocity = 0.0;
     }
 
-    void setTarget(double target_position) {
-        m_target_position = target_position;
-    }
+    double observation(double position, double target_position, double dt) {
 
-    double observation(double position, double time) {
-        // limit dt to 100 microseconds to prevent blowup (nobody has latency
-        // that low so this shouldn't happen in practice).
-        double dt = math_max(time - m_last_time, 0.000100);
-
-        const double error = m_target_position - position;
+        const double error = target_position - position;
 
         // Calculate integral component of PID
-        m_error_sum += error * dt;
+        // In case of error too small then stop intergration
+        if (abs(error) > 0.001) {
+            // A pure PID calculates * dt, we need * dt^2 for tweaking the Controller for all latencies
+            m_error_sum += error * dt * dt;
+        }
 
         // Calculate differential component of PID. Positive if we're getting
         // worse, negative if we're getting closer.
-        double error_change = (error - m_last_error) / dt;
+        // A pure PID calculates / dt, we need * dt for tweaking the Controller for all latencies
+        double error_change = (error - m_last_error) * dt;
 
         // Indicator that can possibly tell if we've gone unstable and are
         // oscillating around the target.
         //const bool error_flip = (error < 0 && m_last_error > 0) || (error > 0 && m_last_error < 0);
 
         // Protect against silly error_change values.
-        if (isnan(error_change) || isinf(error_change))
+        if (isnan(error_change) || isinf(error_change)) {
             error_change = 0.0;
+        }
 
         // qDebug() << "target:" << m_target_position << "position:" << position
         //          << "error:" << error << "change:" << error_change << "sum:" << m_error_sum;
@@ -77,26 +71,25 @@ class VelocityController {
             //qDebug() << "clamp decay" << decay << "output" << output;
         //}
 
-        m_last_velocity = output;
         m_last_error = error;
         return output;
     }
 
-    double getTarget() {
-        return m_target_position;
-    }
-
   private:
-    double m_target_position;
     double m_last_error;
-    double m_last_time;
-    double m_last_velocity;
     double m_error_sum;
     double m_p, m_i, m_d;
 };
 
-PositionScratchController::PositionScratchController(const char* pGroup)
-        : m_group(pGroup) {
+PositionScratchController::PositionScratchController(const char* pGroup) :
+        m_group(pGroup),
+        m_bScratchingEnabled(false),
+        m_bScratching(false),
+        m_bEnableInertia(false),
+        m_bIgnoreNextSeek(false),
+        m_dStartSample(0),
+        m_dStartScratchPosition(0),
+        m_dRate(0) {
     m_pScratchEnable = new ControlObject(ConfigKey(pGroup, "scratch_position_enable"));
     m_pScratchPosition = new ControlObject(ConfigKey(pGroup, "scratch_position"));
     m_pMasterSampleRate = ControlObject::getControl(ConfigKey("[Master]", "samplerate"));
@@ -104,10 +97,6 @@ PositionScratchController::PositionScratchController(const char* pGroup)
     m_pScratchControllerI = new ControlObject(ConfigKey(pGroup, "scratch_constant_i"));
     m_pScratchControllerD = new ControlObject(ConfigKey(pGroup, "scratch_constant_d"));
     m_pVelocityController = new VelocityController();
-    m_bScratching = false;
-    m_dScratchTime = 0;
-    m_bEnableInertia = false;
-    m_dRate = 0.;
     m_pScratchControllerP->set(0.0002);
     m_pScratchControllerI->set(0.0);
     m_pScratchControllerD->set(0.0);
@@ -126,12 +115,19 @@ PositionScratchController::~PositionScratchController() {
     delete m_pScratchControllerD;
 }
 
+static volatile double p = 0.3;
+static volatile double i = 0.6;
+static volatile double d = 0.5;
+
 void PositionScratchController::process(double currentSample, bool paused, int iBufferSize) {
     bool scratchEnable = m_pScratchEnable->get() != 0;
     double scratchPosition = m_pScratchPosition->get();
-    m_pVelocityController->setPID(m_pScratchControllerP->get(),
-                                  m_pScratchControllerI->get(),
-                                  m_pScratchControllerD->get());
+
+    m_pVelocityController->setPID(p, i, d);
+
+    //m_pVelocityController->setPID(m_pScratchControllerP->get(),
+    //                              m_pScratchControllerI->get(),
+    //                              m_pScratchControllerD->get());
 
     // The rate threshold above which disabling position scratching will enable
     // an 'inertia' mode.
@@ -148,50 +144,58 @@ void PositionScratchController::process(double currentSample, bool paused, int i
     // The latency or time difference between process calls.
     const double dt = static_cast<double>(iBufferSize) / m_pMasterSampleRate->get();
 
-    // We calculate the exponential decay constant based on the above
-    // constants. Roughly we backsolve what the decay should be if we want to
-    // stop a throw of max velocity kMaxVelocity in kTimeToStop seconds. Here is
-    // the derivation:
-    // kMaxVelocity * alpha ^ (# callbacks to stop in) = kDecayThreshold
-    // # callbacks = kTimeToStop / dt
-    // alpha = (kDecayThreshold / kMaxVelocity) ^ (dt / kTimeToStop)
-    const double kExponentialDecay = pow(kDecayThreshold / kMaxVelocity, dt / kTimeToStop);
-
     if (m_bScratching) {
-        if (scratchEnable || m_bEnableInertia) {
-            // We were previously in scratch mode and are still in scratch mode
-            // OR we are in inertia mode.
+        
 
-            if (scratchEnable) {
+        m_bScratchingEnabled = true;
+        if (scratchEnable) {
+            if (scratchPosition) {
                 // If we're scratching, clear the inertia flag. This case should
                 // have been caught by the 'enable' case below, but just to make
                 // sure.
                 m_bEnableInertia = false;
 
-                // Increment processing timer by time delta.
-                m_dScratchTime += dt;
-
                 // Set the scratch target to the current set position
-                m_pVelocityController->setTarget(scratchPosition);
+                double targetDelta = (scratchPosition - m_dStartScratchPosition) / iBufferSize;
 
                 // Measure the total distance travelled since last frame and add
                 // it to the running total.
-                m_dPositionDeltaSum += (currentSample - m_dLastPlaypos);
+                double positionDelta = (currentSample - m_dStartSample) / iBufferSize;
 
                 m_dRate = m_pVelocityController->observation(
-                    m_dPositionDeltaSum, m_dScratchTime);
-                //qDebug() << "continue" << m_dRate << iBufferSize;
-            } else {
-                // If we got here then we're not scratching and we're in inertia
-                // mode. Take the previous rate that was set and apply a
-                // deceleration.
-                m_dRate *= kExponentialDecay;
+                    positionDelta, targetDelta, dt) + (paused ? 0 : 1);
+                //m_dRate = ((scratchPosition - m_dStartScratchPosition) - (currentSample - m_dStartSample))/iBufferSize
+                //        * 0.5;
 
-                // If the rate has decayed below the threshold, then leave
-                // inertia mode.
-                if (fabs(m_dRate) <= kDecayThreshold) {
-                    m_bEnableInertia = false;
-                }
+                qDebug() << "continue Rate" << m_dRate << scratchPosition << m_dStartScratchPosition << currentSample << m_dStartSample << iBufferSize << m_pMasterSampleRate->get();
+            } else {
+                // This happens when the mouse button was releases t < latency
+                // Reset start positions
+                m_dStartSample = currentSample;
+                m_dStartScratchPosition = scratchPosition;
+            }
+        } else if (m_bEnableInertia) {
+            // If we got here then we're not scratching and we're in inertia
+            // mode. Take the previous rate that was set and apply a
+            // deceleration.
+
+            // We calculate the exponential decay constant based on the above
+            // constants. Roughly we backsolve what the decay should be if we want to
+            // stop a throw of max velocity kMaxVelocity in kTimeToStop seconds. Here is
+            // the derivation:
+            // kMaxVelocity * alpha ^ (# callbacks to stop in) = kDecayThreshold
+            // # callbacks = kTimeToStop / dt
+            // alpha = (kDecayThreshold / kMaxVelocity) ^ (dt / kTimeToStop)
+            const double kExponentialDecay = pow(kDecayThreshold / kMaxVelocity, dt / kTimeToStop);
+
+            m_dRate *= kExponentialDecay;
+
+            // If the rate has decayed below the threshold, then leave
+            // inertia mode.
+            if (fabs(m_dRate) < kDecayThreshold) {
+                m_bEnableInertia = false;
+                m_bScratching = false;
+                m_bScratchingEnabled = false;
             }
         } else {
             // We were previously in scratch mode and are no longer in scratch
@@ -200,33 +204,30 @@ void PositionScratchController::process(double currentSample, bool paused, int i
             if (fabs(m_dRate) > kThrowThreshold) {
                 m_bEnableInertia = true;
             } else {
-                m_dRate = 0;
                 m_bScratching = false;
-                m_dScratchTime = 0;
+                m_bScratchingEnabled = false;
             }
             //qDebug() << "disable";
         }
-    } else {
-        if (scratchEnable) {
+    } else if (scratchEnable) {
             // We were not previously in scratch mode but now are in scratch
             // mode. Enable scratching.
             m_bScratching = true;
             m_bEnableInertia = false;
-            m_dPositionDeltaSum = 0;
-            m_dScratchTime = 0;
-            m_pVelocityController->reset(0, m_dScratchTime, scratchPosition);
-            m_dRate = m_pVelocityController->observation(0, m_dScratchTime);
-            //qDebug() << "enable" << m_dRate << currentSample;
-        } else {
+            m_dStartSample = currentSample;
+            m_dStartScratchPosition = scratchPosition;
+            m_pVelocityController->reset();
+
+            qDebug() << "scratchEnable()" << currentSample;
+    } else {
             // We were not previously in scratch mode are still not in scratch
             // mode. Do nothing
-        }
     }
-    m_dLastPlaypos = currentSample;
 }
 
 bool PositionScratchController::isEnabled() {
-    return m_bScratching;
+    // return true only if m_dRate is valid.
+    return m_bScratchingEnabled;
 }
 
 double PositionScratchController::getRate() {
@@ -234,5 +235,15 @@ double PositionScratchController::getRate() {
 }
 
 void PositionScratchController::notifySeek(double currentSample) {
-    m_dLastPlaypos = currentSample;
+    if (m_bScratchingEnabled) {
+        double scratchPosition = m_pScratchPosition->get();
+        double targetSample = (m_dStartSample + scratchPosition - m_dStartScratchPosition);
+        if ((currentSample > targetSample && currentSample > m_dStartSample) ||
+                (currentSample < targetSample && currentSample < m_dStartSample)) {
+            // ignore seeks from itself called by ReadAheadManager::getEffectiveVirtualPlaypositionFromLog
+            // else start new scratch
+   //         m_bScratching = false;
+   //         m_bScratchingEnabled = false;
+        }
+    }
 }
