@@ -141,7 +141,30 @@ void PositionScratchController::process(double currentSample, bool paused, int i
         double i;
         double d;
         m_bScratchingEnabled = true;
-        if (scratchEnable) {
+		if (m_bEnableInertia) {
+            // If we got here then we're not scratching and we're in inertia
+            // mode. Take the previous rate that was set and apply a
+            // deceleration.
+
+            // We calculate the exponential decay constant based on the above
+            // constants. Roughly we backsolve what the decay should be if we want to
+            // stop a throw of max velocity kMaxVelocity in kTimeToStop seconds. Here is
+            // the derivation:
+            // kMaxVelocity * alpha ^ (# callbacks to stop in) = kDecayThreshold
+            // # callbacks = kTimeToStop / dt
+            // alpha = (kDecayThreshold / kMaxVelocity) ^ (dt / kTimeToStop)
+            const double kExponentialDecay = pow(kDecayThreshold / kMaxVelocity, dt / kTimeToStop);
+
+            m_dRate *= kExponentialDecay;
+
+            // If the rate has decayed below the threshold, or scartching is 
+            // reanabled then leave inertia mode.
+            if (fabs(m_dRate) < kDecayThreshold || scratchEnable) {
+                m_bEnableInertia = false;
+                m_bScratching = false;
+                m_bScratchingEnabled = false;
+            }        
+		} else if (scratchEnable) {
             // Tweak PID controller for different latencies
             if (dt > 0.015) {
                 // High latency
@@ -171,33 +194,7 @@ void PositionScratchController::process(double currentSample, bool paused, int i
 
             m_dRate = m_pVelocityController->observation(
                 m_dPositionDeltaSum, targetDelta, dt);
-            //m_dRate = ((scratchPosition - m_dStartScratchPosition) - (currentSample - m_dStartSample))/iBufferSize
-            //        * 0.5;
-
             qDebug() << m_dRate << scratchPosition << targetDelta - m_dPositionDeltaSum << iBufferSize << QCursor::pos().x();
-        } else if (m_bEnableInertia) {
-            // If we got here then we're not scratching and we're in inertia
-            // mode. Take the previous rate that was set and apply a
-            // deceleration.
-
-            // We calculate the exponential decay constant based on the above
-            // constants. Roughly we backsolve what the decay should be if we want to
-            // stop a throw of max velocity kMaxVelocity in kTimeToStop seconds. Here is
-            // the derivation:
-            // kMaxVelocity * alpha ^ (# callbacks to stop in) = kDecayThreshold
-            // # callbacks = kTimeToStop / dt
-            // alpha = (kDecayThreshold / kMaxVelocity) ^ (dt / kTimeToStop)
-            const double kExponentialDecay = pow(kDecayThreshold / kMaxVelocity, dt / kTimeToStop);
-
-            m_dRate *= kExponentialDecay;
-
-            // If the rate has decayed below the threshold, then leave
-            // inertia mode.
-            if (fabs(m_dRate) < kDecayThreshold) {
-                m_bEnableInertia = false;
-                m_bScratching = false;
-                m_bScratchingEnabled = false;
-            }
         } else {
             // We were previously in scratch mode and are no longer in scratch
             // mode. Disable everything, or optionally enable inertia mode if
@@ -219,7 +216,7 @@ void PositionScratchController::process(double currentSample, bool paused, int i
             m_dStartScratchPosition = scratchPosition;
             m_pVelocityController->reset();
             m_dRate = (paused ? 0 : 1);
-            qDebug() << "scratchEnable()" << currentSample;
+            //qDebug() << "scratchEnable()" << currentSample;
     } else {
             // We were not previously in scratch mode are still not in scratch
             // mode. Do nothing
