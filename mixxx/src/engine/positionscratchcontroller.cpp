@@ -1,4 +1,5 @@
 #include <QtDebug>
+#include <QCursor>
 
 #include "engine/positionscratchcontroller.h"
 #include "mathstuff.h"
@@ -36,15 +37,14 @@ class VelocityController {
 
         // Calculate integral component of PID
         // In case of error too small then stop intergration
-        if (abs(error) > 0.001) {
-            // A pure PID calculates * dt, we need * dt^2 for tweaking the Controller for all latencies
-            m_error_sum += error * dt * dt;
+        if (abs(error) > 0.1) {
+            m_error_sum += error;
         }
 
         // Calculate differential component of PID. Positive if we're getting
         // worse, negative if we're getting closer.
         // A pure PID calculates / dt, we need * dt for tweaking the Controller for all latencies
-        double error_change = (error - m_last_error) * dt;
+        double error_change = (error - m_last_error);
 
         // Indicator that can possibly tell if we've gone unstable and are
         // oscillating around the target.
@@ -86,8 +86,8 @@ PositionScratchController::PositionScratchController(const char* pGroup) :
         m_bScratchingEnabled(false),
         m_bScratching(false),
         m_bEnableInertia(false),
-        m_bIgnoreNextSeek(false),
-        m_dStartSample(0),
+        m_dLastPlaypos(0),
+        m_dPositionDeltaSum(0),
         m_dStartScratchPosition(0),
         m_dRate(0) {
     m_pScratchEnable = new ControlObject(ConfigKey(pGroup, "scratch_position_enable"));
@@ -123,8 +123,6 @@ void PositionScratchController::process(double currentSample, bool paused, int i
     bool scratchEnable = m_pScratchEnable->get() != 0;
     double scratchPosition = m_pScratchPosition->get();
 
-    m_pVelocityController->setPID(p, i, d);
-
     //m_pVelocityController->setPID(m_pScratchControllerP->get(),
     //                              m_pScratchControllerI->get(),
     //                              m_pScratchControllerD->get());
@@ -144,36 +142,44 @@ void PositionScratchController::process(double currentSample, bool paused, int i
     // The latency or time difference between process calls.
     const double dt = static_cast<double>(iBufferSize) / m_pMasterSampleRate->get();
 
+    if (dt > 0.02) {
+        // High latency
+        p = 0.2;
+        i = 0;
+        d = 0;
+    } else {
+        // Low latency
+        p = 0.0002 * iBufferSize;
+        i = 0;
+        d = 0;
+    }
+
+    m_pVelocityController->setPID(p, i, d);
+
     if (m_bScratching) {
         
 
         m_bScratchingEnabled = true;
         if (scratchEnable) {
-            if (scratchPosition) {
-                // If we're scratching, clear the inertia flag. This case should
-                // have been caught by the 'enable' case below, but just to make
-                // sure.
-                m_bEnableInertia = false;
+            // If we're scratching, clear the inertia flag. This case should
+            // have been caught by the 'enable' case below, but just to make
+            // sure.
+            m_bEnableInertia = false;
 
-                // Set the scratch target to the current set position
-                double targetDelta = (scratchPosition - m_dStartScratchPosition) / iBufferSize;
+            // Set the scratch target to the current set position
+            double targetDelta = (scratchPosition - m_dStartScratchPosition) / iBufferSize;
 
-                // Measure the total distance travelled since last frame and add
-                // it to the running total.
-                double positionDelta = (currentSample - m_dStartSample) / iBufferSize;
+            // Measure the total distance traveled since last frame and add
+            // it to the running total. This is required to scratch within loop
+            // boundaries.
+            m_dPositionDeltaSum += (currentSample - m_dLastPlaypos) / iBufferSize;
 
-                m_dRate = m_pVelocityController->observation(
-                    positionDelta, targetDelta, dt) + (paused ? 0 : 1);
-                //m_dRate = ((scratchPosition - m_dStartScratchPosition) - (currentSample - m_dStartSample))/iBufferSize
-                //        * 0.5;
+            m_dRate = m_pVelocityController->observation(
+                m_dPositionDeltaSum, targetDelta, dt);
+            //m_dRate = ((scratchPosition - m_dStartScratchPosition) - (currentSample - m_dStartSample))/iBufferSize
+            //        * 0.5;
 
-                qDebug() << "continue Rate" << m_dRate << scratchPosition << m_dStartScratchPosition << currentSample << m_dStartSample << iBufferSize << m_pMasterSampleRate->get();
-            } else {
-                // This happens when the mouse button was releases t < latency
-                // Reset start positions
-                m_dStartSample = currentSample;
-                m_dStartScratchPosition = scratchPosition;
-            }
+            qDebug() << m_dRate << scratchPosition << targetDelta - m_dPositionDeltaSum << iBufferSize << QCursor::pos().x();
         } else if (m_bEnableInertia) {
             // If we got here then we're not scratching and we're in inertia
             // mode. Take the previous rate that was set and apply a
@@ -214,15 +220,16 @@ void PositionScratchController::process(double currentSample, bool paused, int i
             // mode. Enable scratching.
             m_bScratching = true;
             m_bEnableInertia = false;
-            m_dStartSample = currentSample;
+            m_dPositionDeltaSum = 0;
             m_dStartScratchPosition = scratchPosition;
             m_pVelocityController->reset();
-
+            m_dRate = (paused ? 0 : 1);
             qDebug() << "scratchEnable()" << currentSample;
     } else {
             // We were not previously in scratch mode are still not in scratch
             // mode. Do nothing
     }
+    m_dLastPlaypos = currentSample;
 }
 
 bool PositionScratchController::isEnabled() {
@@ -235,15 +242,7 @@ double PositionScratchController::getRate() {
 }
 
 void PositionScratchController::notifySeek(double currentSample) {
-    if (m_bScratchingEnabled) {
-        double scratchPosition = m_pScratchPosition->get();
-        double targetSample = (m_dStartSample + scratchPosition - m_dStartScratchPosition);
-        if ((currentSample > targetSample && currentSample > m_dStartSample) ||
-                (currentSample < targetSample && currentSample < m_dStartSample)) {
-            // ignore seeks from itself called by ReadAheadManager::getEffectiveVirtualPlaypositionFromLog
-            // else start new scratch
-   //         m_bScratching = false;
-   //         m_bScratchingEnabled = false;
-        }
-    }
+    // scratching continues after seek due to calculating the relative distance traveled 
+    // in m_dPositionDeltaSum   
+    m_dLastPlaypos = currentSample;
 }

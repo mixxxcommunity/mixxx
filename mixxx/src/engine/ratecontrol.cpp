@@ -416,8 +416,11 @@ double RateControl::calculateRate(double baserate, bool paused, int iSamplesPerB
     } else if (paused) {
         // Stopped. Wheel, jog and scratch controller all scrub through audio.
         // New scratch behavior overrides old
-        if (scratchEnable) rate = scratchFactor + jogFactor + wheelFactor*40.0;
-        else rate = oldScratchFactor + jogFactor*18 + wheelFactor; // Just remove oldScratchFactor in future
+        if (scratchEnable) {
+            rate = scratchFactor + jogFactor + wheelFactor*40.0;
+        } else {
+            rate = oldScratchFactor + jogFactor*18 + wheelFactor; // Just remove oldScratchFactor in future
+        }
     } else {
         // The buffer is playing, so calculate the buffer rate.
 
@@ -431,8 +434,9 @@ double RateControl::calculateRate(double baserate, bool paused, int iSamplesPerB
         rate += wheelFactor;
 
         // New scratch behavior - overrides playback speed (and old behavior)
-        if (scratchEnable) rate = scratchFactor;
-        else {
+        if (scratchEnable) {
+            rate = scratchFactor;
+        } else {
             // Deprecated old scratch behavior
             if (oldScratchFactor < 0.) {
                 rate *= (oldScratchFactor-1.);
