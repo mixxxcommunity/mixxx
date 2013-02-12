@@ -115,52 +115,47 @@ PositionScratchController::~PositionScratchController() {
     delete m_pScratchControllerD;
 }
 
-static volatile double p = 0.3;
-static volatile double i = 0.6;
-static volatile double d = 0.5;
 
 void PositionScratchController::process(double currentSample, bool paused, int iBufferSize) {
     bool scratchEnable = m_pScratchEnable->get() != 0;
     double scratchPosition = m_pScratchPosition->get();
 
-    //m_pVelocityController->setPID(m_pScratchControllerP->get(),
-    //                              m_pScratchControllerI->get(),
-    //                              m_pScratchControllerD->get());
-
-    // The rate threshold above which disabling position scratching will enable
-    // an 'inertia' mode.
-    const double kThrowThreshold = 2.5;
-
-    // If we're playing, then do not decay rate below 1. If we're not playing,
-    // then we want to decay all the way down to below 0.01
-    const double kDecayThreshold = paused ? 0.01 : 1.0;
-    // Max velocity we would like to stop in a given time period.
-    const double kMaxVelocity = 100;
-    // Seconds to stop a throw at the max velocity.
-    const double kTimeToStop = 2.0;
-
-    // The latency or time difference between process calls.
-    const double dt = static_cast<double>(iBufferSize) / m_pMasterSampleRate->get();
-
-    if (dt > 0.02) {
-        // High latency
-        p = 0.2;
-        i = 0;
-        d = 0;
-    } else {
-        // Low latency
-        p = 0.0002 * iBufferSize;
-        i = 0;
-        d = 0;
-    }
-
-    m_pVelocityController->setPID(p, i, d);
-
     if (m_bScratching) {
-        
 
+        // The rate threshold above which disabling position scratching will enable
+        // an 'inertia' mode.
+        const double kThrowThreshold = 2.5;
+
+        // If we're playing, then do not decay rate below 1. If we're not playing,
+        // then we want to decay all the way down to below 0.01
+        const double kDecayThreshold = paused ? 0.01 : 1.0;
+        // Max velocity we would like to stop in a given time period.
+        const double kMaxVelocity = 100;
+        // Seconds to stop a throw at the max velocity.
+        const double kTimeToStop = 2.0;
+
+        // The latency or time difference between process calls.
+        const double dt = static_cast<double>(iBufferSize) / m_pMasterSampleRate->get();
+
+        double p;
+        double i;
+        double d;
         m_bScratchingEnabled = true;
         if (scratchEnable) {
+            // Tweak PID controller for different latencies
+            if (dt > 0.015) {
+                // High latency
+                p = 0.3;
+                i = 0;
+                d = 0;
+            } else {
+                // Low latency
+                p = 0.0002 * iBufferSize;
+                i = 0;
+                d = 0;
+            }
+            m_pVelocityController->setPID(p, i, d);
+
             // If we're scratching, clear the inertia flag. This case should
             // have been caught by the 'enable' case below, but just to make
             // sure.
