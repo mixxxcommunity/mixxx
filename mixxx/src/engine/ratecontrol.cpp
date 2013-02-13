@@ -30,18 +30,18 @@ int RateControl::m_iRateRampSensitivity = 250;
 enum RateControl::RATERAMP_MODE RateControl::m_eRateRampMode = RateControl::RATERAMP_STEP;
 
 RateControl::RateControl(const char* _group,
-                         ConfigObject<ConfigValue>* _config) :
-    EngineControl(_group, _config),
-    m_bVinylControlEnabled(false),
-    m_bVinylControlScratching(false),
-    m_ePbCurrent(0),
-    m_ePbPressed(0),
-    m_bTempStarted(false),
-    m_dTempRateChange(0.0),
-    m_dRateTemp(0.0),
-    m_eRampBackMode(RATERAMP_RAMPBACK_NONE),
-    m_dRateTempRampbackChange(0.0),
-    m_dOldRate(0.0f) {
+                         ConfigObject<ConfigValue>* _config)
+    : EngineControl(_group, _config),
+      m_bVinylControlEnabled(false),
+      m_bVinylControlScratching(false),
+      m_ePbCurrent(0),
+      m_ePbPressed(0),
+      m_bTempStarted(false),
+      m_dTempRateChange(0.0),
+      m_dRateTemp(0.0),
+      m_eRampBackMode(RATERAMP_RAMPBACK_NONE),
+      m_dRateTempRampbackChange(0.0),
+      m_dOldRate(0.0f) {
     m_pScratchController = new PositionScratchController(_group);
 
     m_pRateDir = new ControlObject(ConfigKey(_group, "rate_dir"));

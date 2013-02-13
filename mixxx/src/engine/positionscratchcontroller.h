@@ -23,9 +23,6 @@ class PositionScratchController : public QObject {
     ControlObject* m_pScratchEnable;
     ControlObject* m_pScratchPosition;
     ControlObject* m_pMasterSampleRate;
-    ControlObject* m_pScratchControllerP;
-    ControlObject* m_pScratchControllerI;
-    ControlObject* m_pScratchControllerD;
     VelocityController* m_pVelocityController;
     bool m_bScratchingEnabled;
     bool m_bScratching;

@@ -11,13 +11,12 @@
 
 class VelocityController {
   public:
-    VelocityController() :
-        m_last_error(0.0),
-        m_error_sum(0.0),
-        m_p(0.0),
-        m_i(0.0),
-        m_d(0.0)
-    {
+    VelocityController()
+        : m_last_error(0.0),
+          m_error_sum(0.0),
+          m_p(0.0),
+          m_i(0.0),
+          m_d(0.0) {
     }
 
     void setPID(double p, double i, double d) {
@@ -32,28 +31,20 @@ class VelocityController {
     }
 
     double observation(double position, double target_position, double dt) {
+        Q_UNUSED(dt) // Since the controller runs with constant sample rate
+                     // we don't have to deal with dt inside the controller
 
         const double error = target_position - position;
 
         // Calculate integral component of PID
-        // In case of error too small then stop intergration
+        // In case of error too small then stop integration
         if (abs(error) > 0.1) {
             m_error_sum += error;
         }
 
         // Calculate differential component of PID. Positive if we're getting
         // worse, negative if we're getting closer.
-        // A pure PID calculates / dt, we need * dt for tweaking the Controller for all latencies
         double error_change = (error - m_last_error);
-
-        // Indicator that can possibly tell if we've gone unstable and are
-        // oscillating around the target.
-        //const bool error_flip = (error < 0 && m_last_error > 0) || (error > 0 && m_last_error < 0);
-
-        // Protect against silly error_change values.
-        if (isnan(error_change) || isinf(error_change)) {
-            error_change = 0.0;
-        }
 
         // qDebug() << "target:" << m_target_position << "position:" << position
         //          << "error:" << error << "change:" << error_change << "sum:" << m_error_sum;
@@ -81,25 +72,19 @@ class VelocityController {
     double m_p, m_i, m_d;
 };
 
-PositionScratchController::PositionScratchController(const char* pGroup) :
-        m_group(pGroup),
-        m_bScratchingEnabled(false),
-        m_bScratching(false),
-        m_bEnableInertia(false),
-        m_dLastPlaypos(0),
-        m_dPositionDeltaSum(0),
-        m_dStartScratchPosition(0),
-        m_dRate(0) {
+PositionScratchController::PositionScratchController(const char* pGroup)
+    : m_group(pGroup),
+      m_bScratchingEnabled(false),
+      m_bScratching(false),
+      m_bEnableInertia(false),
+      m_dLastPlaypos(0),
+      m_dPositionDeltaSum(0),
+      m_dStartScratchPosition(0),
+      m_dRate(0) {
     m_pScratchEnable = new ControlObject(ConfigKey(pGroup, "scratch_position_enable"));
     m_pScratchPosition = new ControlObject(ConfigKey(pGroup, "scratch_position"));
     m_pMasterSampleRate = ControlObject::getControl(ConfigKey("[Master]", "samplerate"));
-    m_pScratchControllerP = new ControlObject(ConfigKey(pGroup, "scratch_constant_p"));
-    m_pScratchControllerI = new ControlObject(ConfigKey(pGroup, "scratch_constant_i"));
-    m_pScratchControllerD = new ControlObject(ConfigKey(pGroup, "scratch_constant_d"));
     m_pVelocityController = new VelocityController();
-    m_pScratchControllerP->set(0.0002);
-    m_pScratchControllerI->set(0.0);
-    m_pScratchControllerD->set(0.0);
 
     //m_pVelocityController->setPID(0.2, 1.0, 5.0);
     //m_pVelocityController->setPID(0.1, 0.0, 5.0);
@@ -110,9 +95,6 @@ PositionScratchController::~PositionScratchController() {
     delete m_pScratchEnable;
     delete m_pScratchPosition;
     delete m_pVelocityController;
-    delete m_pScratchControllerP;
-    delete m_pScratchControllerI;
-    delete m_pScratchControllerD;
 }
 
 
@@ -135,13 +117,11 @@ void PositionScratchController::process(double currentSample, bool paused, int i
         const double kTimeToStop = 2.0;
 
         // The latency or time difference between process calls.
-        const double dt = static_cast<double>(iBufferSize) / m_pMasterSampleRate->get();
+        const double dt = static_cast<double>(iBufferSize)
+                / m_pMasterSampleRate->get() / 2;
 
-        double p;
-        double i;
-        double d;
         m_bScratchingEnabled = true;
-		if (m_bEnableInertia) {
+        if (m_bEnableInertia) {
             // If we got here then we're not scratching and we're in inertia
             // mode. Take the previous rate that was set and apply a
             // deceleration.
@@ -164,8 +144,11 @@ void PositionScratchController::process(double currentSample, bool paused, int i
                 m_bScratching = false;
                 m_bScratchingEnabled = false;
             }        
-		} else if (scratchEnable) {
+        } else if (scratchEnable) {
             // Tweak PID controller for different latencies
+            double p;
+            double i;
+            double d;
             if (dt > 0.015) {
                 // High latency
                 p = 0.3;
@@ -173,7 +156,7 @@ void PositionScratchController::process(double currentSample, bool paused, int i
                 d = 0;
             } else {
                 // Low latency
-                p = 0.0002 * iBufferSize;
+                p = 17 * dt; // ~ 0.2 for 11,6 ms
                 i = 0;
                 d = 0;
             }
@@ -194,7 +177,7 @@ void PositionScratchController::process(double currentSample, bool paused, int i
 
             m_dRate = m_pVelocityController->observation(
                 m_dPositionDeltaSum, targetDelta, dt);
-            qDebug() << m_dRate << scratchPosition << targetDelta - m_dPositionDeltaSum << iBufferSize << QCursor::pos().x();
+            qDebug() << m_dRate << scratchPosition << targetDelta - m_dPositionDeltaSum << dt << QCursor::pos().x();
         } else {
             // We were previously in scratch mode and are no longer in scratch
             // mode. Disable everything, or optionally enable inertia mode if
