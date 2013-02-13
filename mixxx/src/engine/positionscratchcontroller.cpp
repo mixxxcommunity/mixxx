@@ -98,7 +98,8 @@ PositionScratchController::~PositionScratchController() {
 }
 
 
-void PositionScratchController::process(double currentSample, bool paused, int iBufferSize) {
+void PositionScratchController::process(double currentSample, bool paused,
+        int iBufferSize, double baserate) {
     bool scratchEnable = m_pScratchEnable->get() != 0;
     double scratchPosition = m_pScratchPosition->get();
 
@@ -168,12 +169,15 @@ void PositionScratchController::process(double currentSample, bool paused, int i
             m_bEnableInertia = false;
 
             // Set the scratch target to the current set position
-            double targetDelta = (scratchPosition - m_dStartScratchPosition) / iBufferSize;
+            // and normalize to one buffer
+            double targetDelta = (scratchPosition - m_dStartScratchPosition) /
+                    (iBufferSize * baserate);
 
             // Measure the total distance traveled since last frame and add
             // it to the running total. This is required to scratch within loop
-            // boundaries.
-            m_dPositionDeltaSum += (currentSample - m_dLastPlaypos) / iBufferSize;
+            // boundaries. Normalize to one buffer
+            m_dPositionDeltaSum += (currentSample - m_dLastPlaypos) /
+                    (iBufferSize * baserate);
 
             m_dRate = m_pVelocityController->observation(
                 m_dPositionDeltaSum, targetDelta, dt);

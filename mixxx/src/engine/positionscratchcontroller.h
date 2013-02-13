@@ -13,7 +13,8 @@ class PositionScratchController : public QObject {
     PositionScratchController(const char* pGroup);
     virtual ~PositionScratchController();
 
-    void process(double currentSample, bool paused, int iBufferSize);
+    void process(double currentSample, bool paused,
+            int iBufferSize, double baserate);
     bool isEnabled();
     double getRate();
     void notifySeek(double currentSample);
