@@ -79,8 +79,10 @@ PositionScratchController::PositionScratchController(const char* pGroup)
       m_bEnableInertia(false),
       m_dLastPlaypos(0),
       m_dPositionDeltaSum(0),
+      m_dTargetDelta(0),
       m_dStartScratchPosition(0),
-      m_dRate(0) {
+      m_dRate(0),
+      m_dMoveDelay(0) {
     m_pScratchEnable = new ControlObject(ConfigKey(pGroup, "scratch_position_enable"));
     m_pScratchPosition = new ControlObject(ConfigKey(pGroup, "scratch_position"));
     m_pMasterSampleRate = ControlObject::getControl(ConfigKey("[Master]", "samplerate"));
@@ -172,6 +174,19 @@ void PositionScratchController::process(double currentSample, bool paused,
             // and normalize to one buffer
             double targetDelta = (scratchPosition - m_dStartScratchPosition) /
                     (iBufferSize * baserate);
+            if (m_dTargetDelta == targetDelta) {
+                // we get here, if the next mouse position is delayed
+                // or the mouse is stopped. Since we don't know the case
+                // we allow up to 30 ms move delay
+                m_dMoveDelay += dt;
+                if (m_dMoveDelay < 0.1) {
+                    targetDelta += m_dRate * (m_dMoveDelay/dt);
+                }
+            } else {
+                m_dMoveDelay = 0;
+                m_dTargetDelta = targetDelta;
+            }
+
 
             // Measure the total distance traveled since last frame and add
             // it to the running total. This is required to scratch within loop
@@ -181,7 +196,7 @@ void PositionScratchController::process(double currentSample, bool paused,
 
             m_dRate = m_pVelocityController->observation(
                 m_dPositionDeltaSum, targetDelta, dt);
-            qDebug() << m_dRate << scratchPosition << targetDelta - m_dPositionDeltaSum << dt << QCursor::pos().x();
+            qDebug() << m_dRate << scratchPosition << targetDelta - m_dPositionDeltaSum << targetDelta << m_dPositionDeltaSum << dt << QCursor::pos().x();
         } else {
             // We were previously in scratch mode and are no longer in scratch
             // mode. Disable everything, or optionally enable inertia mode if
@@ -198,11 +213,13 @@ void PositionScratchController::process(double currentSample, bool paused,
             // We were not previously in scratch mode but now are in scratch
             // mode. Enable scratching.
             m_bScratching = true;
+            m_bScratchingEnabled = true;
             m_bEnableInertia = false;
             m_dPositionDeltaSum = 0;
             m_dStartScratchPosition = scratchPosition;
             m_pVelocityController->reset();
-            m_dRate = (paused ? 0 : 1);
+            m_dMoveDelay = 0;
+            m_dRate = (paused ? 0 : 0.5);
             //qDebug() << "scratchEnable()" << currentSample;
     } else {
             // We were not previously in scratch mode are still not in scratch

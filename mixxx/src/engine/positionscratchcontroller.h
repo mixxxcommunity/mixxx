@@ -30,8 +30,10 @@ class PositionScratchController : public QObject {
     bool m_bEnableInertia;
     double m_dLastPlaypos;
     double m_dPositionDeltaSum;
+    double m_dTargetDelta;
     double m_dStartScratchPosition;
     double m_dRate;
+    double m_dMoveDelay;
 };
 
 #endif /* POSITIONSCRATCHCONTROLLER_H */
