@@ -74,7 +74,6 @@ class VelocityController {
 
 PositionScratchController::PositionScratchController(const char* pGroup)
     : m_group(pGroup),
-      m_bScratchingEnabled(false),
       m_bScratching(false),
       m_bEnableInertia(false),
       m_dLastPlaypos(0),
@@ -103,31 +102,47 @@ PositionScratchController::~PositionScratchController() {
 void PositionScratchController::process(double currentSample, bool paused,
         int iBufferSize, double baserate) {
     bool scratchEnable = m_pScratchEnable->get() != 0;
-    double scratchPosition = m_pScratchPosition->get();
+
+   	if (!m_bScratching && scratchEnable) {
+        // We were not previously in scratch mode are still not in scratch
+        // mode. Do nothing
+    }
+
+    // double scratchPosition = m_pScratchPosition->get();
+   	double scratchPosition = m_pScratchEnable->get() *
+   	     QCursor::pos().x() * -2;
+
+    // The latency or time difference between process calls.
+    const double dt = static_cast<double>(iBufferSize)
+            / m_pMasterSampleRate->get() / 2;
+
+    // Tweak PID controller for different latencies
+    double p;
+    double i;
+    double d;
+    p = 13 * dt; // ~ 0.15 for 11,6 ms
+    if (p > 0.3) {
+        // avoid overshooting at high latency
+        p = 0.3;
+    }
+    i = 0;
+    d = p/-2;
+    m_pVelocityController->setPID(p, i, d);
 
     if (m_bScratching) {
-
-        // The rate threshold above which disabling position scratching will enable
-        // an 'inertia' mode.
-        const double kThrowThreshold = 2.5;
-
-        // If we're playing, then do not decay rate below 1. If we're not playing,
-        // then we want to decay all the way down to below 0.01
-        const double kDecayThreshold = paused ? 0.01 : 1.0;
-        // Max velocity we would like to stop in a given time period.
-        const double kMaxVelocity = 100;
-        // Seconds to stop a throw at the max velocity.
-        const double kTimeToStop = 2.0;
-
-        // The latency or time difference between process calls.
-        const double dt = static_cast<double>(iBufferSize)
-                / m_pMasterSampleRate->get() / 2;
-
-        m_bScratchingEnabled = true;
         if (m_bEnableInertia) {
             // If we got here then we're not scratching and we're in inertia
             // mode. Take the previous rate that was set and apply a
             // deceleration.
+
+            // If we're playing, then do not decay rate below 1. If we're not playing,
+            // then we want to decay all the way down to below 0.01
+            const double kDecayThreshold = paused ? 0.01 : 1.0;
+
+            // Max velocity we would like to stop in a given time period.
+            const double kMaxVelocity = 100;
+            // Seconds to stop a throw at the max velocity.
+            const double kTimeToStop = 2.0;
 
             // We calculate the exponential decay constant based on the above
             // constants. Roughly we backsolve what the decay should be if we want to
@@ -145,26 +160,8 @@ void PositionScratchController::process(double currentSample, bool paused,
             if (fabs(m_dRate) < kDecayThreshold || scratchEnable) {
                 m_bEnableInertia = false;
                 m_bScratching = false;
-                m_bScratchingEnabled = false;
             }        
         } else if (scratchEnable) {
-            // Tweak PID controller for different latencies
-            double p;
-            double i;
-            double d;
-            if (dt > 0.015) {
-                // High latency
-                p = 0.3;
-                i = 0;
-                d = 0;
-            } else {
-                // Low latency
-                p = 17 * dt; // ~ 0.2 for 11,6 ms
-                i = 0;
-                d = 0;
-            }
-            m_pVelocityController->setPID(p, i, d);
-
             // If we're scratching, clear the inertia flag. This case should
             // have been caught by the 'enable' case below, but just to make
             // sure.
@@ -179,7 +176,7 @@ void PositionScratchController::process(double currentSample, bool paused,
                 // or the mouse is stopped. Since we don't know the case
                 // we allow up to 30 ms move delay
                 m_dMoveDelay += dt;
-                if (m_dMoveDelay < 0.1) {
+                if (m_dMoveDelay < 0.02) {
                     targetDelta += m_dRate * (m_dMoveDelay/dt);
                 }
             } else {
@@ -196,16 +193,20 @@ void PositionScratchController::process(double currentSample, bool paused,
 
             m_dRate = m_pVelocityController->observation(
                 m_dPositionDeltaSum, targetDelta, dt);
-            qDebug() << m_dRate << scratchPosition << targetDelta - m_dPositionDeltaSum << targetDelta << m_dPositionDeltaSum << dt << QCursor::pos().x();
+            qDebug() << m_dRate << scratchPosition << targetDelta - m_dPositionDeltaSum << targetDelta << m_dPositionDeltaSum << dt;
         } else {
             // We were previously in scratch mode and are no longer in scratch
             // mode. Disable everything, or optionally enable inertia mode if
             // the previous rate was high enough to count as a 'throw'
+            
+            // The rate threshold above which disabling position scratching will enable
+            // an 'inertia' mode.
+            const double kThrowThreshold = 2.5;
+
             if (fabs(m_dRate) > kThrowThreshold) {
                 m_bEnableInertia = true;
             } else {
                 m_bScratching = false;
-                m_bScratchingEnabled = false;
             }
             //qDebug() << "disable";
         }
@@ -213,24 +214,28 @@ void PositionScratchController::process(double currentSample, bool paused,
             // We were not previously in scratch mode but now are in scratch
             // mode. Enable scratching.
             m_bScratching = true;
-            m_bScratchingEnabled = true;
             m_bEnableInertia = false;
-            m_dPositionDeltaSum = 0;
+			if (paused) {
+				m_dRate = 0; 
+				m_dPositionDeltaSum = 0;
+			} else {
+				// deck is playing, start contoller in settled state 
+				// with the remaining error or a P Controller
+                m_dRate = 1;
+                m_dPositionDeltaSum = -(1 / p);
+			}
+            
             m_dStartScratchPosition = scratchPosition;
             m_pVelocityController->reset();
             m_dMoveDelay = 0;
-            m_dRate = (paused ? 0 : 0.5);
             //qDebug() << "scratchEnable()" << currentSample;
-    } else {
-            // We were not previously in scratch mode are still not in scratch
-            // mode. Do nothing
     }
     m_dLastPlaypos = currentSample;
 }
 
 bool PositionScratchController::isEnabled() {
     // return true only if m_dRate is valid.
-    return m_bScratchingEnabled;
+    return m_bScratching;
 }
 
 double PositionScratchController::getRate() {
