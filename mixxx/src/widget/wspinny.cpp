@@ -1,5 +1,14 @@
 #include "wspinny.h"
-#include <math.h>
+
+#ifdef _MSC_VER
+ #include <float.h>  // for _isnan() on VC++
+ #define isnan(x) _isnan(x)  // VC++ uses _isnan() instead of isnan()
+#else
+ #include <math.h>  // for isnan() everywhere else
+ #ifdef __APPLE__
+  #define isnan(x) std::isnan(x)
+ #endif
+#endif
 
 #include <QtDebug>
 

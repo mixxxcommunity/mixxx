@@ -14,10 +14,13 @@
 #include <QDebug>
 
 #ifdef _MSC_VER
-#include <float.h>  // for _isnan() on VC++
-#define isnan(x) _isnan(x)  // VC++ uses _isnan() instead of isnan()
+ #include <float.h>  // for _isnan() on VC++
+ #define isnan(x) _isnan(x)  // VC++ uses _isnan() instead of isnan()
 #else
-#include <math.h>  // for isnan() everywhere else
+ #include <math.h>  // for isnan() everywhere else
+ #ifdef __APPLE__
+  #define isnan(x) std::isnan(x)
+ #endif
 #endif
 
 // Static default values for rate buttons (percents)

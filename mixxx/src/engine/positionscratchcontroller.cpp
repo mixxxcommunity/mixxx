@@ -25,8 +25,8 @@ class VelocityController {
         m_d = d;
     }
 
-    void reset() {
-        m_last_error = 0;
+    void reset(double last_error) {
+        m_last_error = last_error;
         m_error_sum = 0.0;
     }
 
@@ -36,31 +36,34 @@ class VelocityController {
 
         const double error = target_position - position;
 
-        // Calculate integral component of PID
-        // In case of error too small then stop integration
-        if (abs(error) > 0.1) {
+        double output = m_p * error;
+
+        // In case of error too small then stop controller
+        if (abs(error) > 0.001) {
+
+            // Calculate integral component of PID
             m_error_sum += error;
+
+            // Calculate differential component of PID. Positive if we're getting
+            // worse, negative if we're getting closer.
+            double error_change = (error - m_last_error);
+
+            // qDebug() << "target:" << m_target_position << "position:" << position
+            //          << "error:" << error << "change:" << error_change << "sum:" << m_error_sum;
+
+            // Main PID calculation
+            output += m_i * m_error_sum + m_d * error_change;
+
+            // Try to stabilize us if we're close to the target. Otherwise we might
+            // overshoot and oscillate.
+            //if (fabs(error) < m_samples_per_buffer) {
+                //double percent_remaining = error / m_samples_per_buffer;
+                //// Apply exponential decay to try and stop the stuttering.
+                //double decay = (1.0 - pow(2, -fabs(percent_remaining)));
+                //output = percent_remaining * decay;
+                //qDebug() << "clamp decay" << decay << "output" << output;
+            //}
         }
-
-        // Calculate differential component of PID. Positive if we're getting
-        // worse, negative if we're getting closer.
-        double error_change = (error - m_last_error);
-
-        // qDebug() << "target:" << m_target_position << "position:" << position
-        //          << "error:" << error << "change:" << error_change << "sum:" << m_error_sum;
-
-        // Main PID calculation
-        double output = m_p * error + m_i * m_error_sum + m_d * error_change;
-
-        // Try to stabilize us if we're close to the target. Otherwise we might
-        // overshoot and oscillate.
-        //if (fabs(error) < m_samples_per_buffer) {
-            //double percent_remaining = error / m_samples_per_buffer;
-            //// Apply exponential decay to try and stop the stuttering.
-            //double decay = (1.0 - pow(2, -fabs(percent_remaining)));
-            //output = percent_remaining * decay;
-            //qDebug() << "clamp decay" << decay << "output" << output;
-        //}
 
         m_last_error = error;
         return output;
@@ -142,7 +145,7 @@ void PositionScratchController::process(double currentSample, bool paused,
             // Max velocity we would like to stop in a given time period.
             const double kMaxVelocity = 100;
             // Seconds to stop a throw at the max velocity.
-            const double kTimeToStop = 2.0;
+            const double kTimeToStop = 1.0;
 
             // We calculate the exponential decay constant based on the above
             // constants. Roughly we backsolve what the decay should be if we want to
@@ -218,15 +221,16 @@ void PositionScratchController::process(double currentSample, bool paused,
 			if (paused) {
 				m_dRate = 0; 
 				m_dPositionDeltaSum = 0;
+	            m_pVelocityController->reset(0);
 			} else {
 				// deck is playing, start contoller in settled state 
 				// with the remaining error or a P Controller
                 m_dRate = 1;
                 m_dPositionDeltaSum = -(1 / p);
+                m_pVelocityController->reset(1);
 			}
             
             m_dStartScratchPosition = scratchPosition;
-            m_pVelocityController->reset();
             m_dMoveDelay = 0;
             //qDebug() << "scratchEnable()" << currentSample;
     }
