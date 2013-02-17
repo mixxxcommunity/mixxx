@@ -52,7 +52,7 @@
 #else
  #include <math.h>  // for isnan() everywhere else
  #ifdef __APPLE__
-  #define isnan(x) std::isnan(x);
+  #define isnan(x) std::isnan(x)
  #endif
 #endif
 
