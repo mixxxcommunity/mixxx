@@ -579,7 +579,7 @@ void EngineBuffer::process(const CSAMPLE *, const CSAMPLE * pOut, const int iBuf
 
         bool paused = m_playButton->get() != 0.0f ? false : true;
 
-        bool is_scratching = false;
+        bool is_scratching;
         rate = m_pRateControl->calculateRate(baserate, paused, iBufferSize,
                                              &is_scratching);
 
@@ -608,7 +608,7 @@ void EngineBuffer::process(const CSAMPLE *, const CSAMPLE * pOut, const int iBuf
             // Make sure new scaler has proper position
             if (m_bScalerChanged) {
                 setNewPlaypos(m_filepos_play);
-            } else if (m_pScale != m_pScaleLinear) { //linear scaler does this part for us now
+            } else if (m_pScale != m_pScaleLinear) { // linear scaler does this part for us now
                 //XXX: Trying to force RAMAN to read from correct
                 //     playpos when rate changes direction - Albert
                 if ((m_rate_old <= 0 && rate > 0) ||
@@ -617,8 +617,8 @@ void EngineBuffer::process(const CSAMPLE *, const CSAMPLE * pOut, const int iBuf
                 }
             }
 
-            if (baserate > 0) { //Prevent division by 0
-                rate = baserate*m_pScale->setTempo(rate/baserate);
+            if (baserate > 0) { // Prevent division by 0
+                rate = baserate * m_pScale->setTempo(rate/baserate);
             }
             m_pScale->setBaseRate(baserate);
             m_rate_old = rate;
