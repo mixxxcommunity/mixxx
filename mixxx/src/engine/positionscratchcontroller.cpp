@@ -202,19 +202,26 @@ void PositionScratchController::process(double currentSample, double releaseRate
             // sure.
             m_bEnableInertia = false;
 
+            // Measure the total distance traveled since last frame and add
+            // it to the running total. This is required to scratch within loop
+            // boundaries. Normalize to one buffer
+            m_dPositionDeltaSum += (currentSample - m_dLastPlaypos) /
+                    (iBufferSize * baserate);
+
             // Set the scratch target to the current set position
             // and normalize to one buffer
             double targetDelta = (scratchPosition - m_dStartScratchPosition) /
                     (iBufferSize * baserate);
+
             if (m_dTargetDelta == targetDelta) {
                 // we get here, if the next mouse position is delayed
                 // or the mouse is stopped. Since we don't know the case
                 // we allow up to 20 ms move delay
                 m_dMoveDelay += dt;
-                if (m_dMoveDelay < 0.02 || m_dMoveDelay == dt) {
+                if (m_dMoveDelay < 0.02) {
                     targetDelta += m_dRate * (m_dMoveDelay/dt);
                 } else if (targetDelta == 0) {
-                    // Mouse was not Moved at all
+                    // Mouse was not moved at all
                     // Stop immediately
                     m_pVelocityController->reset(0);
                     m_pMouseRateIIFilter->reset(0);
@@ -224,12 +231,6 @@ void PositionScratchController::process(double currentSample, double releaseRate
                 m_dMoveDelay = 0;
                 m_dTargetDelta = targetDelta;
             }
-
-            // Measure the total distance traveled since last frame and add
-            // it to the running total. This is required to scratch within loop
-            // boundaries. Normalize to one buffer
-            m_dPositionDeltaSum += (currentSample - m_dLastPlaypos) /
-                    (iBufferSize * baserate);
 
             double mouseRate = targetDelta - m_dPositionDeltaSum;
             if (mouseRate < MIN_SEEK_SPEED && mouseRate > -MIN_SEEK_SPEED) {
