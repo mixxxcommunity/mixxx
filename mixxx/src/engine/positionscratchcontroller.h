@@ -28,6 +28,7 @@ class PositionScratchController : public QObject {
     VelocityController* m_pVelocityController;
     MouseRateIIFilter* m_pMouseRateIIFilter;
     bool m_bScratching;
+    bool m_bDetectStop;
     bool m_bEnableInertia;
     double m_dLastPlaypos;
     double m_dPositionDeltaSum;

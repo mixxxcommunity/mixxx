@@ -2,6 +2,7 @@
 #include <QCursor>
 
 #include "engine/positionscratchcontroller.h"
+#include "engine/enginebufferscale.h" // for MIN_SEEK_SPEED
 #include "mathstuff.h"
 
 #ifdef _MSC_VER
@@ -96,14 +97,15 @@ class MouseRateIIFilter {
     }
 
   private:
-    double m_last_rate;
     double m_factor;
+    double m_last_rate;
 };
 
 
 PositionScratchController::PositionScratchController(const char* pGroup)
     : m_group(pGroup),
       m_bScratching(false),
+      m_bDetectStop(false),
       m_bEnableInertia(false),
       m_dLastPlaypos(0),
       m_dPositionDeltaSum(0),
@@ -209,8 +211,14 @@ void PositionScratchController::process(double currentSample, double releaseRate
                 // or the mouse is stopped. Since we don't know the case
                 // we allow up to 20 ms move delay
                 m_dMoveDelay += dt;
-                if (m_dMoveDelay < 0.02) {
+                if (m_dMoveDelay < 0.02 || m_dMoveDelay == dt) {
                     targetDelta += m_dRate * (m_dMoveDelay/dt);
+                } else if (targetDelta == 0) {
+                    // Mouse was not Moved at all
+                    // Stop immediately
+                    m_pVelocityController->reset(0);
+                    m_pMouseRateIIFilter->reset(0);
+                    m_dPositionDeltaSum = 0;
                 }
             } else {
                 m_dMoveDelay = 0;
@@ -223,12 +231,18 @@ void PositionScratchController::process(double currentSample, double releaseRate
             m_dPositionDeltaSum += (currentSample - m_dLastPlaypos) /
                     (iBufferSize * baserate);
 
-            double mouseRate = m_pMouseRateIIFilter->filter(targetDelta - m_dPositionDeltaSum);
+            double mouseRate = targetDelta - m_dPositionDeltaSum;
+            if (mouseRate < MIN_SEEK_SPEED && mouseRate > -MIN_SEEK_SPEED) {
+                // we cannot get closer
+                m_dRate = 0;
+            } else {
+                mouseRate = m_pMouseRateIIFilter->filter(targetDelta - m_dPositionDeltaSum);
 
+                m_dRate = m_pVelocityController->observation(
+                    m_dPositionDeltaSum, m_dPositionDeltaSum + mouseRate, dt);
+            }
 
-            m_dRate = m_pVelocityController->observation(
-                m_dPositionDeltaSum, m_dPositionDeltaSum + mouseRate, dt);
-            qDebug() << m_dRate << mouseRate << scratchPosition << targetDelta - m_dPositionDeltaSum << targetDelta << m_dPositionDeltaSum << dt;
+            qDebug() << m_dRate << mouseRate << scratchPosition << (targetDelta - m_dPositionDeltaSum) << targetDelta << m_dPositionDeltaSum << dt;
         } else {
             // We were previously in scratch mode and are no longer in scratch
             // mode. Disable everything, or optionally enable inertia mode if
@@ -250,12 +264,15 @@ void PositionScratchController::process(double currentSample, double releaseRate
             // mode. Enable scratching.
             m_bScratching = true;
             m_bEnableInertia = false;
-            m_dRate = releaseRate;
-            m_dPositionDeltaSum = -(releaseRate/ p);
-            m_pVelocityController->reset(releaseRate);
-            m_pMouseRateIIFilter->reset(releaseRate);
-            m_dStartScratchPosition = scratchPosition;
             m_dMoveDelay = 0;
+            // Set up initial values, in a way that the system is settled
+            // These values are calculated with a table
+            // TODO: calculate them from the controller parameters
+            m_dRate = releaseRate;
+            m_dPositionDeltaSum = releaseRate * -2.2;
+            m_pVelocityController->reset(releaseRate / p);
+            m_pMouseRateIIFilter->reset(releaseRate * 2);
+            m_dStartScratchPosition = scratchPosition;
             //qDebug() << "scratchEnable()" << currentSample;
     }
     m_dLastPlaypos = currentSample;
