@@ -132,14 +132,19 @@ PositionScratchController::~PositionScratchController() {
     delete m_pMouseRateIIFilter;
 }
 
+volatile double _p = 0.3;
+volatile double _i = 0;
+volatile double _d = -0.15;
+volatile double _f = 0.5;
 
 void PositionScratchController::process(double currentSample, double releaseRate,
         int iBufferSize, double baserate) {
     bool scratchEnable = m_pScratchEnable->get() != 0;
 
-   	if (!m_bScratching && scratchEnable) {
+   	if (!m_bScratching && !scratchEnable) {
         // We were not previously in scratch mode are still not in scratch
         // mode. Do nothing
+   	    return;
     }
 
     // double scratchPosition = m_pScratchPosition->get();
@@ -154,6 +159,7 @@ void PositionScratchController::process(double currentSample, double releaseRate
     double p;
     double i;
     double d;
+    double f;
     p = 13 * dt; // ~ 0.15 for 11,6 ms
     if (p > 0.3) {
         // avoid overshooting at high latency
@@ -161,8 +167,11 @@ void PositionScratchController::process(double currentSample, double releaseRate
     }
     i = 0;
     d = p/-2;
-    m_pVelocityController->setPID(p, i, d);
-    m_pMouseRateIIFilter->setFactor(0.5);
+    f = 0.5;
+    //m_pVelocityController->setPID(p, i, d);
+    //m_pMouseRateIIFilter->setFactor(f);
+    m_pVelocityController->setPID(_p, _i, _d);
+    m_pMouseRateIIFilter->setFactor(_f);
 
     if (m_bScratching) {
         if (m_bEnableInertia) {
@@ -216,16 +225,24 @@ void PositionScratchController::process(double currentSample, double releaseRate
             if (m_dTargetDelta == targetDelta) {
                 // we get here, if the next mouse position is delayed
                 // or the mouse is stopped. Since we don't know the case
-                // we allow up to 20 ms move delay
+                // we assume delayed mouse updates for 20 ms
                 m_dMoveDelay += dt;
                 if (m_dMoveDelay < 0.02) {
+                    // Assume a missing Mouse Update and continue with the
+                    // Previously calculated rate.
                     targetDelta += m_dRate * (m_dMoveDelay/dt);
-                } else if (targetDelta == 0) {
-                    // Mouse was not moved at all
-                    // Stop immediately
-                    m_pVelocityController->reset(0);
-                    m_pMouseRateIIFilter->reset(0);
-                    m_dPositionDeltaSum = 0;
+                } else {
+                    // Mouse has stopped
+                    // Bypass Mouse IIF to avoid overshooting
+                    m_pMouseRateIIFilter->setFactor(1);
+                    if (targetDelta == 0) {
+                        // Mouse was not moved at all
+                        // Stop immediately by restarting the controller
+                        // in stopped mode
+                        m_pVelocityController->reset(0);
+                        m_pMouseRateIIFilter->reset(0);
+                        m_dPositionDeltaSum = 0;
+                    }
                 }
             } else {
                 m_dMoveDelay = 0;
@@ -267,12 +284,10 @@ void PositionScratchController::process(double currentSample, double releaseRate
             m_bEnableInertia = false;
             m_dMoveDelay = 0;
             // Set up initial values, in a way that the system is settled
-            // These values are calculated with a table
-            // TODO: calculate them from the controller parameters
             m_dRate = releaseRate;
-            m_dPositionDeltaSum = releaseRate * -2.2;
-            m_pVelocityController->reset(releaseRate / p);
-            m_pMouseRateIIFilter->reset(releaseRate * 2);
+            m_dPositionDeltaSum = -(releaseRate / p); // Set to the remaining error of a p controller
+            m_pVelocityController->reset(-m_dPositionDeltaSum);
+            m_pMouseRateIIFilter->reset(-m_dPositionDeltaSum);
             m_dStartScratchPosition = scratchPosition;
             //qDebug() << "scratchEnable()" << currentSample;
     }
