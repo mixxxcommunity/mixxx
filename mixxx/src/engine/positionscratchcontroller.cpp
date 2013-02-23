@@ -132,10 +132,10 @@ PositionScratchController::~PositionScratchController() {
     delete m_pMouseRateIIFilter;
 }
 
-volatile double _p = 0.3;
-volatile double _i = 0;
-volatile double _d = -0.15;
-volatile double _f = 0.5;
+//volatile double _p = 0.3;
+//volatile double _i = 0;
+//volatile double _d = -0.15;
+//volatile double _f = 0.5;
 
 void PositionScratchController::process(double currentSample, double releaseRate,
         int iBufferSize, double baserate) {
@@ -160,18 +160,21 @@ void PositionScratchController::process(double currentSample, double releaseRate
     double i;
     double d;
     double f;
-    p = 13 * dt; // ~ 0.15 for 11,6 ms
+    p = 17 * dt; // ~ 0.2 for 11,6 ms
     if (p > 0.3) {
         // avoid overshooting at high latency
         p = 0.3;
     }
     i = 0;
     d = p/-2;
-    f = 0.5;
-    //m_pVelocityController->setPID(p, i, d);
-    //m_pMouseRateIIFilter->setFactor(f);
-    m_pVelocityController->setPID(_p, _i, _d);
-    m_pMouseRateIIFilter->setFactor(_f);
+    f = 20 * dt;
+    if (f > 1) {
+        f = 1;
+    }
+    m_pVelocityController->setPID(p, i, d);
+    m_pMouseRateIIFilter->setFactor(f);
+    //m_pVelocityController->setPID(_p, _i, _d);
+    //m_pMouseRateIIFilter->setFactor(_f);
 
     if (m_bScratching) {
         if (m_bEnableInertia) {
@@ -235,6 +238,7 @@ void PositionScratchController::process(double currentSample, double releaseRate
                     // Mouse has stopped
                     // Bypass Mouse IIF to avoid overshooting
                     m_pMouseRateIIFilter->setFactor(1);
+                    m_pVelocityController->setPID(p, i, 0);
                     if (targetDelta == 0) {
                         // Mouse was not moved at all
                         // Stop immediately by restarting the controller
@@ -258,6 +262,10 @@ void PositionScratchController::process(double currentSample, double releaseRate
 
                 m_dRate = m_pVelocityController->observation(
                     m_dPositionDeltaSum, m_dPositionDeltaSum + mouseRate, dt);
+
+                // Note: The following SoundTouch has a rate filter like the average
+                // of the new and the old rate independent from dt (determined experimentally)
+                // Averaging is disabled when direction changes or rate = 0;
             }
 
             qDebug() << m_dRate << mouseRate << scratchPosition << (targetDelta - m_dPositionDeltaSum) << targetDelta << m_dPositionDeltaSum << dt;
