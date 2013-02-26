@@ -112,7 +112,8 @@ PositionScratchController::PositionScratchController(const char* pGroup)
       m_dTargetDelta(0),
       m_dStartScratchPosition(0),
       m_dRate(0),
-      m_dMoveDelay(0) {
+      m_dMoveDelay(0),
+      m_dMouseSampeTime(0) {
     m_pScratchEnable = new ControlObject(ConfigKey(pGroup, "scratch_position_enable"));
     m_pScratchPosition = new ControlObject(ConfigKey(pGroup, "scratch_position"));
     m_pMasterSampleRate = ControlObject::getControl(ConfigKey("[Master]", "samplerate"));
@@ -147,13 +148,17 @@ void PositionScratchController::process(double currentSample, double releaseRate
    	    return;
     }
 
-    // double scratchPosition = m_pScratchPosition->get();
-   	double scratchPosition = m_pScratchEnable->get() *
-   	     QCursor::pos().x() * -2;
-
     // The latency or time difference between process calls.
     const double dt = static_cast<double>(iBufferSize)
             / m_pMasterSampleRate->get() / 2;
+
+    m_dMouseSampeTime += dt;
+   	if (m_dMouseSampeTime > 0.016 || !m_bScratching) {
+        // m_scratchPosition = m_pScratchPosition->get();
+   	    m_scratchPosition = m_pScratchEnable->get() *
+             QCursor::pos().x() * -2;
+   	    m_dMouseSampeTime = 0;
+   	}
 
     // Tweak PID controller for different latencies
     double p;
@@ -222,18 +227,21 @@ void PositionScratchController::process(double currentSample, double releaseRate
 
             // Set the scratch target to the current set position
             // and normalize to one buffer
-            double targetDelta = (scratchPosition - m_dStartScratchPosition) /
+            double targetDelta = (m_scratchPosition - m_dStartScratchPosition) /
                     (iBufferSize * baserate);
+
+            bool mouse_update = true;
 
             if (m_dTargetDelta == targetDelta) {
                 // we get here, if the next mouse position is delayed
-                // or the mouse is stopped. Since we don't know the case
-                // we assume delayed mouse updates for 20 ms
+                // the mouse is stopped or moves slow. Since we don't know the case
+                // we assume delayed mouse updates for 40 ms
                 m_dMoveDelay += dt;
-                if (m_dMoveDelay < 0.02) {
+                if (m_dMoveDelay < 0.04) {
                     // Assume a missing Mouse Update and continue with the
                     // Previously calculated rate.
                     targetDelta += m_dRate * (m_dMoveDelay/dt);
+                    mouse_update = false;
                 } else {
                     // Mouse has stopped
                     // Bypass Mouse IIF to avoid overshooting
@@ -254,21 +262,25 @@ void PositionScratchController::process(double currentSample, double releaseRate
             }
 
             double mouseRate = targetDelta - m_dPositionDeltaSum;
-            if (mouseRate < MIN_SEEK_SPEED && mouseRate > -MIN_SEEK_SPEED) {
-                // we cannot get closer
-                m_dRate = 0;
-            } else {
-                mouseRate = m_pMouseRateIIFilter->filter(targetDelta - m_dPositionDeltaSum);
 
-                m_dRate = m_pVelocityController->observation(
-                    m_dPositionDeltaSum, m_dPositionDeltaSum + mouseRate, dt);
+            if (mouse_update) {
+                if (mouseRate < MIN_SEEK_SPEED && mouseRate > -MIN_SEEK_SPEED) {
+                    // we cannot get closer
+                    m_dRate = 0;
+                } else {
+                    mouseRate = m_pMouseRateIIFilter->filter(targetDelta - m_dPositionDeltaSum);
 
-                // Note: The following SoundTouch has a rate filter like the average
-                // of the new and the old rate independent from dt (determined experimentally)
-                // Averaging is disabled when direction changes or rate = 0;
+                    m_dRate = m_pVelocityController->observation(
+                        m_dPositionDeltaSum, m_dPositionDeltaSum + mouseRate, dt);
+
+                    // Note: The following SoundTouch changes the rate by a ramp
+                    // This looks like average of the new and the old rate independent
+                    // from dt. Ramping is disabled when direction changes or rate = 0;
+                    // (determined experimentally)
+                }
             }
 
-            qDebug() << m_dRate << mouseRate << scratchPosition << (targetDelta - m_dPositionDeltaSum) << targetDelta << m_dPositionDeltaSum << dt;
+            qDebug() << m_dRate << mouseRate << m_scratchPosition << (targetDelta - m_dPositionDeltaSum) << targetDelta << m_dPositionDeltaSum << dt;
         } else {
             // We were previously in scratch mode and are no longer in scratch
             // mode. Disable everything, or optionally enable inertia mode if
@@ -296,7 +308,7 @@ void PositionScratchController::process(double currentSample, double releaseRate
             m_dPositionDeltaSum = -(releaseRate / p); // Set to the remaining error of a p controller
             m_pVelocityController->reset(-m_dPositionDeltaSum);
             m_pMouseRateIIFilter->reset(-m_dPositionDeltaSum);
-            m_dStartScratchPosition = scratchPosition;
+            m_dStartScratchPosition = m_scratchPosition;
             //qDebug() << "scratchEnable()" << currentSample;
     }
     m_dLastPlaypos = currentSample;
