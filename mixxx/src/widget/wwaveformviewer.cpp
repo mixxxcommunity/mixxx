@@ -14,6 +14,8 @@
 #include "waveform/waveformwidgetfactory.h"
 #include "controlpotmeter.h"
 
+// static
+QAtomicInt WWaveformViewer::m_mousePosX = 0;
 
 WWaveformViewer::WWaveformViewer(const char *group, ConfigObject<ConfigValue>* pConfig, QWidget * parent)
         : QWidget(parent),
@@ -72,10 +74,9 @@ void WWaveformViewer::mousePressEvent(QMouseEvent* event) {
         }
         m_bScratching = true;
 
-        double audioSamplePerPixel = m_waveformWidget->getAudioSamplePerPixel();
-        double targetPosition = -1.0 * event->pos().x() * audioSamplePerPixel * 2;
-        m_pScratchPosition->slotSet(targetPosition);
+        m_mousePosX = event->pos().x();
 
+        double audioSamplePerPixel = m_waveformWidget->getAudioSamplePerPixel();
         m_pScratchPositionEnable->slotSet(audioSamplePerPixel);
     } else if (event->button() == Qt::RightButton) {
         // If we are scratching then disable and reset because the two shouldn't
@@ -95,11 +96,10 @@ void WWaveformViewer::mousePressEvent(QMouseEvent* event) {
 void WWaveformViewer::mouseMoveEvent(QMouseEvent* event) {
     // Only send signals for mouse moving if the left button is pressed
     if (m_bScratching && m_waveformWidget) {
-        // Adjusts for one-to-one movement.
-        double audioSamplePerPixel = m_waveformWidget->getAudioSamplePerPixel();
-        double targetPosition = -1.0 * event->pos().x() * audioSamplePerPixel * 2;
-        //qDebug() << "Target:" << targetPosition;
-        m_pScratchPosition->slotSet(targetPosition);
+        // Save Mouse Position in this global
+        // It is the fastest way to bring this info to engine thread
+        // We have only one Mouse position for all decks so a single variable is ok.
+        m_mousePosX = event->pos().x();
     } else if (m_bBending) {
         QPoint diff = event->pos() - m_mouseAnchor;        
         // start at the middle of 0-127, and emit values based on

@@ -7,7 +7,7 @@
 #include "controlobject.h"
 
 class VelocityController;
-class MouseRateIIFilter;
+class RateIIFilter;
 
 class PositionScratchController : public QObject {
   public:
@@ -26,7 +26,7 @@ class PositionScratchController : public QObject {
     ControlObject* m_pScratchPosition;
     ControlObject* m_pMasterSampleRate;
     VelocityController* m_pVelocityController;
-    MouseRateIIFilter* m_pMouseRateIIFilter;
+    RateIIFilter* m_pRateIIFilter;
     bool m_bScratching;
     bool m_bDetectStop;
     bool m_bEnableInertia;

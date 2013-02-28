@@ -3,6 +3,7 @@
 
 #include "engine/positionscratchcontroller.h"
 #include "engine/enginebufferscale.h" // for MIN_SEEK_SPEED
+#include "widget/wwaveformviewer.h"
 #include "mathstuff.h"
 
 #ifdef _MSC_VER
@@ -14,71 +15,34 @@ class VelocityController {
   public:
     VelocityController()
         : m_last_error(0.0),
-          m_error_sum(0.0),
           m_p(0.0),
-          m_i(0.0),
           m_d(0.0) {
     }
 
-    void setPID(double p, double i, double d) {
+    void setPD(double p, double d) {
         m_p = p;
-        m_i = i;
         m_d = d;
     }
 
     void reset(double last_error) {
         m_last_error = last_error;
-        m_error_sum = 0.0;
     }
 
-    double observation(double position, double target_position, double dt) {
-        Q_UNUSED(dt) // Since the controller runs with constant sample rate
-                     // we don't have to deal with dt inside the controller
-
-        const double error = target_position - position;
-
-        double output = m_p * error;
-
-        // In case of error too small then stop controller
-        if (abs(error) > 0.001) {
-
-            // Calculate integral component of PID
-            m_error_sum += error;
-
-            // Calculate differential component of PID. Positive if we're getting
-            // worse, negative if we're getting closer.
-            double error_change = (error - m_last_error);
-
-            // qDebug() << "target:" << m_target_position << "position:" << position
-            //          << "error:" << error << "change:" << error_change << "sum:" << m_error_sum;
-
-            // Main PID calculation
-            output += m_i * m_error_sum + m_d * error_change;
-
-            // Try to stabilize us if we're close to the target. Otherwise we might
-            // overshoot and oscillate.
-            //if (fabs(error) < m_samples_per_buffer) {
-                //double percent_remaining = error / m_samples_per_buffer;
-                //// Apply exponential decay to try and stop the stuttering.
-                //double decay = (1.0 - pow(2, -fabs(percent_remaining)));
-                //output = percent_remaining * decay;
-                //qDebug() << "clamp decay" << decay << "output" << output;
-            //}
-        }
-
-        m_last_error = error;
-        return output;
+    double observation(double error) {
+        // Main PD calculation
+        m_last_error = m_p * error + m_d * (error - m_last_error);
+        return m_last_error;
     }
 
   private:
     double m_last_error;
     double m_error_sum;
-    double m_p, m_i, m_d;
+    double m_p, m_d;
 };
 
-class MouseRateIIFilter {
+class RateIIFilter {
   public:
-    MouseRateIIFilter()
+    RateIIFilter()
         : m_factor(1.0),
           m_last_rate(0.0) {
     }
@@ -92,7 +56,12 @@ class MouseRateIIFilter {
     }
 
     double filter(double rate) {
-        m_last_rate = m_last_rate * (1 - m_factor) + rate * m_factor;
+        if (fabs(rate) > fabs(m_last_rate)) {
+            m_last_rate = m_last_rate * (1 - m_factor) + rate * m_factor;
+        }  else {
+            // do not filter decelerateions to avoid overshooting
+            m_last_rate = rate;
+        }
         return m_last_rate;
     }
 
@@ -118,7 +87,7 @@ PositionScratchController::PositionScratchController(const char* pGroup)
     m_pScratchPosition = new ControlObject(ConfigKey(pGroup, "scratch_position"));
     m_pMasterSampleRate = ControlObject::getControl(ConfigKey("[Master]", "samplerate"));
     m_pVelocityController = new VelocityController();
-    m_pMouseRateIIFilter = new MouseRateIIFilter;
+    m_pRateIIFilter = new RateIIFilter;
 
 
     //m_pVelocityController->setPID(0.2, 1.0, 5.0);
@@ -130,11 +99,10 @@ PositionScratchController::~PositionScratchController() {
     delete m_pScratchEnable;
     delete m_pScratchPosition;
     delete m_pVelocityController;
-    delete m_pMouseRateIIFilter;
+    delete m_pRateIIFilter;
 }
 
 //volatile double _p = 0.3;
-//volatile double _i = 0;
 //volatile double _d = -0.15;
 //volatile double _f = 0.5;
 
@@ -152,19 +120,29 @@ void PositionScratchController::process(double currentSample, double releaseRate
     const double dt = static_cast<double>(iBufferSize)
             / m_pMasterSampleRate->get() / 2;
 
+    // Sample Mouse with fixed timing intervals to iron out significant jitters
+    // that are added on the way from mouse to engine thread
+    // Normaly the Mouse is sampled every 8 ms so with this 16 ms window we
+    // have 0 ... 3 samples. The remaining jitter is ironed by the following IIR
+    // lowpass filter
+    const double m_dMouseSampeIntervall = 0.016;
+    const int callsPerDt = ceil(m_dMouseSampeIntervall/dt);
+    double scratchPosition = 0;
     m_dMouseSampeTime += dt;
-   	if (m_dMouseSampeTime > 0.016 || !m_bScratching) {
-        // m_scratchPosition = m_pScratchPosition->get();
-   	    m_scratchPosition = m_pScratchEnable->get() *
-             QCursor::pos().x() * -2;
+   	if (m_dMouseSampeTime >= m_dMouseSampeIntervall || !m_bScratching) {
+   	    scratchPosition =
+   	            m_pScratchEnable->get() * WWaveformViewer::getMousePosX() * -2;
    	    m_dMouseSampeTime = 0;
    	}
 
-    // Tweak PID controller for different latencies
-    double p;
-    double i;
-    double d;
-    double f;
+    // Tweak PD controller for different latencies
+    double p = 0.3;
+    double d = p/-2;
+    double f = 0.4;
+    if (dt > m_dMouseSampeIntervall * 2) {
+        f = 1;
+    }
+    /*
     p = 17 * dt; // ~ 0.2 for 11,6 ms
     if (p > 0.3) {
         // avoid overshooting at high latency
@@ -176,8 +154,9 @@ void PositionScratchController::process(double currentSample, double releaseRate
     if (f > 1) {
         f = 1;
     }
-    m_pVelocityController->setPID(p, i, d);
-    m_pMouseRateIIFilter->setFactor(f);
+    */
+    m_pVelocityController->setPD(p, d);
+    m_pRateIIFilter->setFactor(f);
     //m_pVelocityController->setPID(_p, _i, _d);
     //m_pMouseRateIIFilter->setFactor(_f);
 
@@ -207,8 +186,8 @@ void PositionScratchController::process(double currentSample, double releaseRate
 
             m_dRate *= kExponentialDecay;
 
-            // If the rate has decayed below the threshold, or scartching is 
-            // reanabled then leave inertia mode.
+            // If the rate has decayed below the threshold, or scratching is
+            // re-enabled then leave inertia mode.
             if (fabs(m_dRate) < kDecayThreshold || scratchEnable) {
                 m_bEnableInertia = false;
                 m_bScratching = false;
@@ -221,66 +200,63 @@ void PositionScratchController::process(double currentSample, double releaseRate
 
             // Measure the total distance traveled since last frame and add
             // it to the running total. This is required to scratch within loop
-            // boundaries. Normalize to one buffer
+            // boundaries. And normalize to one buffer
             m_dPositionDeltaSum += (currentSample - m_dLastPlaypos) /
                     (iBufferSize * baserate);
 
-            // Set the scratch target to the current set position
-            // and normalize to one buffer
-            double targetDelta = (m_scratchPosition - m_dStartScratchPosition) /
-                    (iBufferSize * baserate);
+            // Continue with the last rate if we do not have a new
+            // Mouse position
+            if (m_dMouseSampeTime ==  0) {
 
-            bool mouse_update = true;
+                // Set the scratch target to the current set position
+                // and normalize to one buffer
+                double targetDelta = (scratchPosition - m_dStartScratchPosition) /
+                        (iBufferSize * baserate);
 
-            if (m_dTargetDelta == targetDelta) {
-                // we get here, if the next mouse position is delayed
-                // the mouse is stopped or moves slow. Since we don't know the case
-                // we assume delayed mouse updates for 40 ms
-                m_dMoveDelay += dt;
-                if (m_dMoveDelay < 0.04) {
-                    // Assume a missing Mouse Update and continue with the
-                    // Previously calculated rate.
-                    targetDelta += m_dRate * (m_dMoveDelay/dt);
-                    mouse_update = false;
-                } else {
-                    // Mouse has stopped
-                    // Bypass Mouse IIF to avoid overshooting
-                    m_pMouseRateIIFilter->setFactor(1);
-                    m_pVelocityController->setPID(p, i, 0);
-                    if (targetDelta == 0) {
-                        // Mouse was not moved at all
-                        // Stop immediately by restarting the controller
-                        // in stopped mode
-                        m_pVelocityController->reset(0);
-                        m_pMouseRateIIFilter->reset(0);
-                        m_dPositionDeltaSum = 0;
+                bool calcRate = true;
+
+                if (m_dTargetDelta == targetDelta) {
+                    // we get here, if the next mouse position is delayed
+                    // the mouse is stopped or moves slow. Since we don't know the case
+                    // we assume delayed mouse updates for 40 ms
+                    m_dMoveDelay += dt * callsPerDt;
+                    if (m_dMoveDelay < 0.04) {
+                        // Assume a missing Mouse Update and continue with the
+                        // previously calculated rate.
+                        calcRate = false;
+                    } else {
+                        // Mouse has stopped
+                        m_pVelocityController->setPD(p, 0);
+                        if (targetDelta == 0) {
+                            // Mouse was not moved at all
+                            // Stop immediately by restarting the controller
+                            // in stopped mode
+                            m_pVelocityController->reset(0);
+                            m_pRateIIFilter->reset(0);
+                            m_dPositionDeltaSum = 0;
+                        }
                     }
-                }
-            } else {
-                m_dMoveDelay = 0;
-                m_dTargetDelta = targetDelta;
-            }
-
-            double mouseRate = targetDelta - m_dPositionDeltaSum;
-
-            if (mouse_update) {
-                if (mouseRate < MIN_SEEK_SPEED && mouseRate > -MIN_SEEK_SPEED) {
-                    // we cannot get closer
-                    m_dRate = 0;
                 } else {
-                    mouseRate = m_pMouseRateIIFilter->filter(targetDelta - m_dPositionDeltaSum);
+                    m_dMoveDelay = 0;
+                    m_dTargetDelta = targetDelta;
+                }
 
-                    m_dRate = m_pVelocityController->observation(
-                        m_dPositionDeltaSum, m_dPositionDeltaSum + mouseRate, dt);
-
-                    // Note: The following SoundTouch changes the rate by a ramp
+                if (calcRate) {
+                    double ctrlError = m_pRateIIFilter->filter(targetDelta - m_dPositionDeltaSum);
+                    m_dRate = m_pVelocityController->observation(ctrlError);
+                    m_dRate /= ceil(m_dMouseSampeIntervall/dt);
+                    // Note: The following SoundTouch changes the also rate by a ramp
                     // This looks like average of the new and the old rate independent
                     // from dt. Ramping is disabled when direction changes or rate = 0;
                     // (determined experimentally)
+                    if (fabs(m_dRate) < MIN_SEEK_SPEED) {
+                        // we cannot get closer
+                        m_dRate = 0;
+                    }
                 }
-            }
 
-            qDebug() << m_dRate << mouseRate << m_scratchPosition << (targetDelta - m_dPositionDeltaSum) << targetDelta << m_dPositionDeltaSum << dt;
+                qDebug() << m_dRate << targetDelta << m_dPositionDeltaSum << dt;
+            }
         } else {
             // We were previously in scratch mode and are no longer in scratch
             // mode. Disable everything, or optionally enable inertia mode if
@@ -307,8 +283,8 @@ void PositionScratchController::process(double currentSample, double releaseRate
             m_dRate = releaseRate;
             m_dPositionDeltaSum = -(releaseRate / p); // Set to the remaining error of a p controller
             m_pVelocityController->reset(-m_dPositionDeltaSum);
-            m_pMouseRateIIFilter->reset(-m_dPositionDeltaSum);
-            m_dStartScratchPosition = m_scratchPosition;
+            m_pRateIIFilter->reset(-m_dPositionDeltaSum);
+            m_dStartScratchPosition = scratchPosition;
             //qDebug() << "scratchEnable()" << currentSample;
     }
     m_dLastPlaypos = currentSample;

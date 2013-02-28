@@ -32,6 +32,8 @@ class WWaveformViewer : public QWidget {
     void mouseMoveEvent(QMouseEvent *);
     void mouseReleaseEvent(QMouseEvent *);
 
+    static int getMousePosX() { return m_mousePosX; };
+
 signals:
     void valueChangedLeftDown(double);
     void valueChangedRightDown(double);
@@ -72,6 +74,8 @@ private:
     QPoint m_mouseAnchor;
 
     WaveformWidgetAbstract* m_waveformWidget;
+
+    static QAtomicInt m_mousePosX;
 
     friend class WaveformWidgetFactory;
 };
