@@ -587,6 +587,7 @@ void WOverview::resizeEvent(QResizeEvent *) {
 void WOverview::dragEnterEvent(QDragEnterEvent* event) {
     // Accept the enter event if the thing is a filepath and nothing's playing
     // in this deck or the settings allow to interrupt the playing deck.
+    qDebug() << "kain88 overview = " << m_pGroup;
     if (event->mimeData()->hasUrls() && event->mimeData()->urls().size() > 0) {
         if ((m_playControl->get() == 0.0 ||
             m_pConfig->getValueString(ConfigKey("[Controls]","AllowTrackLoadToPlayingDeck")).toInt()) || !(m_pGroup=="[PreviewDeck1]")) {

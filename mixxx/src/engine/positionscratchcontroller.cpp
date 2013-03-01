@@ -36,7 +36,6 @@ class VelocityController {
 
   private:
     double m_last_error;
-    double m_error_sum;
     double m_p, m_d;
 };
 
@@ -56,10 +55,10 @@ class RateIIFilter {
     }
 
     double filter(double rate) {
-        if (fabs(rate) > fabs(m_last_rate)) {
+        if (fabs(rate) - fabs(m_last_rate) > -0.1) {
             m_last_rate = m_last_rate * (1 - m_factor) + rate * m_factor;
         }  else {
-            // do not filter decelerateions to avoid overshooting
+            // do not filter strong decelerations to avoid overshooting
             m_last_rate = rate;
         }
         return m_last_rate;
@@ -255,7 +254,7 @@ void PositionScratchController::process(double currentSample, double releaseRate
                     }
                 }
 
-                qDebug() << m_dRate << targetDelta << m_dPositionDeltaSum << dt;
+                //qDebug() << m_dRate << targetDelta << m_dPositionDeltaSum << dt;
             }
         } else {
             // We were previously in scratch mode and are no longer in scratch
@@ -281,7 +280,7 @@ void PositionScratchController::process(double currentSample, double releaseRate
             m_dMoveDelay = 0;
             // Set up initial values, in a way that the system is settled
             m_dRate = releaseRate;
-            m_dPositionDeltaSum = -(releaseRate / p); // Set to the remaining error of a p controller
+            m_dPositionDeltaSum = -(releaseRate / p) * callsPerDt; // Set to the remaining error of a p controller
             m_pVelocityController->reset(-m_dPositionDeltaSum);
             m_pRateIIFilter->reset(-m_dPositionDeltaSum);
             m_dStartScratchPosition = scratchPosition;
