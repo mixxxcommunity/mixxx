@@ -167,7 +167,10 @@ void PositionScratchController::process(double currentSample, double releaseRate
 
             // If we're playing, then do not decay rate below 1. If we're not playing,
             // then we want to decay all the way down to below 0.01
-            const double kDecayThreshold = ((releaseRate < 0.01) ? 0.01 : releaseRate);
+            double decayThreshold = fabs(releaseRate);
+            if (decayThreshold < 0.01) {
+                decayThreshold = 0.01;
+            }
 
             // Max velocity we would like to stop in a given time period.
             const double kMaxVelocity = 100;
@@ -178,19 +181,20 @@ void PositionScratchController::process(double currentSample, double releaseRate
             // constants. Roughly we backsolve what the decay should be if we want to
             // stop a throw of max velocity kMaxVelocity in kTimeToStop seconds. Here is
             // the derivation:
-            // kMaxVelocity * alpha ^ (# callbacks to stop in) = kDecayThreshold
+            // kMaxVelocity * alpha ^ (# callbacks to stop in) = decayThreshold
             // # callbacks = kTimeToStop / dt
-            // alpha = (kDecayThreshold / kMaxVelocity) ^ (dt / kTimeToStop)
-            const double kExponentialDecay = pow(kDecayThreshold / kMaxVelocity, dt / kTimeToStop);
+            // alpha = (decayThreshold / kMaxVelocity) ^ (dt / kTimeToStop)
+            const double kExponentialDecay = pow(decayThreshold / kMaxVelocity, dt / kTimeToStop);
 
             m_dRate *= kExponentialDecay;
 
             // If the rate has decayed below the threshold, or scratching is
             // re-enabled then leave inertia mode.
-            if (fabs(m_dRate) < kDecayThreshold || scratchEnable) {
+            if (fabs(m_dRate) < decayThreshold || scratchEnable) {
                 m_bEnableInertia = false;
                 m_bScratching = false;
-            }        
+            }
+            //qDebug() << m_dRate << kExponentialDecay << dt;
         } else if (scratchEnable) {
             // If we're scratching, clear the inertia flag. This case should
             // have been caught by the 'enable' case below, but just to make
@@ -254,7 +258,7 @@ void PositionScratchController::process(double currentSample, double releaseRate
                     }
                 }
 
-                //qDebug() << m_dRate << targetDelta << m_dPositionDeltaSum << dt;
+                qDebug() << m_dRate << targetDelta << m_dPositionDeltaSum << dt;
             }
         } else {
             // We were previously in scratch mode and are no longer in scratch
