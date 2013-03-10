@@ -68,7 +68,6 @@ private:
     int m_zoomZoneWidth;
     ControlObjectThreadMain* m_pZoom;
     ControlObjectThreadMain* m_pScratchPositionEnable;
-    ControlObjectThreadMain* m_pScratchPosition;
     bool m_bScratching;
     bool m_bBending;
     QPoint m_mouseAnchor;

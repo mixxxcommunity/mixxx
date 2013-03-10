@@ -34,8 +34,6 @@ WWaveformViewer::WWaveformViewer(const char *group, ConfigObject<ConfigValue>* p
 
     m_pScratchPositionEnable = new ControlObjectThreadMain(
                 ControlObject::getControl(ConfigKey(group, "scratch_position_enable")));
-    m_pScratchPosition = new ControlObjectThreadMain(
-                ControlObject::getControl(ConfigKey(group, "scratch_position")));
 
     setAttribute(Qt::WA_OpaquePaintEvent);
 
@@ -48,7 +46,6 @@ WWaveformViewer::~WWaveformViewer() {
 
     delete m_pZoom;
     delete m_pScratchPositionEnable;
-    delete m_pScratchPosition;
 }
 
 void WWaveformViewer::setup(QDomNode node) {

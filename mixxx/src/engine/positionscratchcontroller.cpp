@@ -1,5 +1,4 @@
 #include <QtDebug>
-#include <QCursor>
 
 #include "engine/positionscratchcontroller.h"
 #include "engine/enginebufferscale.h" // for MIN_SEEK_SPEED
@@ -73,7 +72,6 @@ class RateIIFilter {
 PositionScratchController::PositionScratchController(const char* pGroup)
     : m_group(pGroup),
       m_bScratching(false),
-      m_bDetectStop(false),
       m_bEnableInertia(false),
       m_dLastPlaypos(0),
       m_dPositionDeltaSum(0),
@@ -83,20 +81,13 @@ PositionScratchController::PositionScratchController(const char* pGroup)
       m_dMoveDelay(0),
       m_dMouseSampeTime(0) {
     m_pScratchEnable = new ControlObject(ConfigKey(pGroup, "scratch_position_enable"));
-    m_pScratchPosition = new ControlObject(ConfigKey(pGroup, "scratch_position"));
     m_pMasterSampleRate = ControlObject::getControl(ConfigKey("[Master]", "samplerate"));
     m_pVelocityController = new VelocityController();
     m_pRateIIFilter = new RateIIFilter;
-
-
-    //m_pVelocityController->setPID(0.2, 1.0, 5.0);
-    //m_pVelocityController->setPID(0.1, 0.0, 5.0);
-    //m_pVelocityController->setPID(0.0001, 0.0, 0.00);
 }
 
 PositionScratchController::~PositionScratchController() {
     delete m_pScratchEnable;
-    delete m_pScratchPosition;
     delete m_pVelocityController;
     delete m_pRateIIFilter;
 }
@@ -141,19 +132,6 @@ void PositionScratchController::process(double currentSample, double releaseRate
     if (dt > m_dMouseSampeIntervall * 2) {
         f = 1;
     }
-    /*
-    p = 17 * dt; // ~ 0.2 for 11,6 ms
-    if (p > 0.3) {
-        // avoid overshooting at high latency
-        p = 0.3;
-    }
-    i = 0;
-    d = p/-2;
-    f = 20 * dt;
-    if (f > 1) {
-        f = 1;
-    }
-    */
     m_pVelocityController->setPD(p, d);
     m_pRateIIFilter->setFactor(f);
     //m_pVelocityController->setPID(_p, _i, _d);
@@ -168,8 +146,8 @@ void PositionScratchController::process(double currentSample, double releaseRate
             // If we're playing, then do not decay rate below 1. If we're not playing,
             // then we want to decay all the way down to below 0.01
             double decayThreshold = fabs(releaseRate);
-            if (decayThreshold < 0.01) {
-                decayThreshold = 0.01;
+            if (decayThreshold < MIN_SEEK_SPEED) {
+                decayThreshold = MIN_SEEK_SPEED;
             }
 
             // Max velocity we would like to stop in a given time period.
@@ -258,7 +236,7 @@ void PositionScratchController::process(double currentSample, double releaseRate
                     }
                 }
 
-                qDebug() << m_dRate << targetDelta << m_dPositionDeltaSum << dt;
+                //qDebug() << m_dRate << targetDelta << m_dPositionDeltaSum << dt;
             }
         } else {
             // We were previously in scratch mode and are no longer in scratch

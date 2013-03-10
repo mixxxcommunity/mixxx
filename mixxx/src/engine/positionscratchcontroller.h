@@ -23,12 +23,10 @@ class PositionScratchController : public QObject {
   private:
     const QString m_group;
     ControlObject* m_pScratchEnable;
-    ControlObject* m_pScratchPosition;
     ControlObject* m_pMasterSampleRate;
     VelocityController* m_pVelocityController;
     RateIIFilter* m_pRateIIFilter;
     bool m_bScratching;
-    bool m_bDetectStop;
     bool m_bEnableInertia;
     double m_dLastPlaypos;
     double m_dPositionDeltaSum;
