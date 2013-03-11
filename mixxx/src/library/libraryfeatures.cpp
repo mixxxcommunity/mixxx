@@ -25,7 +25,9 @@
 #include "library/autodjfeature.h"
 #include "library/playlistfeature.h"
 #include "library/preparefeature.h"
+#ifdef __PROMO__
 #include "library/promotracksfeature.h"
+#endif
 #include "library/traktor/traktorfeature.h"
 #include "library/librarycontrol.h"
 #include "library/setlogfeature.h"
@@ -52,6 +54,8 @@ LibraryFeatures::LibraryFeatures(QObject* parent, ConfigObject<ConfigValue>* pCo
     // method or something -- CreateDefaultLibrary
     m_pMixxxLibraryFeature = new MixxxLibraryFeature(this, m_pTrackCollection,m_pConfig);
     addFeature(m_pMixxxLibraryFeature);
+
+#ifdef __PROMO__
     if (PromoTracksFeature::isSupported(m_pConfig)) {
         m_pPromoTracksFeature = new PromoTracksFeature(this, pConfig,
                                                        m_pTrackCollection,
@@ -60,6 +64,7 @@ LibraryFeatures::LibraryFeatures(QObject* parent, ConfigObject<ConfigValue>* pCo
     } else {
         m_pPromoTracksFeature = NULL;
     }
+#endif
 
     addFeature(new AutoDJFeature(this, pConfig, m_pTrackCollection));
     m_pPlaylistFeature = new PlaylistFeature(this, m_pTrackCollection, pConfig);
@@ -265,8 +270,10 @@ void LibraryFeatures::slotLoadCover(QString img) {
 
 QList<TrackPointer> LibraryFeatures::getTracksToAutoLoad()
 {
-    if (m_pPromoTracksFeature)
+#ifdef __PROMO__
+    if (m_pPromoTracksFeature) {
         return m_pPromoTracksFeature->getTracksToAutoLoad();
-    else
-        return QList<TrackPointer>();
+    }
+#endif
+    return QList<TrackPointer>();
 }

@@ -67,7 +67,6 @@ class RateIIFilter {
     double m_last_rate;
 };
 
-
 PositionScratchController::PositionScratchController(const char* pGroup)
     : m_group(pGroup),
       m_bScratching(false),

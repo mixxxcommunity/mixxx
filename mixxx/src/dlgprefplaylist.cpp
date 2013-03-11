@@ -16,7 +16,9 @@
 ***************************************************************************/
 
 #include "dlgprefplaylist.h"
+#ifdef __PROMO__
 #include "library/promotracksfeature.h"
+#endif
 #include "soundsourceproxy.h"
 //#include "plugindownloader.h"
 #include <QtCore>
@@ -61,8 +63,11 @@ DlgPrefPlaylist::DlgPrefPlaylist(QWidget * parent, ConfigObject<ConfigValue> * _
     checkBox_show_clementine->hide();
 #endif // __CLEMENTINE__
 
-    if (!PromoTracksFeature::isSupported(config))
-    {
+    bool enablePromoGroupbox = false;
+#ifdef __PROMO__
+    enablePromoGroupbox = PromoTracksFeature::isSupported(config);
+#endif
+    if (!enablePromoGroupbox) {
         groupBoxBundledSongs->hide();
     }
 
