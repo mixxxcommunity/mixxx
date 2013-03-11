@@ -32,8 +32,6 @@ class WWaveformViewer : public QWidget {
     void mouseMoveEvent(QMouseEvent *);
     void mouseReleaseEvent(QMouseEvent *);
 
-    static int getMousePosX() { return m_mousePosX; };
-
 signals:
     void valueChangedLeftDown(double);
     void valueChangedRightDown(double);
@@ -68,13 +66,13 @@ private:
     int m_zoomZoneWidth;
     ControlObjectThreadMain* m_pZoom;
     ControlObjectThreadMain* m_pScratchPositionEnable;
+    ControlObjectThreadMain* m_pScratchPosition;
+    ControlObjectThreadMain* m_playControl;
     bool m_bScratching;
     bool m_bBending;
     QPoint m_mouseAnchor;
 
     WaveformWidgetAbstract* m_waveformWidget;
-
-    static QAtomicInt m_mousePosX;
 
     friend class WaveformWidgetFactory;
 };

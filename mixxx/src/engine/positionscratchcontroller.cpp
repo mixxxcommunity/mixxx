@@ -2,7 +2,6 @@
 
 #include "engine/positionscratchcontroller.h"
 #include "engine/enginebufferscale.h" // for MIN_SEEK_SPEED
-#include "widget/wwaveformviewer.h"
 #include "mathstuff.h"
 
 #ifdef _MSC_VER
@@ -81,6 +80,7 @@ PositionScratchController::PositionScratchController(const char* pGroup)
       m_dMoveDelay(0),
       m_dMouseSampeTime(0) {
     m_pScratchEnable = new ControlObject(ConfigKey(pGroup, "scratch_position_enable"));
+    m_pScratchPosition = new ControlObject(ConfigKey(pGroup, "scratch_position"));
     m_pMasterSampleRate = ControlObject::getControl(ConfigKey("[Master]", "samplerate"));
     m_pVelocityController = new VelocityController();
     m_pRateIIFilter = new RateIIFilter;
@@ -105,7 +105,7 @@ void PositionScratchController::process(double currentSample, double releaseRate
         // mode. Do nothing
    	    return;
     }
-
+    
     // The latency or time difference between process calls.
     const double dt = static_cast<double>(iBufferSize)
             / m_pMasterSampleRate->get() / 2;
@@ -120,8 +120,7 @@ void PositionScratchController::process(double currentSample, double releaseRate
     double scratchPosition = 0;
     m_dMouseSampeTime += dt;
    	if (m_dMouseSampeTime >= m_dMouseSampeIntervall || !m_bScratching) {
-   	    scratchPosition =
-   	            m_pScratchEnable->get() * WWaveformViewer::getMousePosX() * -2;
+   	    scratchPosition = m_pScratchPosition->get();
    	    m_dMouseSampeTime = 0;
    	}
 

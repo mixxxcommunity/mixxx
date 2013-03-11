@@ -14,8 +14,6 @@
 #include "waveform/waveformwidgetfactory.h"
 #include "controlpotmeter.h"
 
-// static
-QAtomicInt WWaveformViewer::m_mousePosX = 0;
 
 WWaveformViewer::WWaveformViewer(const char *group, ConfigObject<ConfigValue>* pConfig, QWidget * parent)
         : QWidget(parent),
@@ -34,6 +32,11 @@ WWaveformViewer::WWaveformViewer(const char *group, ConfigObject<ConfigValue>* p
 
     m_pScratchPositionEnable = new ControlObjectThreadMain(
                 ControlObject::getControl(ConfigKey(group, "scratch_position_enable")));
+    m_pScratchPosition = new ControlObjectThreadMain(
+                ControlObject::getControl(ConfigKey(group, "scratch_position")));
+
+    m_playControl = new ControlObjectThreadMain(
+        ControlObject::getControl(ConfigKey(m_pGroup, "play")));
 
     setAttribute(Qt::WA_OpaquePaintEvent);
 
@@ -46,6 +49,7 @@ WWaveformViewer::~WWaveformViewer() {
 
     delete m_pZoom;
     delete m_pScratchPositionEnable;
+    delete m_pScratchPosition;
 }
 
 void WWaveformViewer::setup(QDomNode node) {
@@ -70,11 +74,10 @@ void WWaveformViewer::mousePressEvent(QMouseEvent* event) {
             m_bBending = false;
         }
         m_bScratching = true;
-
-        m_mousePosX = event->pos().x();
-
         double audioSamplePerPixel = m_waveformWidget->getAudioSamplePerPixel();
-        m_pScratchPositionEnable->slotSet(audioSamplePerPixel);
+        double targetPosition = -1.0 * event->pos().x() * audioSamplePerPixel * 2;
+        m_pScratchPosition->slotSet(targetPosition);
+        m_pScratchPositionEnable->slotSet(1.0f);
     } else if (event->button() == Qt::RightButton) {
         // If we are scratching then disable and reset because the two shouldn't
         // be used at once.
@@ -93,12 +96,13 @@ void WWaveformViewer::mousePressEvent(QMouseEvent* event) {
 void WWaveformViewer::mouseMoveEvent(QMouseEvent* event) {
     // Only send signals for mouse moving if the left button is pressed
     if (m_bScratching && m_waveformWidget) {
-        // Save Mouse Position in this global
-        // It is the fastest way to bring this info to engine thread
-        // We have only one Mouse position for all decks so a single variable is ok.
-        m_mousePosX = event->pos().x();
+        // Adjusts for one-to-one movement.
+        double audioSamplePerPixel = m_waveformWidget->getAudioSamplePerPixel();
+        double targetPosition = -1.0 * event->pos().x() * audioSamplePerPixel * 2;
+        //qDebug() << "Target:" << targetPosition;
+        m_pScratchPosition->slotSet(targetPosition);
     } else if (m_bBending) {
-        QPoint diff = event->pos() - m_mouseAnchor;        
+        QPoint diff = event->pos() - m_mouseAnchor;
         // start at the middle of 0-127, and emit values based on
         // how far the mouse has traveled horizontally
         double v = 64.0 + diff.x()/10.0f;
@@ -142,17 +146,14 @@ void WWaveformViewer::wheelEvent(QWheelEvent *event) {
 /** DRAG AND DROP **/
 
 void WWaveformViewer::dragEnterEvent(QDragEnterEvent * event) {
-    // Accept the enter event if the thing is a filepath.
-    qDebug() << "Kain88 waveform=" << m_pGroup;
+    // Accept the enter event if the thing is a filepath and nothing's playing
+    // in this deck or the settings allow to interrupt the playing deck.
     if (event->mimeData()->hasUrls() && event->mimeData()->urls().size() > 0) {
-        ControlObject *pPlayCO = ControlObject::getControl(
-                    ConfigKey(m_pGroup, "play"));
-        qDebug() << "could I get the ControlObject " << !(pPlayCO==NULL);
-        qDebug() << "Is the deck playing " << (pPlayCO->get() == 0.);
-        qDebug() << "allowTrackLoadToPlayingDeck " << m_pConfig->getValueString(ConfigKey("[Controls]","AllowTrackLoadToPlayingDeck")).toInt();
-        // Accept if the Deck isn't playing or the settings allow to interupt a playing deck
-        if (pPlayCO && (pPlayCO->get() == 0. ||
-            m_pConfig->getValueString(ConfigKey("[Controls]","AllowTrackLoadToPlayingDeck")).toInt())) {
+        qDebug() << "kain88 deck is playing" << !(m_playControl->get() == 0.0);
+        qDebug() << "kain88 allow to drop on playing deck" << m_pConfig->getValueString(ConfigKey("[Controls]","AllowTrackLoadToPlayingDeck")).toInt();
+        if (m_playControl->get() == 0.0 ||
+            m_pConfig->getValueString(ConfigKey("[Controls]","AllowTrackLoadToPlayingDeck")).toInt() ) {
+            qDebug() << "kain88 accept Event";
             event->acceptProposedAction();
         } else {
             event->ignore();
