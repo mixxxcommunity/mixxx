@@ -7,16 +7,19 @@
 static const int kFrameSize = 2;
 
 struct BeatGridData {
-	double bpm;
-	double firstBeat;
+    double bpm;
+    double firstBeat;
+    int beatsPerBar;
 };
 
 class BeatGridIterator : public BeatIterator {
   public:
-    BeatGridIterator(double dBeatLength, double dFirstBeat, double dEndSample)
+    BeatGridIterator(double dBeatLength, double dFirstBeat, double dEndSample, double dGlobalFirstBeat, int dBeatsPerBar = 4)
             : m_dBeatLength(dBeatLength),
               m_dCurrentSample(dFirstBeat),
-              m_dEndSample(dEndSample) {
+              m_dEndSample(dEndSample),
+              m_dFirstBeat(dGlobalFirstBeat),
+              m_dBeatsPerBar(dBeatsPerBar) {
     }
 
     virtual bool hasNext() const {
@@ -29,10 +32,18 @@ class BeatGridIterator : public BeatIterator {
         return beat;
     }
 
+    virtual bool isFirstInBar() const {
+		if(m_dCurrentSample >= m_dFirstBeat)
+	        return (((int)(((m_dCurrentSample - m_dFirstBeat) / m_dBeatLength)+.5)-1) % m_dBeatsPerBar) == 0;
+		return false;
+    }
+
   private:
     double m_dBeatLength;
     double m_dCurrentSample;
     double m_dEndSample;
+    double m_dFirstBeat;
+    int m_dBeatsPerBar;
 };
 
 BeatGrid::BeatGrid(TrackInfoObject* pTrack, const QByteArray* pByteArray)
@@ -188,7 +199,8 @@ BeatIterator* BeatGrid::findBeats(double startSample, double stopSample) const {
     if (curBeat == -1.0) {
         return NULL;
     }
-    return new BeatGridIterator(m_dBeatLength, curBeat, stopSample);
+    double firstBeat = findNextBeat(0);
+    return new BeatGridIterator(m_dBeatLength, curBeat, stopSample, firstBeat);
 }
 
 bool BeatGrid::hasBeatInRange(double startSample, double stopSample) const {

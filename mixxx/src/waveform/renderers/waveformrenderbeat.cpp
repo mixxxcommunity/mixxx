@@ -39,6 +39,14 @@ void WaveformRenderBeat::setup(const QDomNode& node) {
     }
     m_highBeatColor = WSkinColor::getCorrectColor(m_highBeatColor);
 
+    m_firstBeatInBarColor = Qt::red;
+    QString firstInBar = WWidget::selectNodeQString(node, "FirstBeatInBarColor");
+    if (firstInBar != "") {
+        m_firstBeatInBarColor.setNamedColor(firstInBar);
+    }
+    m_highBeatColor = WSkinColor::getCorrectColor(m_firstBeatInBarColor);
+
+
     if (m_beatColor.alphaF() > 0.99)
         m_beatColor.setAlphaF(0.8);
 
@@ -55,6 +63,7 @@ void WaveformRenderBeat::draw(QPainter* painter, QPaintEvent* /*event*/) {
     BeatsPointer trackBeats = trackInfo->getBeats();
     if (!trackBeats)
         return;
+    double firstBeatOfTrack = trackBeats->findNextBeat(0);
 
     const int trackSamples = m_waveformRenderer->getTrackSamples();
     if (trackSamples <= 0) {
@@ -83,6 +92,8 @@ void WaveformRenderBeat::draw(QPainter* painter, QPaintEvent* /*event*/) {
     beatPen.setWidth(1.5);
     QPen highBeatPen(m_highBeatColor);
     highBeatPen.setWidth(1.5);
+    QPen firstBeatInBarPen(m_firstBeatInBarColor);
+    firstBeatInBarPen.setWidth(4);
 
     while (it->hasNext()) {
         int beatPosition = it->next();
@@ -96,6 +107,10 @@ void WaveformRenderBeat::draw(QPainter* painter, QPaintEvent* /*event*/) {
         else
             painter->setPen(beatPen);
 
+        if(it->isFirstInBar()) {
+            painter->setPen(firstBeatInBarPen);
+        }
+        
         painter->drawLine(QPointF(xBeatPoint, 0.f),
                           QPointF(xBeatPoint,
                                   (float)m_waveformRenderer->getHeight()));

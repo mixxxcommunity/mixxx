@@ -29,9 +29,11 @@ bool BeatLessThan(const Beat& beat1, const Beat& beat2) {
 
 class BeatMapIterator : public BeatIterator {
   public:
-    BeatMapIterator(BeatList::const_iterator start, BeatList::const_iterator end)
+    BeatMapIterator(BeatList::const_iterator start, BeatList::const_iterator end, BeatList::const_iterator first, int beatsPerBar = 4)
             : m_currentBeat(start),
-              m_endBeat(end) {
+              m_endBeat(end),
+              m_firstBeat(first),
+              m_beatsPerBar(beatsPerBar) {
         // Advance to the first enabled beat.
         while (m_currentBeat != m_endBeat && !m_currentBeat->enabled()) {
             m_currentBeat++;
@@ -51,9 +53,15 @@ class BeatMapIterator : public BeatIterator {
         return beat;
     }
 
+    virtual bool isFirstInBar() const {
+        return (m_currentBeat - m_firstBeat) == 0;
+    }
+
   private:
     BeatList::const_iterator m_currentBeat;
     BeatList::const_iterator m_endBeat;
+    BeatList::const_iterator m_firstBeat;;
+    int m_beatsPerBar;
 };
 
 BeatMap::BeatMap(TrackPointer pTrack, const QByteArray* pByteArray)
@@ -248,7 +256,7 @@ BeatIterator* BeatMap::findBeats(double startSample, double stopSample) const {
     if (curBeat >= lastBeat) {
         return NULL;
     }
-    return new BeatMapIterator(curBeat, lastBeat);
+    return new BeatMapIterator(curBeat, lastBeat, m_beats.begin());
 }
 
 bool BeatMap::hasBeatInRange(double startSample, double stopSample) const {
