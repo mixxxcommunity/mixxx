@@ -104,7 +104,7 @@ void PositionScratchController::process(double currentSample, double releaseRate
         // mode. Do nothing
    	    return;
     }
-    
+
     // The latency or time difference between process calls.
     const double dt = static_cast<double>(iBufferSize)
             / m_pMasterSampleRate->get() / 2;

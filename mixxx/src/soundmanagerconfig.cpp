@@ -28,10 +28,10 @@ const unsigned int SoundManagerConfig::kFallbackSampleRate = 48000;
 // audioBufferSizeIndex=5 means about 21 ms of latency which is default in trunk r2453 -- bkgood
 const int SoundManagerConfig::kDefaultAudioBufferSizeIndex = 5;
 
-SoundManagerConfig::SoundManagerConfig() :
-        m_api("None"),
-        m_sampleRate(kFallbackSampleRate),
-        m_audioBufferSizeIndex(kDefaultAudioBufferSizeIndex) {
+SoundManagerConfig::SoundManagerConfig() 
+    : m_api("None"),
+      m_sampleRate(kFallbackSampleRate),
+      m_audioBufferSizeIndex(kDefaultAudioBufferSizeIndex) {
     m_configFile = QFileInfo(CmdlineArgs::Instance().getSettingsPath() + SOUNDMANAGERCONFIG_FILENAME);
 }
 
