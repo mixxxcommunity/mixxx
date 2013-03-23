@@ -54,7 +54,7 @@ class BeatMapIterator : public BeatIterator {
     }
 
     virtual bool isFirstInBar() const {
-        return (m_currentBeat - m_firstBeat) == 0;
+        return (m_currentBeat - m_firstBeat) % m_beatsPerBar == 0;
     }
 
   private:
