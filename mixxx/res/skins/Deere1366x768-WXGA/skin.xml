@@ -3958,6 +3958,7 @@
 						<SignalLowColor></SignalLowColor>
 						<SignalColor>#0099FF</SignalColor>
 						<BeatColor>#ffffff</BeatColor>
+						<FirstBeatInBarColor>#bc0a0a</FirstBeatInBarColor>
 						<BeatHighlightColor></BeatHighlightColor>
 						<PlayPosColor>#00FF00</PlayPosColor>
 						<EndOfTrackColor>#EA0000</EndOfTrackColor>
@@ -5057,6 +5058,7 @@
 						<SignalLowColor></SignalLowColor>
 						<SignalColor>#E17800</SignalColor>
 						<BeatColor>#ffffff</BeatColor>
+						<FirstBeatInBarColor>#bc0a0a</FirstBeatInBarColor>
 						<BeatHighlightColor></BeatHighlightColor>
 						<PlayPosColor>#00FF00</PlayPosColor>
 						<EndOfTrackColor>#EA0000</EndOfTrackColor>

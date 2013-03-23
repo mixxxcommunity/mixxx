@@ -44,7 +44,7 @@ void WaveformRenderBeat::setup(const QDomNode& node) {
     if (firstInBar != "") {
         m_firstBeatInBarColor.setNamedColor(firstInBar);
     }
-    m_highBeatColor = WSkinColor::getCorrectColor(m_firstBeatInBarColor);
+    m_firstBeatInBarColor = WSkinColor::getCorrectColor(m_firstBeatInBarColor);
 
 
     if (m_beatColor.alphaF() > 0.99)
