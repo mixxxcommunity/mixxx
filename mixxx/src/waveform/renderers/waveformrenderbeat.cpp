@@ -93,22 +93,22 @@ void WaveformRenderBeat::draw(QPainter* painter, QPaintEvent* /*event*/) {
     QPen highBeatPen(m_highBeatColor);
     highBeatPen.setWidth(1.5);
     QPen firstBeatInBarPen(m_firstBeatInBarColor);
-    firstBeatInBarPen.setWidth(4);
+    firstBeatInBarPen.setWidth(2.5);
 
     while (it->hasNext()) {
         int beatPosition = it->next();
         m_waveformRenderer->regulateVisualSample(beatPosition);
         double xBeatPoint = m_waveformRenderer->transformSampleIndexInRendererWorld(beatPosition);
 
-        //NOTE: (vRince) RJ should we keep this ?
-        if (m_beatActive && m_beatActive->get() > 0.0 &&
-            abs(xBeatPoint - m_waveformRenderer->getWidth()/2) < 20)
-            painter->setPen(highBeatPen);
-        else
-            painter->setPen(beatPen);
-
-        if(it->isFirstInBar()) {
+        if (it->isFirstInBar()) {
             painter->setPen(firstBeatInBarPen);
+        }
+        //NOTE: (vRince) RJ should we keep this ?
+        else if (m_beatActive && m_beatActive->get() > 0.0 &&
+            abs(xBeatPoint - m_waveformRenderer->getWidth()/2) < 20) {
+            painter->setPen(highBeatPen);
+        } else {
+            painter->setPen(beatPen);
         }
         
         painter->drawLine(QPointF(xBeatPoint, 0.f),
