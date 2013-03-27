@@ -428,6 +428,12 @@ void WOverview::paintEvent(QPaintEvent *) {
             painter.drawImage(rect(), m_waveformImageScaled);
         }
 
+        if (m_analyserProgress + 1 < width()) {
+            // Paint analyzer Progress
+            painter.setPen(QPen(m_signalColors.getAxesColor(), 3));
+            painter.drawLine(m_analyserProgress, height()/2, width(), height()/2);
+        }
+
         if (m_analyserProgress <= 50) { // remove text after progress by wf is recognizable
             if (m_trackLoaded) {
                 //: Text on waveform overview when file is cached from source
@@ -439,10 +445,6 @@ void WOverview::paintEvent(QPaintEvent *) {
         } else if (m_analyserProgress == width() - 1) {
             //: Text on waveform overview during finalizing of waveform analysis
             paintText(tr("Finalizing .."), &painter);
-        } else if (m_analyserProgress + 1 < width()) {
-            // Paint analyzer Progress
-            painter.setPen(QPen(m_signalColors.getAxesColor(), 3));
-            painter.drawLine(m_analyserProgress, height()/2, width(), height()/2);
         }
     }
 
