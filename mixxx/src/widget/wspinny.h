@@ -53,7 +53,6 @@ class WSpinny : public QGLWidget {
     ControlObjectThreadMain* m_pDuration;
     ControlObjectThreadMain* m_pTrackSamples;
     ControlObjectThreadMain* m_pTrackSampleRate;
-    ControlObjectThreadMain* m_pBPM;
     ControlObjectThreadMain* m_pScratch;
     ControlObjectThreadMain* m_pScratchToggle;
     ControlObjectThreadMain* m_pScratchPos;

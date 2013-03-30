@@ -26,7 +26,6 @@ WSpinny::WSpinny(QWidget* parent, VinylControlManager* pVCMan)
           m_pPlayPos(NULL),
           m_pDuration(NULL),
           m_pTrackSamples(NULL),
-          m_pBPM(NULL),
           m_pScratch(NULL),
           m_pScratchToggle(NULL),
           m_pScratchPos(NULL),
@@ -70,7 +69,6 @@ WSpinny::~WSpinny()
     delete m_pDuration;
     delete m_pTrackSamples;
     delete m_pTrackSampleRate;
-    delete m_pBPM;
     delete m_pScratch;
     delete m_pScratchToggle;
     delete m_pScratchPos;
@@ -117,8 +115,6 @@ void WSpinny::setup(QDomNode node, QString group)
     m_pTrackSampleRate = new ControlObjectThreadMain(
                                     ControlObject::getControl(
                                     ConfigKey(group, "track_samplerate")));
-    m_pBPM = new ControlObjectThreadMain(ControlObject::getControl(
-                        ConfigKey(group, "bpm")));
 
     m_pScratch = new ControlObjectThreadMain(ControlObject::getControl(
                         ConfigKey(group, "scratch2")));
