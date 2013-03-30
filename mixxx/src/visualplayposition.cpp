@@ -15,7 +15,6 @@ const PaStreamCallbackTimeInfo* VisualPlayPosition::m_timeInfo;
 PerformanceTimer VisualPlayPosition::m_timeInfoTime;
 
 VisualPlayPosition::VisualPlayPosition() :
-        m_playPos(-1),
         m_valid(false) {
 
     m_audioBufferSize = new ControlObjectThreadMain(
@@ -27,37 +26,34 @@ VisualPlayPosition::~VisualPlayPosition() {
 }
 
 // This function must be called only form the engine thread (PA callback)
-bool VisualPlayPosition::trySet(double playPos, double rate,
+void VisualPlayPosition::set(double playPos, double rate,
                 double positionStep, double pSlipPosition) {
-    if (m_mutex.tryLock()) {
-        m_referenceTime = m_timeInfoTime;
-        // Time from reference time to Buffer at DAC in µs
-        m_timeDac = (m_timeInfo->outputBufferDacTime - m_timeInfo->currentTime) * 1000000;
-        m_playPos = playPos;
-        m_rate = rate;
-        m_positionStep = positionStep;
-        m_pSlipPosition = pSlipPosition;
-        m_valid = true;
-        m_mutex.unlock();
-        return true;
-    }
-    return false;
+    VisualPlayPositionData data;
+
+    data.m_referenceTime = m_timeInfoTime;
+    // Time from reference time to Buffer at DAC in µs
+    data.m_timeDac = (m_timeInfo->outputBufferDacTime - m_timeInfo->currentTime) * 1000000;
+    data.m_playPos = playPos;
+    data.m_rate = rate;
+    data.m_positionStep = positionStep;
+    data.m_pSlipPosition = pSlipPosition;
+
+    // Atomic write
+    m_data.setValue(data);
+    m_valid = true;
 }
 
 double VisualPlayPosition::getAt(VSyncThread* vsyncThread) {
-    QMutexLocker locker(&m_mutex);
-
     //static double testPos = 0;
     //testPos += 0.000017759; //0.000016608; //  1.46257e-05;
     //return testPos;
 
-    double playPos;
-
     if (m_valid) {
-        int usRefToVSync = vsyncThread->usFromTimerToNextSync(&m_referenceTime);
-        int offset = usRefToVSync - m_timeDac;
-        playPos = m_playPos;  // load playPos for the first sample in Buffer
-        playPos += m_positionStep * offset * m_rate / m_audioBufferSize->get() / 1000;
+        VisualPlayPositionData data = m_data.getValue();
+        int usRefToVSync = vsyncThread->usFromTimerToNextSync(&data.m_referenceTime);
+        int offset = usRefToVSync - data.m_timeDac;
+        double playPos = data.m_playPos;  // load playPos for the first sample in Buffer
+        playPos += data.m_positionStep * offset * data.m_rate / m_audioBufferSize->get() / 1000;
         //qDebug() << "delta Pos" << playPos - m_playPosOld << offset;
         m_playPosOld = playPos;
         return playPos;
@@ -66,30 +62,26 @@ double VisualPlayPosition::getAt(VSyncThread* vsyncThread) {
 }
 
 void VisualPlayPosition::getPlaySlipAt(int usFromNow, double* playPosition, double* slipPosition) {
-    QMutexLocker locker(&m_mutex);
-
     //static double testPos = 0;
     //testPos += 0.000017759; //0.000016608; //  1.46257e-05;
     //return testPos;
 
-    double playPos;
-
     if (m_valid) {
-        int usElapsed = m_referenceTime.elapsed() / 1000;
-        int dacFromNow = usElapsed - m_timeDac;
+        VisualPlayPositionData data = m_data.getValue();
+        int usElapsed = data.m_referenceTime.elapsed() / 1000;
+        int dacFromNow = usElapsed - data.m_timeDac;
         int offset = dacFromNow - usFromNow;
-        playPos = m_playPos;  // load playPos for the first sample in Buffer
-        playPos += m_positionStep * offset * m_rate / m_audioBufferSize->get() / 1000;
+        double playPos = data.m_playPos;  // load playPos for the first sample in Buffer
+        playPos += data.m_positionStep * offset * data.m_rate / m_audioBufferSize->get() / 1000;
         *playPosition = playPos;
-    } else {
-        *playPosition = -1;
+        *slipPosition = data.m_pSlipPosition;
     }
-    *slipPosition = m_pSlipPosition;
 }
 
 double VisualPlayPosition::getEnginePlayPos() {
     if (m_valid) {
-        return m_playPos;
+        VisualPlayPositionData data = m_data.getValue();
+        return data.m_playPos;
     } else {
         return -1;
     }

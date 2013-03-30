@@ -223,8 +223,8 @@ void WSpinny::paintEvent(QPaintEvent *e) {
         p.save();
     }
 
-    double playPosition;
-    double slipPosition;
+    double playPosition = -1;
+    double slipPosition = -1;
     m_pVisualPlayPos->getPlaySlipAt(0, &playPosition, &slipPosition);
 
     if (playPosition != m_dAngleLastPlaypos) {

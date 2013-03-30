@@ -887,7 +887,7 @@ void EngineBuffer::updateIndicators(double rate, int iBufferSize) {
 
     // Update visual control object, this needs to be done more often than the
     // rateEngine and playpos slider
-    m_visualPlayPos->trySet(fFractionalPlaypos, rate,
+    m_visualPlayPos->set(fFractionalPlaypos, rate,
             (double)iBufferSize/m_file_length_old,
             fractionalPlayposFromAbsolute(m_dSlipPosition));
 }
