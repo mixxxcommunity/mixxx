@@ -58,11 +58,11 @@ void WLibrarySidebar::dragMoveEvent(QDragMoveEvent * event)
     QTreeView::dragMoveEvent(event);
     if (event->mimeData()->hasUrls()) {
         QList<QUrl> urls(event->mimeData()->urls());
-        //Drag and drop within this widget
-        if (   (event->source() == this)
-            && (event->possibleActions() & Qt::MoveAction)) {
-            //Do nothing.
-             event->ignore();
+        // Drag and drop within this widget
+        if ((event->source() == this)
+                && (event->possibleActions() & Qt::MoveAction)) {
+            // Do nothing.
+            event->ignore();
         } else {
             SidebarModel* sidebarModel = dynamic_cast<SidebarModel*>(model());
             bool accepted = true;
@@ -108,11 +108,11 @@ void WLibrarySidebar::timerEvent(QTimerEvent *event) {
 void WLibrarySidebar::dropEvent(QDropEvent * event) {
     if (event->mimeData()->hasUrls()) {
         QList<QUrl> urls(event->mimeData()->urls());
-        //Drag and drop within this widget
-        if (    (event->source() == this)
-             && (event->possibleActions() & Qt::MoveAction)) {
-            //Do nothing.
-             event->ignore();
+        // Drag and drop within this widget
+        if ((event->source() == this)
+                && (event->possibleActions() & Qt::MoveAction)) {
+            // Do nothing.
+            event->ignore();
         } else {
             //Reset the selected items (if you had anything highlighted, it clears it)
             //this->selectionModel()->clear();

@@ -126,8 +126,7 @@ double EngineBufferScaleST::setTempo(double dTempo)
 
     if (m_dTempo > MAX_SEEK_SPEED) {
         m_dTempo = MAX_SEEK_SPEED;
-    }
-    else if (m_dTempo < MIN_SEEK_SPEED) {
+    } else if (m_dTempo < MIN_SEEK_SPEED) {
         m_dTempo = 0.0;
     }
 
