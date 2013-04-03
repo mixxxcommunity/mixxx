@@ -74,6 +74,8 @@ ControllerManager::ControllerManager(ConfigObject<ConfigValue>* pConfig)
         QDir().mkpath(localPresets);
     }
 
+    m_pLbAlsa = new LbControllerAlsa();
+
     // Initialize preset info parsers
     m_pPresetInfoManager = new PresetInfoEnumerator(m_pConfig);
 
@@ -116,6 +118,7 @@ ControllerManager::~ControllerManager() {
     delete m_pThread;
     delete m_pControllerLearningEventFilter;
     delete m_pPresetInfoManager;
+    delete m_pLbAlsa;
 }
 
 ControllerLearningEventFilter* ControllerManager::getControllerLearningEventFilter() const {
@@ -288,6 +291,7 @@ void ControllerManager::openController(Controller* pController) {
     if (pController->isOpen()) {
         pController->close();
     }
+
     connect(pController, SIGNAL(syncControlSystem()),
             this, SIGNAL(syncControlSystem()));
     int result = pController->open();

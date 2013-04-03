@@ -225,29 +225,27 @@ void VSyncThread::run() {
             usleep(1000);
 #endif
         } else { // if (m_vSyncMode == ST_TIMER) {
-            // This mode should be used wit vblank_mode = 0
             usRest = m_usWait - m_timer.elapsed() / 1000;
             // waiting for interval by sleep
             if (usRest > 100) {
                 usleep(usRest);
             }
 
-            emit(vsync2()); // swaps the new waveform to front
-            m_sema.acquire();
-            // This is delayed until vsync the delay is stored in m_swapWait
+            emit(vsync2()); // swaps the new waveform to front in case of gl-wf
+            m_sema.acquire(); // wait until swap was scheduled. It might be delayed due to driver vSync settings  
             // <- Assume we are VSynced here ->
             usLast = m_timer.restart() / 1000;
             if (usRest < 0) {
-                // Swapping was delayed
-                // Assume the real swap happens on the following VSync
+                // Our swapping call was already delayed
+                // The real swap might happens on the following VSync, depending on driver settings 
                 m_rtErrorCnt++; // Count as Real Time Error
             }
             // try to stay in right intervals
             usRest = m_usWait - usLast;
             m_usWait = m_usSyncTime + (usRest % m_usSyncTime);
             emit(vsync1()); // renders the new waveform.
-            m_sema.acquire();
- //           qDebug() << "ST_TIMER                      " << usLast << usRest;
+            m_sema.acquire(); // wait until rendreing was scheduled. It might be delayed due a pending swap (depends one driver vSync settings) 
+ 			// qDebug() << "ST_TIMER                      " << usLast << usRest;
         }
     }
 }

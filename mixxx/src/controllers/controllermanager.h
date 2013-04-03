@@ -13,6 +13,8 @@
 #include "controllers/controllerpreset.h"
 #include "controllers/controllerpresetinfo.h"
 
+#include "controllers/loopback/lbcontrolleralsa.h"
+
 //Forward declaration(s)
 class Controller;
 class ControllerLearningEventFilter;
@@ -84,6 +86,9 @@ class ControllerManager : public QObject {
     QList<Controller*> m_controllers;
     QThread* m_pThread;
     PresetInfoEnumerator* m_pPresetInfoManager;
+
+    LbControllerAlsa* m_pLbAlsa;
+
 };
 
 #endif  // CONTROLLERMANAGER_H

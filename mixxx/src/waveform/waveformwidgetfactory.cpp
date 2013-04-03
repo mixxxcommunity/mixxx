@@ -22,6 +22,7 @@
 #include "waveform/widgets/waveformwidgetabstract.h"
 #include "widget/wwaveformviewer.h"
 #include "waveform/vsyncthread.h"
+#include "util/cmdlineargs.h"
 
 #include "util/performancetimer.h"
 #include "util/timer.h"
@@ -153,10 +154,11 @@ WaveformWidgetFactory::~WaveformWidgetFactory() {
     }
 }
 
-bool WaveformWidgetFactory::setConfig(ConfigObject<ConfigValue> *config){
+bool WaveformWidgetFactory::setConfig(ConfigObject<ConfigValue> *config) {
     m_config = config;
-    if (!m_config)
+    if (!m_config) {
         return false;
+    }
 
     bool ok = false;
 
@@ -577,12 +579,14 @@ void WaveformWidgetFactory::evaluateWidgets() {
         QString widgetName;
         bool useOpenGl;
         bool useOpenGLShaders;
+        bool developerOnly;
 
         switch(type) {
         case WaveformWidgetType::EmptyWaveform:
             widgetName = EmptyWaveformWidget::getWaveformWidgetName();
             useOpenGl = EmptyWaveformWidget::useOpenGl();
             useOpenGLShaders = EmptyWaveformWidget::useOpenGLShaders();
+            developerOnly = EmptyWaveformWidget::developerOnly();
             break;
         case WaveformWidgetType::SoftwareSimpleWaveform:
             continue; // //TODO(vrince):
@@ -590,42 +594,52 @@ void WaveformWidgetFactory::evaluateWidgets() {
             widgetName = SoftwareWaveformWidget::getWaveformWidgetName();
             useOpenGl = SoftwareWaveformWidget::useOpenGl();
             useOpenGLShaders = SoftwareWaveformWidget::useOpenGLShaders();
+            developerOnly = SoftwareWaveformWidget::developerOnly();
             break;
         case WaveformWidgetType::HSVWaveform:
             widgetName = HSVWaveformWidget::getWaveformWidgetName();
             useOpenGl = HSVWaveformWidget::useOpenGl();
             useOpenGLShaders = HSVWaveformWidget::useOpenGLShaders();
+            developerOnly = HSVWaveformWidget::developerOnly();
             break;
         case WaveformWidgetType::QtSimpleWaveform:
             widgetName = QtSimpleWaveformWidget::getWaveformWidgetName();
             useOpenGl = QtSimpleWaveformWidget::useOpenGl();
             useOpenGLShaders = QtSimpleWaveformWidget::useOpenGLShaders();
+            developerOnly = QtSimpleWaveformWidget::developerOnly();
             break;
         case WaveformWidgetType::QtWaveform:
             widgetName = QtWaveformWidget::getWaveformWidgetName();
             useOpenGl = QtWaveformWidget::useOpenGl();
             useOpenGLShaders = QtWaveformWidget::useOpenGLShaders();
+            developerOnly = QtWaveformWidget::developerOnly();
             break;
         case WaveformWidgetType::GLSimpleWaveform:
             widgetName = GLSimpleWaveformWidget::getWaveformWidgetName();
             useOpenGl = GLSimpleWaveformWidget::useOpenGl();
             useOpenGLShaders = GLSimpleWaveformWidget::useOpenGLShaders();
+            developerOnly = GLSimpleWaveformWidget::developerOnly();
             break;
         case WaveformWidgetType::GLWaveform:
             widgetName = GLWaveformWidget::getWaveformWidgetName();
             useOpenGl = GLWaveformWidget::useOpenGl();
             useOpenGLShaders = GLWaveformWidget::useOpenGLShaders();
+            developerOnly = GLWaveformWidget::developerOnly();
             break;
         case WaveformWidgetType::GLSLWaveform:
             widgetName = GLSLWaveformWidget::getWaveformWidgetName();
             useOpenGl = GLSLWaveformWidget::useOpenGl();
             useOpenGLShaders = GLSLWaveformWidget::useOpenGLShaders();
+            developerOnly = GLSLWaveformWidget::developerOnly();
             break;
         case WaveformWidgetType::GLVSyncTest:
             widgetName = GLVSyncTestWidget::getWaveformWidgetName();
             useOpenGl = GLVSyncTestWidget::useOpenGl();
             useOpenGLShaders = GLVSyncTestWidget::useOpenGLShaders();
+            developerOnly = GLVSyncTestWidget::developerOnly();
             break;
+        default:
+            continue;
         }
 
         if (useOpenGLShaders) {
@@ -646,6 +660,12 @@ void WaveformWidgetFactory::evaluateWidgets() {
             handle.m_active = false;
             continue;
         }
+
+        if (developerOnly && !CmdlineArgs::Instance().getDeveloper()) {
+            handle.m_active = false;
+            continue;
+        }
+
         m_waveformWidgetHandles.push_back(handle);
     }
 }
