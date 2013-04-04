@@ -2,7 +2,15 @@
 #ifndef LBCONTROLLERALSA_H
 #define LBCONTROLLERALSA_H
 
+#if defined(__APPLE__)
+
+#elif defined(__WINDOWS__)
+
+#else
+
 #include "lbcontroller.h"
+
+
 
 #include <alsa/asoundlib.h>
 
@@ -24,5 +32,5 @@ class LbControllerAlsa : public LbController {
     int m_portNrIn;
     int m_portNrOut;
 };
-
+#endif
 #endif // LBCONTROLLERALSA_H

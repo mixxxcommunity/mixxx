@@ -1,4 +1,10 @@
 
+#if defined(__APPLE__)
+
+#elif defined(__WINDOWS__)
+
+#else
+
 #include "lbcontrolleralsa.h"
 
 
@@ -81,4 +87,6 @@ bool LbControllerAlsa::closeClient() {
     return true;
 }
 
+
+#endif
 
