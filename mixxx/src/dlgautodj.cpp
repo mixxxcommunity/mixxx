@@ -96,6 +96,13 @@ DlgAutoDJ::DlgAutoDJ(QWidget* parent, ConfigObject<ConfigValue>* pConfig,
     connect(pushButtonAutoDJ, SIGNAL(toggled(bool)),
             this,  SLOT(toggleAutoDJButton(bool))); _blah;
 
+    m_pCOEnabledAutoDJ = new ControlPushButton(
+            ConfigKey("[AutoDJ]", "enabled"));
+    m_pCOEnabledAutoDJ->setButtonMode(ControlPushButton::TOGGLE);
+    m_pCOTEnabledAutoDJ = new ControlObjectThreadMain(m_pCOEnabledAutoDJ);
+    connect(m_pCOEnabledAutoDJ, SIGNAL(valueChanged(double)),
+            this, SLOT(enableAutoDJCo(double)));
+
     // playposition is from -0.14 to + 1.14
     m_pCOPlayPos1 = new ControlObjectThreadMain(
         ControlObject::getControl(ConfigKey("[Channel1]", "playposition")));
@@ -143,10 +150,12 @@ DlgAutoDJ::~DlgAutoDJ() {
     delete m_pCOSkipNext;
     delete m_pCOShufflePlaylist;
     delete m_pCOToggleAutoDJ;
+    delete m_pCOEnabledAutoDJ;
     delete m_pCOFadeNow;
     delete m_pCOTSkipNext;
     delete m_pCOTShufflePlaylist;
     delete m_pCOTToggleAutoDJ;
+    delete m_pCOTEnabledAutoDJ;
     delete m_pCOTFadeNow;
     // Delete m_pTrackTableView before the table model. This is because the
     // table view saves the header state using the model.
@@ -254,11 +263,11 @@ void DlgAutoDJ::toggleAutoDJ(double v) {
     }
 }
 
-void DlgAutoDJ::toggleAutoDJButton(bool toggle) {
+void DlgAutoDJ::toggleAutoDJButton(bool enable) {
     bool deck1Playing = m_pCOPlay1Fb->get() == 1.0f;
     bool deck2Playing = m_pCOPlay2Fb->get() == 1.0f;
 
-    if (toggle) {  // Enable Auto DJ
+    if (enable) {  // Enable Auto DJ
         if (deck1Playing && deck2Playing) {
             QMessageBox::warning(
                 NULL, tr("Auto-DJ"),
@@ -281,12 +290,18 @@ void DlgAutoDJ::toggleAutoDJButton(bool toggle) {
         if (!nextTrack) {
             qDebug() << "Queue is empty now";
             pushButtonAutoDJ->setChecked(false);
+            if (m_pCOTEnabledAutoDJ->get() != 0.0) {
+                m_pCOTEnabledAutoDJ->slotSet(0.0);
+            }
             return;
         }
 
         // Track is available so GO
         pushButtonAutoDJ->setToolTip(tr("Disable Auto DJ"));
         pushButtonAutoDJ->setText(tr("Disable Auto DJ"));
+        if (m_pCOTEnabledAutoDJ->get() != 1.0) {
+            m_pCOTEnabledAutoDJ->slotSet(1.0);
+        }
         qDebug() << "Auto DJ enabled";
 
         pushButtonSkipNext->setEnabled(true);
@@ -323,6 +338,9 @@ void DlgAutoDJ::toggleAutoDJButton(bool toggle) {
     } else {  // Disable Auto DJ
         pushButtonAutoDJ->setToolTip(tr("Enable Auto DJ"));
         pushButtonAutoDJ->setText(tr("Enable Auto DJ"));
+        if (m_pCOTEnabledAutoDJ->get() != 0.0) {
+            m_pCOTEnabledAutoDJ->slotSet(0.0);
+        }
         qDebug() << "Auto DJ disabled";
         m_eState = ADJ_DISABLED;
         pushButtonFadeNow->setEnabled(false);
@@ -333,6 +351,12 @@ void DlgAutoDJ::toggleAutoDJButton(bool toggle) {
         m_pCOPlay1->disconnect(this);
         m_pCOPlay2->disconnect(this);
     }
+}
+
+void DlgAutoDJ::enableAutoDJCo(double value) {
+    bool enable = (bool)value;
+    pushButtonAutoDJ->setChecked(enable);
+    toggleAutoDJButton(enable);
 }
 
 void DlgAutoDJ::player1PositionChanged(double value) {
