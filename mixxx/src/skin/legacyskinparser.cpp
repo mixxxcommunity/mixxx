@@ -907,7 +907,9 @@ QWidget* LegacySkinParser::parseSpinny(QDomElement node) {
     WSpinny* spinny = new WSpinny(m_pParent, m_pVCManager);
     if (!spinny->isValid()) {
         delete spinny;
-        WWidgetGroup* dummy = new WWidgetGroup(m_pParent);
+        QLabel* dummy = new QLabel(m_pParent);
+        //: Shown when Spinny can not be displayed. Please keep \n unchanged
+        dummy->setText(tr("No OpenGL\nsupport."));
         return dummy;
     }
     setupWidget(node, spinny);

@@ -63,6 +63,7 @@ WSpinny::~WSpinny() {
         WImageStore::deleteImage(m_pGhostImage);
         delete m_pPlay;
         delete m_pPlayPos;
+        delete m_pVisualPlayPos;
         delete m_pDuration;
         delete m_pTrackSamples;
         delete m_pTrackSampleRate;
@@ -77,8 +78,7 @@ WSpinny::~WSpinny() {
     }
 }
 
-void WSpinny::setup(QDomNode node, QString group)
-{
+void WSpinny::setup(QDomNode node, QString group) {
     m_group = group;
 
     // Set images
