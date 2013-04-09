@@ -13,7 +13,8 @@
 #include "controllers/controllerpreset.h"
 #include "controllers/controllerpresetinfo.h"
 
-#include "controllers/loopback/lbcontrolleralsa.h"
+
+//#include "controllers/loopback/lbcontrolleralsa.h"
 
 //Forward declaration(s)
 class Controller;
@@ -87,7 +88,7 @@ class ControllerManager : public QObject {
     QThread* m_pThread;
     PresetInfoEnumerator* m_pPresetInfoManager;
 
-    LbControllerAlsa* m_pLbAlsa;
+ //   LbControllerAlsa* m_pLbAlsa;
 
 };
 
