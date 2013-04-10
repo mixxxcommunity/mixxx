@@ -14,15 +14,19 @@ QMap<QString, VisualPlayPosition*> VisualPlayPosition::m_listVisualPlayPosition;
 const PaStreamCallbackTimeInfo* VisualPlayPosition::m_timeInfo;
 PerformanceTimer VisualPlayPosition::m_timeInfoTime;
 
-VisualPlayPosition::VisualPlayPosition() :
-        m_valid(false) {
-
+VisualPlayPosition::VisualPlayPosition()
+    : m_playPosOld(0),
+      m_deltatime(0),
+      m_outputBufferDacTime(0),
+      m_valid(false) {
     m_audioBufferSize = new ControlObjectThreadMain(
         ControlObject::getControl(ConfigKey("[Master]","audio_buffer_size")));
 }
 
 VisualPlayPosition::~VisualPlayPosition() {
-
+    QString key = m_listVisualPlayPosition.key(this);
+    m_listVisualPlayPosition.remove(key);
+    delete m_audioBufferSize;
 }
 
 // This function must be called only form the engine thread (PA callback)
