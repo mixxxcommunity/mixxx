@@ -88,11 +88,6 @@ DlgAutoDJ::DlgAutoDJ(QWidget* parent, ConfigObject<ConfigValue>* pConfig,
     connect(spinBoxTransition, SIGNAL(valueChanged(int)),
             this, SLOT(transitionValueChanged(int)));
 
-    m_pCOToggleAutoDJ = new ControlPushButton(
-            ConfigKey("[AutoDJ]", "toggle_autodj"));
-    m_pCOTToggleAutoDJ = new ControlObjectThreadMain(m_pCOToggleAutoDJ);
-    connect(m_pCOToggleAutoDJ, SIGNAL(valueChanged(double)),
-            this, SLOT(toggleAutoDJ(double)));
     connect(pushButtonAutoDJ, SIGNAL(toggled(bool)),
             this,  SLOT(toggleAutoDJButton(bool))); _blah;
 
@@ -100,7 +95,7 @@ DlgAutoDJ::DlgAutoDJ(QWidget* parent, ConfigObject<ConfigValue>* pConfig,
             ConfigKey("[AutoDJ]", "enabled"));
     m_pCOEnabledAutoDJ->setButtonMode(ControlPushButton::TOGGLE);
     m_pCOTEnabledAutoDJ = new ControlObjectThreadMain(m_pCOEnabledAutoDJ);
-    connect(m_pCOEnabledAutoDJ, SIGNAL(valueChanged(double)),
+    connect(m_pCOTEnabledAutoDJ, SIGNAL(valueChanged(double)),
             this, SLOT(enableAutoDJCo(double)));
 
     // playposition is from -0.14 to + 1.14
@@ -149,12 +144,10 @@ DlgAutoDJ::~DlgAutoDJ() {
     delete m_pCOCrossfaderReverse;
     delete m_pCOSkipNext;
     delete m_pCOShufflePlaylist;
-    delete m_pCOToggleAutoDJ;
     delete m_pCOEnabledAutoDJ;
     delete m_pCOFadeNow;
     delete m_pCOTSkipNext;
     delete m_pCOTShufflePlaylist;
-    delete m_pCOTToggleAutoDJ;
     delete m_pCOTEnabledAutoDJ;
     delete m_pCOTFadeNow;
     // Delete m_pTrackTableView before the table model. This is because the
@@ -254,12 +247,6 @@ void DlgAutoDJ::fadeNow(double value) {
             // Repeat is disabled by FadeNow but disables auto Fade
             m_pCORepeat2->slotSet(0.0f);
         }
-    }
-}
-
-void DlgAutoDJ::toggleAutoDJ(double v) {
-    if (v > 0) {
-        pushButtonAutoDJ->toggle();
     }
 }
 
