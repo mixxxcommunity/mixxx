@@ -66,6 +66,8 @@ QList<QString> SoundSourceMp3::supportedFileExtensions()
 {
     QList<QString> list;
     list.push_back("mp3");
+    list.push_back("mp2");
+    list.push_back("mus");
     return list;
 }
 
