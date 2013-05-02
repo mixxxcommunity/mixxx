@@ -1,6 +1,8 @@
 #ifndef ANALYSER_BPM_H
 #define ANALYSER_BPM_H
 
+#include <QSettings>
+
 #include "analyser.h"
 #include "configobject.h"
 
@@ -19,6 +21,7 @@ class AnalyserBPM : public Analyser {
 
   private:
     ConfigObject<ConfigValue> *m_pConfig;
+    QSettings m_settings;
     soundtouch::BPMDetect *m_pDetector;
     int m_iMinBpm, m_iMaxBpm;
     bool m_bProcessEntireSong;

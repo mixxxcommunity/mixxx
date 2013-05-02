@@ -19,6 +19,7 @@
 #include <QtCore>
 #include <QtGui>
 #include <QTranslator>
+#include <QSettings>
 
 #include "mixxx.h"
 
@@ -162,6 +163,22 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
     m_pConfig = upgrader.versionUpgrade(args.getSettingsPath());
     bool bFirstRun = upgrader.isFirstRun();
     bool bUpgraded = upgrader.isUpgraded();
+    QCoreApplication::setOrganizationName("Mixxx");
+    QCoreApplication::setOrganizationDomain("mixxx.org"); // we need this for Mac
+    QCoreApplication::setApplicationName("Mixxx");
+    QSettings::setDefaultFormat(QSettings::IniFormat);
+    QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,
+                       m_pConfig->getSettingsPath());
+
+    //QSettings settings(m_pConfig->getSettingsPath()+"/mixxx.ini", QSettings::IniFormat);
+    QSettings settings;
+    settings.setFallbacksEnabled(false);
+
+    //TODO (kain88) remove this testing stuff
+    qDebug() <<"kain88 " << settings.fileName();
+    settings.setValue("Test",true);
+    settings.setValue("Foo","Bar");
+    settings.setValue("Foo/la",true);
 
     QString resourcePath = m_pConfig->getResourcePath();
     QString translationsFolder = resourcePath + "translations/";
@@ -172,7 +189,8 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
 
     // Attempt to load user locale from config
     if (userLocale == "") {
-        userLocale = m_pConfig->getValueString(ConfigKey("[Config]","Locale"));
+        userLocale = settings.value("Config/Locale", "").toString();
+        qDebug() << "kain88 locale "<< userLocale;
     }
 
     // Load Qt translations for this locale from the system translation
@@ -212,15 +230,16 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
         delete mixxxTranslator;
     }
 
-    // Set the visibility of tooltips
-    m_tooltips = m_pConfig->getValueString(ConfigKey("[Controls]", "Tooltips")).toInt();
+    // Set the visibility of tooltips, default is on
+    m_tooltips = settings.value("Controls/Tooltips", 1).toInt();
 
     // Store the path in the config database
+    // TODO (kain88) check if this is not connected to getResourcePath
     m_pConfig->set(ConfigKey("[Config]", "Path"), ConfigValue(resourcePath));
+    settings.setValue("Config/Path", resourcePath);
 
     // Set the default value in settings file
-    if (m_pConfig->getValueString(ConfigKey("[Keyboard]","Enabled")).length() == 0)
-        m_pConfig->set(ConfigKey("[Keyboard]","Enabled"), ConfigValue(1));
+    settings.value("Keyboard",true);
 
     // Read keyboard configuration and set kdbConfig object in WWidget
     // Check first in user's Mixxx directory
@@ -255,8 +274,7 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
     // TODO(XXX) leak pKbdConfig, MixxxKeyboard owns it? Maybe roll all keyboard
     // initialization into MixxxKeyboard
     // Workaround for today: MixxxKeyboard calls delete
-    bool keyboardShortcutsEnabled = m_pConfig->getValueString(
-        ConfigKey("[Keyboard]", "Enabled")) == "1";
+    bool keyboardShortcutsEnabled = settings.value("Keyboard").toBool();
     m_pKeyboard = new MixxxKeyboard(keyboardShortcutsEnabled ? m_pKbdConfig : m_pKbdConfigEmpty);
 
     //create RecordingManager
@@ -282,10 +300,8 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
 
     // Get Music dir
     bool hasChanged_MusicDir = false;
-    QDir dir(m_pConfig->getValueString(ConfigKey("[Playlist]","Directory")));
-    if (m_pConfig->getValueString(
-        ConfigKey("[Playlist]","Directory")).length() < 1 || !dir.exists())
-    {
+    QDir dir(settings.value("Library/Directory").toString());
+    if (settings.value("Library/Directory").toString() == "" ||  !dir.exists()) {
         // TODO this needs to be smarter, we can't distinguish between an empty
         // path return value (not sure if this is normally possible, but it is
         // possible with the Windows 7 "Music" library, which is what
@@ -297,10 +313,8 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
             this, tr("Choose music library directory"),
             QDesktopServices::storageLocation(QDesktopServices::MusicLocation));
 
-        if (fd != "")
-        {
-            m_pConfig->set(ConfigKey("[Playlist]","Directory"), fd);
-            m_pConfig->Save();
+        if (fd != "") {
+            settings.setValue("Library/Directory",fd);
             hasChanged_MusicDir = true;
         }
     }
@@ -309,8 +323,8 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
     // writing meta data may ruine your MP3 file if done simultaneously.
     // see Bug #728197
     // For safety reasons, we deactivate this feature.
-    m_pConfig->set(ConfigKey("[Library]","WriteAudioTags"), ConfigValue(0));
-
+    //m_pConfig->set(ConfigKey("[Library]","WriteAudioTags"), ConfigValue(0));
+    settings.setValue("Library/WriteAudioTags",false);
 
     // library dies in seemingly unrelated qtsql error about not having a
     // sqlite driver if this path doesn't exist. Normally config->Save()
@@ -359,25 +373,6 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
     m_pPlayerManager->bindToLibrary(m_pLibrary);
 
     // Call inits to invoke all other construction parts
-
-    // Intialize default BPM system values
-    if (m_pConfig->getValueString(ConfigKey("[BPM]", "BPMRangeStart"))
-            .length() < 1)
-    {
-        m_pConfig->set(ConfigKey("[BPM]", "BPMRangeStart"),ConfigValue(65));
-    }
-
-    if (m_pConfig->getValueString(ConfigKey("[BPM]", "BPMRangeEnd"))
-            .length() < 1)
-    {
-        m_pConfig->set(ConfigKey("[BPM]", "BPMRangeEnd"),ConfigValue(135));
-    }
-
-    if (m_pConfig->getValueString(ConfigKey("[BPM]", "AnalyzeEntireSong"))
-            .length() < 1)
-    {
-        m_pConfig->set(ConfigKey("[BPM]", "AnalyzeEntireSong"),ConfigValue(1));
-    }
 
     // Initialize controller sub-system,
     //  but do not set up controllers until the end of the application startup
@@ -518,7 +513,7 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
     m_pControllerManager->setUpDevices();
 
     // Scan the library for new files and directories
-    bool rescan = (bool)m_pConfig->getValueString(ConfigKey("[Library]","RescanOnStartup")).toInt();
+    bool rescan = settings.value("Library/RescanOnStartup". false).toBool();
     // rescan the library if we get a new plugin
     QSet<QString> prev_plugins = QSet<QString>::fromList(m_pConfig->getValueString(
         ConfigKey("[Library]", "SupportedFileExtensions")).split(",", QString::SkipEmptyParts));
@@ -540,7 +535,7 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
 
     if (rescan || hasChanged_MusicDir) {
         m_pLibraryScanner->scan(
-            m_pConfig->getValueString(ConfigKey("[Playlist]", "Directory")),this);
+            settings.value("Library/Directory").toString(),this);
         qDebug() << "Rescan finished";
     }
 }
@@ -901,8 +896,7 @@ void MixxxApp::initActions()
 
     QString keyboardShortcutTitle = tr("Enable &Keyboard Shortcuts");
     QString keyboardShortcutText = tr("Toggles keyboard shortcuts on or off");
-    bool keyboardShortcutsEnabled = m_pConfig->getValueString(
-        ConfigKey("[Keyboard]", "Enabled")) == "1";
+    bool keyboardShortcutsEnabled = QSettings().value("Keyboard",true).toBool();
     m_pOptionsKeyboard = new QAction(keyboardShortcutTitle, this);
     m_pOptionsKeyboard->setShortcut(tr("Ctrl+`"));
     m_pOptionsKeyboard->setShortcutContext(Qt::ApplicationShortcut);
@@ -1183,7 +1177,7 @@ void MixxxApp::slotFileLoadSongPlayer(int deck) {
         QFileDialog::getOpenFileName(
             this,
             loadTrackText,
-            m_pConfig->getValueString(ConfigKey("[Playlist]", "Directory")),
+            QSettings().value("Library/Directory").toString(),
             QString("Audio (%1)")
                 .arg(SoundSourceProxy::supportedFileExtensionsString()));
 
@@ -1210,14 +1204,15 @@ void MixxxApp::slotFileQuit()
 }
 
 void MixxxApp::slotOptionsKeyboard(bool toggle) {
+    QSettings settings;
     if (toggle) {
         //qDebug() << "Enable keyboard shortcuts/mappings";
         m_pKeyboard->setKeyboardConfig(m_pKbdConfig);
-        m_pConfig->set(ConfigKey("[Keyboard]","Enabled"), ConfigValue(1));
+        settings.setValue("Keyboard",true);
     } else {
         //qDebug() << "Disable keyboard shortcuts/mappings";
         m_pKeyboard->setKeyboardConfig(m_pKbdConfigEmpty);
-        m_pConfig->set(ConfigKey("[Keyboard]","Enabled"), ConfigValue(0));
+        settings.setValue("Keyboard",false);
     }
 }
 
@@ -1704,8 +1699,7 @@ void MixxxApp::closeEvent(QCloseEvent *event) {
 void MixxxApp::slotScanLibrary()
 {
     m_pLibraryRescan->setEnabled(false);
-    m_pLibraryScanner->scan(
-        m_pConfig->getValueString(ConfigKey("[Playlist]", "Directory")),this);
+    m_pLibraryScanner->scan(QSettings().value("Library/Directory").toString(),this);
 }
 
 void MixxxApp::slotEnableRescanLibraryAction()

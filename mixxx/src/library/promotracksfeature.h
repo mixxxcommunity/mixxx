@@ -19,6 +19,7 @@
 #define PROMOTRACKSFEATURE_H
 
 #include <QStringListModel>
+#include <QSettings>
 
 #include "treeitemmodel.h"
 #include "trackinfoobject.h"
@@ -71,6 +72,7 @@ private:
     const static QString m_sBundledSongsViewName;
     const static QString m_sMyDownloadsViewName;
     TreeItemModel m_childModel;
+    QSettings m_settings;
     CrateTableModel m_downloadsTableModel;
     SongDownloader* m_pSongDownloader;
     bool m_bFirstRun;

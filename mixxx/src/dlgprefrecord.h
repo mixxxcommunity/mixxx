@@ -18,6 +18,8 @@
 #ifndef DLGPREFRECORD_H
 #define DLGPREFRECORD_H
 
+#include <QSettings>
+
 #include "ui_dlgprefrecorddlg.h"
 #include "configobject.h"
 #include <QRadioButton>
@@ -59,6 +61,7 @@ private:
 
     /** Pointer to config object */
     ConfigObject<ConfigValue> *config;
+    QSettings m_settings;
     ControlObjectThreadMain* recordControl;
     bool confirmOverwrite;
     QString fileTypeExtension;

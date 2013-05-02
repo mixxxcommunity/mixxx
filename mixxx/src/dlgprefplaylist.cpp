@@ -27,7 +27,8 @@
 #define MIXXX_ADDONS_URL "http://www.mixxx.org/wiki/doku.php/add-ons"
 
 DlgPrefPlaylist::DlgPrefPlaylist(QWidget * parent, ConfigObject<ConfigValue> * _config)
-        :  QWidget(parent) {
+        :  QWidget(parent),
+         m_settings(parent) {
     config = _config;
     setupUi(this);
     slotUpdate();
@@ -143,11 +144,11 @@ void DlgPrefPlaylist::slotM4ACheck()
 void DlgPrefPlaylist::slotUpdate()
 {
     // Song path
-    LineEditSongfiles->setText(config->getValueString(ConfigKey("[Playlist]","Directory")));
+    LineEditSongfiles->setText(m_settings.value("Library/Directory").toString());
     //Bundled songs stat tracking
     checkBoxPromoStats->setChecked((bool)config->getValueString(ConfigKey("[Promo]","StatTracking")).toInt());
-    checkBox_library_scan->setChecked((bool)config->getValueString(ConfigKey("[Library]","RescanOnStartup")).toInt());
-    checkbox_ID3_sync->setChecked((bool)config->getValueString(ConfigKey("[Library]","WriteAudioTags")).toInt());
+    checkBox_library_scan->setChecked(m_settings.value("Library/RescanOnStartup",false).toBool());
+    checkbox_ID3_sync->setChecked(m_settings.value("Library/WriteAudioTags").toBool());
     checkBox_use_relative_path->setChecked((bool)config->getValueString(ConfigKey("[Library]","UseRelativePathOnExport")).toInt());
     checkBox_show_rhythmbox->setChecked((bool)config->getValueString(ConfigKey("[Library]","ShowRhythmboxLibrary"),"1").toInt());
     checkBox_show_itunes->setChecked((bool)config->getValueString(ConfigKey("[Library]","ShowITunesLibrary"),"1").toInt());
@@ -157,7 +158,7 @@ void DlgPrefPlaylist::slotUpdate()
 void DlgPrefPlaylist::slotBrowseDir()
 {
     QString fd = QFileDialog::getExistingDirectory(this, tr("Choose music library directory"),
-                                                   config->getValueString(ConfigKey("[Playlist]","Directory")));
+                                                   m_settings.value("Library/Directory").toString());
     if (fd != "")
     {
         LineEditSongfiles->setText(fd);
@@ -170,11 +171,8 @@ void DlgPrefPlaylist::slotApply()
     config->set(ConfigKey("[Promo]","StatTracking"),
                 ConfigValue((int)checkBoxPromoStats->isChecked()));
 
-    config->set(ConfigKey("[Library]","RescanOnStartup"),
-                ConfigValue((int)checkBox_library_scan->isChecked()));
-
-    config->set(ConfigKey("[Library]","WriteAudioTags"),
-                ConfigValue((int)checkbox_ID3_sync->isChecked()));
+    m_settings.setValue("Library/RescanOnStartup", checkBox_library_scan->isChecked());
+    m_settings.setValue("Library/WriteAudioTags",checkbox_ID3_sync->isChecked());
 
     config->set(ConfigKey("[Library]","UseRelativePathOnExport"),
                 ConfigValue((int)checkBox_use_relative_path->isChecked()));
@@ -191,14 +189,10 @@ void DlgPrefPlaylist::slotApply()
     config->Save();
 
     // Update playlist if path has changed
-    if (LineEditSongfiles->text() != config->getValueString(ConfigKey("[Playlist]","Directory")))
-    {
+    if (LineEditSongfiles->text() != m_settings.value("Library/Directory").toString()) {
         // Check for valid directory and put up a dialog if invalid!!!
 
-        config->set(ConfigKey("[Playlist]","Directory"), LineEditSongfiles->text());
-
-        // Save preferences
-        config->Save();
+        m_settings.setValue("Library/Directory", LineEditSongfiles->text());
 
         // Emit apply signal
         emit(apply());

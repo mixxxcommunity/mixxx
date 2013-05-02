@@ -44,6 +44,7 @@ PromoTracksFeature::PromoTracksFeature(QObject* parent,
         : LibraryFeature(parent),
           m_pConfig(config),
           m_pTrackCollection(pTrackCollection),
+          m_settings(),
           m_pFeaturedArtistsView(NULL),
           m_pBundledSongsView(NULL),
           m_downloadsTableModel(this, pTrackCollection),
@@ -132,7 +133,7 @@ QList<TrackPointer> PromoTracksFeature::getTracksToAutoLoad()
 
 void PromoTracksFeature::bindWidget(WLibrary* libraryWidget,
                                     MixxxKeyboard* keyboard) {
-    QString libraryPath = m_pConfig->getValueString(ConfigKey("[Playlist]","Directory"));
+    QString libraryPath = m_settings.value("Library/Directory").toString();
 
     ConfigObject<ConfigValue>* config = m_pConfig; //Long story, macros macros macros
     m_pBundledSongsView = new BundledSongsWebView(libraryWidget, m_pTrackCollection,

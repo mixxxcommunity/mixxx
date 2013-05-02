@@ -12,6 +12,7 @@
 
 AnalyserBPM::AnalyserBPM(ConfigObject<ConfigValue> *_config) :
     m_pConfig(_config),
+    m_settings(),
     m_pDetector(NULL),
     m_iMinBpm(0),
     m_iMaxBpm(0),
@@ -24,9 +25,9 @@ bool AnalyserBPM::initialise(TrackPointer tio, int sampleRate, int totalSamples)
         return false;
     }
 
-    m_iMinBpm = m_pConfig->getValueString(ConfigKey("[BPM]","BPMRangeStart")).toInt();
-    m_iMaxBpm = m_pConfig->getValueString(ConfigKey("[BPM]","BPMRangeEnd")).toInt();
-    m_bProcessEntireSong = (bool)m_pConfig->getValueString(ConfigKey("[BPM]","AnalyzeEntireSong")).toInt();
+    m_iMaxBpm = m_settings.value("BPM/BPMRangeEnd", 65).toInt();
+    m_iMinBpm = m_settings.value("BPM/BPMRangeStart", 135).toInt();
+    m_bProcessEntireSong = m_settings.value("BPM/AnalyzeEntireSong",true).toBool();
 
     // All SoundSource's return stereo data, no matter the real file's type
     m_pDetector = new soundtouch::BPMDetect(2, sampleRate);

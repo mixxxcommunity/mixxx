@@ -10,6 +10,7 @@
 #include <QSharedPointer>
 #include <QWeakPointer>
 #include <QCache>
+#include <QSettings>
 
 #include "configobject.h"
 #include "library/dao/dao.h"
@@ -160,6 +161,7 @@ class TrackDAO : public QObject, public virtual DAO {
     QSqlQuery* m_pQueryLibraryUpdate;
     QSqlQuery* m_pQueryLibrarySelect;
     ScopedTransaction* m_pTransaction;
+    QSettings m_settings;
 
     QSet<int> m_tracksAddedSet;
 

@@ -29,6 +29,7 @@ BrowseFeature::BrowseFeature(QObject* parent,
           m_pConfig(pConfig),
           m_browseModel(this, pTrackCollection, pRecordingManager),
           m_proxyModel(&m_browseModel),
+          m_settings(),
           m_pTrackCollection(pTrackCollection) {
 
     m_pAddQuickLinkAction = new QAction(tr("Add to Quick Links"),this);
@@ -309,7 +310,7 @@ QString BrowseFeature::extractNameFromPath(QString spath) {
 
 QStringList BrowseFeature::getDefaultQuickLinks() const {
     //Default configuration
-    QString mixxx_music_dir = m_pConfig->getValueString(ConfigKey("[Playlist]","Directory"));
+    QString mixxx_music_dir = m_settings.value("Library/Directory").toString();
     QString os_music_folder_dir = QDesktopServices::storageLocation(
         QDesktopServices::MusicLocation);
     QString os_documents_folder_dir = QDesktopServices::storageLocation(

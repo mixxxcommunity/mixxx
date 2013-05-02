@@ -25,7 +25,8 @@
 
 
 DlgPrefRecord::DlgPrefRecord(QWidget * parent, ConfigObject<ConfigValue> * _config)
-        : QWidget(parent) {
+        : QWidget(parent),
+          m_settings(){
     config = _config;
     confirmOverwrite = false;
     radioFlac = 0;
@@ -48,7 +49,7 @@ DlgPrefRecord::DlgPrefRecord(QWidget * parent, ConfigObject<ConfigValue> * _conf
     if (recordingsPath == "") {
         // Initialize recordings path in config to old default path.
         // Do it here so we show current value in UI correctly.
-        QString musicDir = config->getValueString(ConfigKey("[Playlist]","Directory"));
+        QString musicDir = m_settings.value("Library/Directory").toString();
         if (musicDir.isEmpty()) {
             musicDir = QDesktopServices::storageLocation(QDesktopServices::MusicLocation);
         }

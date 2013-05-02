@@ -35,7 +35,8 @@
 #define CONFIG_KEY "[BPM]"
 
 DlgPrefBpm::DlgPrefBpm(QWidget * parent, ConfigObject<ConfigValue> * _config)
-        : QWidget(parent) {
+        : QWidget(parent),
+          m_settings() {
     config = _config;
 
     setupUi(this);
@@ -238,9 +239,9 @@ void DlgPrefBpm::slotDefaultBpmScheme()
     {
         BpmScheme* scheme = m_BpmSchemes.at(row);
 
-        config->set(ConfigKey("[BPM]","BPMRangeEnd"),ConfigValue(scheme->getMaxBpm()));
-        config->set(ConfigKey("[BPM]","BPMRangeStart"),ConfigValue(scheme->getMinBpm()));
-        config->set(ConfigKey("[BPM]","AnalyzeEntireSong"),ConfigValue(scheme->getAnalyzeEntireSong()));
+        m_settings.setValue("BPM/BPMRangeStart", scheme->getMaxBpm());
+        m_settings.setValue("BPM/BPMRangeEnd", scheme->getMinBpm());
+        m_settings.setValue("BPM/AnalyzeEntireSong", scheme->getAnalyzeEntireSong());
         config->set(ConfigKey("[BPM]","DefaultScheme"), scheme->getName());
 
         clearListIcons();
@@ -384,10 +385,10 @@ void DlgPrefBpm::loadBpmSchemes()
     {
         BpmScheme *scheme = new BpmScheme("Default", 70, 140, false);
         m_BpmSchemes.push_back(scheme);
+        m_settings.setValue("BPM/BPMRangeStart", scheme->getMaxBpm());
+        m_settings.setValue("BPM/BPMRangeEnd", scheme->getMinBpm());
+        m_settings.setValue("BPM/AnalyzeEntireSong", scheme->getAnalyzeEntireSong());
         config->set(ConfigKey("[BPM]","DefaultScheme"), QString("Default"));
-        config->set(ConfigKey("[BPM]","BPMRangeEnd"),ConfigValue(scheme->getMaxBpm()));
-        config->set(ConfigKey("[BPM]","BPMRangeStart"),ConfigValue(scheme->getMinBpm()));
-        config->set(ConfigKey("[BPM]","AnalyzeEntireSong"),ConfigValue(scheme->getAnalyzeEntireSong()));
     }
 }
 

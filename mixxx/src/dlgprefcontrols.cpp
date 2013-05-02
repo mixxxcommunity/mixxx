@@ -42,7 +42,9 @@ DlgPrefControls::DlgPrefControls(QWidget * parent, MixxxApp * mixxx,
                                  SkinLoader* pSkinLoader,
                                  PlayerManager* pPlayerManager,
                                  ConfigObject<ConfigValue> * pConfig)
-        :  QWidget(parent) {
+        :  QWidget(parent),
+           m_settings(parent){
+
     m_pConfig = pConfig;
     m_timer = -1;
     m_mixxx = mixxx;
@@ -152,7 +154,7 @@ DlgPrefControls::DlgPrefControls(QWidget * parent, MixxxApp * mixxx,
     // Iterate through the available locales and add them to the combobox
     // Borrowed following snippet from http://qt-project.org/wiki/How_to_create_a_multi_language_application
     QString translationsFolder = m_pConfig->getResourcePath() + "translations/";
-    QString currentLocale = pConfig->getValueString(ConfigKey("[Config]","Locale"));
+    QString currentLocale = m_settings.value("Config/Locale","").toString();
 
     QDir translationsDir(translationsFolder);
     QStringList fileNames = translationsDir.entryList(QStringList("mixxx_*.qm"));
@@ -250,19 +252,13 @@ DlgPrefControls::DlgPrefControls(QWidget * parent, MixxxApp * mixxx,
              ? warningLabel->hide() : warningLabel->show();
     slotUpdateSchemes();
 
-    //
-    // Tooltip configuration
-    //
-    // Set default value in config file, if not present
-    if (m_pConfig->getValueString(ConfigKey("[Controls]","Tooltips")).length() == 0)
-        m_pConfig->set(ConfigKey("[Controls]","Tooltips"), ConfigValue(1));
 
     ComboBoxTooltips->addItem(tr("On"));
     ComboBoxTooltips->addItem(tr("On (only in Library)"));
     ComboBoxTooltips->addItem(tr("Off"));
 
-    // Update combo box
-    int configTooltips = m_pConfig->getValueString(ConfigKey("[Controls]","Tooltips")).toInt();
+    // Update combo box , default is on
+    int configTooltips = m_settings.value("Controls/Tooltips",1).toInt();
     // Add two mod-3 makes the on-disk order match up with the combo-box
     // order.
     ComboBoxTooltips->setCurrentIndex((configTooltips + 2) % 3);
@@ -368,7 +364,7 @@ void DlgPrefControls::slotUpdate()
 
 void DlgPrefControls::slotSetLocale(int pos) {
     QString newLocale = ComboBoxLocale->itemData(pos).toString();
-    m_pConfig->set(ConfigKey("[Config]","Locale"), ConfigValue(newLocale));
+    m_settings.setValue("Config/Locale", newLocale);
     notifyRebootNecessary();
 }
 
@@ -432,8 +428,7 @@ void DlgPrefControls::slotSetAutoDjRequeue(int)
 void DlgPrefControls::slotSetTooltips(int)
 {
     int configValue = (ComboBoxTooltips->currentIndex() + 1) % 3;
-    m_pConfig->set(ConfigKey("[Controls]","Tooltips"),
-                   ConfigValue(configValue));
+    m_settings.setValue("Controls/Tooltips",configValue);
     m_mixxx->setToolTips(configValue);
 }
 

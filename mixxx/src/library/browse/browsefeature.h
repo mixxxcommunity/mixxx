@@ -6,6 +6,7 @@
 
 #include <QStringListModel>
 #include <QSortFilterProxyModel>
+#include <QSettings>
 
 #include "configobject.h"
 #include "library/browse/browsetablemodel.h"
@@ -53,6 +54,7 @@ class BrowseFeature : public LibraryFeature {
     void saveQuickLinks();
     void loadQuickLinks();
 
+    QSettings m_settings;
     ConfigObject<ConfigValue>* m_pConfig;
     BrowseTableModel m_browseModel;
     ProxyTrackModel m_proxyModel;

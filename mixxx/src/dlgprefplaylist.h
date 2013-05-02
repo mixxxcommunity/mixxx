@@ -18,6 +18,8 @@
 #ifndef DLGPREFPLAYLIST_H
 #define DLGPREFPLAYLIST_H
 
+#include <QSettings>
+
 #include "ui_dlgprefplaylistdlg.h"
 #include "configobject.h"
 
@@ -55,6 +57,7 @@ signals:
 private:
     /** Pointer to config object */
     ConfigObject<ConfigValue> *config;
+    QSettings m_settings;
     /** SoundSource Plugin Downloader */
     //PluginDownloader* m_pPluginDownloader;
 };

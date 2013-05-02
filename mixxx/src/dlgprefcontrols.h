@@ -19,6 +19,7 @@
 #define DLGPREFCONTROLS_H
 
 #include "ui_dlgprefcontrolsdlg.h"
+#include "QSettings"
 #include "configobject.h"
 
 class QWidget;
@@ -88,6 +89,7 @@ private:
 private:
     /** Pointer to ConfigObject */
     ConfigObject<ConfigValue> *m_pConfig;
+    QSettings m_settings;
     int m_timer;
     ControlObject* m_pControlPositionDisplay;
     QList<ControlObjectThreadMain*> m_cueControls;

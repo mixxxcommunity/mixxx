@@ -43,6 +43,7 @@ TrackDAO::TrackDAO(QSqlDatabase& database,
           m_pQueryLibraryInsert(NULL),
           m_pQueryLibraryUpdate(NULL),
           m_pQueryLibrarySelect(NULL),
+          m_settings(),
           m_pTransaction(NULL) {
 }
 
@@ -1161,7 +1162,7 @@ void TrackDAO::clearCache() {
 }
 
 void TrackDAO::writeAudioMetaData(TrackInfoObject* pTrack){
-    if (m_pConfig && m_pConfig->getValueString(ConfigKey("[Library]","WriteAudioTags")).toInt() == 1) {
+    if (m_settings.value("Library/WriteAudioTags").toBool()) {
         AudioTagger tagger(pTrack->getLocation());
 
         tagger.setArtist(pTrack->getArtist());

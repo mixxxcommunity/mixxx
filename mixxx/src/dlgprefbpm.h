@@ -12,10 +12,12 @@
 #ifndef DLGPREFBPM_H
 #define DLGPREFBPM_H
 
+#include <QList>
+#include <QSettings>
+
 #include "ui_dlgprefbpmdlg.h"
 #include "configobject.h"
 
-#include <qlist.h>
 
 class QWidget;
 class BpmScheme;
@@ -62,6 +64,7 @@ private:
       /** Pointer to config object */
     ConfigObject<ConfigValue> *config;
     QList<BpmScheme*> m_BpmSchemes;
+    QSettings m_settings;   
 };
 
 #endif
