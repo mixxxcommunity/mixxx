@@ -47,7 +47,6 @@ bool AnalyserBeats::initialise(TrackPointer tio, int sampleRate, int totalSample
         m_bShouldAnalyze = false;
         return false;
     }
-
     bool bpmLock = tio->hasBpmLock();
     if (bpmLock) {
         qDebug() << "Track is BpmLocked: Beat calculation will not start";

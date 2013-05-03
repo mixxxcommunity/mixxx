@@ -125,6 +125,7 @@ public:
   public slots:
     void slotControlPlay(double);
     void slotControlPlayFromStart(double);
+    void slotControlPlayMode(double);
     void slotControlJumpToStartAndStop(double);
     void slotControlStop(double);
     void slotControlStart(double);
@@ -219,6 +220,7 @@ private:
 
     ControlPushButton* m_playButton;
     ControlPushButton* m_playStartButton;
+    ControlPushButton* m_playModeButton;
     ControlPushButton* m_stopStartButton;
     ControlPushButton* m_stopButton;
 

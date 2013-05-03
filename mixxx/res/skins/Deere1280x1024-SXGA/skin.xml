@@ -307,7 +307,7 @@
 							****************************************
 							-->
 							<PushButton>
-								<TooltipId>play_start</TooltipId>
+								<TooltipId>play</TooltipId>
 								<Style></Style>
 								<NumberStates>2</NumberStates>
 								<RightClickIsPushButton>true</RightClickIsPushButton>
@@ -323,18 +323,56 @@
 								</State>
 								<Pos>10,31</Pos>
 								<Connection>
-									<ConfigKey>[Sampler1],play</ConfigKey>
+									<ConfigKey>[Sampler1],start_play</ConfigKey>
 									<EmitOnDownPress>true</EmitOnDownPress>
 									<ButtonState>LeftButton</ButtonState>
 								</Connection>
 								<Connection>
-									<ConfigKey>[Sampler1],start</ConfigKey>
+									<ConfigKey>[Sampler1],start_stop</ConfigKey>
 									<EmitOnDownPress>true</EmitOnDownPress>
 									<ButtonState>RightButton</ButtonState>
 									<ConnectValueToWidget>false</ConnectValueToWidget>
 								</Connection>
 							</PushButton>
-
+							
+							<!--
+							****************************************
+							 Button- PlayMode
+							****************************************
+							-->
+							<PushButton>
+								<TooltipId>play_mode</TooltipId>
+								<Style></Style>
+								<NumberStates>4</NumberStates>
+								<RightClickIsPushButton>true</RightClickIsPushButton>
+								<State>
+									<Number>0</Number>
+									<Pressed>btn_hotcue1_1_down.png</Pressed>
+									<Unpressed>btn_hotcue1_1.png</Unpressed>
+								</State>
+								<State>
+									<Number>1</Number>
+									<Pressed>btn_hotcue1_2_down.png</Pressed>
+									<Unpressed>btn_hotcue1_2.png</Unpressed>
+								</State>
+								<State>
+									<Number>2</Number>
+									<Pressed>btn_hotcue1_3_down.png</Pressed>
+									<Unpressed>btn_hotcue1_3.png</Unpressed>
+								</State>
+								<State>
+									<Number>3</Number>
+									<Pressed>btn_hotcue1_4_down.png</Pressed>
+									<Unpressed>btn_hotcue1_4.png</Unpressed>
+								</State>
+								<Pos>10,71</Pos>
+								<Connection>
+									<ConfigKey>[Sampler1],play_mode</ConfigKey>
+									<EmitOnDownPress>true</EmitOnDownPress>
+									<ButtonState>LeftButton</ButtonState>
+								</Connection>
+							</PushButton>
+	
 							<!--
 							**********************************************
 							Button- Beat sync
@@ -349,7 +387,7 @@
 									<Pressed>btn_sync_sampler_overdown.png</Pressed>
 									<Unpressed>btn_sync_sampler.png</Unpressed>
 								</State>
-								<Pos>10,71</Pos>
+								<Pos>35,71</Pos>
 								<Connection>
 									<ConfigKey>[Sampler1],beatsync</ConfigKey>
 									<EmitOnPressAndRelease>true</EmitOnPressAndRelease>
@@ -383,7 +421,7 @@
 									<Pressed>btn_hotcue1_1_overdown.png</Pressed>
 									<Unpressed>btn_hotcue1_1_over.png</Unpressed>
 								</State>
-								<Pos>80,71</Pos>
+								<Pos>87,71</Pos>
 								<Connection>
 									<ConfigKey>[Sampler1],hotcue_1_activate</ConfigKey>
 									<EmitOnPressAndRelease>true</EmitOnPressAndRelease>
@@ -417,7 +455,7 @@
 									<Pressed>btn_hotcue1_2_overdown.png</Pressed>
 									<Unpressed>btn_hotcue1_2_over.png</Unpressed>
 								</State>
-								<Pos>106,71</Pos>
+								<Pos>113,71</Pos>
 								<Connection>
 									<ConfigKey>[Sampler1],hotcue_2_activate</ConfigKey>
 									<EmitOnPressAndRelease>true</EmitOnPressAndRelease>
@@ -451,7 +489,7 @@
 									<Pressed>btn_hotcue1_3_overdown.png</Pressed>
 									<Unpressed>btn_hotcue1_3_over.png</Unpressed>
 								</State>
-								<Pos>132,71</Pos>
+								<Pos>139,71</Pos>
 								<Connection>
 									<ConfigKey>[Sampler1],hotcue_3_activate</ConfigKey>
 									<EmitOnPressAndRelease>true</EmitOnPressAndRelease>
@@ -485,7 +523,7 @@
 									<Pressed>btn_hotcue1_4_overdown.png</Pressed>
 									<Unpressed>btn_hotcue1_4_over.png</Unpressed>
 								</State>
-								<Pos>158,71</Pos>
+								<Pos>165,71</Pos>
 								<Connection>
 									<ConfigKey>[Sampler1],hotcue_4_activate</ConfigKey>
 									<EmitOnPressAndRelease>true</EmitOnPressAndRelease>

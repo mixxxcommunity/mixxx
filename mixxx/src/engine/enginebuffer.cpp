@@ -116,6 +116,12 @@ EngineBuffer::EngineBuffer(const char * _group, ConfigObject<ConfigValue> * _con
             this, SLOT(slotControlPlayFromStart(double)),
             Qt::DirectConnection);
 
+    //Play Mode Button (for sampler)
+    m_playModeButton = new ControlPushButton(ConfigKey(m_group, "play_mode"));
+    connect(m_playModeButton, SIGNAL(valueChanged(double)),
+            this, SLOT(slotControlPlayMode(double)),
+            Qt::DirectConnection);
+
     // Jump to start and stop button
     m_stopStartButton = new ControlPushButton(ConfigKey(m_group, "start_stop"));
     connect(m_stopStartButton, SIGNAL(valueChanged(double)),
@@ -244,6 +250,7 @@ EngineBuffer::~EngineBuffer()
 
     delete m_playButton;
     delete m_playStartButton;
+    delete m_playModeButton;
     delete m_stopStartButton;
 
     delete m_startButton;
@@ -493,17 +500,60 @@ void EngineBuffer::slotControlEnd(double v)
 
 void EngineBuffer::slotControlPlayFromStart(double v)
 {
-    if (v > 0.0) {
-        slotControlSeek(0.);
-        m_playButton->set(1);
-    }
+//    if (v > 0.0) {
+//        slotControlSeek(0.);
+//        m_playButton->set(1);
+//    }
+	int mode = int(m_playModeButton->get()) + 1;
+	switch (mode){
+		case 1: // Normal Mode
+			if (v > 0.0) {
+				m_playButton->set(1);
+			} else {
+				m_playButton->set(0);
+			} break;
+
+		case 2: // 1 One Shot Mode
+			if (v > 0.0 && !m_playButton->get()) {
+				slotControlSeek(0.);
+				m_playButton->set(1);
+			} else if (v == 0.0) {
+				m_playStartButton->set(1);
+				slotControlSeek(0.);
+			} break;
+
+		case 3: // Hold Mode
+			if (v > 0.0) {
+				if(!m_playButton->get()) {
+					m_playButton->set(1);
+				} else {
+					m_playButton->set(0);
+					m_playStartButton->set(0);
+				}
+			} break;
+		case 4: // Note Off Mode
+			if (v > 0.0) {
+				if(!m_playButton->get()) {
+					slotControlSeek(0.);
+					m_playButton->set(1);
+				} else {
+					m_playButton->set(0);
+					m_playStartButton->set(0);
+					slotControlSeek(0.);
+				}
+			}
+	}
+}
+
+void EngineBuffer::slotControlPlayMode(double v) {
 }
 
 void EngineBuffer::slotControlJumpToStartAndStop(double v)
 {
     if (v > 0.0) {
-        slotControlSeek(0.);
         m_playButton->set(0);
+        m_playStartButton->set(0);
+        slotControlSeek(0.);
     }
 }
 
@@ -759,6 +809,10 @@ void EngineBuffer::process(const CSAMPLE *, const CSAMPLE * pOut, const int iBuf
                 slotControlSeek(seekPosition);
             } else {
                 m_playButton->set(0.);
+                if(m_playStartButton->get()) {
+					m_playStartButton->set(0.);
+					slotControlSeek(0.);
+                }
             }
         }
 
