@@ -170,7 +170,6 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
     QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,
                        m_pConfig->getSettingsPath());
 
-    //QSettings settings(m_pConfig->getSettingsPath()+"/mixxx.ini", QSettings::IniFormat);
     QSettings settings;
     settings.setFallbacksEnabled(false);
 
@@ -278,7 +277,7 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
     m_pKeyboard = new MixxxKeyboard(keyboardShortcutsEnabled ? m_pKbdConfig : m_pKbdConfigEmpty);
 
     //create RecordingManager
-    m_pRecordingManager = new RecordingManager(m_pConfig);
+    m_pRecordingManager = new RecordingManager();
 
     // Starting the master (mixing of the channels and effects):
     m_pEngine = new EngineMaster(m_pConfig, "[Master]", true);
@@ -323,7 +322,6 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
     // writing meta data may ruine your MP3 file if done simultaneously.
     // see Bug #728197
     // For safety reasons, we deactivate this feature.
-    //m_pConfig->set(ConfigKey("[Library]","WriteAudioTags"), ConfigValue(0));
     settings.setValue("Library/WriteAudioTags",false);
 
     // library dies in seemingly unrelated qtsql error about not having a
@@ -513,15 +511,17 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
     m_pControllerManager->setUpDevices();
 
     // Scan the library for new files and directories
-    bool rescan = settings.value("Library/RescanOnStartup". false).toBool();
+    bool rescan = settings.value("Library/RescanOnStartup", false).toBool();
     // rescan the library if we get a new plugin
-    QSet<QString> prev_plugins = QSet<QString>::fromList(m_pConfig->getValueString(
-        ConfigKey("[Library]", "SupportedFileExtensions")).split(",", QString::SkipEmptyParts));
+        //ConfigKey("[Library]", "SupportedFileExtensions")).split(",", QString::SkipEmptyParts));
+    QSet<QString> prev_plugins = QSet<QString>::fromList(
+                                 settings.value("Library/SupportedFileExtensions")
+                                 .toString().split(",", QString::SkipEmptyParts));
     QSet<QString> curr_plugins = QSet<QString>::fromList(
-        SoundSourceProxy::supportedFileExtensions());
+                                 SoundSourceProxy::supportedFileExtensions());
     rescan = rescan || (prev_plugins != curr_plugins);
-    m_pConfig->set(ConfigKey("[Library]", "SupportedFileExtensions"),
-        QStringList(SoundSourceProxy::supportedFileExtensions()).join(","));
+    settings.setValue("Library/SupportedFileExtensions", 
+                      QStringList(SoundSourceProxy::supportedFileExtensions()).join(","));
 
     // Scan the library directory. Initialize this after the skinloader has
     // loaded a skin, see Bug #1047435
@@ -604,8 +604,7 @@ MixxxApp::~MixxxApp()
     // at exit.
 
     //Disable shoutcast so when Mixxx starts again it will not connect
-    m_pConfig->set(ConfigKey("[Shoutcast]", "enabled"),0);
-    m_pConfig->Save();
+    QSettings().setValue("Shoutcast",false);
     delete m_pPrefDlg;
 
     qDebug() << "delete config " << qTime.elapsed();
@@ -997,9 +996,7 @@ void MixxxApp::initActions()
     m_pOptionsShoutcast->setShortcut(tr("Ctrl+L"));
     m_pOptionsShoutcast->setShortcutContext(Qt::ApplicationShortcut);
     m_pOptionsShoutcast->setCheckable(true);
-    bool broadcastEnabled =
-        (m_pConfig->getValueString(ConfigKey("[Shoutcast]", "enabled"))
-            .toInt() == 1);
+    bool broadcastEnabled = QSettings().value("Shoutcast").toBool();
 
     m_pOptionsShoutcast->setChecked(broadcastEnabled);
     m_pOptionsShoutcast->setStatusTip(shoutcastText);
@@ -1163,7 +1160,7 @@ void MixxxApp::slotFileLoadSongPlayer(int deck) {
             .arg(QString::number(deck));
     QString areYouSure = tr("Are you sure you want to load a new track?");
 
-    if (play->get() == 1.) {
+    if (play && play->get() > 0.0) {
         int ret = QMessageBox::warning(this, tr("Mixxx"),
             deckWarningMessage + "\n" + areYouSure,
             QMessageBox::Yes | QMessageBox::No,
@@ -1457,6 +1454,9 @@ void MixxxApp::slotHelpAbout() {
 "Nimatek<br>"
 "Alban Bedel<br>"
 "Stefan N&uuml;rnberger<br>"
+"Steven Boswell<br>"
+"Jo&atilde;o Reys Santos<br>"
+"Carl Pillot<br>"
 
 "</p>"
 "<p align=\"center\"><b>%3</b></p>"
@@ -1467,6 +1467,7 @@ void MixxxApp::slotHelpAbout() {
 "EKS<br>"
 "Echo Digital Audio<br>"
 "JP Disco<br>"
+"Google Summer of Code<br>"
 "Adam Bellinson<br>"
 "Alexandre Bancel<br>"
 "Melanie Thielker<br>"
@@ -1712,9 +1713,7 @@ void MixxxApp::slotOptionsMenuShow(){
     m_pOptionsRecord->setChecked(m_pRecordingManager->isRecordingActive());
 
 #ifdef __SHOUTCAST__
-    bool broadcastEnabled =
-        (m_pConfig->getValueString(ConfigKey("[Shoutcast]", "enabled")).toInt()
-            == 1);
+    bool broadcastEnabled = QSettings().value("Shoutcast").toBool();
     if (broadcastEnabled)
       m_pOptionsShoutcast->setChecked(true);
     else
@@ -1725,7 +1724,7 @@ void MixxxApp::slotOptionsMenuShow(){
 void MixxxApp::slotOptionsShoutcast(bool value){
 #ifdef __SHOUTCAST__
     m_pOptionsShoutcast->setChecked(value);
-    m_pConfig->set(ConfigKey("[Shoutcast]", "enabled"),ConfigValue(value));
+    QSettings().setValue("Shoutcast", value);
 #else
     Q_UNUSED(value);
 #endif
@@ -1758,7 +1757,7 @@ void MixxxApp::checkDirectRendering() {
         return;
 
     if (!factory->isOpenGLAvailable() &&
-        m_pConfig->getValueString(ConfigKey("[Direct Rendering]", "Warned")) != QString("yes")) {
+        QSettings().value("Direct Rendering").toString() != QString("Warned")) {
         QMessageBox::warning(
             0, tr("OpenGL Direct Rendering"),
             tr("Direct rendering is not enabled on your machine.<br><br>"
@@ -1770,7 +1769,7 @@ void MixxxApp::checkDirectRendering() {
                "NOTE: If you use NVIDIA hardware,<br>"
                "direct rendering may not be present, but you should<br>"
                "not experience degraded performance."));
-        m_pConfig->set(ConfigKey("[Direct Rendering]", "Warned"), QString("yes"));
+        QSettings().setValue("Direct Rendering", "Warned");
     }
 }
 

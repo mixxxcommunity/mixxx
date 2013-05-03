@@ -2,11 +2,11 @@
 #define RECORDINGMANAGER_H
 
 #include <QDesktopServices>
+#include <QSettings>
 #include <QDateTime>
 #include <QObject>
 
 
-#include "configobject.h"
 #include "controlobject.h"
 #include "controlobjectthread.h"
 #include "controlobjectthreadmain.h"
@@ -30,7 +30,7 @@ class RecordingManager : public QObject
 {
     Q_OBJECT
   public:
-    RecordingManager(ConfigObject<ConfigValue>* pConfig);
+    RecordingManager();
     virtual ~RecordingManager();
 
 
@@ -69,7 +69,7 @@ class RecordingManager : public QObject
     
     long getFileSplitSize();
 
-    ConfigObject<ConfigValue>* m_pConfig;
+    QSettings m_settings;
     QString m_recordingDir;
     //the base file
     QString m_recording_base_file;

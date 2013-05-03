@@ -2,6 +2,8 @@
 #define DLGRECORDING_H
 
 #include <QItemSelection>
+#include <QSettings>
+
 #include "ui_dlgrecording.h"
 #include "configobject.h"
 #include "trackinfoobject.h"
@@ -48,6 +50,7 @@ class DlgRecording : public QWidget, public Ui::DlgRecording, public virtual Lib
   private:
 
     ConfigObject<ConfigValue>* m_pConfig;
+    QSettings m_settings;
     TrackCollection* m_pTrackCollection;
     WTrackTableView* m_pTrackTableView;
     BrowseTableModel m_browseModel;
