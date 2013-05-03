@@ -26,10 +26,9 @@
 
 #define MIXXX_ADDONS_URL "http://www.mixxx.org/wiki/doku.php/add-ons"
 
-DlgPrefPlaylist::DlgPrefPlaylist(QWidget * parent, ConfigObject<ConfigValue> * _config)
+DlgPrefPlaylist::DlgPrefPlaylist(QWidget * parent)
         :  QWidget(parent),
          m_settings(parent) {
-    config = _config;
     setupUi(this);
     slotUpdate();
     checkbox_ID3_sync->setVisible(false);
@@ -70,123 +69,42 @@ DlgPrefPlaylist::DlgPrefPlaylist(QWidget * parent, ConfigObject<ConfigValue> * _
     }
 }
 
-DlgPrefPlaylist::~DlgPrefPlaylist()
-{
+DlgPrefPlaylist::~DlgPrefPlaylist() {
 }
 
-void DlgPrefPlaylist::slotExtraPlugins()
-{
+void DlgPrefPlaylist::slotExtraPlugins() {
     QDesktopServices::openUrl(QUrl(MIXXX_ADDONS_URL));
 }
 
-/*
-void DlgPrefPlaylist::slotM4ADownloadProgress(qint64 bytesReceived,
-                                              qint64 bytesTotal)
-{
-    pushButtonM4A->setText(QString("%1\%").arg(100*(float)bytesReceived/bytesTotal, 0, 'g', 1));
-}
-void DlgPrefPlaylist::slotM4ADownloadFinished()
-{
-    //Disable the button after the download is finished.
-    //We force it to be disabled because on Linux, gdebi-gtk
-    //needs to be finished running before we know whether or not
-    //the plugin is actually installed. :(
-    setupM4AButton(true);
-}
-
-void DlgPrefPlaylist::setupM4AButton(bool forceInstalled)
-{
-    //If the M4A plugin is present on disk, disable the button
-    if (m_pPluginDownloader->checkForM4APlugin() || forceInstalled) {
-        pushButtonM4A->setChecked(true);
-        pushButtonM4A->setEnabled(false);
-        pushButtonM4A->setText(tr("Installed"));
-    }
-}
-
-void DlgPrefPlaylist::slotM4ACheck()
-{
-    qDebug() << "slotM4ACheck";
-
-#ifdef __LINUX__
-    QFile version("/proc/version");
-    bool isUbuntu = true;
-    if (version.open(QIODevice::ReadOnly))
-    {
-        QByteArray rawLine = version.readAll();
-        QString versionString(rawLine);
-        if (versionString.contains("Ubuntu", Qt::CaseInsensitive))
-        {
-            isUbuntu = true;
-        }
-    }
-    else {
-        isUbuntu = false;
-    }
-
-    if (!isUbuntu)
-    {
-        QMessageBox::information(this, tr("M4A Playback Plugin"),
-                                tr("The M4A playback plugin is currently"
-                                "unavailable for your Linux distribution."
-                                "Please download and compile Mixxx from "
-                                "source to enable M4A playback."));
-    }
-
-#endif
-
-    if (!m_pPluginDownloader->checkForM4APlugin())
-    {
-        m_pPluginDownloader->downloadM4APlugin();
-    }
-}*/
-
-void DlgPrefPlaylist::slotUpdate()
-{
+void DlgPrefPlaylist::slotUpdate() {
     // Song path
     LineEditSongfiles->setText(m_settings.value("Library/Directory").toString());
     //Bundled songs stat tracking
-    checkBoxPromoStats->setChecked((bool)config->getValueString(ConfigKey("[Promo]","StatTracking")).toInt());
+    checkBoxPromoStats->setChecked(m_settings.value("Promo/StatTracking").toBool());
     checkBox_library_scan->setChecked(m_settings.value("Library/RescanOnStartup",false).toBool());
     checkbox_ID3_sync->setChecked(m_settings.value("Library/WriteAudioTags").toBool());
-    checkBox_use_relative_path->setChecked((bool)config->getValueString(ConfigKey("[Library]","UseRelativePathOnExport")).toInt());
-    checkBox_show_rhythmbox->setChecked((bool)config->getValueString(ConfigKey("[Library]","ShowRhythmboxLibrary"),"1").toInt());
-    checkBox_show_itunes->setChecked((bool)config->getValueString(ConfigKey("[Library]","ShowITunesLibrary"),"1").toInt());
-    checkBox_show_traktor->setChecked((bool)config->getValueString(ConfigKey("[Library]","ShowTraktorLibrary"),"1").toInt());
+    checkBox_use_relative_path->setChecked(m_settings.value("Library/UseRelativePathOnExport").toBool());
+    checkBox_show_rhythmbox->setChecked(m_settings.value("Library/ShowRhythmboxLibrary").toBool());
+    checkBox_show_itunes->setChecked(m_settings.value("Library/ShowITunesLibrary").toBool());
+    checkBox_show_traktor->setChecked(m_settings.value("Library/ShowTraktorLibrary").toBool());
 }
 
-void DlgPrefPlaylist::slotBrowseDir()
-{
+void DlgPrefPlaylist::slotBrowseDir() {
     QString fd = QFileDialog::getExistingDirectory(this, tr("Choose music library directory"),
                                                    m_settings.value("Library/Directory").toString());
-    if (fd != "")
-    {
+    if (fd != "") {
         LineEditSongfiles->setText(fd);
     }
 }
 
-void DlgPrefPlaylist::slotApply()
-{
-
-    config->set(ConfigKey("[Promo]","StatTracking"),
-                ConfigValue((int)checkBoxPromoStats->isChecked()));
-
+void DlgPrefPlaylist::slotApply() {
+    m_settings.setValue("Promo/StatTracking", checkBoxPromoStats->isChecked());
     m_settings.setValue("Library/RescanOnStartup", checkBox_library_scan->isChecked());
     m_settings.setValue("Library/WriteAudioTags",checkbox_ID3_sync->isChecked());
-
-    config->set(ConfigKey("[Library]","UseRelativePathOnExport"),
-                ConfigValue((int)checkBox_use_relative_path->isChecked()));
-
-    config->set(ConfigKey("[Library]","ShowRhythmboxLibrary"),
-                ConfigValue((int)checkBox_show_rhythmbox->isChecked()));
-
-    config->set(ConfigKey("[Library]","ShowITunesLibrary"),
-                ConfigValue((int)checkBox_show_itunes->isChecked()));
-
-    config->set(ConfigKey("[Library]","ShowTraktorLibrary"),
-                ConfigValue((int)checkBox_show_traktor->isChecked()));
-
-    config->Save();
+    m_settings.setValue("Library/UseRelativePathOnExport", checkBox_use_relative_path->isChecked());
+    m_settings.setValue("Library/ShowRhythmboxLibrary", checkBox_show_rhythmbox->isChecked());
+    m_settings.setValue("Library/ShowITunesLibrary", checkBox_show_itunes->isChecked());
+    m_settings.setValue("Library.ShowTraktorLibrary", checkBox_show_traktor->isChecked());
 
     // Update playlist if path has changed
     if (LineEditSongfiles->text() != m_settings.value("Library/Directory").toString()) {

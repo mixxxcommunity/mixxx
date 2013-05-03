@@ -13,8 +13,9 @@
 #include "playermanager.h"
 #include "util/debug.h"
 
-SkinLoader::SkinLoader(ConfigObject<ConfigValue>* pConfig) :
-        m_pConfig(pConfig) {
+SkinLoader::SkinLoader(ConfigObject<ConfigValue>* pConfig) 
+          : m_pConfig(pConfig),
+            m_settings() {
 
 
 }
@@ -28,7 +29,7 @@ QString SkinLoader::getConfiguredSkinPath() {
     QString qSkinPath = m_pConfig->getResourcePath();
     qSkinPath.append("skins/");
 
-    QString configSkin = m_pConfig->getValueString(ConfigKey("[Config]","Skin"));
+    QString configSkin = m_settings.value("Config/Skin").toString();
     QString qThisSkin = qSkinPath + configSkin;
     QDir thisSkin(qThisSkin);
 

@@ -34,6 +34,7 @@ WOverview::WOverview(const char *pGroup, ConfigObject<ConfigValue>* pConfig, QWi
         WWidget(parent),
         m_pGroup(pGroup),
         m_pConfig(pConfig),
+        m_settings(),
         m_pWaveform(NULL),
         m_pWaveformSourceImage(NULL),
         m_pixmapDone(false),
@@ -591,7 +592,8 @@ void WOverview::dragEnterEvent(QDragEnterEvent* event) {
     // in this deck or the settings allow to interrupt the playing deck.
     if (event->mimeData()->hasUrls() && event->mimeData()->urls().size() > 0) {
         if ((m_playControl->get() == 0.0 ||
-            m_pConfig->getValueString(ConfigKey("[Controls]","AllowTrackLoadToPlayingDeck")).toInt()) || (m_pGroup=="[PreviewDeck1]")) {
+            m_settings.value("Controls/AllowTrackLoadToPlayingDeck").toBool())
+            || (m_pGroup=="[PreviewDeck1]")) {
             event->acceptProposedAction();
         } else {
             event->ignore();

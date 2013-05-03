@@ -5,6 +5,7 @@
 #include <QList>
 #include <QPair>
 #include <QAction>
+#include <QSettings>
 
 #include "library/libraryfeature.h"
 #include "library/cratetablemodel.h"
@@ -68,6 +69,7 @@ class CrateFeature : public LibraryFeature {
     QModelIndex m_lastRightClickedIndex;
     TreeItemModel m_childModel;
     ConfigObject<ConfigValue>* m_pConfig;
+    QSettings m_settings;
 };
 
 #endif /* CRATEFEATURE_H */

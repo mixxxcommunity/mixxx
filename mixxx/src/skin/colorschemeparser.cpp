@@ -1,4 +1,6 @@
 
+#include <QSettings>
+
 #include "skin/colorschemeparser.h"
 
 #include "widget/wpixmapstore.h"
@@ -16,7 +18,7 @@ void ColorSchemeParser::setupLegacyColorSchemes(QDomElement docElem,
     QDomNode colsch = docElem.namedItem("Schemes");
 
     if (!colsch.isNull() && colsch.isElement()) {
-        QString schname = pConfig->getValueString(ConfigKey("[Config]","Scheme"));
+        QString schname = QSettings().value("Config/Scheme").toString();
         QDomNode sch = colsch.firstChild();
 
         bool found = false;

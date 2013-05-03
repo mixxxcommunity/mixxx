@@ -20,6 +20,8 @@
 
 #include <QWebView>
 #include <QUrl>
+#include <QSettings>
+
 #include "configobject.h"
 #include "trackinfoobject.h"
 #include "library/libraryview.h"
@@ -68,6 +70,7 @@ class BundledSongsWebView : public QWebView, public LibraryView
     bool m_statTracking;
     bool m_bFirstRun;
     ConfigObject<ConfigValue>* m_pConfig;
+    QSettings m_settings;
     TrackCollection* m_pTrackCollection;
 };
 

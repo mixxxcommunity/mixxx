@@ -2,6 +2,7 @@
 #define BASEPLAYLISTFEATURE_H
 
 #include <QAction>
+#include <QSettings>
 
 #include "library/libraryfeature.h"
 #include "library/dao/playlistdao.h"
@@ -57,6 +58,7 @@ class BasePlaylistFeature : public LibraryFeature {
     virtual void addToAutoDJ(bool bTop);
 
     ConfigObject<ConfigValue>* m_pConfig;
+    QSettings m_settings;
     TrackCollection* m_pTrackCollection;
     PlaylistDAO &m_playlistDao;
     TrackDAO &m_trackDao;

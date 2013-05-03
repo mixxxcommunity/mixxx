@@ -2,6 +2,7 @@
 #define SKINLOADER_H
 
 #include <QWidget>
+#include <QSettings>
 
 #include "configobject.h"
 
@@ -27,6 +28,7 @@ class SkinLoader {
 
   private:
     ConfigObject<ConfigValue>* m_pConfig;
+    QSettings m_settings;
 };
 
 

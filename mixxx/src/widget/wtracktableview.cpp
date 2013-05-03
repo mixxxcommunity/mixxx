@@ -24,6 +24,7 @@ WTrackTableView::WTrackTableView(QWidget * parent,
                             ConfigKey(LIBRARY_CONFIGVALUE,
                                       WTRACKTABLEVIEW_VSCROLLBARPOS_KEY)),
           m_pConfig(pConfig),
+          m_settings(),
           m_pTrackCollection(pTrackCollection),
           m_searchThread(this),
           m_sorting(sorting) {
@@ -332,8 +333,7 @@ void WTrackTableView::loadSelectionToGroup(QString group, bool play) {
     if (indices.size() > 0) {
         // If the track load override is disabled, check to see if a track is
         // playing before trying to load it
-        if (!(m_pConfig->getValueString(
-            ConfigKey("[Controls]","AllowTrackLoadToPlayingDeck")).toInt())) {
+        if (m_settings.value("Controls/AllowTrackLoadToPlayingDeck").toBool()) {
             ControlObject* pPlayCO = ControlObject::getControl(ConfigKey(group, "play"));
             // TODO(XXX): Check for other than just the first preview deck.
             if (group != "[PreviewDeck1]" && pPlayCO && pPlayCO->get() > 0.0f) {

@@ -18,7 +18,8 @@
 WWaveformViewer::WWaveformViewer(const char *group, ConfigObject<ConfigValue>* pConfig, QWidget * parent)
         : QWidget(parent),
           m_pGroup(group),
-          m_pConfig(pConfig) {
+          m_pConfig(pConfig),
+          m_settings() {
     setAcceptDrops(true);
 
     m_bScratching = false;
@@ -149,8 +150,8 @@ void WWaveformViewer::dragEnterEvent(QDragEnterEvent * event) {
         ControlObject *pPlayCO = ControlObject::getControl(
                     ConfigKey(m_pGroup, "play"));
         // Accept if the Deck isn't playing or the settings allow to interupt a playing deck
-        if (pPlayCO && (!pPlayCO->get() ||
-            m_pConfig->getValueString(ConfigKey("[Controls]","AllowTrackLoadToPlayingDeck")).toInt())) {
+        if (pPlayCO && (!pPlayCO->get() || 
+            m_settings.value("Controls/AllowTrackLoadToPlayingDeck").toBool())) {
             event->acceptProposedAction();
         } else {
             event->ignore();

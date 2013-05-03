@@ -10,13 +10,12 @@
 
 #include "dlgrecording.h"
 
-
-
-DlgRecording::DlgRecording(QWidget* parent, ConfigObject<ConfigValue>* pConfig,
+DlgRecording::DlgRecording(QWidget* parent,
+                           ConfigObject<ConfigValue> * pConfig,
                            TrackCollection* pTrackCollection,
-                           RecordingManager* pRecordingManager, MixxxKeyboard* pKeyboard)
+                           RecordingManager* pRecordingManager,
+                           MixxxKeyboard* pKeyboard)
         : QWidget(parent),
-          m_pConfig(pConfig),
           m_pTrackCollection(pTrackCollection),
           m_browseModel(this, m_pTrackCollection, pRecordingManager),
           m_proxyModel(&m_browseModel),

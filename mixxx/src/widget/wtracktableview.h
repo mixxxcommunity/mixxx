@@ -3,6 +3,7 @@
 
 #include <QAbstractItemModel>
 #include <QSortFilterProxyModel>
+#include <QSettings>
 
 #include "configobject.h"
 #include "trackinfoobject.h"
@@ -77,6 +78,7 @@ class WTrackTableView : public WLibraryTableView {
     bool modelHasCapabilities(TrackModel::CapabilitiesFlags capability);
 
     ConfigObject<ConfigValue> * m_pConfig;
+    QSettings m_settings;
     TrackCollection* m_pTrackCollection;
 
     QSignalMapper m_loadTrackMapper;

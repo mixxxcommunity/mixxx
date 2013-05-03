@@ -17,6 +17,7 @@ BasePlaylistFeature::BasePlaylistFeature(
     QString rootViewName)
         : LibraryFeature(parent),
           m_pConfig(pConfig),
+          m_settings(),
           m_pTrackCollection(pTrackCollection),
           m_playlistDao(pTrackCollection->getPlaylistDAO()),
           m_trackDao(pTrackCollection->getTrackDAO()),
@@ -346,8 +347,7 @@ void BasePlaylistFeature::slotExportPlaylist() {
     pPlaylistTableModel->select();
 
     // check config if relative paths are desired
-    bool useRelativePath = static_cast<bool>(m_pConfig->getValueString(
-        ConfigKey("[Library]", "UseRelativePathOnExport")).toInt());
+    bool useRelativePath = m_settings.value("Library/UseRelativePathOnExport").toBool();
 
     if (file_location.endsWith(".csv", Qt::CaseInsensitive)) {
         ParserCsv::writeCSVFile(file_location, pPlaylistTableModel.data(), useRelativePath);

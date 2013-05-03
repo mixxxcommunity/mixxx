@@ -2,7 +2,6 @@
 #define DLGRECORDING_H
 
 #include <QItemSelection>
-#include <QSettings>
 
 #include "ui_dlgrecording.h"
 #include "configobject.h"
@@ -23,7 +22,7 @@ class ControlObjectThreadMain;
 class DlgRecording : public QWidget, public Ui::DlgRecording, public virtual LibraryView {
     Q_OBJECT
   public:
-    DlgRecording(QWidget *parent, ConfigObject<ConfigValue>* pConfig,
+    DlgRecording(QWidget *parent, ConfigObject<ConfigValue> * pConfig,
                  TrackCollection* pTrackCollection,
                  RecordingManager* pRecManager, MixxxKeyboard* pKeyboard);
     virtual ~DlgRecording();
@@ -49,8 +48,6 @@ class DlgRecording : public QWidget, public Ui::DlgRecording, public virtual Lib
 
   private:
 
-    ConfigObject<ConfigValue>* m_pConfig;
-    QSettings m_settings;
     TrackCollection* m_pTrackCollection;
     WTrackTableView* m_pTrackTableView;
     BrowseTableModel m_browseModel;

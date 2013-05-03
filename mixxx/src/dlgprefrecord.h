@@ -37,7 +37,7 @@ class QWidget;
 class DlgPrefRecord : public QWidget, public Ui::DlgPrefRecordDlg  {
     Q_OBJECT
 public: 
-    DlgPrefRecord(QWidget *parent, ConfigObject<ConfigValue> *_config);
+    DlgPrefRecord(QWidget *parent);
     ~DlgPrefRecord();
 public slots:
     /** Apply changes to widget */
@@ -60,7 +60,6 @@ private:
     void updateTextQuality();
 
     /** Pointer to config object */
-    ConfigObject<ConfigValue> *config;
     QSettings m_settings;
     ControlObjectThreadMain* recordControl;
     bool confirmOverwrite;

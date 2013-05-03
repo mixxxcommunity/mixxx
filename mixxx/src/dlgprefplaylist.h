@@ -31,7 +31,7 @@ class QWidget;
 class DlgPrefPlaylist : public QWidget, public Ui::DlgPrefPlaylistDlg  {
     Q_OBJECT
 public:
-    DlgPrefPlaylist(QWidget *parent, ConfigObject<ConfigValue> *_config);
+    DlgPrefPlaylist(QWidget *parent);
     ~DlgPrefPlaylist();
 public slots:
     /** Update widget */
@@ -56,7 +56,6 @@ signals:
     void apply();
 private:
     /** Pointer to config object */
-    ConfigObject<ConfigValue> *config;
     QSettings m_settings;
     /** SoundSource Plugin Downloader */
     //PluginDownloader* m_pPluginDownloader;

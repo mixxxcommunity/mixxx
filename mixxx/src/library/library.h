@@ -10,6 +10,7 @@
 #include <QList>
 #include <QObject>
 #include <QAbstractItemModel>
+#include <QSettings>
 
 #include "configobject.h"
 #include "trackinfoobject.h"
@@ -79,6 +80,7 @@ public:
 
   private:
     ConfigObject<ConfigValue>* m_pConfig;
+    QSettings m_settings;
     SidebarModel* m_pSidebarModel;
     TrackCollection* m_pTrackCollection;
     QList<LibraryFeature*> m_features;

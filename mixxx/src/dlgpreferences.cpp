@@ -80,9 +80,9 @@ DlgPreferences::DlgPreferences(MixxxApp * mixxx, SkinLoader* pSkinLoader,
     m_pageSizeHint = QSize(0,0);
 
     // Construct widgets for use in tabs
-    m_wsound = new DlgPrefSound(this, soundman, pPlayerManager, config);
+    m_wsound = new DlgPrefSound(this, soundman, pPlayerManager);
     addPageWidget(m_wsound);
-    m_wplaylist = new DlgPrefPlaylist(this, config);
+    m_wplaylist = new DlgPrefPlaylist(this);
     addPageWidget(m_wplaylist);
     m_wcontrols = new DlgPrefControls(this, mixxx, pSkinLoader, pPlayerManager, config);
     addPageWidget(m_wcontrols);
@@ -100,7 +100,7 @@ DlgPreferences::DlgPreferences(MixxxApp * mixxx, SkinLoader* pSkinLoader,
 #endif
     m_wreplaygain = new DlgPrefReplayGain(this, config);
     addPageWidget(m_wreplaygain);
-    m_wrecord = new DlgPrefRecord(this, config);
+    m_wrecord = new DlgPrefRecord(this);
     addPageWidget(m_wrecord);
 #ifdef __VINYLCONTROL__
     m_wvinylcontrol = new DlgPrefVinyl(this, pVCManager, config);

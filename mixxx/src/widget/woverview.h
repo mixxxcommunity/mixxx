@@ -17,6 +17,7 @@
 #include <QPixmap>
 #include <QColor>
 #include <QList>
+#include <QSettings>
 
 #include "trackinfoobject.h"
 #include "widget/wwidget.h"
@@ -84,6 +85,7 @@ class WOverview : public WWidget
 
     const QString m_pGroup;
     ConfigObject<ConfigValue>* m_pConfig;
+    QSettings m_settings;
     ControlObjectThreadMain* m_endOfTrackControl;
     double m_endOfTrack;
     ControlObjectThreadMain* m_trackSamplesControl;

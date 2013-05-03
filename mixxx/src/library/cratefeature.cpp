@@ -24,7 +24,8 @@ CrateFeature::CrateFeature(QObject* parent,
         : m_pTrackCollection(pTrackCollection),
           m_crateDao(pTrackCollection->getCrateDAO()),
           m_crateTableModel(this, pTrackCollection),
-          m_pConfig(pConfig) {
+          m_pConfig(pConfig),
+          m_settings() {
     Q_UNUSED(parent);
     m_pCreateCrateAction = new QAction(tr("New Crate"),this);
     connect(m_pCreateCrateAction, SIGNAL(triggered()),
@@ -495,9 +496,7 @@ void CrateFeature::slotExportPlaylist(){
         return;
     }
     // check config if relative paths are desired
-    bool useRelativePath = static_cast<bool>(
-        m_pConfig->getValueString(
-            ConfigKey("[Library]", "UseRelativePathOnExport")).toInt());
+    bool useRelativePath = m_settings.value("Library/UseRelativePathOnExport").toBool();
 
     // Create list of files of the crate
     QList<QString> playlist_items;

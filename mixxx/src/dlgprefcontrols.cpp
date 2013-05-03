@@ -83,57 +83,36 @@ DlgPrefControls::DlgPrefControls(QWidget * parent, MixxxApp * mixxx,
             this, SLOT(slotSetPositionDisplay(double)));
     ComboBoxPosition->addItem(tr("Position"));
     ComboBoxPosition->addItem(tr("Remaining"));
-    if (m_pConfig->getValueString(ConfigKey("[Controls]","PositionDisplay")).length() == 0)
-        m_pConfig->set(ConfigKey("[Controls]","PositionDisplay"),ConfigValue(0));
-    if (m_pConfig->getValueString(ConfigKey("[Controls]","PositionDisplay")).toInt() == 1)
-    {
+    if (m_settings.value("Controls/PositionDisplay").toBool()) {
         ComboBoxPosition->setCurrentIndex(1);
         m_pControlPositionDisplay->set(1.0f);
-    }
-    else
-    {
+    } else {
         ComboBoxPosition->setCurrentIndex(0);
         m_pControlPositionDisplay->set(0.0f);
     }
     connect(ComboBoxPosition,   SIGNAL(activated(int)), this, SLOT(slotSetPositionDisplay(int)));
 
-    // Set default direction as stored in config file
-    if (m_pConfig->getValueString(ConfigKey("[Controls]","RateDir")).length() == 0)
-        m_pConfig->set(ConfigKey("[Controls]","RateDir"),ConfigValue(0));
-
-    slotSetRateDir(m_pConfig->getValueString(ConfigKey("[Controls]","RateDir")).toInt());
+    slotSetRateDir(m_settings.value("Controls/RateDir").toInt());
     connect(ComboBoxRateDir,   SIGNAL(activated(int)), this, SLOT(slotSetRateDir(int)));
 
     // Set default range as stored in config file
-    if (m_pConfig->getValueString(ConfigKey("[Controls]","RateRange")).length() == 0)
-        m_pConfig->set(ConfigKey("[Controls]","RateRange"),ConfigValue(2));
-
-    slotSetRateRange(m_pConfig->getValueString(ConfigKey("[Controls]","RateRange")).toInt());
+    slotSetRateRange(m_settings.value("Controls/RateRange",2).toInt());
     connect(ComboBoxRateRange, SIGNAL(activated(int)), this, SLOT(slotSetRateRange(int)));
 
-    //
-    // Rate buttons configuration
-    //
-    //NOTE: THESE DEFAULTS ARE A LIE! You'll need to hack the same values into the static variables
-    //      at the top of enginebuffer.cpp
-    if (m_pConfig->getValueString(ConfigKey("[Controls]","RateTempLeft")).length() == 0)
-        m_pConfig->set(ConfigKey("[Controls]","RateTempLeft"),ConfigValue(QString("4.0")));
-    if (m_pConfig->getValueString(ConfigKey("[Controls]","RateTempRight")).length() == 0)
-        m_pConfig->set(ConfigKey("[Controls]","RateTempRight"),ConfigValue(QString("2.0")));
-    if (m_pConfig->getValueString(ConfigKey("[Controls]","RatePermLeft")).length() == 0)
-        m_pConfig->set(ConfigKey("[Controls]","RatePermLeft"),ConfigValue(QString("0.50")));
-    if (m_pConfig->getValueString(ConfigKey("[Controls]","RatePermRight")).length() == 0)
-        m_pConfig->set(ConfigKey("[Controls]","RatePermRight"),ConfigValue(QString("0.05")));
 
     connect(spinBoxTempRateLeft, SIGNAL(valueChanged(double)), this, SLOT(slotSetRateTempLeft(double)));
     connect(spinBoxTempRateRight, SIGNAL(valueChanged(double)), this, SLOT(slotSetRateTempRight(double)));
     connect(spinBoxPermRateLeft, SIGNAL(valueChanged(double)), this, SLOT(slotSetRatePermLeft(double)));
     connect(spinBoxPermRateRight, SIGNAL(valueChanged(double)), this, SLOT(slotSetRatePermRight(double)));
 
-    spinBoxTempRateLeft->setValue(m_pConfig->getValueString(ConfigKey("[Controls]","RateTempLeft")).toDouble());
-    spinBoxTempRateRight->setValue(m_pConfig->getValueString(ConfigKey("[Controls]","RateTempRight")).toDouble());
-    spinBoxPermRateLeft->setValue(m_pConfig->getValueString(ConfigKey("[Controls]","RatePermLeft")).toDouble());
-    spinBoxPermRateRight->setValue(m_pConfig->getValueString(ConfigKey("[Controls]","RatePermRight")).toDouble());
+    // Rate buttons configuration
+    //
+    //NOTE: THESE DEFAULTS ARE A LIE! You'll need to hack the same values into the static variables
+    //      at the top of enginebuffer.cpp
+    spinBoxTempRateLeft->setValue(m_settings.value("Controls/RateTempLeft",4).toDouble());
+    spinBoxTempRateRight->setValue(m_settings.value("Controls/RateTempRight",2).toDouble());
+    spinBoxPermRateLeft->setValue(m_settings.value("Controls/RatePermLeft",0.5).toDouble());
+    spinBoxPermRateRight->setValue(m_settings.value("Controls/RatePermRight",0.05).toDouble());
 
     SliderRateRampSensitivity->setEnabled(true);
     SpinBoxRateRampSensitivity->setEnabled(true);
@@ -144,7 +123,8 @@ DlgPrefControls::DlgPrefControls(QWidget * parent, MixxxApp * mixxx,
     //
     ComboBoxAllowTrackLoadToPlayingDeck->addItem(tr("Don't load tracks into a playing deck"));
     ComboBoxAllowTrackLoadToPlayingDeck->addItem(tr("Load tracks into a playing deck"));
-    ComboBoxAllowTrackLoadToPlayingDeck->setCurrentIndex(m_pConfig->getValueString(ConfigKey("[Controls]", "AllowTrackLoadToPlayingDeck")).toInt());
+    ComboBoxAllowTrackLoadToPlayingDeck->setCurrentIndex(
+            m_settings.value("Controls/AllowTrackLoadToPlayingDeck").toBool());
     connect(ComboBoxAllowTrackLoadToPlayingDeck, SIGNAL(activated(int)), this, SLOT(slotSetAllowTrackLoadToPlayingDeck(int)));
 
     //
@@ -186,9 +166,9 @@ DlgPrefControls::DlgPrefControls(QWidget * parent, MixxxApp * mixxx,
     //
 
     // Set default value in config file and control objects, if not present
-    QString cueDefault = m_pConfig->getValueString(ConfigKey("[Controls]","CueDefault"));
+    QString cueDefault = m_settings.value("Controls/CueDefault").toString();
     if(cueDefault.length() == 0) {
-        m_pConfig->set(ConfigKey("[Controls]","CueDefault"), ConfigValue(0));
+        m_settings.setValue("Controls/CueDefault",0);
         cueDefault = "0";
     }
     int cueDefaultValue = cueDefault.toInt();
@@ -204,14 +184,14 @@ DlgPrefControls::DlgPrefControls(QWidget * parent, MixxxApp * mixxx,
     //Cue recall
     ComboBoxCueRecall->addItem(tr("On"));
     ComboBoxCueRecall->addItem(tr("Off"));
-    ComboBoxCueRecall->setCurrentIndex(m_pConfig->getValueString(ConfigKey("[Controls]", "CueRecall")).toInt());
+    ComboBoxCueRecall->setCurrentIndex(m_settings.value("Contrls/CueRecall").toInt());
     //NOTE: for CueRecall, 0 means ON....
     connect(ComboBoxCueRecall, SIGNAL(activated(int)), this, SLOT(slotSetCueRecall(int)));
 
     // Re-queue tracks in Auto DJ
     ComboBoxAutoDjRequeue->addItem(tr("Off"));
     ComboBoxAutoDjRequeue->addItem(tr("On"));
-    ComboBoxAutoDjRequeue->setCurrentIndex(m_pConfig->getValueString(ConfigKey("[Auto DJ]", "Requeue")).toInt());
+    ComboBoxAutoDjRequeue->setCurrentIndex(m_settings.value("Auto DJ/Requeue").toBool());
     connect(ComboBoxAutoDjRequeue, SIGNAL(activated(int)), this, SLOT(slotSetAutoDjRequeue(int)));
 
     //
@@ -271,15 +251,11 @@ DlgPrefControls::DlgPrefControls(QWidget * parent, MixxxApp * mixxx,
 
     // Set Ramp Rate On or Off
     connect(groupBoxRateRamp, SIGNAL(toggled(bool)), this, SLOT(slotSetRateRamp(bool)));
-    groupBoxRateRamp->setChecked((bool)
-                                 m_pConfig->getValueString(ConfigKey("[Controls]","RateRamp")).toInt()
-                                 );
+    groupBoxRateRamp->setChecked(m_settings.value("Controls/RateRamp").toBool());
 
     // Update Ramp Rate Sensitivity
     connect(SliderRateRampSensitivity, SIGNAL(valueChanged(int)), this, SLOT(slotSetRateRampSensitivity(int)));
-    SliderRateRampSensitivity->setValue(
-                m_pConfig->getValueString(ConfigKey("[Controls]","RateRampSensitivity")).toInt()
-                );
+    SliderRateRampSensitivity->setValue(m_settings.value("Controls/RateRampSensitivity").toInt());
 
     slotUpdate();
 
@@ -319,7 +295,7 @@ void DlgPrefControls::slotUpdateSchemes()
         for (int i = 0; i < schlist.size(); i++) {
             ComboBoxSchemeconf->addItem(schlist[i]);
 
-            if (schlist[i] == m_pConfig->getValueString(ConfigKey("[Config]","Scheme"))) {
+            if (schlist[i] == m_settings.value("Config/Scheme").toString()) {
                 ComboBoxSchemeconf->setCurrentIndex(i);
             }
         }
@@ -387,8 +363,7 @@ void DlgPrefControls::slotSetRateRange(int pos)
     }
 }
 
-void DlgPrefControls::slotSetRateDir(int index)
-{
+void DlgPrefControls::slotSetRateDir(int index) {
     float dir = 1.;
     if (index == 1)
         dir = -1.;
@@ -399,15 +374,14 @@ void DlgPrefControls::slotSetRateDir(int index)
     }
 }
 
-void DlgPrefControls::slotSetAllowTrackLoadToPlayingDeck(int)
-{
-    m_pConfig->set(ConfigKey("[Controls]","AllowTrackLoadToPlayingDeck"), ConfigValue(ComboBoxAllowTrackLoadToPlayingDeck->currentIndex()));
+void DlgPrefControls::slotSetAllowTrackLoadToPlayingDeck(int) {
+    m_settings.setValue("Controls/AllowTrackLoadToPlayingDeck",
+                        ComboBoxAllowTrackLoadToPlayingDeck->currentIndex());
 }
 
-void DlgPrefControls::slotSetCueDefault(int)
-{
+void DlgPrefControls::slotSetCueDefault(int) {
     int cueIndex = ComboBoxCueDefault->currentIndex();
-    m_pConfig->set(ConfigKey("[Controls]","CueDefault"), ConfigValue(cueIndex));
+    m_settings.setValue("Controls/CueDefault", cueIndex);
 
     // Set cue behavior for every group
     foreach (ControlObjectThreadMain* pControl, m_cueControls) {
@@ -415,14 +389,12 @@ void DlgPrefControls::slotSetCueDefault(int)
     }
 }
 
-void DlgPrefControls::slotSetCueRecall(int)
-{
-    m_pConfig->set(ConfigKey("[Controls]","CueRecall"), ConfigValue(ComboBoxCueRecall->currentIndex()));
+void DlgPrefControls::slotSetCueRecall(int) {
+    m_settings.setValue("Controls/CueRecall", ComboBoxCueRecall->currentIndex());
 }
 
-void DlgPrefControls::slotSetAutoDjRequeue(int)
-{
-    m_pConfig->set(ConfigKey("[Auto DJ]", "Requeue"), ConfigValue(ComboBoxAutoDjRequeue->currentIndex()));
+void DlgPrefControls::slotSetAutoDjRequeue(int) {
+    m_settings.setValue("Auto DJ/Requeue", ComboBoxAutoDjRequeue->currentIndex());
 }
 
 void DlgPrefControls::slotSetTooltips(int)
@@ -439,15 +411,13 @@ void DlgPrefControls::notifyRebootNecessary() {
         tr("Mixxx must be restarted before the changes will take effect."));
 }
 
-void DlgPrefControls::slotSetScheme(int)
-{
-    m_pConfig->set(ConfigKey("[Config]", "Scheme"), ComboBoxSchemeconf->currentText());
+void DlgPrefControls::slotSetScheme(int) {
+    m_settings.setValue("Config/Scheme", ComboBoxSchemeconf->currentText());
     m_mixxx->rebootMixxxView();
 }
 
-void DlgPrefControls::slotSetSkin(int)
-{
-    m_pConfig->set(ConfigKey("[Config]","Skin"), ComboBoxSkinconf->currentText());
+void DlgPrefControls::slotSetSkin(int) {
+    m_settings.setValue("Config/Skin", ComboBoxSkinconf->currentText());
     m_mixxx->rebootMixxxView();
     checkSkinResolution(ComboBoxSkinconf->currentText())
             ? warningLabel->hide() : warningLabel->show();
@@ -457,7 +427,7 @@ void DlgPrefControls::slotSetSkin(int)
 void DlgPrefControls::slotSetPositionDisplay(int)
 {
     int positionDisplay = ComboBoxPosition->currentIndex();
-    m_pConfig->set(ConfigKey("[Controls]","PositionDisplay"), ConfigValue(positionDisplay));
+    m_settings.setValue("Controls/PositionDisplay", positionDisplay);
     m_pControlPositionDisplay->set(positionDisplay);
 }
 
@@ -465,70 +435,51 @@ void DlgPrefControls::slotSetPositionDisplay(double v) {
     if (v > 0) {
         // remaining
         ComboBoxPosition->setCurrentIndex(1);
-        m_pConfig->set(ConfigKey("[Controls]","PositionDisplay"), ConfigValue(1));
+        m_settings.setValue("Controls/PositionDisplay", 1);
     } else {
         // position
         ComboBoxPosition->setCurrentIndex(0);
-        m_pConfig->set(ConfigKey("[Controls]","PositionDisplay"), ConfigValue(0));
+        m_settings.setValue("Controls/PositionDisplay", 0);
     }
 }
 
-void DlgPrefControls::slotSetRateTempLeft(double v)
-{
+void DlgPrefControls::slotSetRateTempLeft(double v) {
     QString str;
     str = str.setNum(v, 'f');
-    m_pConfig->set(ConfigKey("[Controls]","RateTempLeft"),ConfigValue(str));
+    m_settings.setValue("Controls/RateTempLeft", str);
     RateControl::setTemp(v);
 }
 
-void DlgPrefControls::slotSetRateTempRight(double v)
-{
+void DlgPrefControls::slotSetRateTempRight(double v) {
     QString str;
     str = str.setNum(v, 'f');
-    m_pConfig->set(ConfigKey("[Controls]","RateTempRight"),ConfigValue(str));
+    m_settings.setValue("Controls/RateTempRight", str);
     RateControl::setTempSmall(v);
 }
 
-void DlgPrefControls::slotSetRatePermLeft(double v)
-{
+void DlgPrefControls::slotSetRatePermLeft(double v) {
     QString str;
     str = str.setNum(v, 'f');
-    m_pConfig->set(ConfigKey("[Controls]","RatePermLeft"),ConfigValue(str));
+    m_settings.setValue("Controls/RatePermLeft",str);
     RateControl::setPerm(v);
 }
 
-void DlgPrefControls::slotSetRatePermRight(double v)
-{
+void DlgPrefControls::slotSetRatePermRight(double v) {
     QString str;
     str = str.setNum(v, 'f');
-    m_pConfig->set(ConfigKey("[Controls]","RatePermRight"),ConfigValue(str));
+    m_settings.setValue("Controls/RatePermRight", str);
     RateControl::setPermSmall(v);
 }
 
-void DlgPrefControls::slotSetRateRampSensitivity(int sense)
-{
-    m_pConfig->set(ConfigKey("[Controls]","RateRampSensitivity"),
-                   ConfigValue(SliderRateRampSensitivity->value()));
+void DlgPrefControls::slotSetRateRampSensitivity(int sense) {
+    m_settings.setValue("Controls/RateRampSensitivity", SliderRateRampSensitivity->value());
     RateControl::setRateRampSensitivity(sense);
 }
 
-void DlgPrefControls::slotSetRateRamp(bool mode)
-{
-    m_pConfig->set(ConfigKey("[Controls]", "RateRamp"),
-                   ConfigValue(groupBoxRateRamp->isChecked()));
+void DlgPrefControls::slotSetRateRamp(bool mode) {
+    m_settings.setValue("Controls/RateRamp", groupBoxRateRamp->isChecked());
     RateControl::setRateRamp(mode);
 
-    /*
-    if ( mode )
-    {
-        SliderRateRampSensitivity->setEnabled(TRUE);
-        SpinBoxRateRampSensitivity->setEnabled(TRUE);
-    }
-    else
-    {
-        SliderRateRampSensitivity->setEnabled(FALSE);
-        SpinBoxRateRampSensitivity->setEnabled(FALSE);
-    }*/
 }
 
 void DlgPrefControls::slotApply()
@@ -543,13 +494,13 @@ void DlgPrefControls::slotApply()
     else if (deck1RateRange <= 0.09)
         idx = 1.;
 
-    m_pConfig->set(ConfigKey("[Controls]","RateRange"), ConfigValue((int)idx));
+    m_settings.setValue("Controls/RateRange", idx);
 
     // Write rate direction to config file
     if (deck1RateDir == 1)
-        m_pConfig->set(ConfigKey("[Controls]","RateDir"), ConfigValue(0));
+        m_settings.setValue("Controls/RateDir",0);
     else
-        m_pConfig->set(ConfigKey("[Controls]","RateDir"), ConfigValue(1));
+        m_settings.setValue("Controls/RateDir",1);
 
 }
 

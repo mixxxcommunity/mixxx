@@ -38,6 +38,7 @@ const QString Library::m_sTrackViewName = QString("WTrackTableView");
 Library::Library(QObject* parent, ConfigObject<ConfigValue>* pConfig, bool firstRun,
                  RecordingManager* pRecordingManager) :
         m_pConfig(pConfig),
+        m_settings(),
         m_pSidebarModel(new SidebarModel(parent)),
         m_pTrackCollection(new TrackCollection(pConfig)),
         m_pLibraryControl(new LibraryControl),
@@ -72,16 +73,13 @@ Library::Library(QObject* parent, ConfigObject<ConfigValue>* pConfig, bool first
     //iTunes and Rhythmbox should be last until we no longer have an obnoxious
     //messagebox popup when you select them. (This forces you to reach for your
     //mouse or keyboard if you're using MIDI control and you scroll through them...)
-    if (RhythmboxFeature::isSupported() &&
-        pConfig->getValueString(ConfigKey("[Library]","ShowRhythmboxLibrary"),"1").toInt()) {
+    if (RhythmboxFeature::isSupported() && m_settings.value("Library/ShowRhythmboxLibrary").toBool()) {
         addFeature(new RhythmboxFeature(this, m_pTrackCollection));
     }
-    if (ITunesFeature::isSupported() &&
-        pConfig->getValueString(ConfigKey("[Library]","ShowITunesLibrary"),"1").toInt()) {
+    if (ITunesFeature::isSupported() && m_settings.value("Library/ShowITunesLibrary").toBool()) {
         addFeature(new ITunesFeature(this, m_pTrackCollection));
     }
-    if (TraktorFeature::isSupported() &&
-        pConfig->getValueString(ConfigKey("[Library]","ShowTraktorLibrary"),"1").toInt()) {
+    if (TraktorFeature::isSupported() && m_settings.value("Library/ShowTraktorLibrary").toBool()) {
         addFeature(new TraktorFeature(this, m_pTrackCollection));
     }
 

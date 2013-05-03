@@ -7,6 +7,7 @@
 #include <QEvent>
 #include <QList>
 #include <QMutex>
+#include <QSettings>
 
 #include "defs.h"
 #include "trackinfoobject.h"
@@ -32,27 +33,27 @@ class WWaveformViewer : public QWidget {
     void mouseMoveEvent(QMouseEvent *);
     void mouseReleaseEvent(QMouseEvent *);
 
-signals:
+  signals:
     void valueChangedLeftDown(double);
     void valueChangedRightDown(double);
     void trackDropped(QString filename, QString group);
     void valueReset();
-
-public slots:
+ 
+  public slots:
     void onTrackLoaded( TrackPointer track);
     void onTrackUnloaded( TrackPointer track);
 
-protected:
+  protected:
     virtual void resizeEvent(QResizeEvent *event);
     virtual void wheelEvent(QWheelEvent *event);
 
-private slots:
+  private slots:
     void onZoomChange(double zoom);
     void slotWidgetDead() {
         m_waveformWidget = NULL;
     }
 
-private:
+  private:
     void setWaveformWidget(WaveformWidgetAbstract* waveformWidget);
     WaveformWidgetAbstract* getWaveformWidget() {
         return m_waveformWidget;
@@ -60,9 +61,9 @@ private:
     //direct access to let factory sync/set default zoom
     void setZoom(int zoom);
 
-private:
     const char* m_pGroup;
     ConfigObject<ConfigValue>* m_pConfig;
+    QSettings m_settings;
     int m_zoomZoneWidth;
     ControlObjectThreadMain* m_pZoom;
     ControlObjectThreadMain* m_pScratchPositionEnable;

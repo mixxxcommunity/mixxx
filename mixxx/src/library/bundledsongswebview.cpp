@@ -34,10 +34,11 @@ BundledSongsWebView::BundledSongsWebView(QWidget* parent,
     LibraryView(),
     m_bFirstRun(firstRun),
     m_pConfig(config),
+    m_settings(),
     m_pTrackCollection(trackCollection) {
     m_sPromoBundlePath = promoBundlePath;
     m_sLocalURL = localURL;
-    m_statTracking = (int)m_pConfig->getValueString(ConfigKey(CONFIG_KEY,"StatTracking")).toInt();
+    m_statTracking = m_settings.value("Promo/StatTracking").Int();
 
     //Disable right-click
     QWidget::setContextMenuPolicy(Qt::PreventContextMenu);
@@ -149,7 +150,7 @@ bool BundledSongsWebView::statTracking() const {
 void BundledSongsWebView::setStatTracking(bool statTracking) {
     //qDebug() << "setStatTracking" << statTracking;
     m_statTracking = statTracking;
-    m_pConfig->set(ConfigKey(CONFIG_KEY,"StatTracking"), ConfigValue(m_statTracking));
+    m_settings.setValue("Promo/StatTracking", m_statTracking);
 };
 
 

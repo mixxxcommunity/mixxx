@@ -24,10 +24,9 @@
 #include "recording/encoder.h"
 
 
-DlgPrefRecord::DlgPrefRecord(QWidget * parent, ConfigObject<ConfigValue> * _config)
+DlgPrefRecord::DlgPrefRecord(QWidget * parent)
         : QWidget(parent),
           m_settings(){
-    config = _config;
     confirmOverwrite = false;
     radioFlac = 0;
     radioMp3 = 0;
@@ -45,7 +44,7 @@ DlgPrefRecord::DlgPrefRecord(QWidget * parent, ConfigObject<ConfigValue> * _conf
     radioMp3 = new QRadioButton(ENCODING_MP3);
 
     // Setting recordings path
-    QString recordingsPath = config->getValueString(ConfigKey("[Recording]","Directory"));
+    QString recordingsPath = m_settings.value("Recording/Directory").toString();
     if (recordingsPath == "") {
         // Initialize recordings path in config to old default path.
         // Do it here so we show current value in UI correctly.
@@ -90,7 +89,7 @@ DlgPrefRecord::DlgPrefRecord(QWidget * parent, ConfigObject<ConfigValue> * _conf
 #endif
 
     //Read config and check radio button
-    QString format = config->getValueString(ConfigKey("[Recording]","Encoding"));
+    QString format = m_settings.value("Recording/Encoding").toString();
     if(format == ENCODING_WAVE)
         radioWav->setChecked(true);
 #ifdef __SHOUTCAST__
@@ -103,11 +102,10 @@ DlgPrefRecord::DlgPrefRecord(QWidget * parent, ConfigObject<ConfigValue> * _conf
     else if (format == ENCODING_AIFF)
         radioAiff->setChecked(true);
 #endif
-    else //Invalid, so set default and save
-    {
+    else { //Invalid, so set default and save
         //If no config was available, set to WAVE as default
         radioWav->setChecked(true);
-        config->set(ConfigKey(RECORDING_PREF_KEY, "Encoding"), ConfigValue(ENCODING_WAVE));
+        m_settings.setValue("Recording/Encoding", ENCODING_WAVE);
     }
 
     //Connections
@@ -126,7 +124,7 @@ DlgPrefRecord::DlgPrefRecord(QWidget * parent, ConfigObject<ConfigValue> * _conf
     comboBoxSplitting->addItem(SPLIT_2048MB);
     comboBoxSplitting->addItem(SPLIT_4096MB);
 
-    QString fileSizeStr = config->getValueString(ConfigKey("[Recording]","FileSize"));
+    QString fileSizeStr = m_settings.value("Recording/FileSize").toString();
     int index = comboBoxSplitting->findText(fileSizeStr);
     if(index > 0){
         //set file split size
@@ -135,7 +133,7 @@ DlgPrefRecord::DlgPrefRecord(QWidget * parent, ConfigObject<ConfigValue> * _conf
     //Otherwise 650 MB will be default file split size
 
     //Read CUEfile info
-    CheckBoxRecordCueFile->setChecked((bool) config->getValueString(ConfigKey("[Recording]","CueEnabled")).toInt());
+    CheckBoxRecordCueFile->setChecked(m_settings.value("Recording/CueEnabled").toBool());
 
 }
 
@@ -145,11 +143,11 @@ void DlgPrefRecord::slotSliderQuality()
 
     if (radioOgg && radioOgg->isChecked())
     {
-        config->set(ConfigKey(RECORDING_PREF_KEY, "OGG_Quality"), ConfigValue(SliderQuality->value()));
+        m_settings.setValue("Recording/OGG_Quality", SliderQuality->value());
     }
     else if (radioMp3 && radioMp3->isChecked())
     {
-        config->set(ConfigKey(RECORDING_PREF_KEY, "MP3_Quality"), ConfigValue(SliderQuality->value()));
+        m_settings.setValue("Recording/MP3_Quality", SliderQuality->value());
     }
 }
 
@@ -177,111 +175,87 @@ void DlgPrefRecord::slotEncoding()
 {
     //set defaults
     groupBoxQuality->setEnabled(true);
-    //config->set(ConfigKey(RECORDING_PREF_KEY, "Encoding"), ConfigValue(comboBoxEncoding->currentText()));
 
     if (radioWav && radioWav->isChecked()) {
-        config->set(ConfigKey(RECORDING_PREF_KEY, "Encoding"), ConfigValue(ENCODING_WAVE));
+        m_settings.setValue("Recording/Encoding", ENCODING_WAVE);
         groupBoxQuality->setEnabled(false);
-    }
-    else if(radioFlac && radioFlac->isChecked()){
-        config->set(ConfigKey(RECORDING_PREF_KEY, "Encoding"), ConfigValue(ENCODING_FLAC));
+    } else if(radioFlac && radioFlac->isChecked()) {
+        m_settings.setValue("Recording/Encoding", ENCODING_FLAC);
         groupBoxQuality->setEnabled(false);
-    }
-    else if(radioAiff && radioAiff->isChecked()){
-        config->set(ConfigKey(RECORDING_PREF_KEY, "Encoding"), ConfigValue(ENCODING_AIFF));
+    } else if(radioAiff && radioAiff->isChecked()) {
+        m_settings.setValue("Recording/Encoding", ENCODING_AIFF);
         groupBoxQuality->setEnabled(false);
-    }
-    else if (radioOgg && radioOgg->isChecked())
-    {
-        int value = config->getValueString(ConfigKey(RECORDING_PREF_KEY, "OGG_Quality")).toInt();
+    } else if (radioOgg && radioOgg->isChecked()) {
+        int value = m_settings.value("Recording/OGG_Quality").toInt();
         //if value == 0 then a default value of 128kbps is proposed.
         if(!value)
             value = 6; // 128kbps
 
         SliderQuality->setValue(value);
-        config->set(ConfigKey(RECORDING_PREF_KEY, "Encoding"), ConfigValue(ENCODING_OGG));
-    }
-    else if (radioMp3 && radioMp3->isChecked())
-    {
-        int value = config->getValueString(ConfigKey(RECORDING_PREF_KEY, "MP3_Quality")).toInt();
+        m_settings.setValue("Recoding/Encoding", ENCODING_OGG);
+    } else if (radioMp3 && radioMp3->isChecked()) {
+        int value = m_settings.value("Recoding/MP3_Quality").toInt();
         //if value == 0 then a default value of 128kbps is proposed.
         if(!value)
             value = 6; // 128kbps
 
         SliderQuality->setValue(value);
-        config->set(ConfigKey(RECORDING_PREF_KEY, "Encoding"), ConfigValue(ENCODING_MP3));
+        m_settings.setValue("Recording/Encoding", ENCODING_MP3);
     }
     else
         qDebug() << "Invalid recording encoding type in" << __FILE__ << "on line:" << __LINE__;
 }
 
-void DlgPrefRecord::setMetaData()
-{
-    config->set(ConfigKey(RECORDING_PREF_KEY, "Title"), ConfigValue(LineEditTitle->text()));
-    config->set(ConfigKey(RECORDING_PREF_KEY, "Author"), ConfigValue(LineEditAuthor->text()));
-    config->set(ConfigKey(RECORDING_PREF_KEY, "Album"), ConfigValue(LineEditAlbum->text()));
+void DlgPrefRecord::setMetaData() {
+    m_settings.setValue("Recording/Title", LineEditTitle->text());
+    m_settings.setValue("Recording/Author", LineEditAuthor->text());
+    m_settings.setValue("Recording/Album", LineEditAlbum->text());
 }
 
-void DlgPrefRecord::loadMetaData()
-{
-    LineEditTitle->setText( config->getValueString(ConfigKey(RECORDING_PREF_KEY, "Title")));
-    LineEditAuthor->setText( config->getValueString(ConfigKey(RECORDING_PREF_KEY, "Author")));
-    LineEditAlbum->setText( config->getValueString(ConfigKey(RECORDING_PREF_KEY, "Album")));
+void DlgPrefRecord::loadMetaData() {
+    LineEditTitle->setText(m_settings.value("Recording/Title").toString());
+    LineEditAuthor->setText(m_settings.value("Recording/Author").toString());
+    LineEditAlbum->setText(m_settings.value("Recording/Album").toString());
 }
 
-DlgPrefRecord::~DlgPrefRecord()
-{
+DlgPrefRecord::~DlgPrefRecord() {
    delete recordControl;
 }
 
-void DlgPrefRecord::slotRecordPathChange()
-{
+void DlgPrefRecord::slotRecordPathChange() {
     confirmOverwrite = false;
     slotApply();
 }
 
 //This function updates/refreshes the contents of this dialog
-void DlgPrefRecord::slotUpdate()
-{
+void DlgPrefRecord::slotUpdate() {
     // Recordings path
-    QString recordingsPath = config->getValueString(ConfigKey("[Recording]","Directory"));
+    QString recordingsPath = m_settings.value("Recording/Directory").toString();
     LineEditRecordings->setText(recordingsPath);
 
-    if (radioWav && radioWav->isChecked())
-    {
-        config->set(ConfigKey(RECORDING_PREF_KEY, "Encoding"), ConfigValue(ENCODING_WAVE));
-    }
-    else if (radioAiff && radioAiff->isChecked())
-    {
-        config->set(ConfigKey(RECORDING_PREF_KEY, "Encoding"), ConfigValue(ENCODING_AIFF));
-    }
-    else if (radioFlac && radioFlac->isChecked())
-    {
-        config->set(ConfigKey(RECORDING_PREF_KEY, "Encoding"), ConfigValue(ENCODING_FLAC));
-    }
-    else if (radioOgg && radioOgg->isChecked())
-    {
-        config->set(ConfigKey(RECORDING_PREF_KEY, "Encoding"), ConfigValue(ENCODING_OGG));
-    }
-    else if (radioMp3 && radioMp3->isChecked())
-    {
-       config->set(ConfigKey(RECORDING_PREF_KEY, "Encoding"), ConfigValue(ENCODING_MP3));
+    if (radioWav && radioWav->isChecked()) {
+        m_settings.setValue("Recording/Encoding", ENCODING_WAVE);
+    } else if (radioAiff && radioAiff->isChecked()) {
+        m_settings.setValue("Recording/Encoding", ENCODING_AIFF);
+    } else if (radioFlac && radioFlac->isChecked()) {
+        m_settings.setValue("Recording/Encoding", ENCODING_FLAC);
+    } else if (radioOgg && radioOgg->isChecked()) {
+        m_settings.setValue("Recording/Encoding", ENCODING_OGG);
+    } else if (radioMp3 && radioMp3->isChecked()) {
+        m_settings.setValue("Recording/Encoding", ENCODING_MP3);
     }
     loadMetaData();
 }
 
-void DlgPrefRecord::slotBrowseRecordingsDir()
-{
+void DlgPrefRecord::slotBrowseRecordingsDir() {
     QString fd = QFileDialog::getExistingDirectory(this, tr("Choose recordings directory"),
-                                                   config->getValueString(ConfigKey("[Recording]","Directory")));
-    if (fd != "")
-    {
+                                                   m_settings.value("Recording/Directory").toString());
+    if (fd != "") {
         LineEditRecordings->setText(fd);
     }
 }
 
-void DlgPrefRecord::slotApply()
-{
+void DlgPrefRecord::slotApply() {
     setRecordingFolder();
 
     setMetaData();
@@ -294,21 +268,16 @@ void DlgPrefRecord::setRecordingFolder() {
         qDebug() << "Recordings path was empty in dialog";
         return;
     }
-    if (LineEditRecordings->text() != config->getValueString(ConfigKey("[Recording]","Directory")))
-    {
+    if (LineEditRecordings->text() != m_settings.value("Recording/Directory").toString()) {
         qDebug() << "Saved recordings path" << LineEditRecordings->text();
-        config->set(ConfigKey("[Recording]","Directory"), LineEditRecordings->text());
+        m_settings.setValue("Recording/Directory", LineEditRecordings->text());
     }
 }
 
-void DlgPrefRecord::slotEnableCueFile(int enabled)
-{
-    config->set(ConfigKey(RECORDING_PREF_KEY, "CueEnabled"), ConfigValue(enabled != Qt::Unchecked));
+void DlgPrefRecord::slotEnableCueFile(int enabled) {
+    m_settings.setValue("Recording/CueEnabled", enabled != Qt::Unchecked);
 }
 
-void DlgPrefRecord::slotChangeSplitSize()
-{
-        config->set(ConfigKey(RECORDING_PREF_KEY, "FileSize"),
-                    ConfigValue(comboBoxSplitting->currentText()));
-
+void DlgPrefRecord::slotChangeSplitSize() {
+    m_settings.setValue("Recording/FileSize", comboBoxSplitting->currentText());
 }
