@@ -8,6 +8,7 @@ EngineControl::EngineControl(const char * _group,
                              ConfigObject<ConfigValue> * _config) :
     m_pGroup(_group),
     m_pConfig(_config),
+    m_settings(),
     m_dCurrentSample(0),
     m_dTotalSamples(0),
     m_pEngineMaster(NULL) {

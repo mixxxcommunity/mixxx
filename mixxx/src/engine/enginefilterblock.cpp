@@ -44,9 +44,9 @@ EngineFilterBlock::EngineFilterBlock(const char * group)
     //Setup Filter Controls
 
     if (s_loEqFreq == NULL) {
-        s_loEqFreq = new ControlPotmeter(ConfigKey("[Mixer Profile]", "LoEQFrequency"), 0., 22040);
-        s_hiEqFreq = new ControlPotmeter(ConfigKey("[Mixer Profile]", "HiEQFrequency"), 0., 22040);
-        s_lofiEq = new ControlPushButton(ConfigKey("[Mixer Profile]", "LoFiEQs"));
+        s_loEqFreq = new ControlPotmeter(ConfigKey("[MixerProfile]", "LoEQFrequency"), 0., 22040);
+        s_hiEqFreq = new ControlPotmeter(ConfigKey("[MixerProfile]", "HiEQFrequency"), 0., 22040);
+        s_lofiEq = new ControlPushButton(ConfigKey("[MixerProfile]", "LoFiEQs"));
     }
 
     high = band = low = NULL;

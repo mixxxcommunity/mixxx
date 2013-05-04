@@ -2,6 +2,8 @@
 #define DLGAUTODJ_H
 
 #include <QItemSelection>
+#include <QSettings>
+
 #include "ui_dlgautodj.h"
 #include "configobject.h"
 #include "controlpushbutton.h"
@@ -71,6 +73,7 @@ class DlgAutoDJ : public QWidget, public Ui::DlgAutoDJ, public LibraryView {
     bool removePlayingTrackFromQueue(QString group);
 
     ConfigObject<ConfigValue>* m_pConfig;
+    QSettings m_settings;
     TrackCollection* m_pTrackCollection;
     WTrackTableView* m_pTrackTableView;
     PlaylistTableModel* m_pAutoDJTableModel;

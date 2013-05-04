@@ -134,7 +134,7 @@ DlgPrefControls::DlgPrefControls(QWidget * parent, MixxxApp * mixxx,
     // Iterate through the available locales and add them to the combobox
     // Borrowed following snippet from http://qt-project.org/wiki/How_to_create_a_multi_language_application
     QString translationsFolder = m_pConfig->getResourcePath() + "translations/";
-    QString currentLocale = m_settings.value("Config/Locale","").toString();
+    QString currentLocale = m_settings.value("Locale","").toString();
 
     QDir translationsDir(translationsFolder);
     QStringList fileNames = translationsDir.entryList(QStringList("mixxx_*.qm"));
@@ -184,19 +184,17 @@ DlgPrefControls::DlgPrefControls(QWidget * parent, MixxxApp * mixxx,
     //Cue recall
     ComboBoxCueRecall->addItem(tr("On"));
     ComboBoxCueRecall->addItem(tr("Off"));
-    ComboBoxCueRecall->setCurrentIndex(m_settings.value("Contrls/CueRecall").toInt());
+    ComboBoxCueRecall->setCurrentIndex(m_settings.value("Controls/CueRecall").toInt());
     //NOTE: for CueRecall, 0 means ON....
     connect(ComboBoxCueRecall, SIGNAL(activated(int)), this, SLOT(slotSetCueRecall(int)));
 
     // Re-queue tracks in Auto DJ
     ComboBoxAutoDjRequeue->addItem(tr("Off"));
     ComboBoxAutoDjRequeue->addItem(tr("On"));
-    ComboBoxAutoDjRequeue->setCurrentIndex(m_settings.value("Auto DJ/Requeue").toBool());
+    ComboBoxAutoDjRequeue->setCurrentIndex(m_settings.value("AutoDJ/Requeue").toBool());
     connect(ComboBoxAutoDjRequeue, SIGNAL(activated(int)), this, SLOT(slotSetAutoDjRequeue(int)));
 
-    //
     // Skin configurations
-    //
     QString warningString = "<img src=\":/images/preferences/ic_preferences_warning.png\") width=16 height=16 />"
         + tr("The selected skin is bigger than your screen resolution.");
     warningLabel->setText(warningString);
@@ -210,10 +208,8 @@ DlgPrefControls::DlgPrefControls(QWidget * parent, MixxxApp * mixxx,
 
     QList<QFileInfo> list = dir.entryInfoList();
     int j=0;
-    for (int i=0; i<list.size(); ++i)
-    {
-        if (list.at(i).fileName()!="." && list.at(i).fileName()!="..")
-        {
+    for (int i=0; i<list.size(); ++i) {
+        if (list.at(i).fileName()!="." && list.at(i).fileName()!="..") {
             checkSkinResolution(list.at(i).fileName())
                     ? ComboBoxSkinconf->insertItem(i, QIcon(":/trolltech/styles/commonstyle/images/standardbutton-apply-32.png"), list.at(i).fileName())
                     : ComboBoxSkinconf->insertItem(i, QIcon(":/images/preferences/ic_preferences_warning.png"), list.at(i).fileName());
@@ -262,8 +258,7 @@ DlgPrefControls::DlgPrefControls(QWidget * parent, MixxxApp * mixxx,
     initWaveformControl();
 }
 
-DlgPrefControls::~DlgPrefControls()
-{
+DlgPrefControls::~DlgPrefControls() {
     foreach (ControlObjectThreadMain* pControl, m_rateControls) {
         delete pControl;
     }
@@ -278,8 +273,7 @@ DlgPrefControls::~DlgPrefControls()
     }
 }
 
-void DlgPrefControls::slotUpdateSchemes()
-{
+void DlgPrefControls::slotUpdateSchemes() {
     // Since this involves opening a file we won't do this as part of regular slotUpdate
     QList<QString> schlist = LegacySkinParser::getSchemeList(
                 m_pSkinLoader->getConfiguredSkinPath());
@@ -302,8 +296,7 @@ void DlgPrefControls::slotUpdateSchemes()
     }
 }
 
-void DlgPrefControls::slotUpdate()
-{
+void DlgPrefControls::slotUpdate() {
     ComboBoxRateRange->clear();
     ComboBoxRateRange->addItem(tr("6%"));
     ComboBoxRateRange->addItem(tr("8% (Technics SL-1210)"));
@@ -344,8 +337,7 @@ void DlgPrefControls::slotSetLocale(int pos) {
     notifyRebootNecessary();
 }
 
-void DlgPrefControls::slotSetRateRange(int pos)
-{
+void DlgPrefControls::slotSetRateRange(int pos) {
     float range = (float)(pos-1)/10.;
     if (pos==0)
         range = 0.06f;
@@ -394,7 +386,7 @@ void DlgPrefControls::slotSetCueRecall(int) {
 }
 
 void DlgPrefControls::slotSetAutoDjRequeue(int) {
-    m_settings.setValue("Auto DJ/Requeue", ComboBoxAutoDjRequeue->currentIndex());
+    m_settings.setValue("AutoDJ/Requeue", ComboBoxAutoDjRequeue->currentIndex());
 }
 
 void DlgPrefControls::slotSetTooltips(int)

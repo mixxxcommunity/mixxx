@@ -190,7 +190,7 @@ MixxxApp::MixxxApp(QApplication *pApp, const CmdlineArgs& args)
 
     // Attempt to load user locale from config
     if (userLocale == "") {
-        userLocale = settings.value("Config/Locale", "").toString();
+        userLocale = settings.value("Locale", "").toString();
         qDebug() << "kain88 locale "<< userLocale;
     }
 

@@ -481,8 +481,8 @@ void WTrackTableView::contextMenuEvent(QContextMenuEvent* event) {
                 ControlObject* pPlayCO = ControlObject::getControl(
                     ConfigKey(deckGroup, "play"));
                 bool deckPlaying = pPlayCO && pPlayCO->get() > 0.0;
-                bool loadTrackIntoPlayingDeck = m_pConfig->getValueString(
-                    ConfigKey("[Controls]","AllowTrackLoadToPlayingDeck")).toInt();
+                bool loadTrackIntoPlayingDeck = m_settings.value(
+                                "Control/AllowTrackLoadToPlayingDeck").toBool();
                 bool deckEnabled = (!deckPlaying  || loadTrackIntoPlayingDeck)  && oneSongSelected;
                 QAction* pAction = new QAction(tr("Load to Deck %1").arg(i), m_pMenu);
                 pAction->setEnabled(deckEnabled);

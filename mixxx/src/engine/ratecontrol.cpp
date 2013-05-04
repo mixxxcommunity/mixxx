@@ -1,6 +1,8 @@
 // ratecontrol.cpp
 // Created 7/4/2009 by RJ Ryan (rryan@mit.edu)
 
+#include <QSettings>
+
 #include "controlobject.h"
 #include "controlpushbutton.h"
 #include "controlpotmeter.h"
@@ -139,11 +141,10 @@ RateControl::RateControl(const char* _group,
     // Update Internal Settings
     // Set Pitchbend Mode
     m_eRateRampMode = (RateControl::RATERAMP_MODE)
-            getConfig()->getValueString(ConfigKey("[Controls]","RateRamp")).toInt();
+            m_settings.value("Controls/RateRamp").toInt();
 
     // Set the Sensitivity
-    m_iRateRampSensitivity =
-            getConfig()->getValueString(ConfigKey("[Controls]","RateRampSensitivity")).toInt();
+    m_iRateRampSensitivity = m_settings.value("Controls/RateRampSensitivity").toInt();
 
 #ifdef __VINYLCONTROL__
     ControlObject* pVCEnabled = ControlObject::getControl(ConfigKey(_group, "vinylcontrol_enabled"));

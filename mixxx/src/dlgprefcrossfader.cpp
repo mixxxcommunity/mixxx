@@ -15,31 +15,32 @@
 *                                                                         *
 ***************************************************************************/
 
-#include "dlgprefcrossfader.h"
-#include "engine/enginefilteriir.h"
-#include "controlobject.h"
-#include "engine/enginexfader.h"
-#include <qlineedit.h>
-#include <qwidget.h>
-#include <qslider.h>
-#include <qlabel.h>
-#include <qstring.h>
-#include <qcheckbox.h>
-#include <qpushbutton.h>
-#include <qgraphicsscene.h>
-#include <QtDebug>
-
 #include <assert.h>
 
-#define CONFIG_KEY "[Mixer Profile]"
+#include <QLineEdit>
+#include <QWidget>
+#include <QSlider>
+#include <QLabel>
+#include <QString>
+#include <QCheckBox>
+#include <QPushButton>
+#include <QGraphicsScene>
+#include <QtDebug>
 
-DlgPrefCrossfader::DlgPrefCrossfader(QWidget * parent, ConfigObject<ConfigValue> * _config)
-        : QWidget(parent)
-        , m_COTMode(ControlObject::getControl(ConfigKey(CONFIG_KEY, "xFaderMode")))
-        , m_COTCurve(ControlObject::getControl(ConfigKey(CONFIG_KEY, "xFaderCurve")))
-        , m_COTCalibration(ControlObject::getControl(ConfigKey(CONFIG_KEY, "xFaderCalibration")))
-        , m_COTReverse(ControlObject::getControl(ConfigKey(CONFIG_KEY, "xFaderReverse"))) {
-    config = _config;
+#include "dlgprefcrossfader.h"
+#include "engine/enginefilteriir.h"
+#include "engine/enginexfader.h"
+#include "controlobject.h"
+
+static const QString CONFIG_KEY="MixerProfile";
+
+DlgPrefCrossfader::DlgPrefCrossfader(QWidget * parent)
+        : QWidget(parent),
+          m_settings(),
+        m_COTMode(ControlObject::getControl(ConfigKey(CONFIG_KEY, "xFaderMode"))),
+        m_COTCurve(ControlObject::getControl(ConfigKey(CONFIG_KEY, "xFaderCurve"))),
+        m_COTCalibration(ControlObject::getControl(ConfigKey(CONFIG_KEY, "xFaderCalibration"))),
+        m_COTReverse(ControlObject::getControl(ConfigKey(CONFIG_KEY, "xFaderReverse"))) {   
     m_pxfScene = NULL;
 
     m_transform = 0;
@@ -56,14 +57,14 @@ DlgPrefCrossfader::DlgPrefCrossfader(QWidget * parent, ConfigObject<ConfigValue>
 
     loadSettings();
 
-    connect(SliderXFader,         SIGNAL(valueChanged(int)), this, SLOT(slotUpdateXFader()));
-    connect(SliderXFader,         SIGNAL(sliderMoved(int)), this,  SLOT(slotUpdateXFader()));
-    connect(SliderXFader,         SIGNAL(sliderReleased()), this,  SLOT(slotUpdateXFader()));
-    connect(SliderXFader,         SIGNAL(sliderReleased()), this,  SLOT(slotApply()));
+    connect(SliderXFader, SIGNAL(valueChanged(int)), this, SLOT(slotUpdateXFader()));
+    connect(SliderXFader, SIGNAL(sliderMoved(int)), this,  SLOT(slotUpdateXFader()));
+    connect(SliderXFader, SIGNAL(sliderReleased()), this,  SLOT(slotUpdateXFader()));
+    connect(SliderXFader, SIGNAL(sliderReleased()), this,  SLOT(slotApply()));
 
     //Update the crossfader curve graph and other setings when the crossfader mode is changed.
-    connect(radioButtonAdditive,        SIGNAL(clicked(bool)), this, SLOT(slotUpdate()));
-    connect(radioButtonConstantPower,   SIGNAL(clicked(bool)), this, SLOT(slotUpdate()));
+    connect(radioButtonAdditive, SIGNAL(clicked(bool)), this, SLOT(slotUpdate()));
+    connect(radioButtonConstantPower, SIGNAL(clicked(bool)), this, SLOT(slotUpdate()));
 }
 
 DlgPrefCrossfader::~DlgPrefCrossfader() {
@@ -73,11 +74,11 @@ DlgPrefCrossfader::~DlgPrefCrossfader() {
 /** Loads the config keys and sets the widgets in the dialog to match */
 void DlgPrefCrossfader::loadSettings() {
     m_transform = 1. + ((double) SliderXFader->value() / SliderXFader->maximum());
-    double sliderTransform = config->getValueString(ConfigKey(CONFIG_KEY, "xFaderCurve")).toDouble();
+    double sliderTransform = m_settings.value(CONFIG_KEY+"/xFadeCurve").toDouble();
     double sliderVal = SliderXFader->maximum() / MIXXX_XFADER_STEEPNESS_COEFF * (sliderTransform - 1.);
     SliderXFader->setValue((int)sliderVal);
 
-    m_xFaderMode = config->getValueString(ConfigKey(CONFIG_KEY, "xFaderMode")).toInt();
+    m_xFaderMode = m_settings.value(CONFIG_KEY+"/xFaderMode").toInt();
 
     if (m_xFaderMode == MIXXX_XFADER_CONSTPWR) {
         radioButtonConstantPower->setChecked(true);
@@ -87,7 +88,7 @@ void DlgPrefCrossfader::loadSettings() {
         //SliderXFader->setEnabled(false);
     }
 
-    bool xFaderReverse = config->getValueString(ConfigKey(CONFIG_KEY, "xFaderReverse")).toInt() == 1;
+    bool xFaderReverse = m_settings.value(CONFIG_KEY+"/xFaderReverse").toBool();
     checkBoxReverse->setChecked(xFaderReverse);
 
     slotUpdateXFader();
@@ -117,11 +118,11 @@ void DlgPrefCrossfader::slotApply() {
 void DlgPrefCrossfader::slotUpdate() {
     if (radioButtonAdditive->isChecked()) {
         m_xFaderMode = MIXXX_XFADER_ADDITIVE;
-//         SliderXFader->setValue(SliderXFader->minimum());
+        //SliderXFader->setValue(SliderXFader->minimum());
     }
     if (radioButtonConstantPower->isChecked()) {
         m_xFaderMode = MIXXX_XFADER_CONSTPWR;
-        double sliderTransform = config->getValueString(ConfigKey(CONFIG_KEY, "xFaderCurve")).toDouble();
+        double sliderTransform = m_settings.value(CONFIG_KEY+"/xFaderCurve").toDouble();
         double sliderVal = SliderXFader->maximum() / MIXXX_XFADER_STEEPNESS_COEFF * (sliderTransform - 1.);
         SliderXFader->setValue((int)sliderVal);
     }
@@ -130,8 +131,7 @@ void DlgPrefCrossfader::slotUpdate() {
 }
 
 /** Draw the crossfader curve graph. Only needs to get drawn when a change has been made.*/
-void DlgPrefCrossfader::drawXfaderDisplay()
-{
+void DlgPrefCrossfader::drawXfaderDisplay() {
 #define GRID_X_LINES 4
 #define GRID_Y_LINES 6
 
@@ -207,11 +207,10 @@ void DlgPrefCrossfader::slotUpdateXFader() {
 
     m_cal = EngineXfader::getCalibration(m_transform);
     QString QS_transform = QString::number(m_transform);
-    config->set(ConfigKey(CONFIG_KEY, "xFaderMode"), ConfigValue(m_xFaderMode));
-    config->set(ConfigKey(CONFIG_KEY, "xFaderCurve"), ConfigValue(QS_transform));
-    //config->set(ConfigKey(CONFIG_KEY, "xFaderCalibration"), ConfigValue(m_cal)); //FIXME: m_cal is a double - be forewarned
-    config->set(ConfigKey(CONFIG_KEY, "xFaderReverse"),
-                ConfigValue(checkBoxReverse->isChecked() ? 1 : 0));
+    m_settings.setValue(CONFIG_KEY+"/xFaderMode", m_xFaderMode);
+    m_settings.setValue(CONFIG_KEY+"/xFaderCurve", QS_transform);
+    //m_settings.setValue(CONFIG_KEY+"/xFaderCalibration", m_cal);
+    m_settings.setValue(CONFIG_KEY+"/xFaderReverse", checkBoxReverse->isChecked());
 
     drawXfaderDisplay();
 }

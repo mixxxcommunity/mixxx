@@ -18,6 +18,8 @@
 #ifndef DLGPREFCROSSFADER_H
 #define DLGPREFCROSSFADER_H
 
+#include <QSettings>
+
 #include "ui_dlgprefcrossfaderdlg.h"
 #include "configobject.h"
 #include "controlobjectthread.h"
@@ -32,7 +34,7 @@ class QWidget;
 class DlgPrefCrossfader : public QWidget, public Ui::DlgPrefCrossfaderDlg  {
     Q_OBJECT
 public: 
-    DlgPrefCrossfader(QWidget *parent, ConfigObject<ConfigValue> *_config);
+    DlgPrefCrossfader(QWidget *parent);
     ~DlgPrefCrossfader();
 public slots:
 	/** Update X-Fader */
@@ -47,8 +49,7 @@ private:
 	void loadSettings();
 	void drawXfaderDisplay();
 	
-    /** Pointer to config object */
-    ConfigObject<ConfigValue> *config;
+    QSettings m_settings;
 
 	QGraphicsScene *m_pxfScene;
 

@@ -6,6 +6,7 @@
 
 #include <QObject>
 #include <QList>
+#include <QSettings>
 
 #include "configobject.h"
 #include "trackinfoobject.h"
@@ -89,6 +90,7 @@ class EngineControl : public QObject {
     const char* getGroup();
     ConfigObject<ConfigValue>* getConfig();
     EngineMaster* getEngineMaster();
+    QSettings m_settings;
 
   private:
     const char* m_pGroup;

@@ -199,8 +199,7 @@ void CueControl::trackLoaded(TrackPointer pTrack) {
         m_pCuePoint->set(0.0f);
     }
 
-    int cueRecall = getConfig()->getValueString(
-        ConfigKey("[Controls]","CueRecall")).toInt();
+    int cueRecall = m_settings.value("Controls/CueRecall").toInt();
     //If cue recall is ON in the prefs, then we're supposed to seek to the cue
     //point on song load. Note that cueRecall == 0 corresponds to "ON", not OFF.
     double loadCuePoint = 0;

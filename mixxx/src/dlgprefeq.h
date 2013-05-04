@@ -18,8 +18,9 @@
 #ifndef DLGPREFEQ_H
 #define DLGPREFEQ_H
 
+#include <QSettings>
+
 #include "ui_dlgprefeqdlg.h"
-#include "configobject.h"
 #include "engine/enginefilterblock.h"
 #include "controlobject.h"
 
@@ -31,7 +32,7 @@ class QWidget;
 class DlgPrefEQ : public QWidget, public Ui::DlgPrefEQDlg  {
     Q_OBJECT
 public:
-    DlgPrefEQ(QWidget *parent, ConfigObject<ConfigValue> *_config);
+    DlgPrefEQ(QWidget *parent);
     ~DlgPrefEQ();
 public slots:
     void slotLoFiChanged();
@@ -55,7 +56,7 @@ private:
 
     double m_lowEqFreq, m_highEqFreq;
     /** Pointer to config object */
-    ConfigObject<ConfigValue> *m_pConfig;
+    QSettings m_settings;
 #ifndef __LOFI__
     ControlObjectThread m_COTLoFreq;
     ControlObjectThread m_COTHiFreq;

@@ -104,7 +104,7 @@ void DlgPrefPlaylist::slotApply() {
     m_settings.setValue("Library/UseRelativePathOnExport", checkBox_use_relative_path->isChecked());
     m_settings.setValue("Library/ShowRhythmboxLibrary", checkBox_show_rhythmbox->isChecked());
     m_settings.setValue("Library/ShowITunesLibrary", checkBox_show_itunes->isChecked());
-    m_settings.setValue("Library.ShowTraktorLibrary", checkBox_show_traktor->isChecked());
+    m_settings.setValue("Library/ShowTraktorLibrary", checkBox_show_traktor->isChecked());
 
     // Update playlist if path has changed
     if (LineEditSongfiles->text() != m_settings.value("Library/Directory").toString()) {

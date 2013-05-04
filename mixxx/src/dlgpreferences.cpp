@@ -86,9 +86,9 @@ DlgPreferences::DlgPreferences(MixxxApp * mixxx, SkinLoader* pSkinLoader,
     addPageWidget(m_wplaylist);
     m_wcontrols = new DlgPrefControls(this, mixxx, pSkinLoader, pPlayerManager, config);
     addPageWidget(m_wcontrols);
-    m_weq = new DlgPrefEQ(this, config);
+    m_weq = new DlgPrefEQ(this);
     addPageWidget(m_weq);
-    m_wcrossfader = new DlgPrefCrossfader(this, config);
+    m_wcrossfader = new DlgPrefCrossfader(this);
     addPageWidget(m_wcrossfader);
 
 #ifdef __VAMP__

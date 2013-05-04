@@ -11,7 +11,7 @@
 #include "widget/wtracktableview.h"
 #include "widget/wwidget.h"
 
-#define CONFIG_KEY "[Auto DJ]"
+static const QString CONFIG_KEY = "[AutoDJ]";
 const char* kTransitionPreferenceName = "Transition";
 const int kTransitionPreferenceDefault = 10;
 
@@ -21,6 +21,7 @@ DlgAutoDJ::DlgAutoDJ(QWidget* parent, ConfigObject<ConfigValue>* pConfig,
         : QWidget(parent),
           Ui::DlgAutoDJ(),
           m_pConfig(pConfig),
+          m_settings(),
           m_pTrackCollection(pTrackCollection),
           m_pTrackTableView(
               new WTrackTableView(this, pConfig, m_pTrackCollection, false)), // no sorting
@@ -593,7 +594,7 @@ bool DlgAutoDJ::removePlayingTrackFromQueue(QString group) {
     m_pAutoDJTableModel->removeTrack(m_pAutoDJTableModel->index(0, 0));
 
     // Re-queue if configured
-    if (m_pConfig->getValueString(ConfigKey(CONFIG_KEY, "Requeue")).toInt()) {
+    if (m_settings.value(CONFIG_KEY+"/Requeue").toBool()) {
         m_pAutoDJTableModel->appendTrack(loadedId);
     }
     return true;
