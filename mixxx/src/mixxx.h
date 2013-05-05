@@ -23,7 +23,6 @@
 #include <QMainWindow>
 #include <QString>
 #include <QDir>
-#include <QSettings>
 
 // REMOVE ME
 #include <QtDebug>
@@ -156,7 +155,6 @@ class MixxxApp : public QMainWindow {
     ControllerManager *m_pControllerManager;
 
     ConfigObject<ConfigValue> *m_pConfig;
-    QSettings m_settings;
 
     VinylControlManager *m_pVCManager;
 
