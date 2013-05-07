@@ -64,6 +64,8 @@ DlgControllerLearning::DlgControllerLearning(QWidget * parent,
     addDeckAndSamplerControl("repeat", tr("Toggle repeat mode"), transportMenu);
     addDeckAndSamplerAndPreviewDeckControl("eject", tr("Eject track"), transportMenu);
     addSamplerControl("orientation", tr("Mix orientation (e.g. left, right, center)"), transportMenu);
+    addSamplerControl("play_midi", tr("Play with momentary controller (using play modes)"), transportMenu);
+    addSamplerControl("start_stop", tr("Stop and jump to start"), transportMenu);
     addDeckAndSamplerControl("slip_enabled", tr("Toggle slip mode"), transportMenu);
 
     // BPM & Sync

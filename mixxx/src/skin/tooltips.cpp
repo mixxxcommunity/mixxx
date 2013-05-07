@@ -249,8 +249,16 @@ void Tooltips::addStandardTooltips() {
     // Currently used for samplers
     add("play_start")
             << tr("Play/Pause")
-            << QString("%1: %2").arg(leftClick, tr("Toggles playing or pausing the track."))
+            << QString("%1: %2").arg(leftClick, tr("Plays the track in accordance with the current play-mode."))
             << QString("%1: %2").arg(rightClick, tr("Jumps to the beginning of the track."));
+
+    add("play_mode")
+    			<< tr("Play Mode")
+                << tr("Toggles between the four play modes:")
+    			<< tr("1. Normal Mode - Play/Pause on press.")
+    			<< tr("2. One Shot Mode - Play from start on press.")
+    			<< tr("3. Hold Mode - Play on press, pause on release.")
+    			<< tr("4. Note Off Mode - Play from start on press, pause on release. (like hotcue)");
 
     // Currently used for decks
     QString cueSet = tr("Places a cue-point at the current position on the waveform.");

@@ -307,7 +307,7 @@
 							****************************************
 							-->
 							<PushButton>
-								<TooltipId>play</TooltipId>
+								<TooltipId>play_start</TooltipId>
 								<Style></Style>
 								<NumberStates>2</NumberStates>
 								<RightClickIsPushButton>true</RightClickIsPushButton>

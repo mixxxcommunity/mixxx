@@ -110,10 +110,16 @@ EngineBuffer::EngineBuffer(const char * _group, ConfigObject<ConfigValue> * _con
             this, SLOT(slotControlPlay(double)),
             Qt::DirectConnection);
 
-    //Play from Start Button (for sampler)
-    m_playStartButton = new ControlPushButton(ConfigKey(m_group, "start_play"));
-    connect(m_playStartButton, SIGNAL(valueChanged(double)),
-            this, SLOT(slotControlPlayFromStart(double)),
+    //Play Button (for sampler)
+    m_playSamplerButton = new ControlPushButton(ConfigKey(m_group, "start_play"));
+    connect(m_playSamplerButton, SIGNAL(valueChanged(double)),
+            this, SLOT(slotControlSamplerPlay(double)),
+            Qt::DirectConnection);
+
+    //Play Button for momentary MIDI controller (for sampler)
+    m_playSamplerMidiButton = new ControlPushButton(ConfigKey(m_group, "play_midi"));
+    connect(m_playSamplerMidiButton, SIGNAL(valueChanged(double)),
+            this, SLOT(slotControlSamplerMidiPlay(double)),
             Qt::DirectConnection);
 
     //Play Mode Button (for sampler)
@@ -249,7 +255,8 @@ EngineBuffer::~EngineBuffer()
     delete m_pReader;
 
     delete m_playButton;
-    delete m_playStartButton;
+    delete m_playSamplerButton;
+    delete m_playSamplerMidiButton;
     delete m_playModeButton;
     delete m_stopStartButton;
 
@@ -341,6 +348,7 @@ void EngineBuffer::setNewPlaypos(double newpos)
     // Before seeking, read extra buffer for crossfading
     CSAMPLE* fadeout = m_pScale->getScaled(m_iLastBufferSize);
     m_iCrossFadeSamples = m_iLastBufferSize;
+
     SampleUtil::copyWithGain(m_pCrossFadeBuffer, fadeout, 1.0, m_iLastBufferSize);
 
     m_filepos_play = newpos;
@@ -456,6 +464,7 @@ void EngineBuffer::slotControlSeek(double change)
     // Find new playpos, restrict to valid ranges.
     double new_playpos = round(change * m_file_length_old);
 
+
     // TODO(XXX) currently not limiting seeks file_length_old instead of
     // kMaxPlayposRange.
     if (new_playpos > m_file_length_old)
@@ -464,7 +473,6 @@ void EngineBuffer::slotControlSeek(double change)
     // Ensure that the file position is even (remember, stereo channel files...)
     if (!even((int)new_playpos))
         new_playpos--;
-
     setNewPlaypos(new_playpos);
 }
 
@@ -498,14 +506,23 @@ void EngineBuffer::slotControlEnd(double v)
     }
 }
 
-void EngineBuffer::slotControlPlayFromStart(double v)
+void EngineBuffer::slotControlSamplerMidiPlay(double v) {
+	if(!m_pCurrentTrack && m_iTrackLoading == 0) return;
+	if(v > 0.0) {
+		slotControlSamplerPlay(m_playButton->get() ? 0. : 1.);
+	} else if(m_playModeButton->get() > 1) {
+		slotControlSamplerPlay(1.);
+	}
+	m_playSamplerButton->set(m_playButton->get());
+}
+
+void EngineBuffer::slotControlSamplerPlay(double v)
 {
-//    if (v > 0.0) {
-//        slotControlSeek(0.);
-//        m_playButton->set(1);
-//    }
-	int mode = int(m_playModeButton->get()) + 1;
-	switch (mode){
+	if(!m_pCurrentTrack && m_iTrackLoading == 0) {
+		m_playSamplerButton->set(0);
+		return;
+	}
+	switch (int(m_playModeButton->get()) + 1){
 		case 1: // Normal Mode
 			if (v > 0.0) {
 				m_playButton->set(1);
@@ -518,43 +535,44 @@ void EngineBuffer::slotControlPlayFromStart(double v)
 				slotControlSeek(0.);
 				m_playButton->set(1);
 			} else if (v == 0.0) {
-				m_playStartButton->set(1);
+				m_playSamplerButton->set(1);
 				slotControlSeek(0.);
 			} break;
 
 		case 3: // Hold Mode
-			if (v > 0.0) {
-				if(!m_playButton->get()) {
-					m_playButton->set(1);
-				} else {
-					m_playButton->set(0);
-					m_playStartButton->set(0);
-				}
+			if(!m_playButton->get()) {
+				m_playButton->set(1);
+			} else {
+				m_playButton->set(0);
+				m_playSamplerButton->set(0);
 			} break;
 		case 4: // Note Off Mode
-			if (v > 0.0) {
-				if(!m_playButton->get()) {
-					slotControlSeek(0.);
-					m_playButton->set(1);
-				} else {
-					m_playButton->set(0);
-					m_playStartButton->set(0);
-					slotControlSeek(0.);
-				}
+			if(!m_playButton->get()) {
+				slotControlSeek(0.);
+				m_playButton->set(1);
+			} else {
+				m_playButton->set(0);
+				m_playSamplerButton->set(0);
+				slotControlSeek(0.);
 			}
+
 	}
+
 }
 
 void EngineBuffer::slotControlPlayMode(double v) {
+	//Stop play if switching to mode 3 or 4
+	if(v > 1 && m_playButton->get()) {
+		m_playButton->set(0);
+		m_playSamplerButton->set(0);
+	}
 }
 
 void EngineBuffer::slotControlJumpToStartAndStop(double v)
 {
-    if (v > 0.0) {
-        m_playButton->set(0);
-        m_playStartButton->set(0);
-        slotControlSeek(0.);
-    }
+	m_playButton->set(0);
+	m_playSamplerButton->set(0);
+	slotControlSeek(0.);
 }
 
 void EngineBuffer::slotControlStop(double v)
@@ -809,8 +827,8 @@ void EngineBuffer::process(const CSAMPLE *, const CSAMPLE * pOut, const int iBuf
                 slotControlSeek(seekPosition);
             } else {
                 m_playButton->set(0.);
-                if(m_playStartButton->get()) {
-					m_playStartButton->set(0.);
+                if(m_playSamplerButton->get()) {
+					m_playSamplerButton->set(0.);
 					slotControlSeek(0.);
                 }
             }
@@ -855,6 +873,7 @@ void EngineBuffer::process(const CSAMPLE *, const CSAMPLE * pOut, const int iBuf
     //let's try holding the last sample value constant, and pull it
     //towards zero
     float ramp_inc = 0;
+
     if (m_iRampState == ENGINE_RAMP_UP ||
         m_iRampState == ENGINE_RAMP_DOWN) {
         // Ramp of 3.33 ms
