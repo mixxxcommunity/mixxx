@@ -507,11 +507,12 @@ void EngineBuffer::slotControlEnd(double v)
 }
 
 void EngineBuffer::slotControlSamplerMidiPlay(double v) {
+	qDebug() << v;
 	if(!m_pCurrentTrack && m_iTrackLoading == 0) return;
 	if(v > 0.0) {
 		slotControlSamplerPlay(m_playButton->get() ? 0. : 1.);
 	} else if(m_playModeButton->get() > 1) {
-		slotControlSamplerPlay(1.);
+		slotControlSamplerPlay(0.);
 	}
 	m_playSamplerButton->set(m_playButton->get());
 }
@@ -534,20 +535,20 @@ void EngineBuffer::slotControlSamplerPlay(double v)
 			if (v > 0.0 && !m_playButton->get()) {
 				slotControlSeek(0.);
 				m_playButton->set(1);
-			} else if (v == 0.0) {
+			} else if (v == 0.0 && m_playButton->get()) {
 				m_playSamplerButton->set(1);
 				slotControlSeek(0.);
 			} break;
 
 		case 3: // Hold Mode
-			if(!m_playButton->get()) {
+			if(!m_playButton->get() && v > 0.0) {
 				m_playButton->set(1);
 			} else {
 				m_playButton->set(0);
 				m_playSamplerButton->set(0);
 			} break;
 		case 4: // Note Off Mode
-			if(!m_playButton->get()) {
+			if(!m_playButton->get() && v > 0.0) {
 				slotControlSeek(0.);
 				m_playButton->set(1);
 			} else {

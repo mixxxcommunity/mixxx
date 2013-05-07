@@ -17,6 +17,7 @@
 #include "soundmanager.h"
 #include "vinylcontrol/vinylcontrolmanager.h"
 #include "util/stat.h"
+#include "engine/enginedeck.h"
 
 PlayerManager::PlayerManager(ConfigObject<ConfigValue>* pConfig,
                              SoundManager* pSoundManager,
@@ -117,6 +118,23 @@ unsigned int PlayerManager::numDecks() {
 }
 
 // static
+bool PlayerManager::isDeckGroup(const QString& group, int* number) {
+    if (!group.startsWith("[Channel")) {
+        return false;
+    }
+
+    bool ok = false;
+    int deckNum = group.mid(8,group.lastIndexOf("]")-8).toInt(&ok);
+    if (!ok || deckNum <= 0) {
+        return false;
+    }
+    if (number != NULL) {
+        *number = deckNum;
+    }
+    return true;
+}
+
+// static
 unsigned int PlayerManager::numSamplers() {
     // We do this to cache the control once it is created so callers don't incur
     // a hashtable lookup every time they call this.
@@ -214,6 +232,11 @@ Deck* PlayerManager::addDeck() {
         m_pSoundManager->registerInput(
             AudioInput(AudioInput::VINYLCONTROL, 0, number-1), m_pVCManager);
     }
+
+    // Also register vinyl input signal with deck for passthrough support.
+    EngineDeck* pEngineDeck = pDeck->getEngineDeck();
+    m_pSoundManager->registerInput(
+        AudioInput(AudioInput::VINYLCONTROL, 0, number-1), pEngineDeck);
 
     return pDeck;
 }
