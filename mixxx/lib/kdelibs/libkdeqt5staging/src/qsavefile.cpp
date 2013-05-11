@@ -170,6 +170,7 @@ QSaveFile::~QSaveFile()
         delete d->tempFile;
     }
     QIODevice::close();
+    delete d;
 }
 
 /*!
@@ -241,7 +242,7 @@ void QSaveFile::setFileName(const QString &name)
     Opens the file using OpenMode \a mode, returning true if successful;
     otherwise false.
 
-    Important: the \a mode must be QIODevice::WriteOnly.
+    Important: the \a mode must include QIODevice::WriteOnly.
     It may also have additional flags, such as QIODevice::Text and QIODevice::Unbuffered.
 
     QIODevice::ReadWrite and QIODevice::Append are not supported at the moment.

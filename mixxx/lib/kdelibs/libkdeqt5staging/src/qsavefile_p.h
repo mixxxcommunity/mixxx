@@ -60,9 +60,6 @@ QT_BEGIN_NAMESPACE
 class QSaveFilePrivate
 {
 public:
-	
-	QString makeTemp(); 
-
     QSaveFilePrivate();
     ~QSaveFilePrivate();
 
@@ -70,6 +67,8 @@ public:
     QFile *tempFile;
 
     QFile::FileError error;
+private: 
+	QString makeTemp();
 };
 
 QT_END_NAMESPACE
