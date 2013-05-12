@@ -435,10 +435,8 @@ class MixxxCore(Feature):
                    "controllers/dlgprefnocontrollers.cpp",
                    "dlgprefplaylist.cpp",
                    "dlgprefcontrols.cpp",
-                   "dlgprefbpm.cpp",
                    "dlgprefreplaygain.cpp",
                    "dlgprefnovinyl.cpp",
-                   "dlgbpmscheme.cpp",
                    "dlgabout.cpp",
                    "dlgprefeq.cpp",
                    "dlgprefcrossfader.cpp",
@@ -472,6 +470,7 @@ class MixxxCore(Feature):
                    "engine/enginexfader.cpp",
                    "engine/enginemicrophone.cpp",
                    "engine/enginedeck.cpp",
+                   "engine/enginepassthrough.cpp",
 
                    "engine/enginecontrol.cpp",
                    "engine/ratecontrol.cpp",
@@ -486,7 +485,6 @@ class MixxxCore(Feature):
 
                    "analyserrg.cpp",
                    "analyserqueue.cpp",
-                   "analyserbpm.cpp",
                    "analyserwaveform.cpp",
 
                    "controllers/controller.cpp",
@@ -744,10 +742,8 @@ class MixxxCore(Feature):
         build.env.Uic4('dlgprefcontrolsdlg.ui')
         build.env.Uic4('dlgprefeqdlg.ui')
         build.env.Uic4('dlgprefcrossfaderdlg.ui')
-        build.env.Uic4('dlgprefbpmdlg.ui')
         build.env.Uic4('dlgprefreplaygaindlg.ui')
         build.env.Uic4('dlgprefbeatsdlg.ui')
-        build.env.Uic4('dlgbpmschemedlg.ui')
         # build.env.Uic4('dlgbpmtapdlg.ui')
         build.env.Uic4('dlgprefvinyldlg.ui')
         build.env.Uic4('dlgprefnovinyldlg.ui')
