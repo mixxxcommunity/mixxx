@@ -18,44 +18,81 @@
 #ifndef SOUNDSOURCEFFMPEG_H
 #define SOUNDSOURCEFFMPEG_H
 
-#include <qstring.h>
-#include "soundsource.h"
-#include <ffmpeg/avcodec.h>
-#include <ffmpeg/avformat.h>
 
+#include <qstring.h>
+#include <QByteArray>
+#include <QBuffer>
+#include "soundsource.h"
+extern "C" {
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+
+#ifndef __FFMPEGOLDAPI__
+#include <libavresample/avresample.h>
+#include <libavutil/avutil.h>
+#include <libavutil/opt.h>
+#endif
+
+// Compability
+#include <libavutil/mathematics.h>
+#include <libavutil/opt.h>
+
+}
 class TrackInfoObject;
 
 
-class SoundSourceFFmpeg : public SoundSource {
+class SoundSourceFFmpeg : public Mixxx::SoundSource {
 public:
     SoundSourceFFmpeg(QString qFilename);
     ~SoundSourceFFmpeg();
+    int open();
     long seek(long);
-    unsigned read(unsigned long size, const SAMPLE*);
+    unsigned int read(unsigned long size, const SAMPLE*);
+    int parseHeader();
     inline long unsigned length();
-    static int ParseHeader(TrackInfoObject * );
+    //static int ParseHeader(TrackInfoObject * );
     bool readInput();
+    static QList<QString> supportedFileExtensions();
 
 protected:
-  long ffmpeg2mixxx(long pos, const AVRational &time_base);
-  long mixxx2ffmpeg(long pos, const AVRational &time_base);
-  void lock();
-  void unlock();
+    int64_t ffmpeg2mixxx(int64_t pos, const AVRational &time_base);
+    int64_t mixxx2ffmpeg(int64_t pos, const AVRational &time_base);
+    unsigned int reSample(AVFrame *inframe);
+    void lock();
+    void unlock();
 
 private:
-    int channels;
-    unsigned long filelength;
-    AVFormatContext *pFormatCtx;
-    AVInputFormat *iformat;
-    int audioStream;
-    AVCodecContext *pCodecCtx;
-    AVCodec *pCodec;
-    AVFrame *pFrame;
-    AVPacket packet;
+    int m_iAudioStream;
+    uint64_t filelength;
+    QString m_qFilename;
+    AVFormatContext *m_pFormatCtx;
+    AVInputFormat *m_pIformat;
+    AVCodecContext *m_pCodecCtx;
+    AVCodec *m_pCodec;
 
-    volatile int bufferOffset;
-    volatile int bufferSize;
-    SAMPLE buffer[AVCODEC_MAX_AUDIO_FRAME_SIZE];
+#ifndef __FFMPEGOLDAPI__
+    AVAudioResampleContext *m_pSwrCtx;
+    //SwrContext *m_pSwrCtx;
+    // Conveter stuff
+
+    uint8_t *m_pOut;
+    unsigned int m_pOutSize;
+#else
+    //struct AVResampleContext *m_pSwrCtx;
+    ReSampleContext *m_pSwrCtx;
+    // Conveter stuff
+    short *m_pOut;
+    unsigned int m_pOutSize;
+#endif
+
+
+    unsigned int m_iOffset;
+    int64_t m_iCurrentMixxTs;
+    int64_t m_iNextMixxxPCMPoint;
+    bool m_bIsSeeked;
+    int64_t m_iReadedBytes;
+    QByteArray m_strBuffer;
+
 };
 
 #endif

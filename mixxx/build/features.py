@@ -840,18 +840,33 @@ class FFMPEG(Feature):
         if build.platform_is_linux or build.platform_is_osx or build.platform_is_bsd:
             # Check for libavcodec, libavformat
             # I just randomly picked version numbers lower than mine for this - Albert
-            if not conf.CheckForPKG('libavcodec', '51.20.0'):
+            if not conf.CheckForPKG('libavcodec', '53.35.0'):
                 raise Exception('libavcodec not found.')
-            if not conf.CheckForPKG('libavformat', '51.1.0'):
+            if not conf.CheckForPKG('libavformat', '53.21.0'):
                 raise Exception('libavcodec not found.')
+            # Needed to build new FFMPEG
+            build.env.Append(CCFLAGS = '-D__STDC_CONSTANT_MACROS') 
+            build.env.Append(CCFLAGS = '-D__STDC_LIMIT_MACROS') 
+            build.env.Append(CCFLAGS = '-D__STDC_FORMAT_MACROS') 
             #Grabs the libs and cflags for ffmpeg
             build.env.ParseConfig('pkg-config libavcodec --silence-errors --cflags --libs')
             build.env.ParseConfig('pkg-config libavformat --silence-errors --cflags --libs')
-            build.env.Append(CPPDEFINES = '__FFMPEGFILE__')
+            build.env.ParseConfig('pkg-config libavutil --silence-errors --cflags --libs')
+
+            # FFMPEG 1.1/LIBAV 9.1 have libavresample 1.0.1 FFMPEG 1.0 have 0.0.3 (0.0.2 ain't compatible)
+            if conf.CheckForPKG('libavresample', '0.0.3'):
+                build.env.ParseConfig('pkg-config libavresample --silence-errors --cflags --libs')
+                build.env.Append(CPPDEFINES = '__FFMPEGFILE__')
+            else:
+                build.env.Append(CPPDEFINES = '__FFMPEGFILE__')
+                build.env.Append(CPPDEFINES = '__FFMPEGOLDAPI__')    
+
         else:
             # aptitude install libavcodec-dev libavformat-dev liba52-0.7.4-dev libdts-dev
             build.env.Append(LIBS = 'avcodec')
             build.env.Append(LIBS = 'avformat')
+            build.env.Append(LIBS = 'avutil')
+            build.env.Append(LIBS = 'swresample')
             build.env.Append(LIBS = 'z')
             build.env.Append(LIBS = 'a52')
             build.env.Append(LIBS = 'dts')
@@ -860,14 +875,17 @@ class FFMPEG(Feature):
             build.env.Append(LIBS = 'dl')
             build.env.Append(LIBS = 'vorbisenc')
             build.env.Append(LIBS = 'raw1394')
-            build.env.Append(LIBS = 'avutil')
             build.env.Append(LIBS = 'vorbis')
             build.env.Append(LIBS = 'm')
             build.env.Append(LIBS = 'ogg')
             build.env.Append(CPPDEFINES = '__FFMPEGFILE__')
 
     def sources(self, build):
-        return ['soundsourceffmpeg.cpp']
+        return ['soundsourceffmpeg.cpp',
+                'recording/encoderffmpegcore.cpp',
+                'recording/encoderffmpegmp3.cpp',
+                'recording/encoderffmpegmp4.cpp',
+                'recording/encoderffmpegvorbis.cpp']
 
 class Optimize(Feature):
     def description(self):
