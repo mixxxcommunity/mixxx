@@ -1,7 +1,8 @@
-/***************************************************************************
-                     encodervorbis.h  -  vorbis encoder for mixxx
+/****************************************************************************
+                   encoderffmpegmp4.cpp  -  FFMPEG MP4 encoder for mixxx
                              -------------------
-    copyright            : (C) 2007 by Wesley Stessens
+    copyright            : (C) 2012-2013 by Tuukka Pasanen
+                           (C) 2007 by Wesley Stessens
                            (C) 1994 by Xiph.org (encoder example)
                            (C) 1994 Tobias Rafreider (shoutcast and recording fixes)
  ***************************************************************************/
