@@ -26,6 +26,12 @@
 #ifdef __SHOUTCAST__
 #include "encodervorbis.h"
 #include "encodermp3.h"
+
+#ifdef __FFMPEGFILE__
+#include "encoderffmpegmp3.h"
+#include "encoderffmpegvorbis.h"
+#endif
+
 #endif
 
 /***************************************************************************
@@ -79,14 +85,27 @@ void EngineRecord::updateFromPreferences()
 
     if(m_Encoding == ENCODING_MP3){
 #ifdef __SHOUTCAST__
+
+
+// We are using FFMPEG or not?
+#ifndef __FFMPEGFILE__
         m_encoder = new EncoderMp3(this);
-        m_encoder->updateMetaData(m_baAuthor.data(),m_baTitle.data(),m_baAlbum.data());
+#else
+        m_encoder = new EncoderFfmpegMp3(this);
+#endif
+	m_encoder->updateMetaData(m_baAuthor.data(),m_baTitle.data(),m_baAlbum.data());
 
         if(m_encoder->initEncoder(Encoder::convertToBitrate(m_MP3quality.toInt())) < 0){
             delete m_encoder;
             m_encoder = NULL;
+#ifndef __FFMPEGFILE__
             qDebug() << "MP3 recording is not supported. Lame could not be initialized";
+#else
+            qDebug() << "MP3 recording is not supported. FFMPEG could not be initalized";
+#endif
         }
+        m_encoder->updateMetaData(m_baAuthor.data(),m_baTitle.data(),m_baAlbum.data());
+        
 #else
         qDebug() << "MP3 recording requires Mixxx to build with shoutcast support";
 #endif
@@ -94,14 +113,22 @@ void EngineRecord::updateFromPreferences()
     }
     if(m_Encoding == ENCODING_OGG){
 #ifdef __SHOUTCAST__
+#ifndef __FFMPEGFILE__
         m_encoder = new EncoderVorbis(this);
-        m_encoder->updateMetaData(m_baAuthor.data(),m_baTitle.data(),m_baAlbum.data());
+#else
+        m_encoder = new EncoderFfmpegVorbis(this);
+#endif
+	
+	m_encoder->updateMetaData(m_baAuthor.data(),m_baTitle.data(),m_baAlbum.data());
 
-        if(m_encoder->initEncoder(Encoder::convertToBitrate(m_OGGquality.toInt())) < 0){
+	if(m_encoder->initEncoder(Encoder::convertToBitrate(m_OGGquality.toInt())) < 0){
             delete m_encoder;
             m_encoder = NULL;
+#ifndef __FFMPEGFILE__
             qDebug() << "OGG recording is not supported. OGG/Vorbis library could not be initialized";
-
+#else
+            qDebug() << "OGG recording is not supported. FFMPEG library could not be initialized";
+#endif
         }
 #else
         qDebug() << "OGG recording requires Mixxx to build with shoutcast support";
