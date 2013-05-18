@@ -19,9 +19,8 @@
 #include <QSqlQuery>
 #include <QSqlRecord>
 #include <QUrl>
-#include <QFileDialog>
-#include <QDebug>
 #include <QDesktopServices>
+#include <QFileDialog>
 #include "dlgprefplaylist.h"
 #ifdef __PROMO__
 #include "library/promotracksfeature.h"
@@ -55,7 +54,6 @@ DlgPrefPlaylist::DlgPrefPlaylist(QWidget * parent, ConfigObject<ConfigValue> * c
             this, SLOT(slotM4ADownloadProgress(qint64, qint64)));
     */
 
-    // Connection
     connect(PushButtonBrowsePlaylist, SIGNAL(clicked()),
             this, SLOT(slotBrowseDir()));
     connect(PushButtonRemovePlaylist, SIGNAL(clicked()),
@@ -242,33 +240,23 @@ void DlgPrefPlaylist::slotRelocateDir() {
 }
 
 void DlgPrefPlaylist::slotApply() {
-
     m_pconfig->set(ConfigKey("[Promo]","StatTracking"),
                 ConfigValue((int)checkBoxPromoStats->isChecked()));
-
     m_pconfig->set(ConfigKey("[Library]","RescanOnStartup"),
                 ConfigValue((int)checkBox_library_scan->isChecked()));
-
     m_pconfig->set(ConfigKey("[Library]","WriteAudioTags"),
                 ConfigValue((int)checkbox_ID3_sync->isChecked()));
-
     m_pconfig->set(ConfigKey("[Library]","UseRelativePathOnExport"),
                 ConfigValue((int)checkBox_use_relative_path->isChecked()));
-
     m_pconfig->set(ConfigKey("[Library]","ShowRhythmboxLibrary"),
                 ConfigValue((int)checkBox_show_rhythmbox->isChecked()));
-
     m_pconfig->set(ConfigKey("[Library]","ShowITunesLibrary"),
                 ConfigValue((int)checkBox_show_itunes->isChecked()));
-
     m_pconfig->set(ConfigKey("[Library]","ShowTraktorLibrary"),
                 ConfigValue((int)checkBox_show_traktor->isChecked()));
 
-    m_pconfig->Save();
-
     // Update playlist if path has changed
     if (m_dirsModified) {
-        // Emit apply signal
         emit(apply());
     }
 
@@ -279,8 +267,7 @@ void DlgPrefPlaylist::slotApply() {
         m_pconfig->set(ConfigKey("[Library]","ShowMissingSongs"),
                 ConfigValue((int)checkBox_show_missing->isChecked()));
 
-        // Save preferences
-        m_pconfig->Save();
         emit(configChanged("[Library]","ShowMissingSongs"));
     }
+    m_pconfig->Save();
 }
