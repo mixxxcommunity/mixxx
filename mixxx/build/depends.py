@@ -113,6 +113,14 @@ class OggVorbis(Dependence):
         if not conf.CheckLib(libs):
             raise Exception('Did not find libogg.a, libogg.lib, or the libogg development headers')
 
+        # libvorbisenc only exists on Linux, OSX and mingw32 on Windows. On
+        # Windows with MSVS it is included in vorbisfile.dll. libvorbis and
+        # libogg are included from build.py so don't add here.
+        if not build.platform_is_windows or build.toolchain_is_gnu:
+            vorbisenc_found = conf.CheckLib(['libvorbisenc', 'vorbisenc'])
+            if not vorbisenc_found:
+                raise Exception('Did not find libvorbisenc.a, libvorbisenc.lib, or the libvorbisenc development headers.')
+
     def sources(self, build):
         return ['soundsourceoggvorbis.cpp']
 
@@ -412,18 +420,18 @@ class MixxxCore(Feature):
         sources = ["mixxxkeyboard.cpp",
 
                    "configobject.cpp",
+                   "control/control.cpp",
+                   "control/controlbehavior.cpp",
                    "controlobjectthread.cpp",
                    "controlobjectthreadwidget.cpp",
                    "controlobjectthreadmain.cpp",
                    "controlevent.cpp",
                    "controllogpotmeter.cpp",
                    "controlobject.cpp",
-                   "controlnull.cpp",
                    "controlpotmeter.cpp",
                    "controllinpotmeter.cpp",
                    "controlpushbutton.cpp",
                    "controlttrotary.cpp",
-                   "controlbeat.cpp",
 
                    "dlgpreferences.cpp",
                    "dlgprefsound.cpp",
@@ -447,7 +455,6 @@ class MixxxCore(Feature):
 
                    "engine/engineworker.cpp",
                    "engine/engineworkerscheduler.cpp",
-                   "engine/syncworker.cpp",
                    "engine/enginebuffer.cpp",
                    "engine/enginebufferscale.cpp",
                    "engine/enginebufferscaledummy.cpp",
@@ -464,7 +471,7 @@ class MixxxCore(Feature):
                    "engine/engineflanger.cpp",
                    "engine/enginevumeter.cpp",
                    "engine/enginevinylsoundemu.cpp",
-                   "engine/enginesidechain.cpp",
+                   "engine/sidechain/enginesidechain.cpp",
                    "engine/enginefilterbutterworth8.cpp",
                    "engine/enginexfader.cpp",
                    "engine/enginemicrophone.cpp",
@@ -576,6 +583,7 @@ class MixxxCore(Feature):
                    "library/recording/recordingfeature.cpp",
                    "dlgrecording.cpp",
                    "recording/recordingmanager.cpp",
+                   "engine/sidechain/enginerecord.cpp",
 
                    # External Library Features
                    "library/baseexternallibraryfeature.cpp",
@@ -697,8 +705,9 @@ class MixxxCore(Feature):
                    "dlgprefrecord.cpp",
                    "playerinfo.cpp",
 
-                   "recording/enginerecord.cpp",
-                   "recording/encoder.cpp",
+                   "encoder/encoder.cpp",
+                   "encoder/encodermp3.cpp",
+                   "encoder/encodervorbis.cpp",
 
                    "segmentation.cpp",
                    "tapfilter.cpp",
