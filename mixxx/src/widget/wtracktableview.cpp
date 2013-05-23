@@ -392,8 +392,7 @@ void WTrackTableView::loadSelectionToGroup(QString group, bool play) {
 void WTrackTableView::slotRemove()
 {
     QModelIndexList indices = selectionModel()->selectedRows();
-    if (indices.size() > 0)
-    {
+    if (indices.size() > 0) {
         TrackModel* trackModel = getTrackModel();
         if (trackModel) {
             trackModel->removeTracks(indices);
@@ -403,8 +402,7 @@ void WTrackTableView::slotRemove()
 
 void WTrackTableView::slotPurge(){
     QModelIndexList indices = selectionModel()->selectedRows();
-    if (indices.size() > 0)
-    {
+    if (indices.size() > 0) {
         TrackModel* trackModel = getTrackModel();
         if (trackModel) {
             trackModel->purgeTracks(indices);
@@ -1095,6 +1093,7 @@ void WTrackTableView::sendToAutoDJ(bool bTop) {
         playlistDao.insertTracksIntoPlaylist(trackIds,
                                             iAutoDJPlaylistId, 2);
     } else {
+        // TODO(XXX): Care whether the append succeeded.
         playlistDao.appendTracksToPlaylist(
             trackIds, iAutoDJPlaylistId);
     }
@@ -1159,6 +1158,7 @@ void WTrackTableView::addSelectionToPlaylist(int iPlaylistId) {
         }
     }
     if (trackIds.size() > 0) {
+        // TODO(XXX): Care whether the append succeeded.
         playlistDao.appendTracksToPlaylist(trackIds, iPlaylistId);
     }
 }

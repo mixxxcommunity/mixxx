@@ -52,10 +52,6 @@ SoundManager::SoundManager(ConfigObject<ConfigValue> *pConfig,
     // It is possible to take them out?
     m_pControlObjectSoundStatus = new ControlObject(ConfigKey("[SoundManager]", "status"));
     m_pControlObjectSoundStatus->set(SOUNDMANAGER_DISCONNECTED);
-    m_pControlObjectVinylControlMode1 = new ControlObjectThreadMain(
-        ControlObject::getControl(ConfigKey("[Channel1]", "vinylcontrol_mode"))); // TODO(XXX) returning Null
-    m_pControlObjectVinylControlMode2 = new ControlObjectThreadMain(
-        ControlObject::getControl(ConfigKey("[Channel2]", "vinylcontrol_mode"))); // TODO(XXX) returning Null
     m_pControlObjectVinylControlGain = new ControlObjectThreadMain(
         new ControlObject(ConfigKey("[VinylControl]", "gain")));
 
@@ -88,8 +84,6 @@ SoundManager::~SoundManager() {
     // by clearDeviceList -- bkgood
 
     delete m_pControlObjectSoundStatus;
-    delete m_pControlObjectVinylControlMode1;
-    delete m_pControlObjectVinylControlMode2;
     delete m_pControlObjectVinylControlGain;
 }
 
@@ -507,6 +501,8 @@ void SoundManager::pushBuffer(const QList<AudioInput>& inputs, short * inputBuff
     // but this meant we couldn't free all the receiver buffer pointers, because some
     // of them might potentially be owned by portaudio. Not freeing them means we leak
     // memory in certain cases -- bkgood
+    // TODO(rryan): If we have two mono channels we still have to deinterleave.
+    // TODO(XXX): Is it worth hard-coding the iFrameSize == 1 case for microphones?
     if (iFrameSize == 2)
     {
         for (QList<AudioInput>::const_iterator i = inputs.begin(),

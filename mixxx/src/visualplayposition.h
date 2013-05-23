@@ -3,7 +3,7 @@
 
 #include <portaudio.h>
 #include "util/performancetimer.h"
-#include "controlobjectbase.h"
+#include "control/controlvalue.h"
 
 #include <QMutex>
 #include <QTime>
@@ -40,7 +40,7 @@ class VisualPlayPosition
 
 
   private:
-    ControlObjectBase<VisualPlayPositionData> m_data;
+    ControlValueAtomic<VisualPlayPositionData> m_data;
     double m_playPosOld;
     int m_deltatime;
     ControlObjectThreadMain* m_audioBufferSize;

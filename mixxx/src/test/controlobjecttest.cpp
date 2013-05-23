@@ -55,11 +55,11 @@ TEST_F(ControlObjectTest, getControl) {
 }
 
 TEST_F(ControlObjectTest, connectControls) {
-    ControlObject::connectControls(ck1, ck2);
+//    ControlObject::connectControls(ck1, ck2);
     co1->set(1.0f);
     EXPECT_DOUBLE_EQ(1.0f, co1->get());
     EXPECT_DOUBLE_EQ(1.0f, co2->get());
-    ControlObject::disconnectControl(ck1);
+//    ControlObject::disconnectControl(ck1);
     co1->set(2.0f);
     EXPECT_DOUBLE_EQ(2.0f, co1->get());
     EXPECT_DOUBLE_EQ(1.0f, co2->get());
@@ -68,16 +68,16 @@ TEST_F(ControlObjectTest, connectControls) {
 TEST_F(ControlObjectTest, syncDoesntCrash) {
     co1->set(1.0f);
     co2->set(2.0f);
-    ControlObject::sync();
+//    ControlObject::sync();
     co1->set(0.0f);
     co2->set(1.0f);
     delete co2;
     co2 = NULL;
-    ControlObject::sync();
+//    ControlObject::sync();
     co1->set(0.0f);
     delete co1;
     co1 = NULL;
-    ControlObject::sync();
+ //   ControlObject::sync();
 }
 
 }

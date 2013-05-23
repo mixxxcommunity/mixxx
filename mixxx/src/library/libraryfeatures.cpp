@@ -243,19 +243,16 @@ void LibraryFeatures::slotRestoreSearch(const QString& text) {
     emit(restoreSearch(text));
 }
 
-void LibraryFeatures::slotRefreshLibraryModels()
-{
+void LibraryFeatures::slotRefreshLibraryModels() {
    m_pMixxxLibraryFeature->refreshLibraryModels();
    m_pPrepareFeature->refreshLibraryModels();
 }
 
-void LibraryFeatures::slotCreatePlaylist()
-{
+void LibraryFeatures::slotCreatePlaylist() {
     m_pPlaylistFeature->slotCreatePlaylist();
 }
 
-void LibraryFeatures::slotCreateCrate()
-{
+void LibraryFeatures::slotCreateCrate() {
     m_pCrateFeature->slotCreateCrate();
 }
 
