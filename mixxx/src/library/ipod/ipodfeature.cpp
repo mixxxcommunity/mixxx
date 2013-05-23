@@ -28,7 +28,7 @@ IPodFeature::IPodFeature(QObject* parent, TrackCollection* pTrackCollection)
           m_itdb(NULL)
 {
     m_title = tr("iPod");
-    m_pIPodPlaylistModel = new IPodPlaylistModel(this, m_pTrackCollection);
+//    m_pIPodPlaylistModel = new IPodPlaylistModel(this, m_pTrackCollection);
 
     m_gPodItdb = new GPodItdb();
 
@@ -329,6 +329,7 @@ void IPodFeature::addToAutoDJ(bool bTop) {
         QString playlist = item->dataPath().toString();
         Itdb_Playlist* pPlaylist = (Itdb_Playlist*)playlist.toUInt();
         if (pPlaylist) {
+/*
             IPodPlaylistModel* pPlaylistModelToAdd = new IPodPlaylistModel(this, m_pTrackCollection);
             pPlaylistModelToAdd->setPlaylist(pPlaylist);
             PlaylistDAO &playlistDao = m_pTrackCollection->getPlaylistDAO();
@@ -348,6 +349,7 @@ void IPodFeature::addToAutoDJ(bool bTop) {
                 }
             }
             delete pPlaylistModelToAdd;
+            */
         }
     }
 }
@@ -362,6 +364,7 @@ void IPodFeature::slotImportAsMixxxPlaylist() {
         Itdb_Playlist* pPlaylist = (Itdb_Playlist*)playlist.toUInt();
         playlist = QString::fromUtf8(pPlaylist->name);
         if (pPlaylist) {
+            /*
             IPodPlaylistModel* pPlaylistModelToAdd = new IPodPlaylistModel(this, m_pTrackCollection);
             pPlaylistModelToAdd->setPlaylist(pPlaylist);
             PlaylistDAO &playlistDao = m_pTrackCollection->getPlaylistDAO();
@@ -400,6 +403,7 @@ void IPodFeature::slotImportAsMixxxPlaylist() {
             }
 
             delete pPlaylistModelToAdd;
+            */
         }
     }
 }
