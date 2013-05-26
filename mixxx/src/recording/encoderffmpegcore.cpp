@@ -43,7 +43,7 @@
 //
 
 // Constructor
-#ifdef AV_CODEC_ID_NONE
+#ifndef AV_CODEC_ID_NONE
 EncoderFfmpegCore::EncoderFfmpegCore(EngineAbstractRecord *engine, AVCodecID codec)
 #else
 EncoderFfmpegCore::EncoderFfmpegCore(EngineAbstractRecord *engine, CodecID codec)
@@ -74,7 +74,6 @@ EncoderFfmpegCore::EncoderFfmpegCore(EngineAbstractRecord *engine, CodecID codec
 
     m_pSamplerate = new ControlObjectThread(ControlObject::getControl(ConfigKey("[Master]", "samplerate")));
 
-    m_pSwrCtx = NULL;
     m_pOut = NULL;
     m_pOutSize = 0;
 
@@ -105,7 +104,6 @@ EncoderFfmpegCore::~EncoderFfmpegCore() {
     }
 
 
-
     if( m_pStream != NULL ) {
         avcodec_close(m_pStream->codec);
     }
@@ -125,125 +123,12 @@ EncoderFfmpegCore::~EncoderFfmpegCore() {
     //}
 
     // Close buffer
+    delete m_pResample;
     delete m_pSamplerate;
 }
 
 unsigned int EncoderFfmpegCore::reSample(AVFrame *inframe) {
-
-    if (!m_pSwrCtx) {
-        // Create converter from in type to s16 sample rate
-#ifndef __FFMPEGOLDAPI__
-        qDebug() << "ffmpeg: Using libavresample";
-
-        m_pSwrCtx = avresample_alloc_context();
-
-        av_opt_set_int(m_pSwrCtx,"in_channel_layout", AV_CH_LAYOUT_STEREO, 0);
-        av_opt_set_int(m_pSwrCtx,"in_sample_fmt", AV_SAMPLE_FMT_FLT, 0);
-        av_opt_set_int(m_pSwrCtx,"in_sample_rate", 44100, 0);
-        av_opt_set_int(m_pSwrCtx,"out_channel_layout", AV_CH_LAYOUT_STEREO, 0);
-        av_opt_set_int(m_pSwrCtx,"out_sample_fmt", m_pEncoderAudioStream->codec->sample_fmt, 0);
-        av_opt_set_int(m_pSwrCtx,"out_sample_rate", 44100, 0);
-
-#else
-        qDebug() << "ffmpeg: OLD FFMPEG API in use!";
-        m_pSwrCtx = av_audio_resample_init(2,
-                                           m_pEncoderAudioStream->codec->channels,
-                                           m_pEncoderAudioStream->codec->sample_rate,
-                                           m_pEncoderAudioStream->codec->sample_rate,
-                                           m_pEncoderAudioStream->codec->sample_fmt,
-                                           AV_SAMPLE_FMT_FLT,
-                                           16,
-                                           10,
-                                           0,
-                                           0.8);
-
-#endif
-        if( !m_pSwrCtx ) {
-            qDebug() << "Can't init convertor!";
-            return -1;
-        }
-
-#ifndef __FFMPEGOLDAPI__
-        // If it not working let user know about it!
-        // If we don't do this we'll gonna crash
-        if ( avresample_open(m_pSwrCtx ) < 0) {
-            m_pSwrCtx = NULL;
-            qDebug() << "ERROR!! Conventor not created: 44100 Hz " << av_get_sample_fmt_name(AV_SAMPLE_FMT_FLT) << " 2 channels";
-            qDebug() << "To 44100 HZ format:" << av_get_sample_fmt_name(m_pEncoderAudioStream->codec->sample_fmt) << " with 2 channels";
-            return -1;
-        }
-#endif
-        qDebug() << "Created: 44100 Hz " << av_get_sample_fmt_name(AV_SAMPLE_FMT_FLT) << " 2 channels";
-        qDebug() << "To 44100 HZ format:" << av_get_sample_fmt_name(m_pEncoderAudioStream->codec->sample_fmt) << " with 2 channels";
-    }
-
-    if (m_pSwrCtx) {
-
-#ifndef __FFMPEGOLDAPI__
-        uint8_t **l_pIn = (uint8_t **)inframe->extended_data;
-#endif
-
-// #ifdef __FFMPEGOLDAPI__
-//        int64_t l_lInReadBytes = av_samples_get_buffer_size(NULL, 2,
-//                                 inframe->nb_samples,
-//                                 m_pEncoderAudioStream->codec->sample_fmt, 1);
-// #endif
-
-#ifndef __FFMPEGOLDAPI__
-        int l_iOutSamples = av_rescale_rnd(avresample_get_delay(m_pSwrCtx) +
-                                           inframe->nb_samples, 44100, 44100, AV_ROUND_UP);
-
-        int l_iOutSamplesLines = 0;
-        // Alloc too much.. if not enough we are in trouble!
-        av_samples_alloc(&m_pOut, &l_iOutSamplesLines, 2, l_iOutSamples, m_pEncoderAudioStream->codec->sample_fmt, 0);
-#else
-        int l_iOutSamples = av_rescale_rnd(inframe->nb_samples, m_pEncoderAudioStream->codec->sample_rate, m_pEncoderAudioStream->codec->sample_rate, AV_ROUND_UP);
-
-        int l_iOutBytes =  av_samples_get_buffer_size(NULL, 2,
-                           l_iOutSamples,
-                           m_pEncoderAudioStream->codec->sample_fmt, 1);
-
-
-        //av_samples_alloc(&m_pOut, NULL, 2, l_iOutSamples, AV_SAMPLE_FMT_S16, 0);
-        m_pOut = (short *)malloc(l_iOutBytes * 2);
-#endif
-
-        int l_iLen = 0;
-#ifndef __FFMPEGOLDAPI__
-
-        // qDebug() << "SAMPLES OUT" << l_iOutSamples << "SAMPLES IN" << inframe->nb_samples;
-#if LIBAVRESAMPLE_VERSION_INT <= 3
-      l_iLen = avresample_convert(m_pSwrCtx, (void **)&m_pOut, 0, l_iOutSamples,
-                                  (void **)l_pIn, 0, inframe->nb_samples);
-#else
-      l_iLen = avresample_convert(m_pSwrCtx, (uint8_t **)&m_pOut, 0, l_iOutSamples,
-                                  (uint8_t **)l_pIn, 0, inframe->nb_samples);
-#endif
-        // qDebug() << "U" << l_iLen;
-
-        m_pOutSize = av_samples_get_buffer_size(NULL, 2,l_iLen,m_pEncoderAudioStream->codec->sample_fmt, 1);
-
-#else
-        // qDebug() << "INSAMPLE" << inframe->nb_samples << "OUTSAMPLE" << l_iOutSamples << "OUTBYTES" << l_iOutBytes << "INBYTES" << l_lInReadBytes;
-        l_iLen = audio_resample(m_pSwrCtx,
-                                (short *)m_pOut, (short *)inframe->data[0],
-                                inframe->nb_samples);
-
-        // qDebug() << "U" << l_iLen;
-
-
-        m_pOutSize = l_iOutBytes;
-#endif
-        if (l_iLen < 0) {
-            qDebug() << "swr_convert() failed";
-            return -1;
-        }
-
-    } else {
-        m_pOutSize = 0;
-    }
-
-    return 0;
+        m_pResample->reSample(inframe);
 }
 
 //call sendPackages() or write() after 'flush()' as outlined in engineshoutcast.cpp
@@ -564,7 +449,6 @@ int EncoderFfmpegCore::writeAudioFrame(AVFormatContext *formatctx, AVStream *str
 
 void EncoderFfmpegCore::closeAudio(AVFormatContext *formatctx, AVStream *stream) {
     avcodec_close(stream->codec);
-
     av_free(m_pSamples);
 }
 
@@ -611,7 +495,7 @@ void EncoderFfmpegCore::openAudio(AVFormatContext *formatctx, AVCodec *codec, AV
 }
 
 /* Add an output stream. */
-#ifdef AV_CODEC_ID_NONE
+#ifndef AV_CODEC_ID_NONE
 AVStream *EncoderFfmpegCore::addStream(AVFormatContext *formatctx, AVCodec **codec, enum AVCodecID codec_id) {
 #else
 AVStream *EncoderFfmpegCore::addStream(AVFormatContext *formatctx, AVCodec **codec, enum CodecID codec_id) {
@@ -637,10 +521,13 @@ AVStream *EncoderFfmpegCore::addStream(AVFormatContext *formatctx, AVCodec **cod
     l_SStream->id = formatctx->nb_streams-1;
     l_SCodecCtx = l_SStream->codec;
 
+    m_pResample = new EncoderFfmpegResample( l_SCodecCtx );
+
     switch ((*codec)->type) {
     case AVMEDIA_TYPE_AUDIO:
         l_SStream->id = 1;
         l_SCodecCtx->sample_fmt = m_pEncoderAudioCodec->sample_fmts[0];
+        m_pResample->open(AV_SAMPLE_FMT_FLT);
  
         //l_SCodecCtx->bit_rate    = 128000;
         l_SCodecCtx->bit_rate    = m_lBitrate;

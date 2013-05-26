@@ -15,20 +15,24 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef SOUNDSOURCEFFMPEG_H
-#define SOUNDSOURCEFFMPEG_H
+#ifndef ENCODERFFMPEGRESAMPLE_H
+#define ENCODERFFMPEGRESAMPLE_H
 
-#include <recording/encoderffmpegresample.h>
+#include <QDebug>
 
-#include <qstring.h>
-#include <QByteArray>
-#include <QBuffer>
-#include "soundsource.h"
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 
 #ifndef __FFMPEGOLDAPI__
+
+// Thank you macports not providing libavresample for FFMPEG!
+#ifdef __LIBAVRESAMPLE__
+#include <libavresample/avresample.h>
+#else
+#include <libswresample/swresample.h>
+#endif
+
 #include <libavutil/avutil.h>
 #include <libavutil/opt.h>
 #endif
@@ -38,58 +42,44 @@ extern "C" {
 #include <libavutil/opt.h>
 
 }
-class TrackInfoObject;
 
-
-class SoundSourceFFmpeg : public Mixxx::SoundSource {
+class EncoderFfmpegResample {
 public:
-    SoundSourceFFmpeg(QString qFilename);
-    ~SoundSourceFFmpeg();
-    int open();
-    long seek(long);
-    unsigned int read(unsigned long size, const SAMPLE*);
-    int parseHeader();
-    inline long unsigned length();
-    //static int ParseHeader(TrackInfoObject * );
-    bool readInput();
-    static QList<QString> supportedFileExtensions();
-
-protected:
-    int64_t ffmpeg2mixxx(int64_t pos, const AVRational &time_base);
-    int64_t mixxx2ffmpeg(int64_t pos, const AVRational &time_base);
-    unsigned int reSample(AVFrame *inframe);
-    void lock();
-    void unlock();
-
-private:
-    int m_iAudioStream;
-    uint64_t filelength;
-    QString m_qFilename;
-    AVFormatContext *m_pFormatCtx;
-    AVInputFormat *m_pIformat;
-    AVCodecContext *m_pCodecCtx;
-    AVCodec *m_pCodec;
-
-    EncoderFfmpegResample *m_pResample;
-
+    EncoderFfmpegResample(AVCodecContext *codecCtx);
+    ~EncoderFfmpegResample();
+    int open(enum AVSampleFormat outSampleFmt);
+    unsigned int getBufferSize();
+    
 #ifndef __FFMPEGOLDAPI__
-    // Conveter stuff
-    uint8_t *m_pOut;
-    unsigned int m_pOutSize;
+    uint8_t *getBuffer();
 #else
-    // Conveter stuff
-    short *m_pOut;
-    unsigned int m_pOutSize;
+    short *getBuffer();
 #endif
 
+void removeBuffer();
+unsigned int reSample(AVFrame *inframe);
 
-    unsigned int m_iOffset;
-    int64_t m_iCurrentMixxTs;
-    int64_t m_iNextMixxxPCMPoint;
-    bool m_bIsSeeked;
-    int64_t m_iReadedBytes;
-    QByteArray m_strBuffer;
+private:
+AVCodecContext *m_pCodecCtx;
+enum AVSampleFormat m_pOutSampleFmt;
 
+#ifndef __FFMPEGOLDAPI__
+
+// Please choose to use libavresample.. people
+// Compile it now.. but because macports doesn't
+// Support both.. damn!
+#ifdef __LIBAVRESAMPLE__
+    AVAudioResampleContext *m_pSwrCtx;
+#else
+    SwrContext *m_pSwrCtx;
+#endif
+    uint8_t *m_pOut;
+#else
+    ReSampleContext *m_pSwrCtx;
+    short *m_pOut;
+#endif
+
+unsigned int m_pOutSize;
 };
 
 #endif

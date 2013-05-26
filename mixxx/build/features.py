@@ -854,9 +854,17 @@ class FFMPEG(Feature):
             build.env.ParseConfig('pkg-config libavutil --silence-errors --cflags --libs')
 
             # FFMPEG 1.1/LIBAV 9.1 have libavresample 1.0.1 FFMPEG 1.0 have 0.0.3 (0.0.2 ain't compatible)
+            # Somebody doesn't want to use AVRESAMPLE so we use swresample if available
+            # If it's not available and somebody wants to use old old old conversion.. go ahead
+            # be my gueststar!
             if conf.CheckForPKG('libavresample', '0.0.3'):
                 build.env.ParseConfig('pkg-config libavresample --silence-errors --cflags --libs')
                 build.env.Append(CPPDEFINES = '__FFMPEGFILE__')
+                build.env.Append(CPPDEFINES = '__LIBAVRESAMPLE__')
+            elif conf.CheckForPKG('libswresample', '0.0.1'):
+                build.env.ParseConfig('pkg-config libswresample --silence-errors --cflags --libs')
+                build.env.Append(CPPDEFINES = '__FFMPEGFILE__')
+                build.env.Append(CPPDEFINES = '__LIBSWRESAMPLE__')
             else:
                 build.env.Append(CPPDEFINES = '__FFMPEGFILE__')
                 build.env.Append(CPPDEFINES = '__FFMPEGOLDAPI__')    
@@ -866,7 +874,6 @@ class FFMPEG(Feature):
             build.env.Append(LIBS = 'avcodec')
             build.env.Append(LIBS = 'avformat')
             build.env.Append(LIBS = 'avutil')
-            build.env.Append(LIBS = 'swresample')
             build.env.Append(LIBS = 'z')
             build.env.Append(LIBS = 'a52')
             build.env.Append(LIBS = 'dts')
@@ -882,6 +889,7 @@ class FFMPEG(Feature):
 
     def sources(self, build):
         return ['soundsourceffmpeg.cpp',
+                'recording/encoderffmpegresample.cpp',
                 'recording/encoderffmpegcore.cpp',
                 'recording/encoderffmpegmp3.cpp',
                 'recording/encoderffmpegmp4.cpp',

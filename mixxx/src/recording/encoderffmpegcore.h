@@ -19,6 +19,8 @@
 #ifndef ENCODERFFMPEGCORE_H
 #define ENCODERFFMPEGCORE_H
 
+#include <recording/encoderffmpegresample.h>
+
 extern "C" {
 #include <libavutil/opt.h>
 #include <libavcodec/avcodec.h>
@@ -29,7 +31,6 @@ extern "C" {
 #include <libavutil/samplefmt.h>
 
 #ifndef __FFMPEGOLDAPI__
-#include <libavresample/avresample.h>
 #include <libavutil/avutil.h>
 #endif
 
@@ -54,7 +55,7 @@ class TrackInfoObject;
 class EncoderFfmpegCore : public Encoder {
     Q_OBJECT
 public:
-#ifdef AV_CODEC_ID_NONE
+#ifndef AV_CODEC_ID_NONE
     EncoderFfmpegCore(EngineAbstractRecord *engine=0, AVCodecID codec = AV_CODEC_ID_MP2);
 #else
     EncoderFfmpegCore(EngineAbstractRecord *engine=0, CodecID codec = CODEC_ID_MP2);
@@ -76,7 +77,7 @@ private:
     int writeAudioFrame(AVFormatContext *oc, AVStream *st);
     void closeAudio(AVFormatContext *oc, AVStream *st);
     void openAudio(AVFormatContext *oc, AVCodec *codec, AVStream *st);
-#ifdef AV_CODEC_ID_NONE
+#ifndef AV_CODEC_ID_NONE
     AVStream *addStream(AVFormatContext *oc, AVCodec **codec, enum AVCodecID codec_id);
 #else
     AVStream *addStream(AVFormatContext *oc, AVCodec **codec, enum CodecID codec_id);
@@ -111,29 +112,26 @@ private:
     uint64_t m_lRecorededBytes;
     uint64_t m_lDts;
     uint64_t m_lPts;
-#ifdef AV_CODEC_ID_NONE
+#ifndef AV_CODEC_ID_NONE
     enum AVCodecID m_SCcodecId;
 #else
     enum CodecID m_SCcodecId;
 #endif
 
+    EncoderFfmpegResample *m_pResample;
+
 #ifndef __FFMPEGOLDAPI__
-    AVAudioResampleContext *m_pSwrCtx;
-    //SwrContext *m_pSwrCtx;
     // Conveter stuff
     uint8_t *m_pOut;
     unsigned int m_pOutSize;
 #else
-    //struct AVResampleContext *m_pSwrCtx;
-    ReSampleContext *m_pSwrCtx;
-    // Conveter stuff
     short *m_pOut;
     unsigned int m_pOutSize;
 #endif
 
 
 
-#ifdef AV_CODEC_ID_NONE
+#ifndef AV_CODEC_ID_NONE
     AVCodecID m_SCodecID;
 #else
     CodecID m_SCodecID;
