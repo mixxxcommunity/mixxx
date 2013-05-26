@@ -57,7 +57,6 @@ public:
 protected:
     int64_t ffmpeg2mixxx(int64_t pos, const AVRational &time_base);
     int64_t mixxx2ffmpeg(int64_t pos, const AVRational &time_base);
-    unsigned int reSample(AVFrame *inframe);
     void lock();
     void unlock();
 
@@ -72,15 +71,15 @@ private:
 
     EncoderFfmpegResample *m_pResample;
 
-#ifndef __FFMPEGOLDAPI__
+//#ifndef __FFMPEGOLDAPI__
     // Conveter stuff
-    uint8_t *m_pOut;
-    unsigned int m_pOutSize;
-#else
+//    uint8_t *m_pOut;
+//    unsigned int m_pOutSize;
+//#else
     // Conveter stuff
-    short *m_pOut;
-    unsigned int m_pOutSize;
-#endif
+//    short *m_pOut;
+//    unsigned int m_pOutSize;
+//#endif
 
 
     unsigned int m_iOffset;

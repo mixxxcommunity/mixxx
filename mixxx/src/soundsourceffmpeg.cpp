@@ -71,8 +71,7 @@ SoundSourceFFmpeg::SoundSourceFFmpeg(QString filename)
     m_bIsSeeked = FALSE;
     m_iReadedBytes = 0;
     m_iNextMixxxPCMPoint = -1;
-    m_pOut = NULL;
-    m_pOutSize = 0;
+    m_pResample = 0;
 
     this->setType(filename.section(".",-1).toLower());
 }
@@ -83,7 +82,10 @@ SoundSourceFFmpeg::~SoundSourceFFmpeg() {
         avformat_close_input(&m_pFormatCtx);
     }
 
-    delete m_pResample;
+    if( m_pResample != NULL ) {
+        delete m_pResample;
+    }
+    
 };
 
 void SoundSourceFFmpeg::lock() {
@@ -310,12 +312,6 @@ long SoundSourceFFmpeg::seek(long filepos) {
     return filepos;
 }
 
-
-unsigned int SoundSourceFFmpeg::reSample(AVFrame *inframe) {
-   m_pOutSize = m_pResample->reSample(inframe);
-   return m_pOutSize;
-}
-
 /*
    read <size> samples into <destination>, and return the number of
    samples actually read.
@@ -458,9 +454,7 @@ unsigned int SoundSourceFFmpeg::read(unsigned long size, const SAMPLE * destinat
                     m_bIsSeeked = FALSE;
 
                     if (m_pResample->getBufferSize() > 0) {
-                    	qDebug() << "2...." << m_pOutSize;
                         readBuffer.write((const char *)m_pResample->getBuffer(), m_pResample->getBufferSize());
-                    	qDebug() << "3...." << m_pOutSize;
                         readBytes = m_pResample->getBufferSize();
                         m_pResample->removeBuffer();
 

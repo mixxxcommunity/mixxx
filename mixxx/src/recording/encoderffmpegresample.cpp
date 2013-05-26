@@ -160,11 +160,8 @@ short *EncoderFfmpegResample::getBuffer()
 
 void EncoderFfmpegResample::removeBuffer()
 {
-                      	qDebug() << "4...." << m_pOutSize;
                         av_freep(&m_pOut);
-                    	qDebug() << "5...." << m_pOutSize;
                         m_pOut = NULL;
-                    	qDebug() << "6...." << m_pOutSize;
                         m_pOutSize = 0;
 }
 
@@ -173,7 +170,6 @@ void EncoderFfmpegResample::removeBuffer()
 unsigned int EncoderFfmpegResample::reSample(AVFrame *inframe)
 {
 	
-	qDebug() << "!";
     if (m_pSwrCtx) {
 
 #ifndef __FFMPEGOLDAPI__
@@ -236,7 +232,7 @@ int l_iLen = 0;
 #endif
 
 #else
-      qDebug() << "INSAMPLE" << inframe->nb_samples << "OUTSAMPLE" << l_iOutSamples << "OUTBYTES" << l_iOutBytes;
+       // qDebug() << "INSAMPLE" << inframe->nb_samples << "OUTSAMPLE" << l_iOutSamples << "OUTBYTES" << l_iOutBytes;
        l_iLen = swr_convert(m_pSwrCtx, (uint8_t **)&m_pOut, l_iOutSamples,
                            (const uint8_t **)l_pIn, inframe->nb_samples);
 #endif
