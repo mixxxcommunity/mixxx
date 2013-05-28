@@ -8,14 +8,14 @@ msgstr ""
 "Project-Id-Version: mixxx\n"
 "Report-Msgid-Bugs-To: FULL NAME <EMAIL@ADDRESS>\n"
 "POT-Creation-Date: 2013-05-09 15:12+0200\n"
-"PO-Revision-Date: 2012-09-29 12:48+0000\n"
-"Last-Translator: Kakurady Drakenar <kakurady@gmail.com>\n"
+"PO-Revision-Date: 2013-05-28 00:50+0000\n"
+"Last-Translator: yjfhw <yjfhw007@gmail.com>\n"
 "Language-Team: Chinese (Simplified) <zh_CN@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Launchpad-Export-Date: 2013-05-10 05:17+0000\n"
-"X-Generator: Launchpad (build 16598)\n"
+"X-Launchpad-Export-Date: 2013-05-28 05:14+0000\n"
+"X-Generator: Launchpad (build 16640)\n"
 
 #: AutoDJFeature#1
 msgctxt "AutoDJFeature#1"
@@ -25,7 +25,7 @@ msgstr ""
 #: BaseExternalLibraryFeature#1
 msgctxt "BaseExternalLibraryFeature#1"
 msgid "Add to Auto DJ Queue (bottom)"
-msgstr ""
+msgstr "添加至自动曲目队列（底部）"
 
 #: BaseExternalLibraryFeature#2
 msgctxt "BaseExternalLibraryFeature#2"
@@ -244,11 +244,11 @@ msgstr "无法播放"
 
 #: BrowseFeature#1
 msgid "Add to Quick Links"
-msgstr ""
+msgstr "添加至快速链接"
 
 #: BrowseFeature#2
 msgid "Remove from Quick Links"
-msgstr ""
+msgstr "移除快速链接"
 
 #: BrowseFeature#3
 msgid "Quick Links"
@@ -266,7 +266,7 @@ msgstr "可移动设备"
 msgid ""
 "Browse lets you navigate, view, and load tracks from folders on your hard "
 "disk and external devices."
-msgstr ""
+msgstr "从您的硬盘及外置设备中操作、浏览、载入音轨"
 
 #: BrowseFeature#7
 msgid "Browse"
@@ -384,7 +384,7 @@ msgstr "文件 %2: %3 第 %1 行发生未知错误"
 
 #: ControllerEngine#2
 msgid "Uncaught exception at line %1 in passed code: %2"
-msgstr ""
+msgstr "已执行代码 %2 第 %1 行发生未知错误"
 
 #: ControllerEngine#3
 msgid "Controller script error"
@@ -714,7 +714,7 @@ msgstr "假定拍子恒定（推荐）"
 
 #: DlgBeatsDlg#15
 msgid "Enable Offset Correction (Recommended)"
-msgstr ""
+msgstr "开启补偿修正（推荐）"
 
 #: DlgBeatsDlg#16
 msgctxt "DlgBeatsDlg#16"
@@ -818,7 +818,7 @@ msgstr "耳机音量"
 
 #: DlgControllerLearning#14
 msgid "Headphone mix (pre/main)"
-msgstr ""
+msgstr "耳机混音（干音/主要）"
 
 #: DlgControllerLearning#15
 msgid "Transport"
@@ -846,15 +846,15 @@ msgstr "快进按钮"
 
 #: DlgControllerLearning#21
 msgid "Jump to start of track"
-msgstr ""
+msgstr "跳至音轨起始点"
 
 #: DlgControllerLearning#22
 msgid "Jump to end of track"
-msgstr ""
+msgstr "跳至音轨结束点"
 
 #: DlgControllerLearning#23
 msgid "Play reverse button"
-msgstr ""
+msgstr "按下倒退键"
 
 #: DlgControllerLearning#24
 msgid "Gain knob"
@@ -886,11 +886,11 @@ msgstr ""
 
 #: DlgControllerLearning#31
 msgid "Adjust beatgrid"
-msgstr ""
+msgstr "校准 校准节拍网格"
 
 #: DlgControllerLearning#32
 msgid "Toggle quantize mode"
-msgstr ""
+msgstr "切换数字模式"
 
 #: DlgControllerLearning#33
 msgid "Beat sync (tempo and phase)"
@@ -898,11 +898,11 @@ msgstr "节拍同步（拍子和位相）"
 
 #: DlgControllerLearning#34
 msgid "Beat sync (tempo only)"
-msgstr ""
+msgstr "节拍同步（仅位相）"
 
 #: DlgControllerLearning#35
 msgid "Beat sync (phase only)"
-msgstr ""
+msgstr "节拍同步（仅拍子）"
 
 #: DlgControllerLearning#36
 msgid "Pitch and Rate"
@@ -910,7 +910,7 @@ msgstr ""
 
 #: DlgControllerLearning#37
 msgid "Toggle keylock mode"
-msgstr ""
+msgstr "切换键锁模式"
 
 #: DlgControllerLearning#38
 msgid "Pitch control slider"
@@ -996,15 +996,15 @@ msgstr ""
 
 #: DlgControllerLearning#58
 msgid "Cue button"
-msgstr ""
+msgstr "标记键"
 
 #: DlgControllerLearning#59
 msgid "Set cue point"
-msgstr ""
+msgstr "设定标记点"
 
 #: DlgControllerLearning#60
 msgid "Go to cue point and stop"
-msgstr ""
+msgstr "转至标记点并停止"
 
 #: DlgControllerLearning#61
 msgid "Set or jump to hotcue %1"
@@ -1040,11 +1040,11 @@ msgstr ""
 
 #: DlgControllerLearning#69
 msgid "Halve the current loop's length"
-msgstr ""
+msgstr "等分当前循环音轨"
 
 #: DlgControllerLearning#70
 msgid "Double the current loop's length"
-msgstr ""
+msgstr "倍增当前循环音轨"
 
 #: DlgControllerLearning#71
 msgid "Toggle slip mode"
@@ -1113,19 +1113,19 @@ msgstr ""
 
 #: DlgControllerLearning#87
 msgid "Switch to the next view (library, playlist..)"
-msgstr ""
+msgstr "切换至下一个（媒体库，播放列表）"
 
 #: DlgControllerLearning#88
 msgid "Switch to the previous view (library, playlist..)"
-msgstr ""
+msgstr "切换至上一个（媒体库，播放列表）"
 
 #: DlgControllerLearning#89
 msgid "Scroll to next track in library/playlist"
-msgstr ""
+msgstr "滚动至媒体库/播放列表中下一个音轨"
 
 #: DlgControllerLearning#90
 msgid "Scroll to previous track in library/playlist"
-msgstr ""
+msgstr "滚动至媒体库/播放列表中上一个音轨"
 
 #: DlgControllerLearning#91
 msgid "Load selected track into first stopped deck"
@@ -1133,7 +1133,7 @@ msgstr ""
 
 #: DlgControllerLearning#92
 msgid "Load selected track"
-msgstr ""
+msgstr "载入选中音轨"
 
 #: DlgControllerLearning#93
 msgid "Load selected track and play"
@@ -1141,7 +1141,7 @@ msgstr ""
 
 #: DlgControllerLearning#94
 msgid "Effects"
-msgstr ""
+msgstr "特效"
 
 #: DlgControllerLearning#95
 msgid "Toggle flange effect"
@@ -1166,11 +1166,11 @@ msgstr ""
 
 #: DlgControllerLearning#100
 msgid "Microphone on/off"
-msgstr ""
+msgstr "麦克风 开/关"
 
 #: DlgControllerLearning#101
 msgid "Microphone volume"
-msgstr ""
+msgstr "麦克风音量"
 
 #: DlgControllerLearning#102
 msgid "Microphone channel orientation (e.g. left, right, center)"
@@ -1199,7 +1199,7 @@ msgstr ""
 
 #: DlgControllerLearning#108
 msgid "User Interface"
-msgstr ""
+msgstr "用户界面"
 
 #: DlgControllerLearning#109
 msgid "Show/hide the sampler section"
@@ -2526,15 +2526,15 @@ msgstr ""
 msgid "20 ms"
 msgstr ""
 
-#: DlgPrefSoundDlg#6
+#: DlgPrefSoundDlg#3
 msgid "Buffer Underflow Count"
 msgstr ""
 
-#: DlgPrefSoundDlg#7
+#: DlgPrefSoundDlg#4
 msgid "0"
 msgstr ""
 
-#: DlgPrefSoundDlg#8
+#: DlgPrefSoundDlg#5
 msgid "Latency Tips"
 msgstr ""
 
@@ -2557,7 +2557,7 @@ msgctxt "DlgPrefSoundDlg#11"
 msgid "Input"
 msgstr ""
 
-#: DlgPrefSoundDlg#12
+#: DlgPrefSoundDlg#9
 msgid "Query Devices"
 msgstr ""
 
