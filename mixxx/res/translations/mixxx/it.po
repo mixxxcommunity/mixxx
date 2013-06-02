@@ -6,14 +6,14 @@ msgstr ""
 "Project-Id-Version: Mixxx\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2013-05-09 15:12+0200\n"
-"PO-Revision-Date: 2013-04-22 12:04+0000\n"
-"Last-Translator: Raffaele Picca <piccaraffaele@gmail.com>\n"
+"PO-Revision-Date: 2013-06-01 13:34+0000\n"
+"Last-Translator: Matteo Iervasi <matteoiervasi@hotmail.it>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Launchpad-Export-Date: 2013-05-10 05:14+0000\n"
-"X-Generator: Launchpad (build 16598)\n"
+"X-Launchpad-Export-Date: 2013-06-02 04:40+0000\n"
+"X-Generator: Launchpad (build 16660)\n"
 
 #: AutoDJFeature#1
 msgctxt "AutoDJFeature#1"
@@ -713,18 +713,29 @@ msgid ""
 "Often results in higher quality beatgrids, but will not do well on tracks "
 "that have tempo shifts."
 msgstr ""
+"Converte i battiti rilevati dall'analizzatore in una tabella con tempo "
+"fisso. \n"
+"Usa quest'opzione se le tue tracce hanno un ritmo costante (ad esempio la "
+"maggior parte della musica elettronica). \n"
+"Risultati di alta qualità si hanno spesso con tracce a ritmo costante, non "
+"funzionerà bene su tracce che hanno cambi di ritmo."
 
 #: DlgBeatsDlg#10
 msgid ""
 "Attempts to correct the phase (first beat) of fixed-tempo beatgrids \n"
 "by analyzing the beats to discard outliers."
 msgstr ""
+"Tenta di correggere la prima battuta di tabelle dei battiti a tempo fisso \n"
+"analizzando i battiti ed eliminando i valori anormali."
 
 #: DlgBeatsDlg#11
 msgid ""
 "e.g. from 3rd-party programs or Mixxx versions before 1.11.\n"
 "(Not checked: Analyse only, if no beats exist.)"
 msgstr ""
+"ad esempio i programmi di terze parti o le versioni di Mixxx precedenti alla "
+"1.11.\n"
+"(Non selezionato: Analizza e basta, se non c'è alcun battito.)"
 
 #: DlgBeatsDlg#12
 msgid ""
@@ -741,11 +752,11 @@ msgstr ""
 
 #: DlgBeatsDlg#14
 msgid "Assume constant tempo (Recommended)"
-msgstr ""
+msgstr "Assume un tempo costante (Consigliato)"
 
 #: DlgBeatsDlg#15
 msgid "Enable Offset Correction (Recommended)"
-msgstr ""
+msgstr "Abilita la correzione di offset (Consigliato)"
 
 #: DlgBeatsDlg#16
 msgctxt "DlgBeatsDlg#16"
@@ -800,6 +811,10 @@ msgid ""
 "move a control on your controller to map it. Repeat this as many times as "
 "you wish. When you are finished mapping controls, click Done."
 msgstr ""
+"Clicca un qualsiasi controllo nell'interfaccia di Mixxx oppure selezionane "
+"uno dalla lista. Poi sposta un controllo sul controller per mapparlo. Ripeti "
+"questa operazione quante volte vuoi. Quando hai finito di mappare i "
+"controlli, clicca Completato"
 
 #: DlgControllerLearning#3
 msgid "Done"
@@ -866,7 +881,7 @@ msgstr "Bottone Play"
 
 #: DlgControllerLearning#18
 msgid "Volume fader"
-msgstr ""
+msgstr "Dissolvenza del volume"
 
 #: DlgControllerLearning#19
 msgid "Fast rewind button"
@@ -906,7 +921,7 @@ msgstr "Espelli traccia"
 
 #: DlgControllerLearning#28
 msgid "Mix orientation (e.g. left, right, center)"
-msgstr ""
+msgstr "Orientamento mix (ad esempio a sinistra, a destra, centrale)"
 
 #: DlgControllerLearning#29
 msgid "BPM and Sync"
@@ -950,11 +965,11 @@ msgstr ""
 
 #: DlgControllerLearning#39
 msgid "Adjust rate up (fine)"
-msgstr ""
+msgstr "Regola la frequenza in su"
 
 #: DlgControllerLearning#40
 msgid "Adjust rate down (fine)"
-msgstr ""
+msgstr "Regola la frequenza in giù"
 
 #: DlgControllerLearning#41
 msgid "Pitch-bend rate up (fine)"
@@ -983,7 +998,7 @@ msgstr ""
 #: DlgControllerLearning#47
 msgctxt "DlgControllerLearning#47"
 msgid "Equalizers"
-msgstr ""
+msgstr "Equalizzatori"
 
 #: DlgControllerLearning#48
 msgid "High EQ knob"
@@ -1012,19 +1027,20 @@ msgstr ""
 #: DlgControllerLearning#54
 msgctxt "DlgControllerLearning#54"
 msgid "Vinyl Control"
-msgstr ""
+msgstr "Controllo vinile"
 
 #: DlgControllerLearning#55
 msgid "Toggle vinyl-control (ON/OFF)"
-msgstr ""
+msgstr "Abilita/Disabilita il controllo vinile"
 
 #: DlgControllerLearning#56
 msgid "Toggle vinyl-control cueing mode (OFF/ONE/HOT)"
-msgstr ""
+msgstr "Abilita/Disabilita la modalità di coda del controllo vinile"
 
 #: DlgControllerLearning#57
 msgid "Toggle vinyl-control mode (ABS/REL/CONST)"
 msgstr ""
+"Abilita/Disabilita la modalità controllo vinile (Assoluta/Relativa/Costante)"
 
 #: DlgControllerLearning#58
 msgid "Cue button"
@@ -2591,15 +2607,15 @@ msgstr ""
 msgid "20 ms"
 msgstr ""
 
-#: DlgPrefSoundDlg#6
+#: DlgPrefSoundDlg#3
 msgid "Buffer Underflow Count"
 msgstr ""
 
-#: DlgPrefSoundDlg#7
+#: DlgPrefSoundDlg#4
 msgid "0"
 msgstr ""
 
-#: DlgPrefSoundDlg#8
+#: DlgPrefSoundDlg#5
 msgid "Latency Tips"
 msgstr "Consigli sulla latenza"
 
@@ -2622,7 +2638,7 @@ msgctxt "DlgPrefSoundDlg#11"
 msgid "Input"
 msgstr ""
 
-#: DlgPrefSoundDlg#12
+#: DlgPrefSoundDlg#9
 msgid "Query Devices"
 msgstr "Interroga i dispositivi"
 
