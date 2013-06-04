@@ -21,6 +21,11 @@
 #include <QDebug>
 
 extern "C" {
+// Needed to ensure that macros in <stdint.h> get defined.
+#if __cplusplus < 201103L
+#define __STDC_CONSTANT_MACROS
+#endif
+
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 

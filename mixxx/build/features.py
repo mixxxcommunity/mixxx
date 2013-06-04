@@ -861,10 +861,12 @@ class FFMPEG(Feature):
                 build.env.ParseConfig('pkg-config libavresample --silence-errors --cflags --libs')
                 build.env.Append(CPPDEFINES = '__FFMPEGFILE__')
                 build.env.Append(CPPDEFINES = '__LIBAVRESAMPLE__')
+                build.env.Append(LIBS = 'avresample')
             elif conf.CheckForPKG('libswresample', '0.0.1'):
                 build.env.ParseConfig('pkg-config libswresample --silence-errors --cflags --libs')
                 build.env.Append(CPPDEFINES = '__FFMPEGFILE__')
                 build.env.Append(CPPDEFINES = '__LIBSWRESAMPLE__')
+                build.env.Append(LIBS = 'swresample')
             else:
                 build.env.Append(CPPDEFINES = '__FFMPEGFILE__')
                 build.env.Append(CPPDEFINES = '__FFMPEGOLDAPI__')    
@@ -875,17 +877,22 @@ class FFMPEG(Feature):
             build.env.Append(LIBS = 'avformat')
             build.env.Append(LIBS = 'avutil')
             build.env.Append(LIBS = 'z')
-            build.env.Append(LIBS = 'a52')
-            build.env.Append(LIBS = 'dts')
+            #build.env.Append(LIBS = 'a52')
+            #build.env.Append(LIBS = 'dts')
             build.env.Append(LIBS = 'gsm')
-            build.env.Append(LIBS = 'dc1394_control')
-            build.env.Append(LIBS = 'dl')
+            #build.env.Append(LIBS = 'dc1394_control')
+            #build.env.Append(LIBS = 'dl')
             build.env.Append(LIBS = 'vorbisenc')
-            build.env.Append(LIBS = 'raw1394')
+            #build.env.Append(LIBS = 'raw1394')
             build.env.Append(LIBS = 'vorbis')
             build.env.Append(LIBS = 'm')
             build.env.Append(LIBS = 'ogg')
             build.env.Append(CPPDEFINES = '__FFMPEGFILE__')
+
+        # Add new path for ffmpeg header files.
+        # Non-crosscompiled builds need this too, don't they?
+        if build.crosscompile and build.platform_is_windows and build.toolchain_is_gnu:
+            build.env.Append(CPPPATH=os.path.join(build.crosscompile_root, 'include', 'ffmpeg'))
 
     def sources(self, build):
         return ['soundsourceffmpeg.cpp',
